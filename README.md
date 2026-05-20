@@ -1,133 +1,100 @@
-# Welcome to your Expo app 👋
+# Pet Horizon Frontend 🐾
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📥 Clone the Repository
 
-## Get started
+## Open CMD or Terminal and go to the folder where you want the project.
 
-1. Install dependencies
+## Example:
 
-   ```bash
-   npm install
-   ```
+## cd E:\Github_Repo
 
-2. Start the app
+## Then clone the repository:
 
-   ```bash
-   npx expo start
-   ```
+git clone git@github.com:ASAD346/Pet-Horizon-Frontend.git
 
-In the output, you'll find options to open the app in a
+## This will create a folder named:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Pet-Horizon-Frontend
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📂 Open the Project
 
-## Get a fresh project
+## Move into the project folder:
 
-When you're ready, run:
+cd Pet-Horizon-Frontend
 
-```bash
-npm run reset-project
-```
+## 📦 Install Dependencies
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Run:
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
-2. Start the app
-npx expo start
-
-In the output, you'll find options to open the app in:
-
-Development build
-Android emulator
-iOS simulator
-Expo Go
-
-You can start developing by editing files inside the app directory.
-
-This project uses file-based routing:
-https://docs.expo.dev/router/introduction
-
-📦 Get a fresh project
-
-When you're ready, run:
-
-npm run reset-project
-
-This moves starter code to app-example and creates a clean app directory.
-
-👨‍💻 For new developers (Clone & Setup from Bitbucket)
-1. Clone the repository
-git clone git@bitbucket.org:pet-horizon/pet-horizon-frontend.git
-
-If SSH is not set up, use HTTPS:
-
-git clone https://bitbucket.org/pet-horizon/pet-horizon-frontend.git
-2. Move into project folder
-cd pet-horizon-frontend
-3. Install dependencies
 npm install
-4. Start development server
+
+## This installs all required packages.
+
+## ▶️ Start the Project
+
+## Run:
+
 npx expo start
-🔁 Workflow: Make changes & push to Bitbucket
-1. Create a new branch (recommended)
-git checkout -b feature/your-feature-name
+🌿 Create Your Own Branch
+
+Before making changes, create a new branch.
 
 Example:
 
 git checkout -b feature/login-screen
-2. Make your changes
 
-Edit files inside the project as needed.
+Branch naming examples:
 
-3. Check your changes
+feature/navbar
+feature/profile-screen
+feature/chat-ui
+✏️ Make Changes
+
+Edit the files and save your work.
+
+✅ Check Changed Files
 git status
-4. Add changes
+➕ Add Changes
 git add .
-5. Commit changes
+💾 Commit Changes
 git commit -m "Added login screen UI"
-6. Push branch to Bitbucket
-git push origin feature/your-feature-name
-7. Create Pull Request
 
-Go to Bitbucket:
+Write a short message describing your changes.
 
-Open repository
-Click Create Pull Request
-Select your branch → main
-Submit for review
-🔄 Updating your local project
+🚀 Push Changes to GitHub
+git push -u origin your-branch-name
 
-If someone else pushes changes:
+Example:
+
+git push -u origin feature/login-screen
+🔄 Pull Latest Changes
+
+Before starting work every day, run:
 
 git pull origin main
-⚠️ Common issues
-❌ Push rejected
+
+This updates your project with the latest code.
+
+⚠️ Important Rules
+Do NOT push directly to main
+Always create a new branch
+Pull latest changes before starting work
+Write clear commit messages
+👥 Creating Pull Requests
+
+After pushing your branch:
+
+Open GitHub repository
+Click "Compare & pull request"
+Create Pull Request into main
+🛠 Common Commands
+See current branch
+git branch
+Switch branch
+git checkout branch-name
+See remote repository
+git remote -v
+Pull latest code
 git pull origin main
-git push origin main
-❌ Permission denied
-
-Make sure SSH key is added to Bitbucket:
-https://bitbucket.org/account/settings/ssh-keys/
-
-📚 Learn more
-https://docs.expo.dev/
-https://docs.expo.dev/router/introduction/
-🤝 Community
-https://github.com/expo/expo
-https://chat.expo.dev
+Push code
+git push
