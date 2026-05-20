@@ -1,50 +1,100 @@
-# Welcome to your Expo app 👋
+# Pet Horizon Frontend 🐾
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## 📥 Clone the Repository
 
-## Get started
+## Open CMD or Terminal and go to the folder where you want the project.
 
-1. Install dependencies
+## Example:
 
-   ```bash
-   npm install
-   ```
+## cd E:\Github_Repo
 
-2. Start the app
+## Then clone the repository:
 
-   ```bash
-   npx expo start
-   ```
+git clone git@github.com:ASAD346/Pet-Horizon-Frontend.git
 
-In the output, you'll find options to open the app in a
+## This will create a folder named:
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Pet-Horizon-Frontend
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📂 Open the Project
 
-## Get a fresh project
+## Move into the project folder:
 
-When you're ready, run:
+cd Pet-Horizon-Frontend
 
-```bash
-npm run reset-project
-```
+## 📦 Install Dependencies
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Run:
 
-## Learn more
+npm install
 
-To learn more about developing your project with Expo, look at the following resources:
+## This installs all required packages.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## ▶️ Start the Project
 
-## Join the community
+## Run:
 
-Join our community of developers creating universal apps.
+npx expo start
+🌿 Create Your Own Branch
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Before making changes, create a new branch.
+
+Example:
+
+git checkout -b feature/login-screen
+
+Branch naming examples:
+
+feature/navbar
+feature/profile-screen
+feature/chat-ui
+✏️ Make Changes
+
+Edit the files and save your work.
+
+✅ Check Changed Files
+git status
+➕ Add Changes
+git add .
+💾 Commit Changes
+git commit -m "Added login screen UI"
+
+Write a short message describing your changes.
+
+🚀 Push Changes to GitHub
+git push -u origin your-branch-name
+
+Example:
+
+git push -u origin feature/login-screen
+🔄 Pull Latest Changes
+
+Before starting work every day, run:
+
+git pull origin main
+
+This updates your project with the latest code.
+
+⚠️ Important Rules
+Do NOT push directly to main
+Always create a new branch
+Pull latest changes before starting work
+Write clear commit messages
+👥 Creating Pull Requests
+
+After pushing your branch:
+
+Open GitHub repository
+Click "Compare & pull request"
+Create Pull Request into main
+🛠 Common Commands
+See current branch
+git branch
+Switch branch
+git checkout branch-name
+See remote repository
+git remote -v
+Pull latest code
+git pull origin main
+Push code
+git push
