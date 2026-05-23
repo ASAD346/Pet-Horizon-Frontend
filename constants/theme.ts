@@ -38,6 +38,8 @@ export const Colors = {
     primary: Palette.primary.base,
     secondary: Palette.secondary.base,
     border: Palette.gray[200],
+    tint: Palette.primary.base,
+    icon: Palette.gray[600],
     tabIconDefault: Palette.gray[400],
     tabIconSelected: Palette.primary.base,
   },
@@ -49,10 +51,34 @@ export const Colors = {
     primary: Palette.primary.base,
     secondary: Palette.secondary.base,
     border: Palette.gray[800],
+    tint: Palette.white,
+    icon: Palette.gray[400],
     tabIconDefault: Palette.gray[600],
     tabIconSelected: Palette.white,
-  }
+  },
 };
+
+/** Platform font stacks used by template screens (e.g. explore) */
+export const Fonts = Platform.select({
+  ios: {
+    sans: 'system-ui',
+    serif: 'ui-serif',
+    rounded: 'ui-rounded',
+    mono: 'ui-monospace',
+  },
+  default: {
+    sans: 'normal',
+    serif: 'serif',
+    rounded: 'normal',
+    mono: 'monospace',
+  },
+  web: {
+    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    serif: "Georgia, 'Times New Roman', serif",
+    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  },
+});
 
 export const Spacing = {
   xs: 4,
