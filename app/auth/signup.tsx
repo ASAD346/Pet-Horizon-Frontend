@@ -6,24 +6,23 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   LoginBranding,
   LoginFooterBar,
-  LoginFormSection,
   LoginHeaderDecor,
   SocialLoginButtons,
 } from '../../components/auth/login';
+import { SignupFormSection } from '../../components/auth/signup';
 import { LoginTheme, Spacing } from '../../constants/theme';
 
-export default function LoginScreen() {
+export default function SignupScreen() {
   const router = useRouter();
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleSignUp = () => {
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      router.push('/pet/register');
-    }, 400);
+    setTimeout(() => setLoading(false), 1500);
   };
 
   return (
@@ -37,22 +36,26 @@ export default function LoginScreen() {
         >
           <View style={styles.content}>
             <Animated.View entering={FadeIn.duration(700)}>
-              <LoginBranding />
+              <LoginBranding compact />
             </Animated.View>
 
             <Animated.View entering={FadeInDown.delay(150).duration(700)} style={styles.formBlock}>
-              <LoginFormSection
+              <SignupFormSection
+                fullName={fullName}
                 email={email}
                 password={password}
+                confirmPassword={confirmPassword}
                 loading={loading}
+                onFullNameChange={setFullName}
                 onEmailChange={setEmail}
                 onPasswordChange={setPassword}
-                onLogin={handleLogin}
-                onForgotPassword={() => {}}
-                onSignup={() => router.push('/auth/signup')}
+                onConfirmPasswordChange={setConfirmPassword}
+                onSignUp={handleSignUp}
+                onLogin={() => router.back()}
               />
 
               <SocialLoginButtons
+                compact
                 onGooglePress={() => {}}
                 onApplePress={() => {}}
               />
@@ -80,12 +83,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.xs,
     justifyContent: 'space-between',
   },
   formBlock: {
     flex: 1,
     justifyContent: 'flex-start',
-    paddingTop: Spacing.md,
+    paddingTop: Spacing.sm,
   },
 });
