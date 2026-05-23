@@ -38,6 +38,8 @@ export const Colors = {
     primary: Palette.primary.base,
     secondary: Palette.secondary.base,
     border: Palette.gray[200],
+    tint: Palette.primary.base,
+    icon: Palette.gray[600],
     tabIconDefault: Palette.gray[400],
     tabIconSelected: Palette.primary.base,
   },
@@ -49,10 +51,34 @@ export const Colors = {
     primary: Palette.primary.base,
     secondary: Palette.secondary.base,
     border: Palette.gray[800],
+    tint: Palette.white,
+    icon: Palette.gray[400],
     tabIconDefault: Palette.gray[600],
     tabIconSelected: Palette.white,
-  }
+  },
 };
+
+/** Platform font stacks used by template screens (e.g. explore) */
+export const Fonts = Platform.select({
+  ios: {
+    sans: 'system-ui',
+    serif: 'ui-serif',
+    rounded: 'ui-rounded',
+    mono: 'ui-monospace',
+  },
+  default: {
+    sans: 'normal',
+    serif: 'serif',
+    rounded: 'normal',
+    mono: 'monospace',
+  },
+  web: {
+    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    serif: "Georgia, 'Times New Roman', serif",
+    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  },
+});
 
 export const Spacing = {
   xs: 4,
@@ -70,3 +96,41 @@ export const Radius = {
   xl: 30,
   full: 999,
 };
+
+/** Login screen design tokens (matches Pet Horizon mockup) */
+export const LoginTheme = {
+  green: '#5CB35D',
+  greenDark: '#4A9E4B',
+  charcoal: '#3A3A3A',
+  inputBg: '#DCDCDC',
+  inputPlaceholder: '#6B6B6B',
+  tagline: '#9E9E9E',
+  petLabel: '#B0B0B0',
+  brandPet: '#7BA3C4',
+  brandHorizon: '#1A2B4E',
+  screenBg: '#F5F6F8',
+  dividerLine: '#5CB35D',
+  buttonShadow: '#3D7A3E',
+  footerText: '#FFFFFF',
+} as const;
+
+/** Home dashboard design tokens */
+export const HomeTheme = {
+  background: '#F5F6F8',
+  cardGreen: '#5CB35D',
+  cardGreenDark: '#4A9E4B',
+  warningBg: '#FEF9D7',
+  warningAccent: '#F0C419',
+  infoBg: '#E8F4FD',
+  infoAccent: '#5B9BD5',
+  teal: '#4DB6AC',
+  surface: '#FFFFFF',
+  surfaceMuted: '#EBEBEB',
+  text: '#1A1A1A',
+  textMuted: '#757575',
+  green: '#5CB35D',
+  white: '#FFFFFF',
+  badgeRed: '#E53935',
+  dividerOnGreen: 'rgba(255,255,255,0.35)',
+  tagOnGreen: 'rgba(255,255,255,0.25)',
+} as const;

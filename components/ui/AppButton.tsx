@@ -1,10 +1,12 @@
 import React from 'react';
-import { 
-  TouchableOpacity, 
-  StyleSheet, 
-  ActivityIndicator, 
-  ViewStyle, 
-  TextStyle 
+import {
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  ViewStyle,
+  TextStyle,
+  View,
+  StyleProp,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Animated, { 
@@ -18,13 +20,13 @@ import { AppText } from './AppText';
 interface AppButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'success' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
 }
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -62,6 +64,12 @@ export function AppButton({
           bg: Palette.secondary.base, 
           text: Palette.secondary.contrast,
           border: 'transparent' 
+        };
+      case 'success':
+        return {
+          bg: Palette.success,
+          text: Palette.white,
+          border: 'transparent',
         };
       case 'outline':
         return { 
@@ -121,7 +129,7 @@ export function AppButton({
       {loading ? (
         <ActivityIndicator color={text} />
       ) : (
-        <>
+        <View style={styles.content}>
           {icon}
           <AppText
             variant="body"
@@ -131,7 +139,7 @@ export function AppButton({
           >
             {title}
           </AppText>
-        </>
+        </View>
       )}
     </AnimatedTouchableOpacity>
   );
@@ -143,6 +151,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
   },
   text: {
     textAlign: 'center',
