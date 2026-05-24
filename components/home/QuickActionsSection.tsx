@@ -15,13 +15,41 @@ const ACTIONS: { label: string; icon: ActionIcon; color: string; bg: string }[] 
   { label: 'Add Note', icon: 'note-plus-outline', color: '#9C27B0', bg: '#F3E5F5' },
 ];
 
-export function QuickActionsSection() {
+interface QuickActionsSectionProps {
+  onLogFoodPress?: () => void;
+  onLogWalkPress?: () => void;
+  onMedicinePress?: () => void;
+  onGroomingPress?: () => void;
+}
+
+const ACTION_HANDLERS: Record<string, keyof QuickActionsSectionProps> = {
+  'Log Food': 'onLogFoodPress',
+  'Log Walk': 'onLogWalkPress',
+  Medicine: 'onMedicinePress',
+  Grooming: 'onGroomingPress',
+};
+
+export function QuickActionsSection({
+  onLogFoodPress,
+  onLogWalkPress,
+  onMedicinePress,
+  onGroomingPress,
+}: QuickActionsSectionProps) {
+  const handlers = { onLogFoodPress, onLogWalkPress, onMedicinePress, onGroomingPress };
   return (
     <View style={styles.section}>
       <SectionHeader title="Quick Actions" />
       <View style={styles.row}>
-        {ACTIONS.map((action) => (
-          <TouchableOpacity key={action.label} style={styles.tile} activeOpacity={0.85}>
+        {ACTIONS.map((action) => {
+          const handlerKey = ACTION_HANDLERS[action.label];
+          const onPress = handlerKey ? handlers[handlerKey] : undefined;
+          return (
+          <TouchableOpacity
+            key={action.label}
+            style={styles.tile}
+            activeOpacity={0.85}
+            onPress={onPress}
+          >
             <View style={[styles.iconBox, { backgroundColor: action.bg }]}>
               <MaterialCommunityIcons name={action.icon} size={24} color={action.color} />
             </View>
@@ -29,7 +57,8 @@ export function QuickActionsSection() {
               {action.label}
             </AppText>
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </View>
     </View>
   );

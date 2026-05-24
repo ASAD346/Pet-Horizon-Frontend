@@ -39,7 +39,15 @@
           }
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Pet Horizon to access your photos to add a pet picture.",
+          "cameraPermission": "Allow Pet Horizon to use the camera for pet photos."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

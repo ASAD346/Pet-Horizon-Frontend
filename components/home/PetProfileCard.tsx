@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
@@ -14,6 +15,9 @@ interface PetProfileCardProps {
   health?: string;
   mood?: string;
   imageSource?: number;
+  imageUrl?: string;
+  loading?: boolean;
+  onAddPet?: () => void;
 }
 
 export function PetProfileCard({
@@ -26,11 +30,32 @@ export function PetProfileCard({
   health = 'Good',
   mood = 'Happy',
   imageSource = require('../../assets/images/onboarding.png'),
+  imageUrl,
+  loading = false,
+  onAddPet,
 }: PetProfileCardProps) {
+  const avatarSource = imageUrl ? { uri: imageUrl } : imageSource;
   return (
     <View style={styles.card}>
+      {onAddPet ? (
+        <TouchableOpacity
+          style={styles.addPetBtn}
+          onPress={onAddPet}
+          activeOpacity={0.85}
+          accessibilityLabel="Add pet"
+        >
+          <Ionicons name="add" size={22} color={HomeTheme.white} />
+        </TouchableOpacity>
+      ) : null}
+
+      {loading ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator color={HomeTheme.white} />
+        </View>
+      ) : null}
+
       <View style={styles.top}>
-        <Image source={imageSource} style={styles.avatar} contentFit="cover" />
+        <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
         <View style={styles.info}>
           <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name}>
             {name}
@@ -93,7 +118,26 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
+    position: 'relative',
     ...cardShadow,
+  },
+  addPetBtn: {
+    position: 'absolute',
+    top: Spacing.sm,
+    right: Spacing.sm,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: HomeTheme.tagOnGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  loadingRow: {
+    position: 'absolute',
+    top: Spacing.md,
+    left: Spacing.md,
+    zIndex: 2,
   },
   top: {
     flexDirection: 'row',

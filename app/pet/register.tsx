@@ -1,42 +1,230 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Keyboard,
+} from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppButton } from '../../components/ui/AppButton';
-import { AppText } from '../../components/ui/AppText';
+import { AppButton } from '@/components/ui/AppButton';
+import { AppText } from '@/components/ui/AppText';
+import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import {
   BirthdayField,
+  BreedSelector,
   GenderSelect,
   PetGender,
   PetLabeledInput,
   PetPhotoPicker,
-  PetSpecies,
   SpeciesSelector,
   WeightInput,
   WeightUnit,
-} from '../../components/pet';
-import { LoginTheme, Spacing } from '../../constants/theme';
+} from '@/components/pet';
+import { useAuth } from '@/contexts/AuthContext';
+import { getErrorMessage } from '@/lib/api/errors';
+import { LoginTheme, Spacing } from '@/constants/theme';
+import { log } from '@/lib/log';
+import { createAndActivatePet, fetchBreeds, fetchSpecies } from '@/services/pets/petApi';
+import { uploadPetImage } from '@/services/pets/uploadPetImage';
+import {
+  hasRegisterPetFieldErrors,
+  validateRegisterPetForm,
+  type RegisterPetFieldErrors,
+} from '@/services/pets/validation';
 
 const DEFAULT_BIRTHDAY = new Date(2021, 4, 15);
 
 export default function RegisterPetScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ mode?: string }>();
+  const isAddMode = params.mode === 'add';
+  const { token, user, setSession } = useAuth();
+
+  const [speciesList, setSpeciesList] = useState<string[]>([]);
+  const [breeds, setBreeds] = useState<string[]>([]);
+  const [speciesLoading, setSpeciesLoading] = useState(true);
+  const [breedsLoading, setBreedsLoading] = useState(false);
+
   const [petName, setPetName] = useState('');
   const [gender, setGender] = useState<PetGender>('Male');
-  const [species, setSpecies] = useState<PetSpecies>('dog');
+  const [species, setSpecies] = useState('');
   const [breed, setBreed] = useState('');
   const [birthday, setBirthday] = useState(DEFAULT_BIRTHDAY);
   const [weight, setWeight] = useState('25');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<RegisterPetFieldErrors>({});
 
-  const handleAddPet = () => {
+  const clearErrors = useCallback(() => {
+    setFormError(null);
+    setFieldErrors({});
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
+      setSpeciesLoading(false);
+      log.fail('AddPet', 'Not authenticated');
+      setFormError('Please log in to register a pet.');
+      return;
+    }
+
+    let mounted = true;
+
+    (async () => {
+      try {
+        const data = await fetchSpecies(token);
+        if (!mounted) return;
+
+        const list = data.species ?? [];
+        setSpeciesList(list);
+        if (list.length > 0) {
+          setSpecies((current) => current || list[0]);
+        }
+      } catch (error) {
+        if (mounted) {
+          setFormError(getErrorMessage(error, 'Unable to load species.'));
+        }
+      } finally {
+        if (mounted) {
+          setSpeciesLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    if (!token || !species) {
+      setBreeds([]);
+      return;
+    }
+
+    let mounted = true;
+    setBreedsLoading(true);
+
+    (async () => {
+      try {
+        const data = await fetchBreeds(token, species);
+        if (!mounted) return;
+
+        const list = data.breeds ?? [];
+        setBreeds(list);
+        setBreed((current) => (current && list.includes(current) ? current : list[0] ?? ''));
+      } catch (error) {
+        if (mounted) {
+          setBreeds([]);
+          setBreed('');
+          setFormError(getErrorMessage(error, 'Unable to load breeds.'));
+        }
+      } finally {
+        if (mounted) {
+          setBreedsLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [token, species]);
+
+  const handleSpeciesChange = useCallback(
+    (next: string) => {
+      setSpecies(next);
+      setBreed('');
+      if (fieldErrors.species || fieldErrors.breed) {
+        setFieldErrors((prev) => ({ ...prev, species: undefined, breed: undefined }));
+      }
+    },
+    [fieldErrors.breed, fieldErrors.species],
+  );
+
+  const handleAddPet = useCallback(async () => {
+    Keyboard.dismiss();
+    clearErrors();
+
+    if (!token) {
+      log.fail('AddPet', 'Submit blocked — no token');
+      setFormError('Please log in to register a pet.');
+      return;
+    }
+
+    const validation = validateRegisterPetForm(petName, species, breed, weight);
+    if (hasRegisterPetFieldErrors(validation)) {
+      log.fail('AddPet', 'Validation failed', { ...validation });
+      setFieldErrors(validation);
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    log.info('AddPet', 'Submitting', { name: petName.trim(), species, breed, mode: isAddMode ? 'add' : 'onboarding' });
+
+    try {
+      const weightNum = weight.trim() ? Number(weight) : undefined;
+      const apiWeightUnit = weightUnit === 'lbs' ? 'lbs' : 'kg';
+
+      let pet = await createAndActivatePet(token, {
+        name: petName.trim(),
+        species,
+        breed: breed.trim(),
+        gender,
+        birthday: birthday.toISOString(),
+        weight: weightNum,
+        weightUnit: apiWeightUnit,
+      });
+
+      if (photoUri) {
+        try {
+          pet = await uploadPetImage(token, pet._id, photoUri);
+        } catch (uploadError) {
+          log.fail('AddPet', 'Photo upload failed', getErrorMessage(uploadError));
+        }
+      }
+
+      if (user) {
+        await setSession({
+          token,
+          user: { ...user, activePetId: pet._id },
+        });
+      }
+
+      log.ok('AddPet', 'Done — navigating', { petId: pet._id, isAddMode });
+
+      if (isAddMode) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch (error) {
+      log.fail('AddPet', 'Submit failed', getErrorMessage(error));
+      setFormError(getErrorMessage(error, 'Unable to add your pet. Please try again.'));
+    } finally {
       setLoading(false);
-      router.replace('/(tabs)');
-    }, 800);
-  };
+    }
+  }, [
+    birthday,
+    breed,
+    clearErrors,
+    gender,
+    isAddMode,
+    petName,
+    router,
+    setSession,
+    species,
+    token,
+    user,
+    photoUri,
+    weight,
+    weightUnit,
+  ]);
 
   return (
     <View style={styles.root}>
@@ -45,49 +233,87 @@ export default function RegisterPetScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
         >
-          <View style={styles.content}>
+          <ScrollView
+            style={styles.flex}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <View style={styles.header}>
               <AppText variant="h3" weight="800" align="center" style={styles.title}>
-                Tell us about your furry friend!
+                {isAddMode ? 'Add another pet' : 'Tell us about your furry friend!'}
               </AppText>
               <AppText variant="bodySmall" color={LoginTheme.tagline} align="center" style={styles.subtitle}>
                 Let&apos;s create a profile to help you track their healthy lifestyle.
               </AppText>
             </View>
 
-            <PetPhotoPicker />
+            {formError ? <AuthErrorBanner message={formError} /> : null}
+
+            <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />
 
             <PetLabeledInput
               label="Pet Name"
               placeholder="Pet Name"
               value={petName}
-              onChangeText={setPetName}
+              onChangeText={(text) => {
+                setPetName(text);
+                if (fieldErrors.petName) {
+                  setFieldErrors((prev) => ({ ...prev, petName: undefined }));
+                }
+              }}
             />
+            {fieldErrors.petName ? (
+              <AppText variant="caption" color="#C62828" style={styles.inlineError}>
+                {fieldErrors.petName}
+              </AppText>
+            ) : null}
 
             <GenderSelect value={gender} onChange={setGender} />
-            <SpeciesSelector value={species} onChange={setSpecies} />
 
-            <PetLabeledInput
-              label="Breed"
-              placeholder="Breed"
+            <SpeciesSelector
+              speciesList={speciesList}
+              value={species}
+              onChange={handleSpeciesChange}
+              loading={speciesLoading}
+              error={fieldErrors.species}
+            />
+
+            <BreedSelector
               value={breed}
-              onChangeText={setBreed}
+              breeds={breeds}
+              loading={breedsLoading}
+              disabled={!species}
+              error={fieldErrors.breed}
+              onChange={(next) => {
+                setBreed(next);
+                if (fieldErrors.breed) {
+                  setFieldErrors((prev) => ({ ...prev, breed: undefined }));
+                }
+              }}
             />
 
             <BirthdayField value={birthday} onChange={setBirthday} />
+
             <WeightInput
               value={weight}
               unit={weightUnit}
               onValueChange={setWeight}
               onUnitChange={setWeightUnit}
             />
-          </View>
+            {fieldErrors.weight ? (
+              <AppText variant="caption" color="#C62828" style={styles.inlineError}>
+                {fieldErrors.weight}
+              </AppText>
+            ) : null}
+          </ScrollView>
 
           <View style={styles.footer}>
             <AppButton
               title="Add Pet"
               onPress={handleAddPet}
               loading={loading}
+              disabled={speciesLoading || loading}
               variant="success"
               size="sm"
               style={styles.addButton}
@@ -121,9 +347,9 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
     paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.md,
   },
   header: {
     marginTop: Spacing.xs,
@@ -138,6 +364,11 @@ const styles = StyleSheet.create({
   subtitle: {
     lineHeight: 18,
     paddingHorizontal: Spacing.sm,
+  },
+  inlineError: {
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.sm,
+    marginLeft: 2,
   },
   footer: {
     paddingHorizontal: Spacing.xl,

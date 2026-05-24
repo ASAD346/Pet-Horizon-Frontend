@@ -1,60 +1,23 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
+import { getSpeciesIcon } from '../../services/pets/speciesIcons';
 import { LoginTheme, Radius, Spacing } from '../../constants/theme';
 
-export type PetSpecies = 'dog' | 'cat' | 'bird' | 'rabbit' | 'hamster';
-
-type SpeciesIcon = 'dog' | 'cat' | 'bird' | 'rabbit' | 'rodent';
-
-const SPECIES: { id: PetSpecies; label: string; icon: SpeciesIcon }[] = [
-  { id: 'dog', label: 'Dog', icon: 'dog' },
-  { id: 'cat', label: 'Cat', icon: 'cat' },
-  { id: 'bird', label: 'Bird', icon: 'bird' },
-  { id: 'rabbit', label: 'Rabbit', icon: 'rabbit' },
-  { id: 'hamster', label: 'Hamster', icon: 'rodent' },
-];
-
 interface SpeciesSelectorProps {
-  value: PetSpecies;
-  onChange: (species: PetSpecies) => void;
-}
-
-export function SpeciesSelector({ value, onChange }: SpeciesSelectorProps) {
-  return (
-    <View style={styles.wrapper}>
-      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
-        Species
-      </AppText>
-      <View style={styles.row}>
-        {SPECIES.map((species) => {
-          const selected = value === species.id;
-          return (
-            <TouchableOpacity
-              key={species.id}
-              style={[styles.tile, selected && styles.tileSelected]}
-              onPress={() => onChange(species.id)}
-              activeOpacity={0.85}
-            >
-              <MaterialCommunityIcons
-                name={species.icon}
-                size={22}
-                color={selected ? LoginTheme.footerText : LoginTheme.charcoal}
-              />
-              <AppText
-                variant="caption"
-                color={selected ? LoginTheme.footerText : LoginTheme.tagline}
-                style={styles.tileLabel}
-              >
-                {species.label}
-              </AppText>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    </View>
-  );
+  speciesList: string[];
+  value: string;
+  onChange: (species: string) => void;
+  loading?: boolean;
+  error?: string;
 }
 
 const tileShadow = Platform.select({
@@ -67,6 +30,70 @@ const tileShadow = Platform.select({
   android: { elevation: 1 },
 });
 
+export function SpeciesSelector({
+  speciesList,
+  value,
+  onChange,
+  loading = false,
+  error,
+}: SpeciesSelectorProps) {
+  return (
+    <View style={styles.wrapper}>
+      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
+        Species
+      </AppText>
+
+      {loading ? (
+        <View style={styles.loadingRow}>
+          <ActivityIndicator size="small" color={LoginTheme.green} />
+          <AppText variant="bodySmall" color={LoginTheme.tagline} style={styles.loadingText}>
+            Loading species…
+          </AppText>
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.row}
+        >
+          {speciesList.map((species) => {
+            const selected = value === species;
+            const icon = getSpeciesIcon(species);
+            return (
+              <TouchableOpacity
+                key={species}
+                style={[styles.tile, selected && styles.tileSelected]}
+                onPress={() => onChange(species)}
+                activeOpacity={0.85}
+              >
+                <MaterialCommunityIcons
+                  name={icon}
+                  size={22}
+                  color={selected ? LoginTheme.footerText : LoginTheme.charcoal}
+                />
+                <AppText
+                  variant="caption"
+                  color={selected ? LoginTheme.footerText : LoginTheme.tagline}
+                  style={styles.tileLabel}
+                  numberOfLines={1}
+                >
+                  {species}
+                </AppText>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      )}
+
+      {error ? (
+        <AppText variant="caption" color="#C62828" style={styles.errorText}>
+          {error}
+        </AppText>
+      ) : null}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrapper: {
     marginBottom: Spacing.sm,
@@ -75,15 +102,22 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     marginLeft: 2,
   },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 62,
+  },
+  loadingText: {
+    marginLeft: Spacing.sm,
+  },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 6,
+    gap: 8,
+    paddingRight: Spacing.sm,
   },
   tile: {
-    flex: 1,
-    aspectRatio: 1,
-    maxWidth: 62,
+    width: 62,
+    height: 62,
     backgroundColor: LoginTheme.inputBg,
     borderRadius: Radius.md,
     alignItems: 'center',
@@ -98,5 +132,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 10,
     fontWeight: '600',
+    maxWidth: 56,
+    textAlign: 'center',
+  },
+  errorText: {
+    marginTop: Spacing.xs,
+    marginLeft: 2,
   },
 });

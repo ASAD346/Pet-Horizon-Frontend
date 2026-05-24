@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AppButton } from '../../ui/AppButton';
+import { AuthErrorBanner } from '../AuthErrorBanner';
 import { AuthTextField } from '../AuthTextField';
 import { LoginTheme, Spacing } from '../../../constants/theme';
 
@@ -9,31 +10,43 @@ interface LoginFormSectionProps {
   email: string;
   password: string;
   loading: boolean;
+  formError?: string | null;
+  fieldErrors?: { email?: string; password?: string };
   onEmailChange: (text: string) => void;
   onPasswordChange: (text: string) => void;
   onLogin: () => void;
   onForgotPassword: () => void;
   onSignup: () => void;
+  onVerifyEmail?: () => void;
+  showVerifyAction?: boolean;
 }
 
 export function LoginFormSection({
   email,
   password,
   loading,
+  formError,
+  fieldErrors,
   onEmailChange,
   onPasswordChange,
   onLogin,
   onForgotPassword,
   onSignup,
+  onVerifyEmail,
+  showVerifyAction,
 }: LoginFormSectionProps) {
   return (
     <View style={styles.container}>
+      {formError ? <AuthErrorBanner message={formError} /> : null}
+
       <AuthTextField
         placeholder="Email Address"
         icon="mail-outline"
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"
+        error={fieldErrors?.email}
+        autoCapitalize="none"
       />
 
       <AuthTextField
@@ -42,7 +55,16 @@ export function LoginFormSection({
         value={password}
         onChangeText={onPasswordChange}
         secureTextEntry
+        error={fieldErrors?.password}
       />
+
+      {showVerifyAction && onVerifyEmail ? (
+        <TouchableOpacity style={styles.verifyRow} onPress={onVerifyEmail}>
+          <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
+            Verify your email to continue
+          </AppText>
+        </TouchableOpacity>
+      ) : null}
 
       <TouchableOpacity style={styles.forgotPassword} onPress={onForgotPassword}>
         <AppText variant="bodySmall" color={LoginTheme.green} weight="600">
@@ -54,6 +76,7 @@ export function LoginFormSection({
         title="Login"
         onPress={onLogin}
         loading={loading}
+        disabled={loading}
         variant="success"
         size="sm"
         style={styles.loginButton}
@@ -64,7 +87,7 @@ export function LoginFormSection({
         <AppText variant="bodySmall" color={LoginTheme.tagline}>
           Didn&apos;t Have an Account?{' '}
         </AppText>
-        <TouchableOpacity onPress={onSignup}>
+        <TouchableOpacity onPress={onSignup} disabled={loading}>
           <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
             Signup
           </AppText>
@@ -89,6 +112,10 @@ const buttonShadow = Platform.select({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+  },
+  verifyRow: {
+    marginBottom: Spacing.sm,
+    marginTop: -Spacing.xs,
   },
   forgotPassword: {
     alignSelf: 'flex-end',
