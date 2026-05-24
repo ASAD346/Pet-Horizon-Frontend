@@ -2,8 +2,10 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AppButton } from '../../ui/AppButton';
+import { AuthErrorBanner } from '../AuthErrorBanner';
 import { AuthTextField } from '../AuthTextField';
 import { LoginTheme, Spacing } from '../../../constants/theme';
+import type { SignupFieldErrors } from '../../../services/auth/validation';
 
 interface SignupFormSectionProps {
   fullName: string;
@@ -11,6 +13,8 @@ interface SignupFormSectionProps {
   password: string;
   confirmPassword: string;
   loading: boolean;
+  formError?: string | null;
+  fieldErrors?: SignupFieldErrors;
   onFullNameChange: (text: string) => void;
   onEmailChange: (text: string) => void;
   onPasswordChange: (text: string) => void;
@@ -37,6 +41,8 @@ export function SignupFormSection({
   password,
   confirmPassword,
   loading,
+  formError,
+  fieldErrors,
   onFullNameChange,
   onEmailChange,
   onPasswordChange,
@@ -46,6 +52,8 @@ export function SignupFormSection({
 }: SignupFormSectionProps) {
   return (
     <View style={styles.container}>
+      {formError ? <AuthErrorBanner message={formError} /> : null}
+
       <AuthTextField
         placeholder="Full Name"
         icon="person-outline"
@@ -53,6 +61,7 @@ export function SignupFormSection({
         onChangeText={onFullNameChange}
         autoCapitalize="words"
         compact
+        error={fieldErrors?.fullName}
       />
 
       <AuthTextField
@@ -62,6 +71,8 @@ export function SignupFormSection({
         onChangeText={onEmailChange}
         keyboardType="email-address"
         compact
+        error={fieldErrors?.email}
+        autoCapitalize="none"
       />
 
       <AuthTextField
@@ -71,6 +82,7 @@ export function SignupFormSection({
         onChangeText={onPasswordChange}
         secureTextEntry
         compact
+        error={fieldErrors?.password}
       />
 
       <AuthTextField
@@ -80,12 +92,14 @@ export function SignupFormSection({
         onChangeText={onConfirmPasswordChange}
         secureTextEntry
         compact
+        error={fieldErrors?.confirmPassword}
       />
 
       <AppButton
         title="Sign Up"
         onPress={onSignUp}
         loading={loading}
+        disabled={loading}
         variant="success"
         size="sm"
         style={styles.signUpButton}
@@ -96,7 +110,7 @@ export function SignupFormSection({
         <AppText variant="bodySmall" color={LoginTheme.tagline}>
           Already Have an account?{' '}
         </AppText>
-        <TouchableOpacity onPress={onLogin}>
+        <TouchableOpacity onPress={onLogin} disabled={loading}>
           <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
             Login
           </AppText>

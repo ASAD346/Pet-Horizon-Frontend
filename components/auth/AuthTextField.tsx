@@ -8,14 +8,24 @@ import {
   TextInputProps,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppText } from '../ui/AppText';
 import { LoginTheme, Radius, Spacing } from '../../constants/theme';
 
-type AuthFieldIcon = 'person-outline' | 'mail-outline' | 'lock-closed-outline';
+type AuthFieldIcon =
+  | 'person-outline'
+  | 'mail-outline'
+  | 'lock-closed-outline'
+  | 'keypad-outline';
 
-interface AuthTextFieldProps extends Pick<TextInputProps, 'value' | 'onChangeText' | 'keyboardType' | 'secureTextEntry' | 'autoCapitalize'> {
+interface AuthTextFieldProps
+  extends Pick<
+    TextInputProps,
+    'value' | 'onChangeText' | 'keyboardType' | 'secureTextEntry' | 'autoCapitalize' | 'maxLength' | 'editable'
+  > {
   placeholder: string;
   icon: AuthFieldIcon;
   compact?: boolean;
+  error?: string;
   style?: ViewStyle;
 }
 
@@ -28,26 +38,50 @@ export function AuthTextField({
   secureTextEntry,
   autoCapitalize = 'none',
   compact = false,
+  error,
   style,
+  maxLength,
+  editable = true,
 }: AuthTextFieldProps) {
   return (
-    <View style={[styles.container, compact && styles.containerCompact, style]}>
-      <Ionicons name={icon} size={18} color={LoginTheme.inputPlaceholder} style={styles.icon} />
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={LoginTheme.inputPlaceholder}
-        keyboardType={keyboardType}
-        secureTextEntry={secureTextEntry}
-        autoCapitalize={autoCapitalize}
-        style={styles.input}
-      />
+    <View style={[styles.wrapper, compact && styles.wrapperCompact, style]}>
+      <View
+        style={[
+          styles.container,
+          compact && styles.containerCompact,
+          error ? styles.containerError : null,
+        ]}
+      >
+        <Ionicons name={icon} size={18} color={LoginTheme.inputPlaceholder} style={styles.icon} />
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={LoginTheme.inputPlaceholder}
+          keyboardType={keyboardType}
+          secureTextEntry={secureTextEntry}
+          autoCapitalize={autoCapitalize}
+          maxLength={maxLength}
+          editable={editable}
+          style={styles.input}
+        />
+      </View>
+      {error ? (
+        <AppText variant="caption" color="#C62828" style={styles.errorText}>
+          {error}
+        </AppText>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    marginBottom: Spacing.md,
+  },
+  wrapperCompact: {
+    marginBottom: Spacing.sm,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -55,7 +89,7 @@ const styles = StyleSheet.create({
     backgroundColor: LoginTheme.inputBg,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
+    marginBottom: 0,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -73,7 +107,14 @@ const styles = StyleSheet.create({
   },
   containerCompact: {
     height: 42,
-    marginBottom: Spacing.sm,
+  },
+  containerError: {
+    borderWidth: 1,
+    borderColor: '#EF9A9A',
+  },
+  errorText: {
+    marginTop: Spacing.xs,
+    marginLeft: Spacing.xs,
   },
   input: {
     flex: 1,
