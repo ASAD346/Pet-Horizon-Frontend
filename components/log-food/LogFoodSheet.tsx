@@ -20,17 +20,25 @@ import { SheetHeroIllustration, SectionLabel, SheetOptionPicker, ThemedTimePicke
 import type { SheetOption } from '../sheets';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
+import { log } from '@/lib/log';
 import {
+  addMinutesToTimeHHmm,
   dateToTimeHHmm,
+  DEFAULT_FEEDING_UNIT,
+  DEFAULT_REMINDER_MINUTES,
   defaultFeedingTimeDate,
+  FEEDING_UNIT_OPTIONS,
   formatTimeDisplay,
-  getMealTypeLabel,
-  getUnitLabel,
+  getReminderMinutesLabel,
   mealTypeOptionsForSpecies,
-  pickDefaultUnit,
-  unitOptionsForPicker,
+  REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
 import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
+
+const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
+  value: String(option.value),
+  label: option.label,
+}));
 
 const LogFoodColors = {
   sheetBg: '#FFFFFF',
@@ -62,59 +70,69 @@ export function LogFoodSheet({
 }: LogFoodSheetProps) {
   const insets = useSafeAreaInsets();
 
-  const [mealTypeOptions, setMealTypeOptions] = useState<SheetOption[]>([]);
-  const [unitOptions, setUnitOptions] = useState<SheetOption[]>([]);
+  const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [mealType, setMealType] = useState('');
   const [amount, setAmount] = useState('2');
-  const [unit, setUnit] = useState('cup');
+  const [unit, setUnit] = useState<string>(DEFAULT_FEEDING_UNIT);
   const [feedingTime, setFeedingTime] = useState(defaultFeedingTimeDate);
-  const [reminderTime, setReminderTime] = useState(defaultFeedingTimeDate);
+  const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [notes, setNotes] = useState('');
-  const [mealPickerVisible, setMealPickerVisible] = useState(false);
-  const [unitPickerVisible, setUnitPickerVisible] = useState(false);
-  const [timePickerTarget, setTimePickerTarget] = useState<'feeding' | 'reminder' | null>(null);
-  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
+  const [feedingTimePickerVisible, setFeedingTimePickerVisible] = useState(false);
+  const [mealTypesLoading, setMealTypesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetForm = useCallback(() => {
-    const defaultTime = defaultFeedingTimeDate();
     setAmount('2');
-    setFeedingTime(defaultTime);
-    setReminderTime(defaultTime);
+    setFeedingTime(defaultFeedingTimeDate());
+    setReminderMinutes(DEFAULT_REMINDER_MINUTES);
+    setMealType('');
+    setUnit(DEFAULT_FEEDING_UNIT);
     setNotificationsOn(true);
     setNotes('');
     setError(null);
   }, []);
 
-  const loadOptions = useCallback(async () => {
-    if (!petId || !token) return;
-    setOptionsLoading(true);
+  const loadMealTypes = useCallback(async () => {
+    if (!petId || !token) {
+      setMealTypeOptions([]);
+      setMealType('');
+      log.warn('LogFood', 'Cannot load meal types — missing pet or token', { petId, hasToken: Boolean(token) });
+      return;
+    }
+
+    setMealTypesLoading(true);
     setError(null);
     try {
       const perms = await fetchPetPermissions(token, petId);
       const types = perms.speciesFeatures?.mealTypes ?? [];
-      const allowedUnits = perms.speciesFeatures?.inventoryUnits ?? ['cup'];
-      const meals = mealTypeOptionsForSpecies(types);
-      const unitOpts = unitOptionsForPicker(allowedUnits);
-      setMealTypeOptions(meals);
-      setUnitOptions(unitOpts);
-      setMealType(meals[0]?.value ?? '');
-      setUnit(pickDefaultUnit(allowedUnits));
+      const options = mealTypeOptionsForSpecies(types);
+      setMealTypeOptions(options);
+      setMealType(options[0]?.value ?? '');
+      if (!options.length) {
+        log.warn('LogFood', 'No meal types returned for pet', {
+          petId,
+          species: perms.speciesFeatures?.species,
+        });
+      }
     } catch (e) {
+      setMealTypeOptions([]);
+      setMealType('');
       setError(getErrorMessage(e));
+      log.fail('LogFood', 'Load meal types failed', getErrorMessage(e));
     } finally {
-      setOptionsLoading(false);
+      setMealTypesLoading(false);
     }
   }, [petId, token]);
 
   useEffect(() => {
     if (visible) {
       resetForm();
-      loadOptions();
+      loadMealTypes();
     }
-  }, [visible, loadOptions, resetForm]);
+  }, [visible, resetForm, loadMealTypes]);
 
   const handleSave = async () => {
     if (!petId || !token) {
@@ -131,7 +149,6 @@ export function LogFoodSheet({
     }
 
     const timeHHmm = dateToTimeHHmm(feedingTime);
-    const reminderHHmm = dateToTimeHHmm(reminderTime);
     const noteText = notes.trim();
 
     setSaving(true);
@@ -145,8 +162,12 @@ export function LogFoodSheet({
         unit,
         notes: noteText || undefined,
         reminder: notificationsOn,
-        reminderTime: notificationsOn ? reminderHHmm : undefined,
+        reminderMinutes: notificationsOn ? reminderMinutes : undefined,
+        reminderTime: notificationsOn
+          ? addMinutesToTimeHHmm(timeHHmm, reminderMinutes)
+          : undefined,
       });
+      log.ok('LogFood', 'Feeding schedule saved', { mealType, time: timeHHmm, unit });
       onSaved?.();
       onClose();
     } catch (e) {
@@ -192,19 +213,34 @@ export function LogFoodSheet({
               />
 
               <SectionLabel text="MEAL TYPE" />
-              {optionsLoading ? (
-                <ActivityIndicator color={HomeTheme.green} style={styles.loader} />
+              {mealTypesLoading ? (
+                <ActivityIndicator color={HomeTheme.green} style={styles.mealLoader} />
+              ) : mealTypeOptions.length === 0 ? (
+                <AppText variant="bodySmall" color={LogFoodColors.label} style={styles.mealEmpty}>
+                  No meal types available for this pet.
+                </AppText>
               ) : (
-                <TouchableOpacity
-                  style={styles.pickerField}
-                  activeOpacity={0.85}
-                  onPress={() => setMealPickerVisible(true)}
-                >
-                  <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
-                    {mealType ? getMealTypeLabel(mealType) : 'Select meal'}
-                  </AppText>
-                  <Ionicons name="chevron-down" size={18} color={LogFoodColors.label} />
-                </TouchableOpacity>
+                <View style={styles.chipRow}>
+                  {mealTypeOptions.map((option) => {
+                    const selected = mealType === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[styles.chip, selected && styles.chipSelected]}
+                        onPress={() => setMealType(option.value)}
+                        activeOpacity={0.85}
+                      >
+                        <AppText
+                          variant="bodySmall"
+                          weight="600"
+                          color={selected ? HomeTheme.white : LogFoodColors.chipText}
+                        >
+                          {option.label}
+                        </AppText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               )}
 
               <AppText variant="bodySmall" weight="700" color={LogFoodColors.title} style={styles.amountLabel}>
@@ -218,17 +254,27 @@ export function LogFoodSheet({
               />
 
               <SectionLabel text="UNIT" />
-              <TouchableOpacity
-                style={styles.pickerField}
-                activeOpacity={0.85}
-                onPress={() => setUnitPickerVisible(true)}
-                disabled={optionsLoading || unitOptions.length === 0}
-              >
-                <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
-                  {getUnitLabel(unit, unitOptions.map((o) => o.value))}
-                </AppText>
-                <Ionicons name="chevron-down" size={18} color={LogFoodColors.label} />
-              </TouchableOpacity>
+              <View style={styles.chipRow}>
+                {FEEDING_UNIT_OPTIONS.map((option) => {
+                  const selected = unit === option.value;
+                  return (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[styles.chip, selected && styles.chipSelected]}
+                      onPress={() => setUnit(option.value)}
+                      activeOpacity={0.85}
+                    >
+                      <AppText
+                        variant="bodySmall"
+                        weight="600"
+                        color={selected ? HomeTheme.white : LogFoodColors.chipText}
+                      >
+                        {option.label}
+                      </AppText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
 
               <View style={styles.twoColRow}>
                 <View style={styles.halfCol}>
@@ -236,7 +282,7 @@ export function LogFoodSheet({
                   <TouchableOpacity
                     style={styles.pickerField}
                     activeOpacity={0.85}
-                    onPress={() => setTimePickerTarget('feeding')}
+                    onPress={() => setFeedingTimePickerVisible(true)}
                   >
                     <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
                       {formatTimeDisplay(feedingTime)}
@@ -265,16 +311,16 @@ export function LogFoodSheet({
 
               {notificationsOn ? (
                 <>
-                  <SectionLabel text="REMINDER TIME" />
+                  <SectionLabel text="REMINDER" />
                   <TouchableOpacity
                     style={styles.pickerField}
                     activeOpacity={0.85}
-                    onPress={() => setTimePickerTarget('reminder')}
+                    onPress={() => setReminderPickerVisible(true)}
                   >
                     <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
-                      {formatTimeDisplay(reminderTime)}
+                      {getReminderMinutesLabel(reminderMinutes)}
                     </AppText>
-                    <Ionicons name="time-outline" size={18} color={LogFoodColors.label} />
+                    <Ionicons name="chevron-down" size={18} color={LogFoodColors.label} />
                   </TouchableOpacity>
                 </>
               ) : null}
@@ -296,7 +342,7 @@ export function LogFoodSheet({
                 title="Save Feeding"
                 onPress={handleSave}
                 loading={saving}
-                disabled={optionsLoading || saving}
+                disabled={saving || mealTypesLoading || !mealType}
                 variant="success"
                 size="md"
                 style={styles.saveBtn}
@@ -308,34 +354,21 @@ export function LogFoodSheet({
       </KeyboardAvoidingView>
 
       <SheetOptionPicker
-        visible={mealPickerVisible}
-        title="Select meal type"
-        options={mealTypeOptions}
-        selectedValue={mealType}
-        onClose={() => setMealPickerVisible(false)}
-        onSelect={setMealType}
-      />
-
-      <SheetOptionPicker
-        visible={unitPickerVisible}
-        title="Select unit"
-        options={unitOptions}
-        selectedValue={unit}
-        onClose={() => setUnitPickerVisible(false)}
-        onSelect={setUnit}
+        visible={reminderPickerVisible}
+        title="Remind me after"
+        options={REMINDER_MINUTES_PICKER_OPTIONS}
+        selectedValue={String(reminderMinutes)}
+        onClose={() => setReminderPickerVisible(false)}
+        onSelect={(value) => setReminderMinutes(Number(value))}
       />
 
       <ThemedTimePicker
-        visible={timePickerTarget !== null}
-        value={timePickerTarget === 'reminder' ? reminderTime : feedingTime}
-        onClose={() => setTimePickerTarget(null)}
+        visible={feedingTimePickerVisible}
+        value={feedingTime}
+        onClose={() => setFeedingTimePickerVisible(false)}
         onConfirm={(date) => {
-          if (timePickerTarget === 'reminder') {
-            setReminderTime(date);
-          } else {
-            setFeedingTime(date);
-          }
-          setTimePickerTarget(null);
+          setFeedingTime(date);
+          setFeedingTimePickerVisible(false);
         }}
       />
     </Modal>
@@ -390,8 +423,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.md,
   },
-  loader: {
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
     marginBottom: Spacing.md,
+  },
+  mealLoader: {
+    marginBottom: Spacing.md,
+  },
+  mealEmpty: {
+    marginBottom: Spacing.md,
+  },
+  chip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: Radius.full,
+    backgroundColor: LogFoodColors.chipBg,
+  },
+  chipSelected: {
+    backgroundColor: HomeTheme.green,
   },
   textInput: {
     backgroundColor: LogFoodColors.inputBg,

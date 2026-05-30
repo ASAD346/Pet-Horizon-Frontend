@@ -1,99 +1,257 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
+import {
+  feedingScheduleColors,
+  feedingScheduleSubtitle,
+  feedingScheduleTitle,
+  sortFeedingByTime,
+} from '@/lib/feeding/feedingDisplay';
+import {
+  groomingDueTodayOrOverdue,
+  groomingRecordColors,
+  groomingRecordSubtitle,
+  groomingRecordTitle,
+  groomingSortKey,
+} from '@/lib/grooming/groomingDisplay';
+import {
+  medicineScheduleColors,
+  medicineScheduleSubtitle,
+  medicineScheduleTitle,
+  sortMedicineByTime,
+} from '@/lib/medicine/medicineDisplay';
+import {
+  sortWalkByTime,
+  walkScheduleColors,
+  walkScheduleSubtitle,
+  walkScheduleTitle,
+} from '@/lib/walk/walkDisplay';
+import type { FeedingScheduleItem } from '@/types/feeding';
+import type { GroomingRecord } from '@/types/grooming';
+import type { MedicineScheduleItem } from '@/types/medicine';
+import type { WalkScheduleItem } from '@/types/walk';
 import { HomeTheme, Spacing } from '../../constants/theme';
 
-type ScheduleItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  status: 'completed-checks' | 'done-label';
-  iconType: 'completed' | 'icon';
-  color: string;
-  bg?: string;
-  materialIcon?: 'walk' | 'silverware-fork-knife';
-};
+type ScheduleRow =
+  | { kind: 'feeding'; item: FeedingScheduleItem }
+  | { kind: 'walk'; item: WalkScheduleItem }
+  | { kind: 'medicine'; item: MedicineScheduleItem }
+  | { kind: 'grooming'; item: GroomingRecord };
 
-const SCHEDULE: ScheduleItem[] = [
-  {
-    id: '1',
-    title: 'Breakfast',
-    subtitle: 'Done by Sarah at 08:05 AM',
-    status: 'completed-checks',
-    iconType: 'completed',
-    color: '#5CB35D',
-  },
-  {
-    id: '2',
-    title: 'Heartgard Medicine',
-    subtitle: 'Done by Ali at 4:39 PM',
-    status: 'completed-checks',
-    iconType: 'completed',
-    color: '#5B9BD5',
-  },
-  {
-    id: '3',
-    title: 'Afternoon Walk',
-    subtitle: 'Scheduled for 02:00 PM',
-    status: 'done-label',
-    iconType: 'icon',
-    color: '#F5A623',
-    bg: '#FFF8E1',
-    materialIcon: 'walk',
-  },
-  {
-    id: '4',
-    title: 'Evening Dinner',
-    subtitle: 'Scheduled for 06:30 PM',
-    status: 'done-label',
-    iconType: 'icon',
-    color: '#E57373',
-    bg: '#FFEBEE',
-    materialIcon: 'silverware-fork-knife',
-  },
-];
+interface TodaysScheduleSectionProps {
+  feedingSchedules: FeedingScheduleItem[];
+  walkSchedules?: WalkScheduleItem[];
+  medicineSchedules?: MedicineScheduleItem[];
+  groomingRecords?: GroomingRecord[];
+  loading?: boolean;
+  feedingActionId?: string | null;
+  walkActionId?: string | null;
+  medicineActionId?: string | null;
+  groomingActionId?: string | null;
+  onCompleteFeeding?: (scheduleId: string) => void;
+  onCompleteWalk?: (scheduleId: string) => void;
+  onCompleteMedicine?: (scheduleId: string) => void;
+  onCompleteGrooming?: (recordId: string) => void;
+}
 
-export function TodaysScheduleSection() {
+function rowSortKey(row: ScheduleRow): number {
+  if (row.kind === 'grooming') return groomingSortKey(row.item);
+  const [h, m] = row.item.timeOfDay.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.getTime();
+}
+
+function mergeScheduleRows(
+  feedingSchedules: FeedingScheduleItem[],
+  walkSchedules: WalkScheduleItem[],
+  medicineSchedules: MedicineScheduleItem[],
+  groomingRecords: GroomingRecord[],
+): ScheduleRow[] {
+  const rows: ScheduleRow[] = [
+    ...sortFeedingByTime(feedingSchedules).map((item) => ({ kind: 'feeding' as const, item })),
+    ...sortWalkByTime(walkSchedules).map((item) => ({ kind: 'walk' as const, item })),
+    ...sortMedicineByTime(medicineSchedules).map((item) => ({ kind: 'medicine' as const, item })),
+    ...groomingDueTodayOrOverdue(groomingRecords).map((item) => ({ kind: 'grooming' as const, item })),
+  ];
+  return rows.sort((a, b) => rowSortKey(a) - rowSortKey(b));
+}
+
+function rowColors(row: ScheduleRow) {
+  if (row.kind === 'feeding') return feedingScheduleColors(row.item);
+  if (row.kind === 'walk') return walkScheduleColors(row.item);
+  if (row.kind === 'medicine') return medicineScheduleColors();
+  return groomingRecordColors();
+}
+
+function rowTitle(row: ScheduleRow) {
+  if (row.kind === 'feeding') return feedingScheduleTitle(row.item);
+  if (row.kind === 'walk') return walkScheduleTitle(row.item);
+  if (row.kind === 'medicine') return medicineScheduleTitle(row.item);
+  return groomingRecordTitle(row.item);
+}
+
+function rowSubtitle(row: ScheduleRow) {
+  if (row.kind === 'feeding') return feedingScheduleSubtitle(row.item);
+  if (row.kind === 'walk') return walkScheduleSubtitle(row.item);
+  if (row.kind === 'medicine') return medicineScheduleSubtitle(row.item);
+  return groomingRecordSubtitle(row.item);
+}
+
+function rowIcon(row: ScheduleRow): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' {
+  if (row.kind === 'feeding') return 'silverware-fork-knife';
+  if (row.kind === 'walk') return 'walk';
+  if (row.kind === 'medicine') return 'pill';
+  return 'content-cut';
+}
+
+function rowIsDone(row: ScheduleRow) {
+  if (row.kind === 'grooming') return !!row.item.performedAt;
+  return row.item.status === 'done';
+}
+
+function rowIsSkipped(row: ScheduleRow) {
+  if (row.kind === 'grooming') return false;
+  return row.item.status === 'skipped';
+}
+
+function rowId(row: ScheduleRow) {
+  return row.item._id;
+}
+
+function rowActionId(
+  row: ScheduleRow,
+  feedingActionId: string | null,
+  walkActionId: string | null,
+  medicineActionId: string | null,
+  groomingActionId: string | null,
+) {
+  const id = rowId(row);
+  if (row.kind === 'feeding') return feedingActionId === id;
+  if (row.kind === 'walk') return walkActionId === id;
+  if (row.kind === 'medicine') return medicineActionId === id;
+  return groomingActionId === id;
+}
+
+function rowOnComplete(
+  row: ScheduleRow,
+  onCompleteFeeding?: (id: string) => void,
+  onCompleteWalk?: (id: string) => void,
+  onCompleteMedicine?: (id: string) => void,
+  onCompleteGrooming?: (id: string) => void,
+) {
+  if (row.kind === 'feeding') return onCompleteFeeding;
+  if (row.kind === 'walk') return onCompleteWalk;
+  if (row.kind === 'medicine') return onCompleteMedicine;
+  return onCompleteGrooming;
+}
+
+export function TodaysScheduleSection({
+  feedingSchedules,
+  walkSchedules = [],
+  medicineSchedules = [],
+  groomingRecords = [],
+  loading = false,
+  feedingActionId = null,
+  walkActionId = null,
+  medicineActionId = null,
+  groomingActionId = null,
+  onCompleteFeeding,
+  onCompleteWalk,
+  onCompleteMedicine,
+  onCompleteGrooming,
+}: TodaysScheduleSectionProps) {
+  const items = useMemo(
+    () => mergeScheduleRows(feedingSchedules, walkSchedules, medicineSchedules, groomingRecords),
+    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords],
+  );
+
   return (
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
-      {SCHEDULE.map((item) => (
-        <View key={item.id} style={homePillCard.card}>
-          {item.iconType === 'completed' ? (
-            <ColorIconBadge color={item.color} completed size={44} iconSize={24} shape="circle" />
-          ) : (
-            <ColorIconBadge
-              color={item.color}
-              backgroundColor={item.bg}
-              materialIcon={item.materialIcon}
-              size={44}
-              iconSize={22}
-            />
-          )}
-          <View style={styles.textBlock}>
-            <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-              {item.title}
-            </AppText>
-            <AppText variant="caption" color={HomeTheme.textMuted}>
-              {item.subtitle}
-            </AppText>
-          </View>
-          {item.status === 'completed-checks' ? (
-            <View style={styles.checks}>
-              <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} />
-              <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} style={styles.checkOverlap} />
-            </View>
-          ) : (
-            <AppText variant="caption" weight="600" color="#8FAF8F">
-              Done
-            </AppText>
-          )}
+
+      {loading ? (
+        <ActivityIndicator color={HomeTheme.green} style={styles.loader} />
+      ) : items.length === 0 ? (
+        <View style={[homePillCard.card, styles.emptyCard]}>
+          <AppText variant="bodySmall" color={HomeTheme.textMuted}>
+            No schedules yet. Use Quick Actions to add one.
+          </AppText>
         </View>
-      ))}
+      ) : (
+        items.map((row) => {
+          const isDone = rowIsDone(row);
+          const isSkipped = rowIsSkipped(row);
+          const colors = rowColors(row);
+          const busy = rowActionId(
+            row,
+            feedingActionId,
+            walkActionId,
+            medicineActionId,
+            groomingActionId,
+          );
+          const onComplete = rowOnComplete(
+            row,
+            onCompleteFeeding,
+            onCompleteWalk,
+            onCompleteMedicine,
+            onCompleteGrooming,
+          );
+
+          return (
+            <View key={`${row.kind}-${rowId(row)}`} style={homePillCard.card}>
+              {isDone ? (
+                <ColorIconBadge color={colors.color} completed size={44} iconSize={24} shape="circle" />
+              ) : (
+                <ColorIconBadge
+                  color={colors.color}
+                  backgroundColor={colors.bg}
+                  materialIcon={rowIcon(row)}
+                  size={44}
+                  iconSize={22}
+                />
+              )}
+              <View style={styles.textBlock}>
+                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                  {rowTitle(row)}
+                </AppText>
+                <AppText variant="caption" color={HomeTheme.textMuted}>
+                  {rowSubtitle(row)}
+                </AppText>
+              </View>
+              {isDone ? (
+                <View style={styles.checks}>
+                  <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} />
+                  <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} style={styles.checkOverlap} />
+                </View>
+              ) : isSkipped ? (
+                <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
+                  Skipped
+                </AppText>
+              ) : (
+                <TouchableOpacity
+                  style={styles.doneBtn}
+                  activeOpacity={0.85}
+                  disabled={busy || !onComplete}
+                  onPress={() => onComplete?.(rowId(row))}
+                >
+                  {busy ? (
+                    <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                  ) : (
+                    <AppText variant="caption" weight="600" color="#8FAF8F">
+                      Done
+                    </AppText>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })
+      )}
     </View>
   );
 }
@@ -101,6 +259,12 @@ export function TodaysScheduleSection() {
 const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing.lg,
+  },
+  loader: {
+    marginVertical: Spacing.md,
+  },
+  emptyCard: {
+    justifyContent: 'center',
   },
   textBlock: {
     flex: 1,
@@ -113,5 +277,10 @@ const styles = StyleSheet.create({
   },
   checkOverlap: {
     marginLeft: -8,
+  },
+  doneBtn: {
+    minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

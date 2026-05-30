@@ -20,9 +20,10 @@ interface QuickActionsSectionProps {
   onLogWalkPress?: () => void;
   onMedicinePress?: () => void;
   onGroomingPress?: () => void;
+  groomingVisible?: boolean;
 }
 
-const ACTION_HANDLERS: Record<string, keyof QuickActionsSectionProps> = {
+const ACTION_HANDLERS: Record<string, 'onLogFoodPress' | 'onLogWalkPress' | 'onMedicinePress' | 'onGroomingPress'> = {
   'Log Food': 'onLogFoodPress',
   'Log Walk': 'onLogWalkPress',
   Medicine: 'onMedicinePress',
@@ -34,13 +35,17 @@ export function QuickActionsSection({
   onLogWalkPress,
   onMedicinePress,
   onGroomingPress,
+  groomingVisible = true,
 }: QuickActionsSectionProps) {
   const handlers = { onLogFoodPress, onLogWalkPress, onMedicinePress, onGroomingPress };
+  const visibleActions = groomingVisible
+    ? ACTIONS
+    : ACTIONS.filter((action) => action.label !== 'Grooming');
   return (
     <View style={styles.section}>
       <SectionHeader title="Quick Actions" />
       <View style={styles.row}>
-        {ACTIONS.map((action) => {
+        {visibleActions.map((action) => {
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
           return (

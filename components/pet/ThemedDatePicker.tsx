@@ -74,6 +74,9 @@ function buildCalendar(year: number, month: number): CalendarCell[] {
 interface ThemedDatePickerProps {
   visible: boolean;
   value: Date;
+  title?: string;
+  minimumDate?: Date;
+  /** When omitted, future dates are allowed. */
   maximumDate?: Date;
   onClose: () => void;
   onConfirm: (date: Date) => void;
@@ -82,7 +85,9 @@ interface ThemedDatePickerProps {
 export function ThemedDatePicker({
   visible,
   value,
-  maximumDate = new Date(),
+  title = 'Select date',
+  minimumDate,
+  maximumDate,
   onClose,
   onConfirm,
 }: ThemedDatePickerProps) {
@@ -98,7 +103,8 @@ export function ThemedDatePicker({
     }
   }, [visible, value]);
 
-  const max = startOfDay(maximumDate);
+  const min = minimumDate ? startOfDay(minimumDate) : null;
+  const max = maximumDate ? startOfDay(maximumDate) : null;
   const cells = useMemo(() => buildCalendar(viewYear, viewMonth), [viewYear, viewMonth]);
 
   const goMonth = (delta: number) => {
@@ -107,11 +113,22 @@ export function ThemedDatePicker({
     setViewMonth(next.getMonth());
   };
 
-  const isDisabled = (date: Date) => startOfDay(date).getTime() > max.getTime();
+  const isDisabled = (date: Date) => {
+    const day = startOfDay(date).getTime();
+    if (min && day < min.getTime()) return true;
+    if (max && day > max.getTime()) return true;
+    return false;
+  };
 
-  const canGoNext =
-    viewYear < max.getFullYear() ||
-    (viewYear === max.getFullYear() && viewMonth < max.getMonth());
+  const canGoPrev = min
+    ? viewYear > min.getFullYear() ||
+      (viewYear === min.getFullYear() && viewMonth > min.getMonth())
+    : true;
+
+  const canGoNext = max
+    ? viewYear < max.getFullYear() ||
+      (viewYear === max.getFullYear() && viewMonth < max.getMonth())
+    : true;
 
   const handleDayPress = (date: Date) => {
     if (isDisabled(date)) return;
@@ -129,18 +146,23 @@ export function ThemedDatePicker({
           <View style={styles.sheetHeader}>
             <Ionicons name="calendar" size={22} color={LoginTheme.green} />
             <AppText variant="h3" weight="700" color={LoginTheme.charcoal}>
-              Select birthday
+              {title}
             </AppText>
           </View>
 
           <View style={styles.monthRow}>
             <TouchableOpacity
-              style={styles.navBtn}
-              onPress={() => goMonth(-1)}
+              style={[styles.navBtn, !canGoPrev && styles.navBtnDisabled]}
+              onPress={() => canGoPrev && goMonth(-1)}
+              disabled={!canGoPrev}
               hitSlop={12}
               accessibilityLabel="Previous month"
             >
-              <Ionicons name="chevron-back" size={22} color={LoginTheme.charcoal} />
+              <Ionicons
+                name="chevron-back"
+                size={22}
+                color={canGoPrev ? LoginTheme.charcoal : LoginTheme.inputBg}
+              />
             </TouchableOpacity>
 
             <AppText variant="body" weight="700" color={LoginTheme.charcoal}>

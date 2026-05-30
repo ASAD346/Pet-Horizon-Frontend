@@ -3,21 +3,52 @@ export const MEAL_TYPE_OPTIONS = [
   { value: 'breakfast', label: 'Breakfast' },
   { value: 'lunch', label: 'Lunch' },
   { value: 'dinner', label: 'Dinner' },
-  { value: 'snacks', label: 'Snack' },
+  { value: 'snacks', label: 'Snacks' },
 ] as const;
 
 export type MealTypeOption = (typeof MEAL_TYPE_OPTIONS)[number];
 
-/** Filter standard meals to those allowed for the pet species. */
-export function mealTypeOptionsForSpecies(allowedApiTypes: string[]) {
-  const allowed = new Set(allowedApiTypes.map((t) => t.toLowerCase()));
-  const standard = MEAL_TYPE_OPTIONS.filter((o) => allowed.has(o.value));
-  if (standard.length > 0) return standard;
+/** Fixed universal feeding units (same list for all pets). */
+export const FEEDING_UNIT_OPTIONS = [
+  { value: 'cup', label: 'Cup' },
+  { value: 'g', label: 'g' },
+  { value: 'kg', label: 'kg' },
+  { value: 'lb', label: 'lb' },
+  { value: 'tbsp', label: 'tbsp' },
+  { value: 'oz', label: 'oz' },
+  { value: 'ml', label: 'ml' },
+  { value: 'pinch', label: 'Pinch' },
+] as const;
 
-  return allowedApiTypes.map((value) => ({
-    value,
-    label: formatMealTypeLabel(value),
-  }));
+export const DEFAULT_FEEDING_UNIT = FEEDING_UNIT_OPTIONS[0].value;
+
+/** Reminder offset options (minutes after feeding time). */
+export const REMINDER_MINUTES_OPTIONS = [
+  { value: 5, label: '5 min after' },
+  { value: 10, label: '10 min after' },
+  { value: 15, label: '15 min after' },
+  { value: 30, label: '30 min after' },
+  { value: 60, label: '1 hour after' },
+] as const;
+
+export const DEFAULT_REMINDER_MINUTES = 10;
+
+export function getReminderMinutesLabel(minutes: number): string {
+  const found = REMINDER_MINUTES_OPTIONS.find((o) => o.value === minutes);
+  return found?.label ?? `${minutes} min after`;
+}
+
+/** Add minutes to HH:mm and return HH:mm (24h). */
+export function addMinutesToTimeHHmm(hhmm: string, minutes: number): string {
+  const match = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return hhmm;
+  const total = parseInt(match[1], 10) * 60 + parseInt(match[2], 10) + minutes;
+  const normalized = ((total % (24 * 60)) + 24 * 60) % (24 * 60);
+  const h = Math.floor(normalized / 60)
+    .toString()
+    .padStart(2, '0');
+  const m = (normalized % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
 }
 
 export function getMealTypeLabel(value: string): string {
@@ -31,6 +62,14 @@ export function formatMealTypeLabel(mealType: string): string {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+/** Build meal type chips from species-allowed API values. */
+export function mealTypeOptionsForSpecies(allowedApiTypes: string[]) {
+  return allowedApiTypes.map((value) => ({
+    value,
+    label: getMealTypeLabel(value),
+  }));
 }
 
 /** Unit options for dropdown (dedupe by display label). */
@@ -82,13 +121,47 @@ export function formatUnitLabel(unit: string): string {
   return unit;
 }
 
-export function getUnitLabel(value: string, units: string[]): string {
-  const match = units.find((u) => u === value);
-  return formatUnitLabel(match ?? value);
+export function getUnitLabel(value: string): string {
+  const found = FEEDING_UNIT_OPTIONS.find((o) => o.value === value.toLowerCase());
+  return found?.label ?? formatUnitLabel(value);
 }
 
 export function defaultFeedingTimeDate(): Date {
   const d = new Date();
   d.setHours(8, 30, 0, 0);
   return d;
+}
+
+/** Convert backend HH:mm to 12-hour display label. */
+export function formatTimeHHmmDisplay(hhmm: string): string {
+  const match = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return hhmm;
+  const d = new Date();
+  d.setHours(parseInt(match[1], 10), parseInt(match[2], 10), 0, 0);
+  return formatTimeDisplay(d);
+}
+
+export function formatCompletedAt(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
+const MEAL_TYPE_COLORS: Record<string, { color: string; bg: string }> = {
+  breakfast: { color: '#5CB35D', bg: '#E8F5E9' },
+  lunch: { color: '#F5A623', bg: '#FFF8E1' },
+  dinner: { color: '#E57373', bg: '#FFEBEE' },
+  snacks: { color: '#FF9800', bg: '#FFF3E0' },
+  morning_feed: { color: '#5CB35D', bg: '#E8F5E9' },
+  evening_feed: { color: '#E57373', bg: '#FFEBEE' },
+  automatic_feeder: { color: '#5B9BD5', bg: '#E3F2FD' },
+};
+
+export function feedingMealColors(mealType?: string) {
+  const key = (mealType ?? '').toLowerCase();
+  return MEAL_TYPE_COLORS[key] ?? { color: '#F5A623', bg: '#FFF8E1' };
 }

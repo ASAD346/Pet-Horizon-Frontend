@@ -1,9 +1,8 @@
-export interface CreateFeedingScheduleRequest {
+export interface CreateWalkScheduleRequest {
   petId: string;
-  mealType: string;
+  walkTime: string;
   time: string;
-  amount?: string;
-  unit?: string;
+  duration?: number;
   notes?: string;
   note?: string;
   reminder?: boolean;
@@ -11,25 +10,24 @@ export interface CreateFeedingScheduleRequest {
   reminderMinutes?: number;
 }
 
-export type FeedingScheduleStatus = 'pending' | 'done' | 'skipped';
+export type WalkScheduleStatus = 'pending' | 'done' | 'skipped';
 
-export interface FeedingScheduleItem {
+export interface WalkScheduleItem {
   _id: string;
   petId: string;
-  category: 'feeding';
+  category: 'walk';
   title: string;
   timeOfDay: string;
   description?: string;
   notes?: string;
   reminderTime?: string;
-  status?: FeedingScheduleStatus;
+  status?: WalkScheduleStatus;
   completedAt?: string;
   isComplete?: boolean;
   reminderDue?: boolean;
   metadata?: {
-    mealType?: string;
-    amount?: string;
-    unit?: string;
+    walkTime?: string;
+    duration?: number;
     notes?: string;
     reminder?: boolean;
     reminderTime?: string;
@@ -37,11 +35,11 @@ export interface FeedingScheduleItem {
   };
 }
 
-export interface CompleteFeedingRequest {
+export interface CompleteWalkRequest {
   status?: 'done' | 'skipped';
 }
 
-export interface CompleteFeedingResponse {
+export interface CompleteWalkResponse {
   scheduleLog: { _id: string; status: string; completedAt: string };
   journalCreated?: boolean;
 }
