@@ -17,6 +17,7 @@ import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { petToProfileProps } from '@/services/pets/petDisplay';
 import { LogFoodSheet } from '@/components/log-food';
 import { LogGroomingSheet } from '@/components/log-grooming';
+import { LogJournalSheet } from '@/components/journal';
 import { LogMedicineSheet } from '@/components/log-medicine';
 import { LogWalkSheet } from '@/components/log-walk';
 import { HomeTheme, Spacing } from '@/constants/theme';
@@ -41,6 +42,7 @@ export default function HomeScreen() {
   const [logWalkVisible, setLogWalkVisible] = useState(false);
   const [logMedicineVisible, setLogMedicineVisible] = useState(false);
   const [logGroomingVisible, setLogGroomingVisible] = useState(false);
+  const [journalVisible, setJournalVisible] = useState(false);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -49,7 +51,11 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <HomeHeader userName={userName} dateLabel={formatDateLabel(new Date())} />
+        <HomeHeader
+          userName={userName}
+          dateLabel={formatDateLabel(new Date())}
+          onJournalPress={() => setJournalVisible(true)}
+        />
         <PetProfileCard
           {...(profile ?? {})}
           imageUrl={resolveMediaUrl(pet?.image)}
@@ -69,10 +75,16 @@ export default function HomeScreen() {
         <View style={styles.tabSpacer} />
       </ScrollView>
 
-      <LogFoodSheet visible={logFoodVisible} onClose={() => setLogFoodVisible(false)} />
+      <LogFoodSheet
+        visible={logFoodVisible}
+        onClose={() => setLogFoodVisible(false)}
+        petId={pet?._id ?? null}
+        token={token}
+      />
       <LogWalkSheet visible={logWalkVisible} onClose={() => setLogWalkVisible(false)} />
       <LogMedicineSheet visible={logMedicineVisible} onClose={() => setLogMedicineVisible(false)} />
       <LogGroomingSheet visible={logGroomingVisible} onClose={() => setLogGroomingVisible(false)} />
+      <LogJournalSheet visible={journalVisible} onClose={() => setJournalVisible(false)} />
     </SafeAreaView>
   );
 }

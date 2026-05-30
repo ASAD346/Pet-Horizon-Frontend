@@ -56,6 +56,8 @@ export const API_ENDPOINTS = {
   schedules: {
     today: '/schedules/today',
     list: '/schedules',
+    feeding: '/schedules/feeding',
+    feedingById: (id: string) => `/schedules/feeding/${id}`,
   },
   notifications: {
     list: '/notifications',

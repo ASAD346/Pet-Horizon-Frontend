@@ -4,29 +4,20 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
-interface HomeHeaderProps {
-  userName?: string;
-  dateLabel?: string;
+interface ExpenseTrackerHeaderProps {
   notificationCount?: number;
   onJournalPress?: () => void;
 }
 
-export function HomeHeader({
-  userName = 'Sarah',
-  dateLabel = 'Monday, May 15th',
+export function ExpenseTrackerHeader({
   notificationCount = 3,
   onJournalPress,
-}: HomeHeaderProps) {
+}: ExpenseTrackerHeaderProps) {
   return (
     <View style={styles.container}>
-      <View style={styles.textBlock}>
-        <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.greeting}>
-          Good morning, {userName}!
-        </AppText>
-        <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-          {dateLabel}
-        </AppText>
-      </View>
+      <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.title}>
+        Expense Tracker
+      </AppText>
 
       <View style={styles.actions}>
         <TouchableOpacity
@@ -39,13 +30,13 @@ export function HomeHeader({
         </TouchableOpacity>
         <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
           <Ionicons name="notifications-outline" size={20} color={HomeTheme.text} />
-          {notificationCount > 0 && (
+          {notificationCount > 0 ? (
             <View style={styles.badge}>
               <AppText variant="caption" weight="700" color={HomeTheme.white} style={styles.badgeText}>
                 {notificationCount}
               </AppText>
             </View>
-          )}
+          ) : null}
         </TouchableOpacity>
       </View>
     </View>
@@ -65,18 +56,14 @@ const iconShadow = Platform.select({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
-  textBlock: {
+  title: {
     flex: 1,
-    paddingRight: Spacing.sm,
-  },
-  greeting: {
-    fontSize: 22,
-    lineHeight: 28,
-    marginBottom: 2,
+    fontSize: 24,
+    lineHeight: 30,
   },
   actions: {
     flexDirection: 'row',
