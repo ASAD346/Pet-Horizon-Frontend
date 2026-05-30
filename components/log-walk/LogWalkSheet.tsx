@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,11 +14,31 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { AppButton } from '../ui/AppButton';
-import { SheetHeroIllustration, SectionLabel } from '../sheets';
+import { AuthErrorBanner } from '../auth/AuthErrorBanner';
+import { SheetHeroIllustration, SectionLabel, SheetOptionPicker, ThemedTimePicker } from '../sheets';
+import type { SheetOption } from '../sheets';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { getErrorMessage } from '@/lib/api/errors';
+import { log } from '@/lib/log';
+import {
+  addMinutesToTimeHHmm,
+  DEFAULT_REMINDER_MINUTES,
+  formatTimeDisplay,
+  getReminderMinutesLabel,
+  REMINDER_MINUTES_OPTIONS,
+} from '@/lib/feeding/feedingForm';
+import {
+  dateToTimeHHmm,
+  defaultWalkTimeDate,
+  parseDurationMinutes,
+  WALK_TIME_OPTIONS,
+} from '@/lib/walk/walkForm';
+import { createWalkSchedule } from '@/services/schedules/walkApi';
 
-const WALK_SLOTS = ['Morning', 'Afternoon', 'Evening', 'Night'] as const;
-type WalkSlot = (typeof WALK_SLOTS)[number];
+const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
+  value: String(option.value),
+  label: option.label,
+}));
 
 const Colors = {
   sheetBg: '#FFFFFF',
@@ -36,6 +56,9 @@ const Colors = {
 interface LogWalkSheetProps {
   visible: boolean;
   onClose: () => void;
+  petId: string | null;
+  token: string | null;
+  onSaved?: () => void;
 }
 
 function InputWithSuffix({
@@ -47,7 +70,7 @@ function InputWithSuffix({
   value: string;
   onChangeText: (t: string) => void;
   suffix: string;
-  keyboardType?: 'default' | 'decimal-pad';
+  keyboardType?: 'default' | 'decimal-pad' | 'number-pad';
 }) {
   return (
     <View style={styles.suffixInputWrap}>
@@ -64,17 +87,77 @@ function InputWithSuffix({
   );
 }
 
-export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
+export function LogWalkSheet({
+  visible,
+  onClose,
+  petId,
+  token,
+  onSaved,
+}: LogWalkSheetProps) {
   const insets = useSafeAreaInsets();
 
-  const [walkSlot, setWalkSlot] = useState<WalkSlot>('Evening');
+  const [walkTime, setWalkTime] = useState<string>(WALK_TIME_OPTIONS[0].value);
   const [duration, setDuration] = useState('45');
+  const [walkClockTime, setWalkClockTime] = useState(defaultWalkTimeDate);
+  const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
   const [notificationsOn, setNotificationsOn] = useState(true);
-  const [distance, setDistance] = useState('1.5');
-  const [routeNotes, setRouteNotes] = useState('');
+  const [notes, setNotes] = useState('');
+  const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
+  const [timePickerVisible, setTimePickerVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    onClose();
+  const resetForm = useCallback(() => {
+    setWalkTime(WALK_TIME_OPTIONS[0].value);
+    setDuration('45');
+    setWalkClockTime(defaultWalkTimeDate());
+    setReminderMinutes(DEFAULT_REMINDER_MINUTES);
+    setNotificationsOn(true);
+    setNotes('');
+    setError(null);
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      resetForm();
+    }
+  }, [visible, resetForm]);
+
+  const handleSave = async () => {
+    if (!petId || !token) {
+      setError('Add a pet before saving a walk schedule.');
+      return;
+    }
+    const durationMinutes = parseDurationMinutes(duration);
+    if (!durationMinutes) {
+      setError('Enter a valid duration in minutes.');
+      return;
+    }
+
+    const timeHHmm = dateToTimeHHmm(walkClockTime);
+    const noteText = notes.trim();
+
+    setSaving(true);
+    setError(null);
+    try {
+      await createWalkSchedule(token, {
+        petId,
+        walkTime,
+        time: timeHHmm,
+        duration: durationMinutes,
+        notes: noteText || undefined,
+        reminder: notificationsOn,
+        reminderMinutes: notificationsOn ? reminderMinutes : undefined,
+        reminderTime: notificationsOn ? addMinutesToTimeHHmm(timeHHmm, reminderMinutes) : undefined,
+      });
+      log.ok('LogWalk', 'Walk schedule saved', { walkTime, time: timeHHmm, duration: durationMinutes });
+      onSaved?.();
+      onClose();
+    } catch (e) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -104,17 +187,19 @@ export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={styles.scrollContent}
             >
+              {error ? <AuthErrorBanner message={error} /> : null}
+
               <SheetHeroIllustration borderColor="#C8E6C9" backgroundColor="#F5F9F4" heartColor="#5CB35D" />
 
               <SectionLabel text="WHICH WALK?" />
               <View style={styles.chipRow}>
-                {WALK_SLOTS.map((slot) => {
-                  const selected = walkSlot === slot;
+                {WALK_TIME_OPTIONS.map((option) => {
+                  const selected = walkTime === option.value;
                   return (
                     <TouchableOpacity
-                      key={slot}
+                      key={option.value}
                       style={[styles.chip, selected && styles.chipSelected]}
-                      onPress={() => setWalkSlot(slot)}
+                      onPress={() => setWalkTime(option.value)}
                       activeOpacity={0.85}
                     >
                       <AppText
@@ -122,7 +207,7 @@ export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
                         weight="600"
                         color={selected ? HomeTheme.white : Colors.chipText}
                       >
-                        {slot}
+                        {option.label}
                       </AppText>
                     </TouchableOpacity>
                   );
@@ -131,14 +216,30 @@ export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
 
               <View style={styles.twoColRow}>
                 <View style={styles.halfCol}>
+                  <SectionLabel text="TIME" />
+                  <TouchableOpacity
+                    style={styles.pickerField}
+                    activeOpacity={0.85}
+                    onPress={() => setTimePickerVisible(true)}
+                  >
+                    <AppText variant="bodySmall" weight="600" color={Colors.inputText}>
+                      {formatTimeDisplay(walkClockTime)}
+                    </AppText>
+                    <Ionicons name="time-outline" size={18} color={Colors.label} />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.halfCol}>
                   <SectionLabel text="DURATION" />
                   <InputWithSuffix
                     value={duration}
                     onChangeText={setDuration}
                     suffix="min"
-                    keyboardType="decimal-pad"
+                    keyboardType="number-pad"
                   />
                 </View>
+              </View>
+
+              <View style={styles.twoColRow}>
                 <View style={styles.halfCol}>
                   <SectionLabel text="NOTIFICATIONS" />
                   <TouchableOpacity
@@ -160,20 +261,27 @@ export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
                     </AppText>
                   </TouchableOpacity>
                 </View>
+                {notificationsOn ? (
+                  <View style={styles.halfCol}>
+                    <SectionLabel text="REMINDER" />
+                    <TouchableOpacity
+                      style={styles.pickerField}
+                      activeOpacity={0.85}
+                      onPress={() => setReminderPickerVisible(true)}
+                    >
+                      <AppText variant="bodySmall" weight="600" color={Colors.inputText}>
+                        {getReminderMinutesLabel(reminderMinutes)}
+                      </AppText>
+                      <Ionicons name="chevron-down" size={18} color={Colors.label} />
+                    </TouchableOpacity>
+                  </View>
+                ) : null}
               </View>
 
-              <SectionLabel text="DISTANCE" />
-              <InputWithSuffix
-                value={distance}
-                onChangeText={setDistance}
-                suffix="km"
-                keyboardType="decimal-pad"
-              />
-
-              <SectionLabel text="ROUTE NOTES" />
+              <SectionLabel text="NOTES (OPTIONAL)" />
               <TextInput
-                value={routeNotes}
-                onChangeText={setRouteNotes}
+                value={notes}
+                onChangeText={setNotes}
                 placeholder="Park route, leash preference..."
                 placeholderTextColor={Colors.placeholder}
                 style={[styles.textInput, styles.notesInput]}
@@ -186,6 +294,8 @@ export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
               <AppButton
                 title="Save Walk Schedule"
                 onPress={handleSave}
+                loading={saving}
+                disabled={saving}
                 variant="success"
                 size="md"
                 style={styles.saveBtn}
@@ -195,6 +305,25 @@ export function LogWalkSheet({ visible, onClose }: LogWalkSheetProps) {
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
+
+      <SheetOptionPicker
+        visible={reminderPickerVisible}
+        title="Remind me after"
+        options={REMINDER_MINUTES_PICKER_OPTIONS}
+        selectedValue={String(reminderMinutes)}
+        onClose={() => setReminderPickerVisible(false)}
+        onSelect={(value) => setReminderMinutes(Number(value))}
+      />
+
+      <ThemedTimePicker
+        visible={timePickerVisible}
+        value={walkClockTime}
+        onClose={() => setTimePickerVisible(false)}
+        onConfirm={(date) => {
+          setWalkClockTime(date);
+          setTimePickerVisible(false);
+        }}
+      />
     </Modal>
   );
 }
@@ -269,6 +398,17 @@ const styles = StyleSheet.create({
   },
   halfCol: {
     flex: 1,
+  },
+  pickerField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.inputBg,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 14,
+    marginBottom: Spacing.md,
+    minHeight: 48,
   },
   suffixInputWrap: {
     flexDirection: 'row',

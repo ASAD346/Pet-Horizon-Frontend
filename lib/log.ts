@@ -33,4 +33,8 @@ export const log = {
   info(scope: string, message: string, detail?: LogDetail) {
     write(scope, message, detail);
   },
+  /** Non-fatal issues — missing data, fallbacks, empty results */
+  warn(scope: string, message: string, detail?: LogDetail) {
+    write(scope, `⚠ ${message}`, detail);
+  },
 };
