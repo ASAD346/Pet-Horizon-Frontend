@@ -63,7 +63,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="wallet"
         options={{
-          title: 'Wallet',
+          title: 'Expenses',
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} activeIcon="cash" inactiveIcon="cash-outline" />
           ),

@@ -134,3 +134,26 @@ export const HomeTheme = {
   dividerOnGreen: 'rgba(255,255,255,0.35)',
   tagOnGreen: 'rgba(255,255,255,0.25)',
 } as const;
+
+/** Pet Journal screen design tokens */
+export const JournalTheme = {
+  background: '#F5F6F8',
+  surface: '#FFFFFF',
+  navy: '#1A2B4E',
+  text: '#1A1A1A',
+  textMuted: '#757575',
+  textLight: '#9E9E9E',
+  border: '#E8E8E8',
+  chipBg: '#F0F0F0',
+  timelineLine: '#E0E0E0',
+  food: '#E57373',
+  foodBg: '#FFEBEE',
+  walk: '#F5A623',
+  walkBg: '#FFF8E1',
+  medicine: '#5B9BD5',
+  medicineBg: '#E3F2FD',
+  grooming: '#E91E8C',
+  groomingBg: '#FCE4F0',
+  completed: '#5CB35D',
+  photoPlaceholder: '#EEEEEE',
+} as const;

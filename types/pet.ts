@@ -39,3 +39,20 @@ export interface SetActivePetResponse {
 export interface ActivePetIdResponse {
   activePetId: string | null;
 }
+
+export interface SpeciesFeatures {
+  species: string;
+  hiddenModules: string[];
+  mealTypes: string[];
+  inventoryUnits: string[];
+  groomingTypes: string[];
+  groomingVisible: boolean;
+  walkingVisible: boolean;
+}
+
+export interface PetPermissionsResponse {
+  accessLevel: string;
+  allowedModules: string[];
+  lockedModules: string[];
+  speciesFeatures: SpeciesFeatures;
+}
