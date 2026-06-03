@@ -27,9 +27,17 @@ import {
   walkScheduleColors,
   walkScheduleTitle,
 } from '@/lib/walk/walkDisplay';
+import {
+  pendingVaccinationSchedules,
+  vaccinationDueDate,
+  vaccinationScheduleColors,
+  vaccinationScheduleTitle,
+  vaccinationSortKey,
+} from '@/lib/vaccination/vaccinationDisplay';
 import type { FeedingScheduleItem } from '@/types/feeding';
 import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
+import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
@@ -37,26 +45,31 @@ type PendingRow =
   | { kind: 'feeding'; item: FeedingScheduleItem }
   | { kind: 'walk'; item: WalkScheduleItem }
   | { kind: 'medicine'; item: MedicineScheduleItem }
-  | { kind: 'grooming'; item: GroomingRecord };
+  | { kind: 'grooming'; item: GroomingRecord }
+  | { kind: 'vaccination'; item: VaccinationScheduleItem };
 
 interface UpNextSectionProps {
   feedingSchedules: FeedingScheduleItem[];
   walkSchedules?: WalkScheduleItem[];
   medicineSchedules?: MedicineScheduleItem[];
   groomingRecords?: GroomingRecord[];
+  vaccinationSchedules?: VaccinationScheduleItem[];
   loading?: boolean;
   feedingActionId?: string | null;
   walkActionId?: string | null;
   medicineActionId?: string | null;
   groomingActionId?: string | null;
+  vaccinationActionId?: string | null;
   onLogFeeding?: (scheduleId: string) => void;
   onLogWalk?: (scheduleId: string) => void;
   onLogMedicine?: (scheduleId: string) => void;
   onLogGrooming?: (recordId: string) => void;
+  onLogVaccination?: (scheduleId: string) => void;
 }
 
 function rowSortKey(row: PendingRow): number {
   if (row.kind === 'grooming') return groomingSortKey(row.item);
+  if (row.kind === 'vaccination') return vaccinationSortKey(row.item);
   const [h, m] = row.item.timeOfDay.split(':').map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
@@ -68,12 +81,17 @@ function mergePendingRows(
   walkSchedules: WalkScheduleItem[],
   medicineSchedules: MedicineScheduleItem[],
   groomingRecords: GroomingRecord[],
+  vaccinationSchedules: VaccinationScheduleItem[],
 ): PendingRow[] {
   const rows: PendingRow[] = [
     ...pendingFeedingSchedules(feedingSchedules).map((item) => ({ kind: 'feeding' as const, item })),
     ...pendingWalkSchedules(walkSchedules).map((item) => ({ kind: 'walk' as const, item })),
     ...pendingMedicineSchedules(medicineSchedules).map((item) => ({ kind: 'medicine' as const, item })),
     ...pendingGroomingRecords(groomingRecords).map((item) => ({ kind: 'grooming' as const, item })),
+    ...pendingVaccinationSchedules(vaccinationSchedules).map((item) => ({
+      kind: 'vaccination' as const,
+      item,
+    })),
   ];
   return rows.sort((a, b) => rowSortKey(a) - rowSortKey(b));
 }
@@ -82,6 +100,7 @@ function rowColors(row: PendingRow) {
   if (row.kind === 'feeding') return feedingScheduleColors(row.item);
   if (row.kind === 'walk') return walkScheduleColors(row.item);
   if (row.kind === 'medicine') return medicineScheduleColors();
+  if (row.kind === 'vaccination') return vaccinationScheduleColors();
   return groomingRecordColors();
 }
 
@@ -89,6 +108,7 @@ function rowTitle(row: PendingRow) {
   if (row.kind === 'feeding') return feedingScheduleTitle(row.item);
   if (row.kind === 'walk') return walkScheduleTitle(row.item);
   if (row.kind === 'medicine') return medicineScheduleTitle(row.item);
+  if (row.kind === 'vaccination') return vaccinationScheduleTitle(row.item);
   return groomingRecordTitle(row.item);
 }
 
@@ -99,13 +119,19 @@ function rowCaption(row: PendingRow) {
     }
     return 'No date set';
   }
+  if (row.kind === 'vaccination') {
+    const due = vaccinationDueDate(row.item);
+    if (due) return formatDateLabel(due);
+    return 'No date set';
+  }
   return formatTimeHHmmDisplay(row.item.timeOfDay);
 }
 
-function rowIcon(row: PendingRow): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' {
+function rowIcon(row: PendingRow): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' {
   if (row.kind === 'feeding') return 'silverware-fork-knife';
   if (row.kind === 'walk') return 'walk';
   if (row.kind === 'medicine') return 'pill';
+  if (row.kind === 'vaccination') return 'needle';
   return 'content-cut';
 }
 
@@ -113,6 +139,7 @@ function rowLogBtnStyle(row: PendingRow) {
   if (row.kind === 'feeding') return styles.logBtn;
   if (row.kind === 'walk') return [styles.logBtn, styles.logBtnWalk];
   if (row.kind === 'medicine') return [styles.logBtn, styles.logBtnMedicine];
+  if (row.kind === 'vaccination') return [styles.logBtn, styles.logBtnVaccination];
   return [styles.logBtn, styles.logBtnGrooming];
 }
 
@@ -122,10 +149,12 @@ function rowOnLog(
   onLogWalk?: (id: string) => void,
   onLogMedicine?: (id: string) => void,
   onLogGrooming?: (id: string) => void,
+  onLogVaccination?: (id: string) => void,
 ) {
   if (row.kind === 'feeding') return onLogFeeding;
   if (row.kind === 'walk') return onLogWalk;
   if (row.kind === 'medicine') return onLogMedicine;
+  if (row.kind === 'vaccination') return onLogVaccination;
   return onLogGrooming;
 }
 
@@ -135,11 +164,13 @@ function rowBusy(
   walkActionId: string | null,
   medicineActionId: string | null,
   groomingActionId: string | null,
+  vaccinationActionId: string | null,
 ) {
   const id = row.item._id;
   if (row.kind === 'feeding') return feedingActionId === id;
   if (row.kind === 'walk') return walkActionId === id;
   if (row.kind === 'medicine') return medicineActionId === id;
+  if (row.kind === 'vaccination') return vaccinationActionId === id;
   return groomingActionId === id;
 }
 
@@ -148,19 +179,29 @@ export function UpNextSection({
   walkSchedules = [],
   medicineSchedules = [],
   groomingRecords = [],
+  vaccinationSchedules = [],
   loading = false,
   feedingActionId = null,
   walkActionId = null,
   medicineActionId = null,
   groomingActionId = null,
+  vaccinationActionId = null,
   onLogFeeding,
   onLogWalk,
   onLogMedicine,
   onLogGrooming,
+  onLogVaccination,
 }: UpNextSectionProps) {
   const pending = useMemo(
-    () => mergePendingRows(feedingSchedules, walkSchedules, medicineSchedules, groomingRecords),
-    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords],
+    () =>
+      mergePendingRows(
+        feedingSchedules,
+        walkSchedules,
+        medicineSchedules,
+        groomingRecords,
+        vaccinationSchedules,
+      ),
+    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 
   if (loading) {
@@ -192,8 +233,16 @@ export function UpNextSection({
             walkActionId,
             medicineActionId,
             groomingActionId,
+            vaccinationActionId,
           );
-          const onLog = rowOnLog(row, onLogFeeding, onLogWalk, onLogMedicine, onLogGrooming);
+          const onLog = rowOnLog(
+            row,
+            onLogFeeding,
+            onLogWalk,
+            onLogMedicine,
+            onLogGrooming,
+            onLogVaccination,
+          );
 
           return (
             <View key={`${row.kind}-${row.item._id}`} style={[homePillCard.card, styles.card]}>
@@ -271,5 +320,8 @@ const styles = StyleSheet.create({
   },
   logBtnGrooming: {
     backgroundColor: '#E91E8C',
+  },
+  logBtnVaccination: {
+    backgroundColor: '#673AB7',
   },
 });

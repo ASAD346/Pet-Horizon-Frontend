@@ -115,3 +115,68 @@ export function validateVerifyEmailForm(email: string, otp: string): VerifyEmail
 export function hasVerifyEmailFieldErrors(errors: VerifyEmailFieldErrors): boolean {
   return Boolean(errors.email || errors.otp);
 }
+
+export interface ForgotPasswordFieldErrors {
+  email?: string;
+}
+
+export interface ResetPasswordFieldErrors {
+  email?: string;
+  otp?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
+export function validateForgotPasswordForm(email: string): ForgotPasswordFieldErrors {
+  const errors: ForgotPasswordFieldErrors = {};
+  const emailError = validateEmailOnly(email);
+  if (emailError) {
+    errors.email = emailError;
+  }
+  return errors;
+}
+
+export function hasForgotPasswordFieldErrors(errors: ForgotPasswordFieldErrors): boolean {
+  return Boolean(errors.email);
+}
+
+export function validateResetPasswordForm(
+  email: string,
+  otp: string,
+  newPassword: string,
+  confirmPassword: string,
+): ResetPasswordFieldErrors {
+  const errors: ResetPasswordFieldErrors = {};
+  const trimmedEmail = email.trim();
+  const trimmedOtp = otp.trim();
+
+  if (!trimmedEmail) {
+    errors.email = 'Email is required';
+  } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
+    errors.email = 'Enter a valid email address';
+  }
+
+  if (!trimmedOtp) {
+    errors.otp = 'Reset code is required';
+  } else if (!/^\d{6}$/.test(trimmedOtp)) {
+    errors.otp = 'Enter the 6-digit code from your email';
+  }
+
+  if (!newPassword) {
+    errors.newPassword = 'New password is required';
+  } else if (newPassword.length < 6) {
+    errors.newPassword = 'Password must be at least 6 characters';
+  }
+
+  if (!confirmPassword) {
+    errors.confirmPassword = 'Please confirm your password';
+  } else if (newPassword !== confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match';
+  }
+
+  return errors;
+}
+
+export function hasResetPasswordFieldErrors(errors: ResetPasswordFieldErrors): boolean {
+  return Boolean(errors.email || errors.otp || errors.newPassword || errors.confirmPassword);
+}

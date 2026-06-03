@@ -71,6 +71,10 @@ export const API_ENDPOINTS = {
     medicineRefill: (id: string) => `/schedules/medicine/${id}/refill`,
     medicineLowStock: '/schedules/medicine/low-stock',
     medicineHistory: (id: string) => `/schedules/medicine/${id}/history`,
+    vaccination: '/schedules/vaccination',
+    vaccinationById: (id: string) => `/schedules/vaccination/${id}`,
+    vaccinationComplete: (id: string) => `/schedules/vaccination/${id}/complete`,
+    vaccinationHistory: '/schedules/vaccination/history',
   },
   grooming: {
     list: '/grooming',

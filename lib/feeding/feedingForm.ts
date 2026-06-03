@@ -8,20 +8,6 @@ export const MEAL_TYPE_OPTIONS = [
 
 export type MealTypeOption = (typeof MEAL_TYPE_OPTIONS)[number];
 
-/** Fixed universal feeding units (same list for all pets). */
-export const FEEDING_UNIT_OPTIONS = [
-  { value: 'cup', label: 'Cup' },
-  { value: 'g', label: 'g' },
-  { value: 'kg', label: 'kg' },
-  { value: 'lb', label: 'lb' },
-  { value: 'tbsp', label: 'tbsp' },
-  { value: 'oz', label: 'oz' },
-  { value: 'ml', label: 'ml' },
-  { value: 'pinch', label: 'Pinch' },
-] as const;
-
-export const DEFAULT_FEEDING_UNIT = FEEDING_UNIT_OPTIONS[0].value;
-
 /** Reminder offset options (minutes after feeding time). */
 export const REMINDER_MINUTES_OPTIONS = [
   { value: 5, label: '5 min after' },
@@ -72,7 +58,12 @@ export function mealTypeOptionsForSpecies(allowedApiTypes: string[]) {
   }));
 }
 
-/** Unit options for dropdown (dedupe by display label). */
+/** Build unit chips from species-allowed API values. */
+export function unitOptionsForSpecies(allowedUnits: string[]) {
+  return unitOptionsForPicker(allowedUnits);
+}
+
+/** Unit options for picker (dedupe by display label). */
 export function unitOptionsForPicker(units: string[]) {
   const seen = new Set<string>();
   const options: { value: string; label: string }[] = [];
@@ -122,8 +113,7 @@ export function formatUnitLabel(unit: string): string {
 }
 
 export function getUnitLabel(value: string): string {
-  const found = FEEDING_UNIT_OPTIONS.find((o) => o.value === value.toLowerCase());
-  return found?.label ?? formatUnitLabel(value);
+  return formatUnitLabel(value);
 }
 
 export function defaultFeedingTimeDate(): Date {

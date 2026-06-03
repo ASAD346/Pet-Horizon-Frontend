@@ -149,7 +149,12 @@ export default function LoginScreen() {
                 onEmailChange={handleEmailChange}
                 onPasswordChange={handlePasswordChange}
                 onLogin={handleLogin}
-                onForgotPassword={() => {}}
+                onForgotPassword={() =>
+                  router.push({
+                    pathname: '/auth/forgot-password',
+                    params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
+                  })
+                }
                 onSignup={() => router.push('/auth/signup')}
                 onVerifyEmail={handleVerifyEmail}
                 showVerifyAction={showVerifyAction}

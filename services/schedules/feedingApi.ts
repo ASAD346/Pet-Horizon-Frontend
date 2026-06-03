@@ -23,7 +23,8 @@ export async function fetchPetPermissions(
       { token },
     );
     log.ok(SCOPE, 'Permissions loaded', {
-      units: data.speciesFeatures?.inventoryUnits?.length ?? 0,
+      mealTypes: data.speciesFeatures?.mealTypes?.length ?? 0,
+      inventoryUnits: data.speciesFeatures?.inventoryUnits?.length ?? 0,
     });
     return data;
   } catch (error) {
