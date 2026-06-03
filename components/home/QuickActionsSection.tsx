@@ -5,14 +5,14 @@ import { AppText } from '../ui/AppText';
 import { SectionHeader } from './SectionHeader';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
-type ActionIcon = 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'note-plus-outline';
+type ActionIcon = 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle';
 
 const ACTIONS: { label: string; icon: ActionIcon; color: string; bg: string }[] = [
   { label: 'Log Food', icon: 'silverware-fork-knife', color: '#F5A623', bg: '#FFF4E0' },
   { label: 'Log Walk', icon: 'walk', color: '#5CB35D', bg: '#E8F5E9' },
   { label: 'Medicine', icon: 'pill', color: '#5B9BD5', bg: '#E3F2FD' },
   { label: 'Grooming', icon: 'content-cut', color: '#E91E8C', bg: '#FCE4F0' },
-  { label: 'Add Note', icon: 'note-plus-outline', color: '#9C27B0', bg: '#F3E5F5' },
+  { label: 'Vaccination', icon: 'needle', color: '#673AB7', bg: '#EDE7F6' },
 ];
 
 interface QuickActionsSectionProps {
@@ -20,14 +20,19 @@ interface QuickActionsSectionProps {
   onLogWalkPress?: () => void;
   onMedicinePress?: () => void;
   onGroomingPress?: () => void;
+  onVaccinationPress?: () => void;
   groomingVisible?: boolean;
 }
 
-const ACTION_HANDLERS: Record<string, 'onLogFoodPress' | 'onLogWalkPress' | 'onMedicinePress' | 'onGroomingPress'> = {
+const ACTION_HANDLERS: Record<
+  string,
+  'onLogFoodPress' | 'onLogWalkPress' | 'onMedicinePress' | 'onGroomingPress' | 'onVaccinationPress'
+> = {
   'Log Food': 'onLogFoodPress',
   'Log Walk': 'onLogWalkPress',
   Medicine: 'onMedicinePress',
   Grooming: 'onGroomingPress',
+  Vaccination: 'onVaccinationPress',
 };
 
 export function QuickActionsSection({
@@ -35,9 +40,16 @@ export function QuickActionsSection({
   onLogWalkPress,
   onMedicinePress,
   onGroomingPress,
+  onVaccinationPress,
   groomingVisible = true,
 }: QuickActionsSectionProps) {
-  const handlers = { onLogFoodPress, onLogWalkPress, onMedicinePress, onGroomingPress };
+  const handlers = {
+    onLogFoodPress,
+    onLogWalkPress,
+    onMedicinePress,
+    onGroomingPress,
+    onVaccinationPress,
+  };
   const visibleActions = groomingVisible
     ? ACTIONS
     : ACTIONS.filter((action) => action.label !== 'Grooming');

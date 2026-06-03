@@ -30,9 +30,17 @@ import {
   walkScheduleSubtitle,
   walkScheduleTitle,
 } from '@/lib/walk/walkDisplay';
+import {
+  vaccinationDueTodayOrOverdue,
+  vaccinationScheduleColors,
+  vaccinationScheduleSubtitle,
+  vaccinationScheduleTitle,
+  vaccinationSortKey,
+} from '@/lib/vaccination/vaccinationDisplay';
 import type { FeedingScheduleItem } from '@/types/feeding';
 import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
+import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
 import { HomeTheme, Spacing } from '../../constants/theme';
 
@@ -40,26 +48,31 @@ type ScheduleRow =
   | { kind: 'feeding'; item: FeedingScheduleItem }
   | { kind: 'walk'; item: WalkScheduleItem }
   | { kind: 'medicine'; item: MedicineScheduleItem }
-  | { kind: 'grooming'; item: GroomingRecord };
+  | { kind: 'grooming'; item: GroomingRecord }
+  | { kind: 'vaccination'; item: VaccinationScheduleItem };
 
 interface TodaysScheduleSectionProps {
   feedingSchedules: FeedingScheduleItem[];
   walkSchedules?: WalkScheduleItem[];
   medicineSchedules?: MedicineScheduleItem[];
   groomingRecords?: GroomingRecord[];
+  vaccinationSchedules?: VaccinationScheduleItem[];
   loading?: boolean;
   feedingActionId?: string | null;
   walkActionId?: string | null;
   medicineActionId?: string | null;
   groomingActionId?: string | null;
+  vaccinationActionId?: string | null;
   onCompleteFeeding?: (scheduleId: string) => void;
   onCompleteWalk?: (scheduleId: string) => void;
   onCompleteMedicine?: (scheduleId: string) => void;
   onCompleteGrooming?: (recordId: string) => void;
+  onCompleteVaccination?: (scheduleId: string) => void;
 }
 
 function rowSortKey(row: ScheduleRow): number {
   if (row.kind === 'grooming') return groomingSortKey(row.item);
+  if (row.kind === 'vaccination') return vaccinationSortKey(row.item);
   const [h, m] = row.item.timeOfDay.split(':').map(Number);
   const d = new Date();
   d.setHours(h, m, 0, 0);
@@ -71,12 +84,17 @@ function mergeScheduleRows(
   walkSchedules: WalkScheduleItem[],
   medicineSchedules: MedicineScheduleItem[],
   groomingRecords: GroomingRecord[],
+  vaccinationSchedules: VaccinationScheduleItem[],
 ): ScheduleRow[] {
   const rows: ScheduleRow[] = [
     ...sortFeedingByTime(feedingSchedules).map((item) => ({ kind: 'feeding' as const, item })),
     ...sortWalkByTime(walkSchedules).map((item) => ({ kind: 'walk' as const, item })),
     ...sortMedicineByTime(medicineSchedules).map((item) => ({ kind: 'medicine' as const, item })),
     ...groomingDueTodayOrOverdue(groomingRecords).map((item) => ({ kind: 'grooming' as const, item })),
+    ...vaccinationDueTodayOrOverdue(vaccinationSchedules).map((item) => ({
+      kind: 'vaccination' as const,
+      item,
+    })),
   ];
   return rows.sort((a, b) => rowSortKey(a) - rowSortKey(b));
 }
@@ -85,6 +103,7 @@ function rowColors(row: ScheduleRow) {
   if (row.kind === 'feeding') return feedingScheduleColors(row.item);
   if (row.kind === 'walk') return walkScheduleColors(row.item);
   if (row.kind === 'medicine') return medicineScheduleColors();
+  if (row.kind === 'vaccination') return vaccinationScheduleColors();
   return groomingRecordColors();
 }
 
@@ -92,6 +111,7 @@ function rowTitle(row: ScheduleRow) {
   if (row.kind === 'feeding') return feedingScheduleTitle(row.item);
   if (row.kind === 'walk') return walkScheduleTitle(row.item);
   if (row.kind === 'medicine') return medicineScheduleTitle(row.item);
+  if (row.kind === 'vaccination') return vaccinationScheduleTitle(row.item);
   return groomingRecordTitle(row.item);
 }
 
@@ -99,23 +119,28 @@ function rowSubtitle(row: ScheduleRow) {
   if (row.kind === 'feeding') return feedingScheduleSubtitle(row.item);
   if (row.kind === 'walk') return walkScheduleSubtitle(row.item);
   if (row.kind === 'medicine') return medicineScheduleSubtitle(row.item);
+  if (row.kind === 'vaccination') return vaccinationScheduleSubtitle(row.item);
   return groomingRecordSubtitle(row.item);
 }
 
-function rowIcon(row: ScheduleRow): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' {
+function rowIcon(
+  row: ScheduleRow,
+): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' {
   if (row.kind === 'feeding') return 'silverware-fork-knife';
   if (row.kind === 'walk') return 'walk';
   if (row.kind === 'medicine') return 'pill';
+  if (row.kind === 'vaccination') return 'needle';
   return 'content-cut';
 }
 
 function rowIsDone(row: ScheduleRow) {
   if (row.kind === 'grooming') return !!row.item.performedAt;
+  if (row.kind === 'vaccination') return row.item.isActive === false;
   return row.item.status === 'done';
 }
 
 function rowIsSkipped(row: ScheduleRow) {
-  if (row.kind === 'grooming') return false;
+  if (row.kind === 'grooming' || row.kind === 'vaccination') return false;
   return row.item.status === 'skipped';
 }
 
@@ -129,11 +154,13 @@ function rowActionId(
   walkActionId: string | null,
   medicineActionId: string | null,
   groomingActionId: string | null,
+  vaccinationActionId: string | null,
 ) {
   const id = rowId(row);
   if (row.kind === 'feeding') return feedingActionId === id;
   if (row.kind === 'walk') return walkActionId === id;
   if (row.kind === 'medicine') return medicineActionId === id;
+  if (row.kind === 'vaccination') return vaccinationActionId === id;
   return groomingActionId === id;
 }
 
@@ -143,10 +170,12 @@ function rowOnComplete(
   onCompleteWalk?: (id: string) => void,
   onCompleteMedicine?: (id: string) => void,
   onCompleteGrooming?: (id: string) => void,
+  onCompleteVaccination?: (id: string) => void,
 ) {
   if (row.kind === 'feeding') return onCompleteFeeding;
   if (row.kind === 'walk') return onCompleteWalk;
   if (row.kind === 'medicine') return onCompleteMedicine;
+  if (row.kind === 'vaccination') return onCompleteVaccination;
   return onCompleteGrooming;
 }
 
@@ -155,19 +184,29 @@ export function TodaysScheduleSection({
   walkSchedules = [],
   medicineSchedules = [],
   groomingRecords = [],
+  vaccinationSchedules = [],
   loading = false,
   feedingActionId = null,
   walkActionId = null,
   medicineActionId = null,
   groomingActionId = null,
+  vaccinationActionId = null,
   onCompleteFeeding,
   onCompleteWalk,
   onCompleteMedicine,
   onCompleteGrooming,
+  onCompleteVaccination,
 }: TodaysScheduleSectionProps) {
   const items = useMemo(
-    () => mergeScheduleRows(feedingSchedules, walkSchedules, medicineSchedules, groomingRecords),
-    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords],
+    () =>
+      mergeScheduleRows(
+        feedingSchedules,
+        walkSchedules,
+        medicineSchedules,
+        groomingRecords,
+        vaccinationSchedules,
+      ),
+    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 
   return (
@@ -193,6 +232,7 @@ export function TodaysScheduleSection({
             walkActionId,
             medicineActionId,
             groomingActionId,
+            vaccinationActionId,
           );
           const onComplete = rowOnComplete(
             row,
@@ -200,6 +240,7 @@ export function TodaysScheduleSection({
             onCompleteWalk,
             onCompleteMedicine,
             onCompleteGrooming,
+            onCompleteVaccination,
           );
 
           return (

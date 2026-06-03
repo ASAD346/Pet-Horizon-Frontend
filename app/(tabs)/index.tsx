@@ -36,6 +36,8 @@ import { useMedicineSchedules } from '@/hooks/useMedicineSchedules';
 
 import { useGroomingRecords } from '@/hooks/useGroomingRecords';
 
+import { useVaccinationSchedules } from '@/hooks/useVaccinationSchedules';
+
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 import { petToProfileProps } from '@/services/pets/petDisplay';
@@ -49,6 +51,8 @@ import { LogJournalSheet } from '@/components/journal';
 import { LogMedicineSheet } from '@/components/log-medicine';
 
 import { LogWalkSheet } from '@/components/log-walk';
+
+import { LogVaccinationSheet } from '@/components/log-vaccination';
 
 import { HomeTheme, Spacing } from '@/constants/theme';
 
@@ -146,7 +150,23 @@ export default function HomeScreen() {
 
 
 
-  const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading;
+  const {
+
+    schedules: vaccinationSchedules,
+
+    loading: vaccinationLoading,
+
+    actionId: vaccinationActionId,
+
+    reload: reloadVaccination,
+
+    completeVaccination,
+
+  } = useVaccinationSchedules(token, pet?._id);
+
+
+
+  const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading;
 
 
 
@@ -163,6 +183,8 @@ export default function HomeScreen() {
   const [logMedicineVisible, setLogMedicineVisible] = useState(false);
 
   const [logGroomingVisible, setLogGroomingVisible] = useState(false);
+
+  const [logVaccinationVisible, setLogVaccinationVisible] = useState(false);
 
   const [journalVisible, setJournalVisible] = useState(false);
 
@@ -216,6 +238,8 @@ export default function HomeScreen() {
 
           onGroomingPress={() => setLogGroomingVisible(true)}
 
+          onVaccinationPress={() => setLogVaccinationVisible(true)}
+
           groomingVisible={groomingVisible}
 
         />
@@ -230,6 +254,8 @@ export default function HomeScreen() {
 
           groomingRecords={groomingRecords}
 
+          vaccinationSchedules={vaccinationSchedules}
+
           loading={scheduleLoading}
 
           feedingActionId={feedingActionId}
@@ -240,6 +266,8 @@ export default function HomeScreen() {
 
           groomingActionId={groomingActionId}
 
+          vaccinationActionId={vaccinationActionId}
+
           onLogFeeding={completeFeeding}
 
           onLogWalk={completeWalk}
@@ -247,6 +275,8 @@ export default function HomeScreen() {
           onLogMedicine={completeMedicine}
 
           onLogGrooming={completeGrooming}
+
+          onLogVaccination={completeVaccination}
 
         />
 
@@ -260,6 +290,8 @@ export default function HomeScreen() {
 
           groomingRecords={groomingRecords}
 
+          vaccinationSchedules={vaccinationSchedules}
+
           loading={scheduleLoading}
 
           feedingActionId={feedingActionId}
@@ -270,6 +302,8 @@ export default function HomeScreen() {
 
           groomingActionId={groomingActionId}
 
+          vaccinationActionId={vaccinationActionId}
+
           onCompleteFeeding={completeFeeding}
 
           onCompleteWalk={completeWalk}
@@ -277,6 +311,8 @@ export default function HomeScreen() {
           onCompleteMedicine={completeMedicine}
 
           onCompleteGrooming={completeGrooming}
+
+          onCompleteVaccination={completeVaccination}
 
         />
 
@@ -341,6 +377,20 @@ export default function HomeScreen() {
         token={token}
 
         onSaved={reloadGrooming}
+
+      />
+
+      <LogVaccinationSheet
+
+        visible={logVaccinationVisible}
+
+        onClose={() => setLogVaccinationVisible(false)}
+
+        petId={pet?._id ?? null}
+
+        token={token}
+
+        onSaved={reloadVaccination}
 
       />
 

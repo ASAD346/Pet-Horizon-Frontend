@@ -3,10 +3,14 @@ import { apiRequest } from '@/lib/api/client';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import type {
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
   RegisterResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   ResendVerificationResponse,
   VerifyEmailRequest,
   VerifyEmailResponse,
@@ -82,6 +86,48 @@ export async function resendVerificationEmail(email: string): Promise<ResendVeri
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Resend verification failed', { email: normalized, error: getErrorMessage(error) });
+    throw error;
+  }
+}
+
+export async function requestPasswordReset(
+  payload: ForgotPasswordRequest,
+): Promise<ForgotPasswordResponse> {
+  const email = normalizeEmail(payload.email);
+  log.info(SCOPE, 'POST /auth/forgot-password', { email });
+  try {
+    const data = await apiRequest<ForgotPasswordResponse>(API_ENDPOINTS.auth.forgotPassword, {
+      method: 'POST',
+      body: { email },
+    });
+    log.ok(SCOPE, 'Password reset code requested', {
+      email,
+      emailSent: data.emailSent,
+      expiresInMinutes: data.expiresInMinutes,
+    });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Forgot password failed', { email, error: getErrorMessage(error) });
+    throw error;
+  }
+}
+
+export async function resetPassword(payload: ResetPasswordRequest): Promise<ResetPasswordResponse> {
+  const email = normalizeEmail(payload.email);
+  log.info(SCOPE, 'POST /auth/reset-password', { email });
+  try {
+    const data = await apiRequest<ResetPasswordResponse>(API_ENDPOINTS.auth.resetPassword, {
+      method: 'POST',
+      body: {
+        email,
+        otp: payload.otp.trim(),
+        new_password: payload.newPassword,
+      },
+    });
+    log.ok(SCOPE, 'Password reset success', { email });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Reset password failed', { email, error: getErrorMessage(error) });
     throw error;
   }
 }

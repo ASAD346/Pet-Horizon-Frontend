@@ -60,3 +60,28 @@ export interface ResendVerificationResponse {
   expiresInMinutes?: number;
   devOtp?: string;
 }
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  emailConfigured?: boolean;
+  emailProvider?: string;
+  emailSent?: boolean;
+  emailError?: string;
+  expiresInMinutes?: number;
+  devOtp?: string;
+  hint?: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}

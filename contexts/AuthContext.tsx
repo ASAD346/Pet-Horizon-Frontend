@@ -144,3 +144,26 @@ export function getAuthLoginErrorMessage(error: unknown): string {
   }
   return 'Unable to sign in. Please try again.';
 }
+
+export function getAuthForgotPasswordErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.isNetworkError) {
+      return error.message;
+    }
+    return error.message;
+  }
+  return 'Unable to send a reset code. Please try again.';
+}
+
+export function getAuthResetPasswordErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.isNetworkError) {
+      return error.message;
+    }
+    if (error.status === 400) {
+      return error.message || 'Invalid or expired reset code. Request a new one.';
+    }
+    return error.message;
+  }
+  return 'Unable to reset your password. Please try again.';
+}

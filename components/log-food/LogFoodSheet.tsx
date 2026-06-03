@@ -24,14 +24,14 @@ import { log } from '@/lib/log';
 import {
   addMinutesToTimeHHmm,
   dateToTimeHHmm,
-  DEFAULT_FEEDING_UNIT,
   DEFAULT_REMINDER_MINUTES,
   defaultFeedingTimeDate,
-  FEEDING_UNIT_OPTIONS,
   formatTimeDisplay,
   getReminderMinutesLabel,
   mealTypeOptionsForSpecies,
+  pickDefaultUnit,
   REMINDER_MINUTES_OPTIONS,
+  unitOptionsForSpecies,
 } from '@/lib/feeding/feedingForm';
 import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
 
@@ -71,16 +71,17 @@ export function LogFoodSheet({
   const insets = useSafeAreaInsets();
 
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
+  const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [mealType, setMealType] = useState('');
   const [amount, setAmount] = useState('2');
-  const [unit, setUnit] = useState<string>(DEFAULT_FEEDING_UNIT);
+  const [unit, setUnit] = useState('');
   const [feedingTime, setFeedingTime] = useState(defaultFeedingTimeDate);
   const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [notes, setNotes] = useState('');
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
   const [feedingTimePickerVisible, setFeedingTimePickerVisible] = useState(false);
-  const [mealTypesLoading, setMealTypesLoading] = useState(false);
+  const [featuresLoading, setFeaturesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,50 +90,69 @@ export function LogFoodSheet({
     setFeedingTime(defaultFeedingTimeDate());
     setReminderMinutes(DEFAULT_REMINDER_MINUTES);
     setMealType('');
-    setUnit(DEFAULT_FEEDING_UNIT);
+    setUnit('');
+    setUnitOptions([]);
     setNotificationsOn(true);
     setNotes('');
     setError(null);
   }, []);
 
-  const loadMealTypes = useCallback(async () => {
+  const loadSpeciesFeatures = useCallback(async () => {
     if (!petId || !token) {
       setMealTypeOptions([]);
+      setUnitOptions([]);
       setMealType('');
-      log.warn('LogFood', 'Cannot load meal types — missing pet or token', { petId, hasToken: Boolean(token) });
+      setUnit('');
+      log.warn('LogFood', 'Cannot load species features — missing pet or token', {
+        petId,
+        hasToken: Boolean(token),
+      });
       return;
     }
 
-    setMealTypesLoading(true);
+    setFeaturesLoading(true);
     setError(null);
     try {
       const perms = await fetchPetPermissions(token, petId);
-      const types = perms.speciesFeatures?.mealTypes ?? [];
-      const options = mealTypeOptionsForSpecies(types);
-      setMealTypeOptions(options);
-      setMealType(options[0]?.value ?? '');
-      if (!options.length) {
+      const features = perms.speciesFeatures;
+      const mealOptions = mealTypeOptionsForSpecies(features?.mealTypes ?? []);
+      const unitOpts = unitOptionsForSpecies(features?.inventoryUnits ?? []);
+
+      setMealTypeOptions(mealOptions);
+      setUnitOptions(unitOpts);
+      setMealType(mealOptions[0]?.value ?? '');
+      setUnit(pickDefaultUnit(features?.inventoryUnits ?? []));
+
+      if (!mealOptions.length) {
         log.warn('LogFood', 'No meal types returned for pet', {
           petId,
-          species: perms.speciesFeatures?.species,
+          species: features?.species,
+        });
+      }
+      if (!unitOpts.length) {
+        log.warn('LogFood', 'No inventory units returned for pet', {
+          petId,
+          species: features?.species,
         });
       }
     } catch (e) {
       setMealTypeOptions([]);
+      setUnitOptions([]);
       setMealType('');
+      setUnit('');
       setError(getErrorMessage(e));
-      log.fail('LogFood', 'Load meal types failed', getErrorMessage(e));
+      log.fail('LogFood', 'Load species features failed', getErrorMessage(e));
     } finally {
-      setMealTypesLoading(false);
+      setFeaturesLoading(false);
     }
   }, [petId, token]);
 
   useEffect(() => {
     if (visible) {
       resetForm();
-      loadMealTypes();
+      loadSpeciesFeatures();
     }
-  }, [visible, resetForm, loadMealTypes]);
+  }, [visible, resetForm, loadSpeciesFeatures]);
 
   const handleSave = async () => {
     if (!petId || !token) {
@@ -141,6 +161,10 @@ export function LogFoodSheet({
     }
     if (!mealType) {
       setError('Select a meal type.');
+      return;
+    }
+    if (!unit) {
+      setError('Select a unit.');
       return;
     }
     if (!amount.trim()) {
@@ -213,7 +237,7 @@ export function LogFoodSheet({
               />
 
               <SectionLabel text="MEAL TYPE" />
-              {mealTypesLoading ? (
+              {featuresLoading ? (
                 <ActivityIndicator color={HomeTheme.green} style={styles.mealLoader} />
               ) : mealTypeOptions.length === 0 ? (
                 <AppText variant="bodySmall" color={LogFoodColors.label} style={styles.mealEmpty}>
@@ -254,27 +278,35 @@ export function LogFoodSheet({
               />
 
               <SectionLabel text="UNIT" />
-              <View style={styles.chipRow}>
-                {FEEDING_UNIT_OPTIONS.map((option) => {
-                  const selected = unit === option.value;
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[styles.chip, selected && styles.chipSelected]}
-                      onPress={() => setUnit(option.value)}
-                      activeOpacity={0.85}
-                    >
-                      <AppText
-                        variant="bodySmall"
-                        weight="600"
-                        color={selected ? HomeTheme.white : LogFoodColors.chipText}
+              {featuresLoading ? (
+                <ActivityIndicator color={HomeTheme.green} style={styles.mealLoader} />
+              ) : unitOptions.length === 0 ? (
+                <AppText variant="bodySmall" color={LogFoodColors.label} style={styles.mealEmpty}>
+                  No units available for this pet.
+                </AppText>
+              ) : (
+                <View style={styles.chipRow}>
+                  {unitOptions.map((option) => {
+                    const selected = unit === option.value;
+                    return (
+                      <TouchableOpacity
+                        key={option.value}
+                        style={[styles.chip, selected && styles.chipSelected]}
+                        onPress={() => setUnit(option.value)}
+                        activeOpacity={0.85}
                       >
-                        {option.label}
-                      </AppText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                        <AppText
+                          variant="bodySmall"
+                          weight="600"
+                          color={selected ? HomeTheme.white : LogFoodColors.chipText}
+                        >
+                          {option.label}
+                        </AppText>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
 
               <View style={styles.twoColRow}>
                 <View style={styles.halfCol}>
@@ -342,7 +374,7 @@ export function LogFoodSheet({
                 title="Save Feeding"
                 onPress={handleSave}
                 loading={saving}
-                disabled={saving || mealTypesLoading || !mealType}
+                disabled={saving || featuresLoading || !mealType || !unit}
                 variant="success"
                 size="md"
                 style={styles.saveBtn}
