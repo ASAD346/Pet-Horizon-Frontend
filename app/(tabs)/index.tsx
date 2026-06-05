@@ -7,21 +7,19 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
+    HomeHeader,
 
-  HomeHeader,
+    PetProfileCard,
 
-  PetProfileCard,
+    QuickActionsSection,
 
-  QuickActionsSection,
+    RecentActivitySection,
 
-  RecentActivitySection,
+    ReminderCardsRow,
 
-  ReminderCardsRow,
+    TodaysScheduleSection,
 
-  TodaysScheduleSection,
-
-  UpNextSection,
-
+    UpNextSection,
 } from '@/components/home';
 
 import { useAuth } from '@/contexts/AuthContext';

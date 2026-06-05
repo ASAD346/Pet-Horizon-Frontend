@@ -1,0 +1,42 @@
+export interface PetMemberUser {
+  _id: string;
+  fullName?: string;
+  email?: string;
+  profileImage?: string | null;
+}
+
+export interface PetMemberRow {
+  userId: PetMemberUser;
+  accessLevel: 'admin' | 'edit' | 'readonly' | string;
+  allowedModules: string[];
+  grantedAt?: string;
+}
+
+export interface GenerateInviteRequest {
+  petId: string;
+  accessLevel?: 'admin' | 'edit' | 'readonly';
+  allowedModules?: string[];
+}
+
+export interface GenerateInviteResponse {
+  inviteToken: string;
+  inviteLink: string;
+  deepLink: string;
+  qrCodeDataUrl: string;
+  shareText: string;
+  petName: string;
+  petPhoto?: string | null;
+  permissions: {
+    accessLevel: string;
+    allowedModules: string[];
+  };
+  expiresAt: string;
+}
+
+export interface FamilyMemberDisplay {
+  id: string;
+  name: string;
+  subtitle: string;
+  isAdmin: boolean;
+  avatarColor: string;
+}

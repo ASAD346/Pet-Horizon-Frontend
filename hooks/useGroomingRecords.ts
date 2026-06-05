@@ -1,13 +1,13 @@
-import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
-  completeGroomingRecord,
-  fetchGroomingRecords,
-  fetchGroomingTypes,
+    completeGroomingRecord,
+    fetchGroomingRecords,
+    fetchGroomingTypes,
 } from '@/services/grooming/groomingApi';
 import type { GroomingRecord } from '@/types/grooming';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 
 export function useGroomingRecords(token: string | null, petId: string | null | undefined) {
   const [records, setRecords] = useState<GroomingRecord[]>([]);
