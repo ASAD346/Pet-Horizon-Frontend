@@ -1,33 +1,33 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  Modal,
-  Pressable,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Platform,
-  KeyboardAvoidingView,
-  ActivityIndicator,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { AppText } from '../ui/AppText';
-import { AppButton } from '../ui/AppButton';
-import { AuthErrorBanner } from '../auth/AuthErrorBanner';
-import { SheetHeroIllustration, SectionLabel, SheetColors } from '../sheets';
-import { ThemedDatePicker } from '../pet/ThemedDatePicker';
-import { Radius, Spacing } from '../../constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
-import { log } from '@/lib/log';
 import {
-  dateToApiDateString,
-  defaultScheduledDate,
-  formatDateLabel,
+    dateToApiDateString,
+    defaultScheduledDate,
+    formatDateLabel,
 } from '@/lib/grooming/groomingForm';
+import { log } from '@/lib/log';
 import { createGroomingRecord, fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useCallback, useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Radius, Spacing } from '../../constants/theme';
+import { AuthErrorBanner } from '../auth/AuthErrorBanner';
+import { ThemedDatePicker } from '../pet/ThemedDatePicker';
+import { SectionLabel, SheetColors, SheetHeroIllustration } from '../sheets';
+import { AppButton } from '../ui/AppButton';
+import { AppText } from '../ui/AppText';
 
 const Accent = {
   primary: '#E91E8C',

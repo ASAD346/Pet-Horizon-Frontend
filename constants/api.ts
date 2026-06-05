@@ -17,7 +17,7 @@ function getDevApiBaseUrl(): string {
 /** Root API URL including `/v1` — no trailing slash */
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') ??
-  (__DEV__ ? getDevApiBaseUrl() : 'https://your-api.example.com/v1');
+  (__DEV__ ? getDevApiBaseUrl() : 'https://pet-horizon-backend.onrender.com/v1');
 
 /**
  * Relative paths (appended to API_BASE_URL).
@@ -89,5 +89,16 @@ export const API_ENDPOINTS = {
     list: '/notifications',
     markAllRead: '/notifications/mark-all-read',
     markRead: (id: string) => `/notifications/${id}/read`,
+  },
+  invitations: {
+    generate: '/invitations/generate',
+    accept: '/invitations/accept',
+    info: (token: string) => `/invitations/info/${token}`,
+  },
+  family: {
+    membersByPet: (petId: string) => `/pets/${petId}/members`,
+    removeMemberByPet: (petId: string, userId: string) => `/pets/${petId}/members/${userId}`,
+    updateMemberPermissionsByPet: (petId: string, userId: string) =>
+      `/pets/${petId}/members/${userId}/permissions`,
   },
 } as const;

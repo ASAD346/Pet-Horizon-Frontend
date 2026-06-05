@@ -1,39 +1,39 @@
+import { getErrorMessage } from '@/lib/api/errors';
+import {
+    addMinutesToTimeHHmm,
+    dateToTimeHHmm,
+    DEFAULT_REMINDER_MINUTES,
+    defaultFeedingTimeDate,
+    formatTimeDisplay,
+    getReminderMinutesLabel,
+    mealTypeOptionsForSpecies,
+    pickDefaultUnit,
+    REMINDER_MINUTES_OPTIONS,
+    unitOptionsForSpecies,
+} from '@/lib/feeding/feedingForm';
+import { log } from '@/lib/log';
+import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  View,
-  StyleSheet,
-  Modal,
-  Pressable,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Platform,
-  KeyboardAvoidingView,
-  ActivityIndicator,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { AppText } from '../ui/AppText';
-import { AppButton } from '../ui/AppButton';
-import { AuthErrorBanner } from '../auth/AuthErrorBanner';
-import { SheetHeroIllustration, SectionLabel, SheetOptionPicker, ThemedTimePicker } from '../sheets';
-import type { SheetOption } from '../sheets';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
-import { getErrorMessage } from '@/lib/api/errors';
-import { log } from '@/lib/log';
-import {
-  addMinutesToTimeHHmm,
-  dateToTimeHHmm,
-  DEFAULT_REMINDER_MINUTES,
-  defaultFeedingTimeDate,
-  formatTimeDisplay,
-  getReminderMinutesLabel,
-  mealTypeOptionsForSpecies,
-  pickDefaultUnit,
-  REMINDER_MINUTES_OPTIONS,
-  unitOptionsForSpecies,
-} from '@/lib/feeding/feedingForm';
-import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
+import { AuthErrorBanner } from '../auth/AuthErrorBanner';
+import type { SheetOption } from '../sheets';
+import { SectionLabel, SheetHeroIllustration, SheetOptionPicker, ThemedTimePicker } from '../sheets';
+import { AppButton } from '../ui/AppButton';
+import { AppText } from '../ui/AppText';
 
 const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
   value: String(option.value),

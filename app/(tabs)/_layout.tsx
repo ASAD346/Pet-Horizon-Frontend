@@ -45,7 +45,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Calendar',
+          title: 'Schedule',
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} activeIcon="calendar" inactiveIcon="calendar-outline" />
           ),
@@ -54,7 +54,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="community"
         options={{
-          title: 'Community',
+          title: 'Family',
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} activeIcon="people" inactiveIcon="people-outline" />
           ),
