@@ -13,6 +13,7 @@ import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { FamilyHubHeader } from '@/components/family/FamilyHubHeader';
 import { FamilyOverviewCard } from '@/components/family/FamilyOverviewCard';
 import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
+import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
 import { MembersListSection } from '@/components/family/MembersListSection';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,7 +28,7 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { generatePetInvite } from '@/services/family/familyApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
-import type { FamilyMemberDisplay, GenerateInviteResponse } from '@/types/family';
+import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
 
 const TAB_BAR_CLEARANCE = 100;
 
@@ -45,6 +46,13 @@ export function FamilyHubView() {
   const [guestMembers, setGuestMembers] = useState<FamilyMemberDisplay[]>([]);
   const [guestLoading, setGuestLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [permissionsVisible, setPermissionsVisible] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<PetMemberRow | null>(null);
+
+  const manageableMemberIds = useMemo(
+    () => members.map((member) => member.userId._id),
+    [members],
+  );
 
   const isPremium = user?.premiumStatus === 'premium';
   const canInvite = Boolean(pet?._id && token && isOwner && isPremium);
@@ -191,6 +199,14 @@ export function FamilyHubView() {
             <MembersListSection
               members={displayMembers}
               loading={(membersLoading && isOwner) || (guestLoading && !isOwner)}
+              manageableIds={isOwner ? manageableMemberIds : []}
+              onMemberSettingsPress={(memberId) => {
+                const row = members.find((member) => member.userId._id === memberId);
+                if (row) {
+                  setSelectedMember(row);
+                  setPermissionsVisible(true);
+                }
+              }}
             />
           </>
         ) : null}
@@ -202,6 +218,18 @@ export function FamilyHubView() {
         petId={pet?._id ?? null}
         token={token}
         onInviteGenerated={(data) => setInvite(data)}
+      />
+
+      <MemberPermissionsSheet
+        visible={permissionsVisible}
+        member={selectedMember}
+        petId={pet?._id ?? null}
+        token={token}
+        onClose={() => {
+          setPermissionsVisible(false);
+          setSelectedMember(null);
+        }}
+        onUpdated={reloadMembers}
       />
     </SafeAreaView>
   );

@@ -32,6 +32,17 @@ export interface CreatePetRequest {
   image?: string | null;
 }
 
+export interface UpdatePetRequest {
+  name?: string;
+  species?: string;
+  breed?: string;
+  gender?: string;
+  birthday?: string;
+  weight?: number;
+  weightUnit?: string;
+  image?: string | null;
+}
+
 export interface SetActivePetResponse {
   activePetId: string;
 }

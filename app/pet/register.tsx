@@ -6,6 +6,7 @@ import {
   Platform,
   ScrollView,
   Keyboard,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -27,7 +28,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/lib/api/errors';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
-import { createAndActivatePet, fetchBreeds, fetchSpecies } from '@/services/pets/petApi';
+import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchSpecies, updatePet } from '@/services/pets/petApi';
 import { uploadPetImage } from '@/services/pets/uploadPetImage';
 import {
   hasRegisterPetFieldErrors,
@@ -39,8 +40,10 @@ const DEFAULT_BIRTHDAY = new Date(2021, 4, 15);
 
 export default function RegisterPetScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; petId?: string }>();
   const isAddMode = params.mode === 'add';
+  const isEditMode = params.mode === 'edit' && Boolean(params.petId);
+  const editPetId = Array.isArray(params.petId) ? params.petId[0] : params.petId;
   const { token, user, setSession } = useAuth();
 
   const [speciesList, setSpeciesList] = useState<string[]>([]);
@@ -136,6 +139,33 @@ export default function RegisterPetScreen() {
     };
   }, [token, species]);
 
+  useEffect(() => {
+    if (!token || !isEditMode || !editPetId) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const existing = await fetchPetById(token, editPetId);
+        if (!mounted) return;
+        setPetName(existing.name ?? '');
+        setSpecies(existing.species ?? '');
+        setBreed(existing.breed ?? '');
+        setGender((existing.gender as PetGender) || 'Male');
+        if (existing.birthday) setBirthday(new Date(existing.birthday));
+        if (existing.weight != null) setWeight(String(existing.weight));
+        if (existing.weightUnit === 'lbs' || existing.weightUnit === 'kg') {
+          setWeightUnit(existing.weightUnit);
+        }
+      } catch (error) {
+        if (mounted) setFormError(getErrorMessage(error));
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [token, isEditMode, editPetId]);
+
   const handleSpeciesChange = useCallback(
     (next: string) => {
       setSpecies(next);
@@ -165,13 +195,12 @@ export default function RegisterPetScreen() {
     }
 
     setLoading(true);
-    log.info('AddPet', 'Submitting', { name: petName.trim(), species, breed, mode: isAddMode ? 'add' : 'onboarding' });
+    log.info('AddPet', 'Submitting', { name: petName.trim(), species, breed, mode: isEditMode ? 'edit' : isAddMode ? 'add' : 'onboarding' });
 
     try {
       const weightNum = weight.trim() ? Number(weight) : undefined;
       const apiWeightUnit = weightUnit === 'lbs' ? 'lbs' : 'kg';
-
-      let pet = await createAndActivatePet(token, {
+      const payload = {
         name: petName.trim(),
         species,
         breed: breed.trim(),
@@ -179,7 +208,11 @@ export default function RegisterPetScreen() {
         birthday: birthday.toISOString(),
         weight: weightNum,
         weightUnit: apiWeightUnit,
-      });
+      };
+
+      let pet = isEditMode && editPetId
+        ? await updatePet(token, editPetId, payload)
+        : await createAndActivatePet(token, payload);
 
       if (photoUri) {
         try {
@@ -189,16 +222,16 @@ export default function RegisterPetScreen() {
         }
       }
 
-      if (user) {
+      if (user && !isEditMode) {
         await setSession({
           token,
           user: { ...user, activePetId: pet._id },
         });
       }
 
-      log.ok('AddPet', 'Done — navigating', { petId: pet._id, isAddMode });
+      log.ok('AddPet', 'Done — navigating', { petId: pet._id, isAddMode, isEditMode });
 
-      if (isAddMode) {
+      if (isEditMode || isAddMode) {
         router.back();
       } else {
         router.replace('/(tabs)');
@@ -215,6 +248,8 @@ export default function RegisterPetScreen() {
     clearErrors,
     gender,
     isAddMode,
+    isEditMode,
+    editPetId,
     petName,
     router,
     setSession,
@@ -225,6 +260,31 @@ export default function RegisterPetScreen() {
     weight,
     weightUnit,
   ]);
+
+  const handleDeletePet = useCallback(() => {
+    if (!token || !editPetId) return;
+    Alert.alert('Delete pet', 'This permanently removes the pet and related data.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          setLoading(true);
+          try {
+            await deletePet(token, editPetId);
+            if (user && user.activePetId === editPetId) {
+              await setSession({ token, user: { ...user, activePetId: null } });
+            }
+            router.replace('/(tabs)');
+          } catch (error) {
+            setFormError(getErrorMessage(error));
+          } finally {
+            setLoading(false);
+          }
+        },
+      },
+    ]);
+  }, [token, editPetId, user, setSession, router]);
 
   return (
     <View style={styles.root}>
@@ -241,7 +301,7 @@ export default function RegisterPetScreen() {
           >
             <View style={styles.header}>
               <AppText variant="h3" weight="800" align="center" style={styles.title}>
-                {isAddMode ? 'Add another pet' : 'Tell us about your furry friend!'}
+                {isEditMode ? 'Edit pet profile' : isAddMode ? 'Add another pet' : 'Tell us about your furry friend!'}
               </AppText>
               <AppText variant="bodySmall" color={LoginTheme.tagline} align="center" style={styles.subtitle}>
                 Let&apos;s create a profile to help you track their healthy lifestyle.
@@ -310,7 +370,7 @@ export default function RegisterPetScreen() {
 
           <View style={styles.footer}>
             <AppButton
-              title="Add Pet"
+              title={isEditMode ? 'Save Changes' : 'Add Pet'}
               onPress={handleAddPet}
               loading={loading}
               disabled={speciesLoading || loading}
@@ -319,6 +379,17 @@ export default function RegisterPetScreen() {
               style={styles.addButton}
               textStyle={styles.addButtonText}
             />
+            {isEditMode ? (
+              <AppButton
+                title="Delete Pet"
+                onPress={handleDeletePet}
+                disabled={loading}
+                variant="outline"
+                size="sm"
+                style={styles.deleteButton}
+                textStyle={styles.deleteButtonText}
+              />
+            ) : null}
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -386,5 +457,17 @@ const styles = StyleSheet.create({
   addButtonText: {
     fontSize: 16,
     fontWeight: '700',
+  },
+  deleteButton: {
+    width: '100%',
+    minHeight: 48,
+    borderRadius: 24,
+    marginTop: Spacing.sm,
+    borderColor: '#C62828',
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#C62828',
   },
 });

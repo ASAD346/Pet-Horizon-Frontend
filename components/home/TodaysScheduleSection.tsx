@@ -64,9 +64,11 @@ interface TodaysScheduleSectionProps {
   groomingActionId?: string | null;
   vaccinationActionId?: string | null;
   onCompleteFeeding?: (scheduleId: string) => void;
+  onSkipFeeding?: (scheduleId: string) => void;
   onCompleteWalk?: (scheduleId: string) => void;
   onCompleteMedicine?: (scheduleId: string) => void;
   onCompleteGrooming?: (recordId: string) => void;
+  onManageGrooming?: (recordId: string) => void;
   onCompleteVaccination?: (scheduleId: string) => void;
 }
 
@@ -192,9 +194,11 @@ export function TodaysScheduleSection({
   groomingActionId = null,
   vaccinationActionId = null,
   onCompleteFeeding,
+  onSkipFeeding,
   onCompleteWalk,
   onCompleteMedicine,
   onCompleteGrooming,
+  onManageGrooming,
   onCompleteVaccination,
 }: TodaysScheduleSectionProps) {
   const items = useMemo(
@@ -273,6 +277,57 @@ export function TodaysScheduleSection({
                 <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
                   Skipped
                 </AppText>
+              ) : row.kind === 'feeding' ? (
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.skipBtn}
+                    activeOpacity={0.85}
+                    disabled={busy || !onSkipFeeding}
+                    onPress={() => onSkipFeeding?.(rowId(row))}
+                  >
+                    {busy ? (
+                      <ActivityIndicator size="small" color={HomeTheme.textMuted} />
+                    ) : (
+                      <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
+                        Skip
+                      </AppText>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.doneBtn}
+                    activeOpacity={0.85}
+                    disabled={busy || !onComplete}
+                    onPress={() => onComplete?.(rowId(row))}
+                  >
+                    <AppText variant="caption" weight="600" color="#8FAF8F">
+                      Done
+                    </AppText>
+                  </TouchableOpacity>
+                </View>
+              ) : row.kind === 'grooming' && onManageGrooming ? (
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.skipBtn}
+                    activeOpacity={0.85}
+                    onPress={() => onManageGrooming(rowId(row))}
+                  >
+                    <Ionicons name="settings-outline" size={16} color={HomeTheme.textMuted} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.doneBtn}
+                    activeOpacity={0.85}
+                    disabled={busy || !onComplete}
+                    onPress={() => onComplete?.(rowId(row))}
+                  >
+                    {busy ? (
+                      <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                    ) : (
+                      <AppText variant="caption" weight="600" color="#8FAF8F">
+                        Done
+                      </AppText>
+                    )}
+                  </TouchableOpacity>
+                </View>
               ) : (
                 <TouchableOpacity
                   style={styles.doneBtn}
@@ -321,6 +376,16 @@ const styles = StyleSheet.create({
   },
   doneBtn: {
     minWidth: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  skipBtn: {
+    minWidth: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },

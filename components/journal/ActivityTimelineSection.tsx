@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from '../home/ColorIconBadge';
@@ -10,6 +10,7 @@ import { getCategoryStyle } from './journalData';
 interface ActivityTimelineSectionProps {
   events: TimelineEvent[];
   categoryFilter: JournalCategory;
+  onEventPress?: (eventId: string) => void;
 }
 
 function filterEvents(events: TimelineEvent[], filter: JournalCategory) {
@@ -17,7 +18,15 @@ function filterEvents(events: TimelineEvent[], filter: JournalCategory) {
   return events.filter((e) => e.category === filter);
 }
 
-function TimelineRow({ event, isLast }: { event: TimelineEvent; isLast: boolean }) {
+function TimelineRow({
+  event,
+  isLast,
+  onPress,
+}: {
+  event: TimelineEvent;
+  isLast: boolean;
+  onPress?: (eventId: string) => void;
+}) {
   const { color, bg } = getCategoryStyle(event.category);
   const completed = event.status === 'completed';
 
@@ -32,7 +41,12 @@ function TimelineRow({ event, isLast }: { event: TimelineEvent; isLast: boolean 
         {!isLast ? <View style={styles.line} /> : null}
       </View>
 
-      <View style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        activeOpacity={onPress ? 0.85 : 1}
+        disabled={!onPress}
+        onPress={() => onPress?.(event.id)}
+      >
         <ColorIconBadge
           color={color}
           backgroundColor={bg}
@@ -58,12 +72,16 @@ function TimelineRow({ event, isLast }: { event: TimelineEvent; isLast: boolean 
             <Ionicons name="checkmark" size={18} color={JournalTheme.surface} />
           </View>
         ) : null}
-      </View>
+      </TouchableOpacity>
     </View>
   );
 }
 
-export function ActivityTimelineSection({ events, categoryFilter }: ActivityTimelineSectionProps) {
+export function ActivityTimelineSection({
+  events,
+  categoryFilter,
+  onEventPress,
+}: ActivityTimelineSectionProps) {
   const filtered = useMemo(
     () => filterEvents(events, categoryFilter),
     [events, categoryFilter]
@@ -81,13 +99,22 @@ export function ActivityTimelineSection({ events, categoryFilter }: ActivityTime
       </View>
 
       <View style={styles.list}>
-        {filtered.map((event, index) => (
-          <TimelineRow
-            key={event.id}
-            event={event}
-            isLast={index === filtered.length - 1}
-          />
-        ))}
+        {filtered.length === 0 ? (
+          <View style={styles.empty}>
+            <AppText variant="bodySmall" color={JournalTheme.textMuted}>
+              No journal entries for this day yet. Complete a feeding, walk, or grooming task to log activity here.
+            </AppText>
+          </View>
+        ) : (
+          filtered.map((event, index) => (
+            <TimelineRow
+              key={event.id}
+              event={event}
+              isLast={index === filtered.length - 1}
+              onPress={onEventPress}
+            />
+          ))
+        )}
       </View>
     </View>
   );
@@ -118,6 +145,13 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: Spacing.sm,
+  },
+  empty: {
+    backgroundColor: JournalTheme.surface,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: JournalTheme.border,
   },
   row: {
     flexDirection: 'row',

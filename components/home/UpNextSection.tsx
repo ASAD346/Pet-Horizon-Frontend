@@ -39,6 +39,7 @@ import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
+import type { DashboardTask } from '@/types/dashboard';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 type PendingRow =
@@ -65,6 +66,39 @@ interface UpNextSectionProps {
   onLogMedicine?: (scheduleId: string) => void;
   onLogGrooming?: (recordId: string) => void;
   onLogVaccination?: (scheduleId: string) => void;
+  dashboardTasks?: DashboardTask[];
+}
+
+function dashboardTaskCaption(task: DashboardTask): string {
+  if (task.timeOfDay) return formatTimeHHmmDisplay(task.timeOfDay);
+  if (task.scheduledDate) return new Date(task.scheduledDate).toLocaleDateString();
+  return 'Upcoming';
+}
+
+function dashboardTaskIcon(task: DashboardTask): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' {
+  const category = task.category?.toLowerCase() ?? '';
+  if (category === 'feeding' || category === 'food') return 'silverware-fork-knife';
+  if (category === 'walk' || category === 'walks') return 'walk';
+  if (category === 'medicine') return 'pill';
+  if (category === 'vaccination') return 'needle';
+  if (task.source === 'grooming') return 'content-cut';
+  return 'silverware-fork-knife';
+}
+
+function dashboardTaskHandler(
+  task: DashboardTask,
+  handlers: Pick<
+    UpNextSectionProps,
+    'onLogFeeding' | 'onLogWalk' | 'onLogMedicine' | 'onLogGrooming' | 'onLogVaccination'
+  >,
+) {
+  if (task.source === 'grooming') return handlers.onLogGrooming;
+  const category = task.category?.toLowerCase() ?? '';
+  if (category === 'feeding' || category === 'food') return handlers.onLogFeeding;
+  if (category === 'walk' || category === 'walks') return handlers.onLogWalk;
+  if (category === 'medicine') return handlers.onLogMedicine;
+  if (category === 'vaccination') return handlers.onLogVaccination;
+  return handlers.onLogFeeding;
 }
 
 function rowSortKey(row: PendingRow): number {
@@ -191,6 +225,7 @@ export function UpNextSection({
   onLogMedicine,
   onLogGrooming,
   onLogVaccination,
+  dashboardTasks = [],
 }: UpNextSectionProps) {
   const pending = useMemo(
     () =>
@@ -204,6 +239,8 @@ export function UpNextSection({
     [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 
+  const useDashboard = dashboardTasks.length > 0;
+
   if (loading) {
     return (
       <View style={styles.section}>
@@ -213,7 +250,11 @@ export function UpNextSection({
     );
   }
 
-  if (pending.length === 0) {
+  if (!useDashboard && pending.length === 0) {
+    return null;
+  }
+
+  if (useDashboard && dashboardTasks.length === 0) {
     return null;
   }
 
@@ -225,7 +266,53 @@ export function UpNextSection({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {pending.map((row) => {
+        {useDashboard
+          ? dashboardTasks.map((task) => {
+              const onLog = dashboardTaskHandler(task, {
+                onLogFeeding,
+                onLogWalk,
+                onLogMedicine,
+                onLogGrooming,
+                onLogVaccination,
+              });
+              const colors =
+                task.source === 'grooming'
+                  ? groomingRecordColors()
+                  : task.category === 'walk'
+                    ? walkScheduleColors({} as WalkScheduleItem)
+                    : feedingScheduleColors({} as FeedingScheduleItem);
+
+              return (
+                <View key={`${task.source}-${task.id}`} style={[homePillCard.card, styles.card]}>
+                  <ColorIconBadge
+                    color={colors.color}
+                    backgroundColor={colors.bg}
+                    materialIcon={dashboardTaskIcon(task)}
+                    size={46}
+                    iconSize={22}
+                  />
+                  <View style={styles.textBlock}>
+                    <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                      {task.title}
+                    </AppText>
+                    <AppText variant="caption" color={HomeTheme.textMuted}>
+                      {dashboardTaskCaption(task)}
+                    </AppText>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.logBtn}
+                    activeOpacity={0.85}
+                    disabled={!onLog}
+                    onPress={() => onLog?.(task.id)}
+                  >
+                    <AppText variant="caption" weight="800" color={HomeTheme.white}>
+                      LOG
+                    </AppText>
+                  </TouchableOpacity>
+                </View>
+              );
+            })
+          : pending.map((row) => {
           const colors = rowColors(row);
           const busy = rowBusy(
             row,

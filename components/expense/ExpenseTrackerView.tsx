@@ -1,8 +1,24 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { useRouter, type Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
+import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActivePet } from '@/hooks/useActivePet';
+import { useBudget } from '@/hooks/useBudget';
+import { useExpenses } from '@/hooks/useExpenses';
+import { useNotifications } from '@/hooks/useNotifications';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
 import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
+import { EditBudgetSheet } from './EditBudgetSheet';
 import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
@@ -10,10 +26,32 @@ import { HomeTheme, Spacing } from '../../constants/theme';
 
 interface ExpenseTrackerViewProps {
   onJournalPress?: () => void;
+  onNotificationsPress?: () => void;
 }
 
-export function ExpenseTrackerView({ onJournalPress }: ExpenseTrackerViewProps) {
+export function ExpenseTrackerView({
+  onJournalPress,
+  onNotificationsPress,
+}: ExpenseTrackerViewProps) {
+  const router = useRouter();
+  const { token } = useAuth();
+  const { pet, loading: petLoading } = useActivePet(token);
+  const { expenses, loading: expensesLoading, error, reload: reloadExpenses } = useExpenses(
+    token,
+    pet?._id,
+  );
+  const { budget, loading: budgetLoading, reload: reloadBudget } = useBudget(token, pet?._id);
+  const { unreadCount } = useNotifications(token);
+
   const [category, setCategory] = useState<ExpenseTrackerCategory>('all');
+  const [refreshing, setRefreshing] = useState(false);
+  const [budgetSheetVisible, setBudgetSheetVisible] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([reloadExpenses(), reloadBudget()]);
+    setRefreshing(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -21,13 +59,63 @@ export function ExpenseTrackerView({ onJournalPress }: ExpenseTrackerViewProps) 
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
+        }
       >
-        <ExpenseTrackerHeader onJournalPress={onJournalPress} />
-        <WeeklySpendingCard />
+        <ExpenseTrackerHeader
+          notificationCount={unreadCount}
+          onJournalPress={onJournalPress}
+          onNotificationsPress={onNotificationsPress}
+        />
+
+        {!petLoading && !pet ? (
+          <AuthInfoBanner message="Add a pet from Home to track expenses." />
+        ) : null}
+
+        {error ? <AuthErrorBanner message={error} /> : null}
+
+        <WeeklySpendingCard
+          limitLabel={budget.limitLabel}
+          spentPercent={budget.spentPercent}
+          remainingLabel={budget.remainingLabel}
+          status={budget.status}
+          loading={budgetLoading || petLoading}
+          onEditPress={() => setBudgetSheetVisible(true)}
+        />
+
         <ExpenseCategoryTiles selected={category} onSelect={setCategory} />
-        <RecentTransactionsSection categoryFilter={category} />
+        <RecentTransactionsSection
+          categoryFilter={category}
+          transactions={expenses}
+          loading={expensesLoading || petLoading}
+        />
+
         <View style={styles.tabSpacer} />
       </ScrollView>
+
+      {pet ? (
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.9}
+          onPress={() => router.push('/expense/add' as Href)}
+        >
+          <Ionicons name="add" size={28} color={HomeTheme.white} />
+        </TouchableOpacity>
+      ) : null}
+
+      <EditBudgetSheet
+        visible={budgetSheetVisible}
+        petId={pet?._id ?? null}
+        token={token}
+        budgetId={budget.budgetId}
+        currentLimit={budget.amountLimit}
+        onClose={() => setBudgetSheetVisible(false)}
+        onSaved={() => {
+          reloadBudget();
+          reloadExpenses();
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -47,5 +135,16 @@ const styles = StyleSheet.create({
   },
   tabSpacer: {
     height: 88,
+  },
+  fab: {
+    position: 'absolute',
+    right: Spacing.lg,
+    bottom: 100,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: HomeTheme.cardGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

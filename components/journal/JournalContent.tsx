@@ -1,28 +1,193 @@
-import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
+import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useAuth } from '@/contexts/AuthContext';
+import { useActivePet } from '@/hooks/useActivePet';
+import { useJournalEntries } from '@/hooks/useJournalEntries';
+import {
+  buildDateStrip,
+  extractPhotoUrls,
+  filterEntriesByDate,
+  findPhotoUploadTarget,
+  formatMonthLabel,
+  isSameCalendarDay,
+  mapEntryToTimelineEvent,
+  parseDateKey,
+  shiftWeekStart,
+  startOfWeek,
+  toDateKey,
+} from '@/lib/journal/journalMappers';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { getErrorMessage } from '@/lib/api/errors';
+import { createJournalEntry } from '@/services/journal/journalApi';
+import { uploadJournalImage } from '@/services/journal/uploadJournalImage';
 import { ActivityTimelineSection } from './ActivityTimelineSection';
+import { JournalEntryEditSheet } from './JournalEntryEditSheet';
 import { JournalCategoryChips } from './JournalCategoryChips';
 import { JournalDateStrip } from './JournalDateStrip';
 import { JournalMonthHeader } from './JournalMonthHeader';
-import {
-  JOURNAL_CATEGORY_CHIPS,
-  JOURNAL_DATES,
-  JOURNAL_MONTH_LABEL,
-  JOURNAL_TIMELINE_EVENTS,
-} from './journalData';
-import type { JournalCategory } from './journalData';
+import { JOURNAL_CATEGORY_CHIPS, type JournalCategory } from './journalData';
 import { TodaysPhotosSection } from './TodaysPhotosSection';
-import { Spacing } from '../../constants/theme';
+import { JournalTheme, Spacing } from '../../constants/theme';
 
-export function JournalContent() {
-  const [selectedDateId, setSelectedDateId] = useState<string>(JOURNAL_DATES[0].id);
+interface JournalContentProps {
+  active?: boolean;
+}
+
+export function JournalContent({ active = true }: JournalContentProps) {
+  const { token } = useAuth();
+  const { pet, loading: petLoading } = useActivePet(token);
+  const { entries, loading, error, reload } = useJournalEntries(
+    token,
+    pet?._id ?? null,
+    active && Boolean(pet?._id),
+  );
+
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+  const [selectedDateId, setSelectedDateId] = useState(() => toDateKey(new Date()));
   const [category, setCategory] = useState<JournalCategory>('all');
+  const [refreshing, setRefreshing] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [editEntryId, setEditEntryId] = useState<string | null>(null);
+
+  const dateStrip = useMemo(() => buildDateStrip(weekStart), [weekStart]);
+  const selectedDate = useMemo(() => parseDateKey(selectedDateId), [selectedDateId]);
+  const monthLabel = useMemo(() => formatMonthLabel(selectedDate), [selectedDate]);
+
+  const dayEntries = useMemo(
+    () => filterEntriesByDate(entries, selectedDateId),
+    [entries, selectedDateId],
+  );
+
+  const editEntry = useMemo(
+    () => (editEntryId ? dayEntries.find((entry) => entry._id === editEntryId) ?? null : null),
+    [editEntryId, dayEntries],
+  );
+
+  const timelineEvents = useMemo(
+    () => dayEntries.map(mapEntryToTimelineEvent),
+    [dayEntries],
+  );
+
+  const photoUrls = useMemo(
+    () => extractPhotoUrls(dayEntries).map((path) => resolveMediaUrl(path)).filter(Boolean) as string[],
+    [dayEntries],
+  );
+
+  const isSelectedToday = isSameCalendarDay(selectedDate, new Date());
+  const canAddPhoto = isSelectedToday;
+
+  useEffect(() => {
+    if (!dateStrip.some((item) => item.id === selectedDateId)) {
+      setSelectedDateId(dateStrip[0]?.id ?? toDateKey(new Date()));
+    }
+  }, [dateStrip, selectedDateId]);
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await reload();
+    setRefreshing(false);
+  }, [reload]);
+
+  const handlePreviousWeek = useCallback(() => {
+    setWeekStart((current) => shiftWeekStart(current, -1));
+  }, []);
+
+  const handleNextWeek = useCallback(() => {
+    setWeekStart((current) => shiftWeekStart(current, 1));
+  }, []);
+
+  const handleAddPhoto = useCallback(async () => {
+    if (!token || !pet?._id) {
+      Alert.alert('Journal', 'Select a pet before adding a photo.');
+      return;
+    }
+    if (!isSelectedToday) {
+      Alert.alert('Journal', 'Photos can only be added for today.');
+      return;
+    }
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Photos access', 'Allow photo library access to add journal photos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.85,
+    });
+
+    if (result.canceled || !result.assets[0]?.uri) return;
+
+    setUploadingPhoto(true);
+    try {
+      let target = findPhotoUploadTarget(dayEntries);
+      if (!target) {
+        target = await createJournalEntry(token, {
+          petId: pet._id,
+          activityType: 'General',
+          note: 'Journal photo',
+        });
+      }
+      await uploadJournalImage(token, target._id, result.assets[0].uri);
+      await reload();
+    } catch (err) {
+      Alert.alert('Upload failed', getErrorMessage(err));
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }, [token, pet?._id, isSelectedToday, dayEntries, reload]);
+
+  if (!petLoading && !pet) {
+    return (
+      <View style={styles.messageWrap}>
+        <AuthInfoBanner message="Add a pet from Home to view your activity journal." />
+      </View>
+    );
+  }
+
+  if (loading && entries.length === 0) {
+    return (
+      <View style={styles.loaderWrap}>
+        <ActivityIndicator size="large" color={JournalTheme.navy} />
+      </View>
+    );
+  }
 
   return (
-    <View style={styles.content}>
-      <JournalMonthHeader monthLabel={JOURNAL_MONTH_LABEL} />
+    <>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={JournalTheme.navy} />
+      }
+    >
+      {error ? (
+        <View style={styles.messageWrap}>
+          <AuthErrorBanner message={error} />
+        </View>
+      ) : null}
+
+      <JournalMonthHeader
+        monthLabel={monthLabel}
+        onPrevious={handlePreviousWeek}
+        onNext={handleNextWeek}
+      />
       <JournalDateStrip
-        dates={JOURNAL_DATES}
+        dates={dateStrip}
         selectedId={selectedDateId}
         onSelect={setSelectedDateId}
       />
@@ -31,14 +196,39 @@ export function JournalContent() {
         selected={category}
         onSelect={setCategory}
       />
-      <ActivityTimelineSection events={JOURNAL_TIMELINE_EVENTS} categoryFilter={category} />
-      <TodaysPhotosSection />
-    </View>
+      <ActivityTimelineSection
+        events={timelineEvents}
+        categoryFilter={category}
+        onEventPress={setEditEntryId}
+      />
+      <TodaysPhotosSection
+        title={isSelectedToday ? "Today's Photos" : 'Photos'}
+        photoUrls={photoUrls}
+        canAddPhoto={canAddPhoto}
+        uploading={uploadingPhoto}
+        onAddPhoto={handleAddPhoto}
+      />
+    </ScrollView>
+    <JournalEntryEditSheet
+      visible={Boolean(editEntry)}
+      entry={editEntry}
+      token={token}
+      onClose={() => setEditEntryId(null)}
+      onSaved={reload}
+    />
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   content: {
     paddingBottom: Spacing.md,
+  },
+  messageWrap: {
+    marginBottom: Spacing.md,
+  },
+  loaderWrap: {
+    paddingVertical: Spacing.xxl,
+    alignItems: 'center',
   },
 });

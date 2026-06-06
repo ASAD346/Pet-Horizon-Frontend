@@ -9,13 +9,15 @@ interface HomeHeaderProps {
   dateLabel?: string;
   notificationCount?: number;
   onJournalPress?: () => void;
+  onNotificationsPress?: () => void;
 }
 
 export function HomeHeader({
   userName = 'Sarah',
   dateLabel = 'Monday, May 15th',
-  notificationCount = 3,
+  notificationCount = 0,
   onJournalPress,
+  onNotificationsPress,
 }: HomeHeaderProps) {
   return (
     <View style={styles.container}>
@@ -37,7 +39,11 @@ export function HomeHeader({
         >
           <MaterialCommunityIcons name="notebook-outline" size={22} color={HomeTheme.text} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.iconBtn}
+          activeOpacity={0.8}
+          onPress={onNotificationsPress}
+        >
           <Ionicons name="notifications-outline" size={20} color={HomeTheme.text} />
           {notificationCount > 0 && (
             <View style={styles.badge}>

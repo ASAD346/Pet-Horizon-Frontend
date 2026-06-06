@@ -7,14 +7,18 @@ import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { AppButton } from '../ui/AppButton';
+import { AuthErrorBanner } from '../auth/AuthErrorBanner';
 import { SectionLabel, SheetColors } from '../sheets/sheetUi';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
-import { EXPENSE_CATEGORIES, type ExpenseCategory } from './expenseData';
+import { API_EXPENSE_CATEGORIES } from '@/lib/expense/expenseMappers';
+import { getErrorMessage } from '@/lib/api/errors';
+import { createExpense } from '@/services/expense/expenseApi';
 import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 
 const inputShadow = Platform.select({
@@ -30,28 +34,64 @@ const inputShadow = Platform.select({
 const TAB_BAR_CLEARANCE = 88;
 
 interface AddExpenseViewProps {
+  petId?: string | null;
+  token?: string | null;
   onClose?: () => void;
   onJournalPress?: () => void;
-  /** Extra bottom padding when shown inside the tab navigator (floating tab bar). */
+  onSaved?: () => void;
   embeddedInTabs?: boolean;
 }
 
 export function AddExpenseView({
+  petId,
+  token,
   onClose,
   onJournalPress,
+  onSaved,
   embeddedInTabs = false,
 }: AddExpenseViewProps) {
   const insets = useSafeAreaInsets();
   const footerPadding =
     Math.max(insets.bottom, Spacing.md) + (embeddedInTabs ? TAB_BAR_CLEARANCE : 0);
   const scrollBottomPadding = embeddedInTabs ? TAB_BAR_CLEARANCE : Spacing.lg;
-  const [category, setCategory] = useState<ExpenseCategory>('Vet');
-  const [amount, setAmount] = useState('20');
-  const [merchant, setMerchant] = useState('Abxb');
-  const [note, setNote] = useState('');
 
-  const handleSubmit = () => {
-    onClose?.();
+  const [category, setCategory] = useState('Food');
+  const [amount, setAmount] = useState('');
+  const [merchant, setMerchant] = useState('');
+  const [note, setNote] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const categoryLabels = API_EXPENSE_CATEGORIES.map((item) => item.label);
+
+  const handleSubmit = async () => {
+    if (!petId || !token) {
+      setError('Select a pet before adding an expense.');
+      return;
+    }
+    const value = Number(amount);
+    if (!value || Number.isNaN(value) || value <= 0) {
+      setError('Enter a valid amount.');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      const selected = API_EXPENSE_CATEGORIES.find((item) => item.label === category);
+      await createExpense(token, {
+        petId,
+        category: selected?.value ?? 'other',
+        amount: value,
+        note: [merchant.trim(), note.trim()].filter(Boolean).join(' — ') || undefined,
+      });
+      onSaved?.();
+      onClose?.();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -71,11 +111,7 @@ export function AddExpenseView({
               style={styles.headerActionBtn}
               accessibilityLabel="Open pet journal"
             >
-              <MaterialCommunityIcons
-                name="notebook-outline"
-                size={22}
-                color={HomeTheme.text}
-              />
+              <MaterialCommunityIcons name="notebook-outline" size={22} color={HomeTheme.text} />
             </TouchableOpacity>
           ) : onClose ? (
             <TouchableOpacity
@@ -96,9 +132,11 @@ export function AddExpenseView({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {error ? <AuthErrorBanner message={error} /> : null}
+
           <SectionLabel text="CATEGORY" />
           <ExpenseCategoryChips
-            categories={EXPENSE_CATEGORIES}
+            categories={categoryLabels}
             selected={category}
             onSelect={setCategory}
           />
@@ -150,6 +188,7 @@ export function AddExpenseView({
           <AppButton
             title="Add Expense"
             onPress={handleSubmit}
+            loading={saving}
             variant="success"
             size="lg"
             style={styles.submitBtn}

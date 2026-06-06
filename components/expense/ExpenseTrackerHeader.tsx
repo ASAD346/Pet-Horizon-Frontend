@@ -7,11 +7,13 @@ import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 interface ExpenseTrackerHeaderProps {
   notificationCount?: number;
   onJournalPress?: () => void;
+  onNotificationsPress?: () => void;
 }
 
 export function ExpenseTrackerHeader({
-  notificationCount = 3,
+  notificationCount = 0,
   onJournalPress,
+  onNotificationsPress,
 }: ExpenseTrackerHeaderProps) {
   return (
     <View style={styles.container}>
@@ -28,7 +30,11 @@ export function ExpenseTrackerHeader({
         >
           <MaterialCommunityIcons name="notebook-outline" size={22} color={HomeTheme.text} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8}>
+        <TouchableOpacity
+          style={styles.iconBtn}
+          activeOpacity={0.8}
+          onPress={onNotificationsPress}
+        >
           <Ionicons name="notifications-outline" size={20} color={HomeTheme.text} />
           {notificationCount > 0 ? (
             <View style={styles.badge}>

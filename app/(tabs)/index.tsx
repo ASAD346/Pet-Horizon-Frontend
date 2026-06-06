@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,7 +15,7 @@ import {
 
     RecentActivitySection,
 
-    ReminderCardsRow,
+    GroomingAlertsRow,
 
     TodaysScheduleSection,
 
@@ -25,6 +25,16 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 
 import { useActivePet } from '@/hooks/useActivePet';
+
+import { useDashboardStatus } from '@/hooks/useDashboardStatus';
+
+import { useNotifications } from '@/hooks/useNotifications';
+
+import { usePets } from '@/hooks/usePets';
+
+import { useUpcomingTasks } from '@/hooks/useUpcomingTasks';
+
+import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
 
 import { useFeedingSchedules } from '@/hooks/useFeedingSchedules';
 
@@ -44,6 +54,8 @@ import { LogFoodSheet } from '@/components/log-food';
 
 import { LogGroomingSheet } from '@/components/log-grooming';
 
+import { GroomingManageSheet } from '@/components/log-grooming/GroomingManageSheet';
+
 import { LogJournalSheet } from '@/components/journal';
 
 import { LogMedicineSheet } from '@/components/log-medicine';
@@ -53,6 +65,8 @@ import { LogWalkSheet } from '@/components/log-walk';
 import { LogVaccinationSheet } from '@/components/log-vaccination';
 
 import { HomeTheme, Spacing } from '@/constants/theme';
+
+import type { GroomingRecord } from '@/types/grooming';
 
 
 
@@ -76,9 +90,17 @@ export default function HomeScreen() {
 
   const router = useRouter();
 
-  const { token, user } = useAuth();
+  const { token, user, setSession } = useAuth();
 
-  const { pet, loading } = useActivePet(token);
+  const { pet, loading, reload: reloadPet } = useActivePet(token);
+
+  const { profileStats } = useDashboardStatus(token);
+
+  const { tasks: dashboardTasks, loading: tasksLoading } = useUpcomingTasks(token);
+
+  const { unreadCount } = useNotifications(token);
+
+  const { pets, switchingId, switchPet, reload: reloadPets } = usePets(token, pet?._id ?? user?.activePetId);
 
 
 
@@ -93,6 +115,8 @@ export default function HomeScreen() {
     reload: reloadFeeding,
 
     completeFeeding,
+
+    skipFeeding,
 
   } = useFeedingSchedules(token, pet?._id);
 
@@ -164,11 +188,17 @@ export default function HomeScreen() {
 
 
 
-  const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading;
+  const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading || tasksLoading;
 
 
 
-  const profile = useMemo(() => (pet ? petToProfileProps(pet) : null), [pet]);
+  const profile = useMemo(() => {
+    if (profileStats) return profileStats;
+    if (pet) return petToProfileProps(pet);
+    return null;
+  }, [pet, profileStats]);
+
+  const petImageUrl = resolveMediaUrl(profileStats?.photoUrl ?? pet?.image);
 
 
 
@@ -185,6 +215,34 @@ export default function HomeScreen() {
   const [logVaccinationVisible, setLogVaccinationVisible] = useState(false);
 
   const [journalVisible, setJournalVisible] = useState(false);
+
+  const [petSwitcherVisible, setPetSwitcherVisible] = useState(false);
+
+  const [groomingManageVisible, setGroomingManageVisible] = useState(false);
+
+  const [groomingManageRecord, setGroomingManageRecord] = useState<GroomingRecord | null>(null);
+
+  const openGroomingManage = (recordId: string) => {
+
+    const record = groomingRecords.find((item) => item._id === recordId) ?? null;
+
+    setGroomingManageRecord(record);
+
+    setGroomingManageVisible(true);
+
+  };
+
+
+
+  const handleSwitchPet = async (petId: string) => {
+    if (!token) return;
+    await switchPet(petId);
+    if (user) {
+      await setSession({ token, user: { ...user, activePetId: petId } });
+    }
+    await reloadPet();
+    setPetSwitcherVisible(false);
+  };
 
 
 
@@ -208,7 +266,11 @@ export default function HomeScreen() {
 
           dateLabel={formatDateLabel(new Date())}
 
+          notificationCount={unreadCount}
+
           onJournalPress={() => setJournalVisible(true)}
+
+          onNotificationsPress={() => router.push('/notifications' as Href)}
 
         />
 
@@ -216,15 +278,31 @@ export default function HomeScreen() {
 
           {...(profile ?? {})}
 
-          imageUrl={resolveMediaUrl(pet?.image)}
+          imageUrl={petImageUrl}
 
           loading={loading}
+
+          onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
 
           onAddPet={() => router.push({ pathname: '/pet/register', params: { mode: 'add' } })}
 
         />
 
-        <ReminderCardsRow />
+        <GroomingAlertsRow
+
+          token={token}
+
+          petId={pet?._id}
+
+          onAlertPress={(record) => {
+
+            setGroomingManageRecord(record);
+
+            setGroomingManageVisible(true);
+
+          }}
+
+        />
 
         <QuickActionsSection
 
@@ -276,6 +354,8 @@ export default function HomeScreen() {
 
           onLogVaccination={completeVaccination}
 
+          dashboardTasks={dashboardTasks}
+
         />
 
         <TodaysScheduleSection
@@ -304,11 +384,15 @@ export default function HomeScreen() {
 
           onCompleteFeeding={completeFeeding}
 
+          onSkipFeeding={skipFeeding}
+
           onCompleteWalk={completeWalk}
 
           onCompleteMedicine={completeMedicine}
 
           onCompleteGrooming={completeGrooming}
+
+          onManageGrooming={openGroomingManage}
 
           onCompleteVaccination={completeVaccination}
 
@@ -393,6 +477,50 @@ export default function HomeScreen() {
       />
 
       <LogJournalSheet visible={journalVisible} onClose={() => setJournalVisible(false)} />
+
+      <GroomingManageSheet
+
+        visible={groomingManageVisible}
+
+        record={groomingManageRecord}
+
+        token={token}
+
+        onClose={() => {
+
+          setGroomingManageVisible(false);
+
+          setGroomingManageRecord(null);
+
+        }}
+
+        onUpdated={reloadGrooming}
+
+      />
+
+      <PetSwitcherSheet
+
+        visible={petSwitcherVisible}
+
+        pets={pets}
+
+        activePetId={pet?._id}
+
+        switchingId={switchingId}
+
+        onClose={() => setPetSwitcherVisible(false)}
+
+        onSelectPet={handleSwitchPet}
+
+        onAddPet={() => {
+
+          setPetSwitcherVisible(false);
+
+          router.push({ pathname: '/pet/register', params: { mode: 'add' } });
+
+        }}
+
+      />
 
     </SafeAreaView>
 
