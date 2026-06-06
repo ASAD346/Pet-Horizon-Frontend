@@ -9,6 +9,8 @@ import type { FamilyMemberDisplay } from '@/types/family';
 interface MembersListSectionProps {
   members: FamilyMemberDisplay[];
   loading?: boolean;
+  manageableIds?: string[];
+  onMemberSettingsPress?: (memberId: string) => void;
 }
 
 function MemberAvatar({ color }: { color: string }) {
@@ -19,7 +21,12 @@ function MemberAvatar({ color }: { color: string }) {
   );
 }
 
-export function MembersListSection({ members, loading }: MembersListSectionProps) {
+export function MembersListSection({
+  members,
+  loading,
+  manageableIds = [],
+  onMemberSettingsPress,
+}: MembersListSectionProps) {
   const activeCount = members.length;
 
   return (
@@ -38,7 +45,9 @@ export function MembersListSection({ members, loading }: MembersListSectionProps
       {loading ? (
         <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
       ) : (
-        members.map((member) => (
+        members.map((member) => {
+          const canManage = manageableIds.includes(member.id);
+          return (
           <View key={member.id} style={[homePillCard.card, styles.memberCard]}>
             <MemberAvatar color={member.avatarColor} />
             <View style={styles.memberInfo}>
@@ -53,11 +62,19 @@ export function MembersListSection({ members, loading }: MembersListSectionProps
                 {member.subtitle}
               </AppText>
             </View>
-            <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.7} accessibilityLabel="Member settings">
-              <Ionicons name="settings-outline" size={18} color={HomeTheme.textMuted} />
-            </TouchableOpacity>
+            {canManage ? (
+              <TouchableOpacity
+                style={styles.settingsBtn}
+                activeOpacity={0.7}
+                accessibilityLabel="Member settings"
+                onPress={() => onMemberSettingsPress?.(member.id)}
+              >
+                <Ionicons name="settings-outline" size={18} color={HomeTheme.textMuted} />
+              </TouchableOpacity>
+            ) : null}
           </View>
-        ))
+        );
+        })
       )}
     </View>
   );

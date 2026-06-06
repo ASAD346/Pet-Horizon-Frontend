@@ -5,5 +5,6 @@ export { QuickActionsSection } from './QuickActionsSection';
 export { UpNextSection } from './UpNextSection';
 export { TodaysScheduleSection } from './TodaysScheduleSection';
 export { RecentActivitySection } from './RecentActivitySection';
+export { GroomingAlertsRow } from './GroomingAlertsRow';
 export { ColorIconBadge } from './ColorIconBadge';
 export { SectionHeader } from './SectionHeader';

@@ -33,6 +33,31 @@ export interface GenerateInviteResponse {
   expiresAt: string;
 }
 
+export interface InviteInfoResponse {
+  valid: boolean;
+  token: string;
+  inviteType: string;
+  inviterName?: string | null;
+  inviterPhoto?: string | null;
+  pet?: {
+    petId: string;
+    name: string;
+    species?: string;
+    photoUrl?: string | null;
+  } | null;
+  expiresAt: string;
+  userRegistered?: boolean;
+  deepLink?: string;
+  universalLink?: string;
+  appStoreUrl?: string;
+  playStoreUrl?: string;
+}
+
+export interface UpdateMemberPermissionsRequest {
+  accessLevel?: 'admin' | 'edit' | 'readonly';
+  allowedModules?: string[];
+}
+
 export interface FamilyMemberDisplay {
   id: string;
   name: string;

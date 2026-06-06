@@ -5,7 +5,6 @@ import {
   Modal,
   Pressable,
   TouchableOpacity,
-  ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,13 +40,9 @@ export function LogJournalSheet({ visible, onClose }: LogJournalSheetProps) {
               </TouchableOpacity>
             </View>
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.scrollContent}
-            >
-              <JournalContent />
-            </ScrollView>
+            <View style={styles.body}>
+              <JournalContent active={visible} />
+            </View>
           </Pressable>
         </Pressable>
       </View>
@@ -70,6 +65,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
     maxHeight: '92%',
+    flex: 1,
     paddingTop: Spacing.sm,
   },
   handle: {
@@ -85,7 +81,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  body: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
   },
   headerTitle: {
     flex: 1,
@@ -98,9 +98,5 @@ const styles = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
   },
 });

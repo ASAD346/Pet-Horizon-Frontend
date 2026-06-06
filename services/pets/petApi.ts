@@ -9,6 +9,7 @@ import type {
   CreatePetRequest,
   SetActivePetResponse,
   SpeciesListResponse,
+  UpdatePetRequest,
 } from '@/types/pet';
 
 const SCOPE = 'PetAPI';
@@ -62,6 +63,18 @@ export async function fetchPetById(token: string, petId: string): Promise<ApiPet
   }
 }
 
+export async function fetchPets(token: string): Promise<ApiPet[]> {
+  log.info(SCOPE, 'GET /pets');
+  try {
+    const data = await apiRequest<ApiPet[]>(API_ENDPOINTS.pets.list, { token });
+    log.ok(SCOPE, 'Pets loaded', { count: data.length });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'List pets failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
 export async function createPet(token: string, payload: CreatePetRequest): Promise<ApiPet> {
   log.info(SCOPE, 'POST /pets', { name: payload.name, species: payload.species, breed: payload.breed });
   try {
@@ -89,6 +102,44 @@ export async function setActivePet(token: string, petId: string): Promise<SetAct
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Set active pet failed', { petId, error: getErrorMessage(error) });
+    throw error;
+  }
+}
+
+export async function updatePet(
+  token: string,
+  petId: string,
+  payload: UpdatePetRequest,
+): Promise<ApiPet> {
+  log.info(SCOPE, 'PUT /pets/:id', { petId });
+  try {
+    const data = await apiRequest<ApiPet>(API_ENDPOINTS.pets.byId(petId), {
+      method: 'PUT',
+      token,
+      body: payload,
+    });
+    log.ok(SCOPE, 'Pet updated', { petId: data._id });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Update pet failed', { petId, error: getErrorMessage(error) });
+    throw error;
+  }
+}
+
+export async function deletePet(
+  token: string,
+  petId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /pets/:id', { petId });
+  try {
+    const data = await apiRequest<{ message: string }>(API_ENDPOINTS.pets.byId(petId), {
+      method: 'DELETE',
+      token,
+    });
+    log.ok(SCOPE, 'Pet deleted', { petId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Delete pet failed', { petId, error: getErrorMessage(error) });
     throw error;
   }
 }

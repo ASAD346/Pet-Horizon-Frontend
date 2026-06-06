@@ -18,25 +18,30 @@ interface PetProfileCardProps {
   imageUrl?: string;
   loading?: boolean;
   onAddPet?: () => void;
+  onPress?: () => void;
 }
 
 export function PetProfileCard({
-  name = 'Boby',
-  breed = 'Maine Coon',
-  age = '2 Years',
-  gender = 'Male',
-  weight = '10 KG',
-  activity = '85%',
-  health = 'Good',
-  mood = 'Happy',
+  name = 'Your pet',
+  breed = '—',
+  age = '—',
+  gender = '—',
+  weight = '—',
+  activity = '—',
+  health = '—',
+  mood = '—',
   imageSource = require('../../assets/images/onboarding.png'),
   imageUrl,
   loading = false,
   onAddPet,
+  onPress,
 }: PetProfileCardProps) {
   const avatarSource = imageUrl ? { uri: imageUrl } : imageSource;
+  const CardWrapper = onPress ? TouchableOpacity : View;
+  const cardProps = onPress ? { onPress, activeOpacity: 0.92 } : {};
+
   return (
-    <View style={styles.card}>
+    <CardWrapper style={styles.card} {...cardProps}>
       {onAddPet ? (
         <TouchableOpacity
           style={styles.addPetBtn}
@@ -81,11 +86,11 @@ export function PetProfileCard({
       <View style={styles.divider} />
 
       <View style={styles.stats}>
-        <StatColumn label="Activity" value={activity} />
-        <StatColumn label="Health" value={health} />
-        <StatColumn label="Mood" value={mood} />
+        <StatColumn label="Plan" value={activity} />
+        <StatColumn label="Weight" value={health} />
+        <StatColumn label="Status" value={mood} />
       </View>
-    </View>
+    </CardWrapper>
   );
 }
 

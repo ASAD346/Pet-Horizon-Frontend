@@ -3,12 +3,11 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SheetColors } from '../sheets/sheetUi';
-import type { ExpenseCategory } from './expenseData';
 
 interface ExpenseCategoryChipsProps {
-  categories: readonly ExpenseCategory[];
-  selected: ExpenseCategory;
-  onSelect: (category: ExpenseCategory) => void;
+  categories: readonly string[];
+  selected: string;
+  onSelect: (category: string) => void;
 }
 
 export function ExpenseCategoryChips({

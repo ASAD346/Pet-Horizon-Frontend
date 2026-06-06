@@ -5,7 +5,9 @@ import { log } from '@/lib/log';
 import type {
   GenerateInviteRequest,
   GenerateInviteResponse,
+  InviteInfoResponse,
   PetMemberRow,
+  UpdateMemberPermissionsRequest,
 } from '@/types/family';
 
 const SCOPE = 'FamilyAPI';
@@ -41,10 +43,10 @@ export async function generatePetInvite(
   }
 }
 
-export async function acceptPetInvite(token: string, inviteToken: string): Promise<{ message: string }> {
+export async function acceptPetInvite(token: string, inviteToken: string): Promise<{ message: string; petId?: string }> {
   log.info(SCOPE, 'POST /invitations/accept');
   try {
-    const data = await apiRequest<{ message: string }>(API_ENDPOINTS.invitations.accept, {
+    const data = await apiRequest<{ message: string; petId?: string }>(API_ENDPOINTS.invitations.accept, {
       method: 'POST',
       token,
       body: { token: inviteToken },
@@ -53,6 +55,57 @@ export async function acceptPetInvite(token: string, inviteToken: string): Promi
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Accept invite failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function fetchInviteInfo(inviteToken: string): Promise<InviteInfoResponse> {
+  log.info(SCOPE, 'GET /invitations/info/:token');
+  try {
+    const data = await apiRequest<InviteInfoResponse>(API_ENDPOINTS.invitations.info(inviteToken));
+    log.ok(SCOPE, 'Invite info loaded');
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Invite info failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function removePetMember(
+  token: string,
+  petId: string,
+  userId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /pets/:petId/members/:userId', { petId, userId });
+  try {
+    const data = await apiRequest<{ message: string }>(
+      API_ENDPOINTS.family.removeMemberByPet(petId, userId),
+      { method: 'DELETE', token },
+    );
+    log.ok(SCOPE, 'Member removed', { userId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Remove member failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function updatePetMemberPermissions(
+  token: string,
+  petId: string,
+  userId: string,
+  payload: UpdateMemberPermissionsRequest,
+): Promise<{ message: string; accessLevel: string; allowedModules: string[] }> {
+  log.info(SCOPE, 'PUT /pets/:petId/members/:userId/permissions', { petId, userId });
+  try {
+    const data = await apiRequest<{ message: string; accessLevel: string; allowedModules: string[] }>(
+      API_ENDPOINTS.family.updateMemberPermissionsByPet(petId, userId),
+      { method: 'PUT', token, body: payload },
+    );
+    log.ok(SCOPE, 'Permissions updated', { userId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Update permissions failed', getErrorMessage(error));
     throw error;
   }
 }

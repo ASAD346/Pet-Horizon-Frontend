@@ -31,8 +31,9 @@ import {
   VACCINATION_RECURRENCE_OPTIONS,
   VACCINATION_REMINDER_FREQUENCY_OPTIONS,
 } from '@/lib/vaccination/vaccinationForm';
-import { createVaccinationSchedule } from '@/services/schedules/vaccinationApi';
+import { createVaccinationSchedule, fetchVaccinationHistory } from '@/services/schedules/vaccinationApi';
 import type {
+  VaccinationHistoryItem,
   VaccinationRecurrenceInterval,
   VaccinationReminderFrequency,
 } from '@/types/vaccination';
@@ -73,6 +74,24 @@ export function LogVaccinationSheet({
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<VaccinationHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  const loadHistory = useCallback(async () => {
+    if (!petId || !token) {
+      setHistory([]);
+      return;
+    }
+    setHistoryLoading(true);
+    try {
+      const rows = await fetchVaccinationHistory(token, petId);
+      setHistory(rows.slice(0, 5));
+    } catch {
+      setHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [petId, token]);
 
   const resetForm = useCallback(() => {
     setVaccineName('');
@@ -87,8 +106,11 @@ export function LogVaccinationSheet({
   }, []);
 
   useEffect(() => {
-    if (visible) resetForm();
-  }, [visible, resetForm]);
+    if (visible) {
+      resetForm();
+      loadHistory();
+    }
+  }, [visible, resetForm, loadHistory]);
 
   const handleSave = async () => {
     if (!petId || !token) {
@@ -125,6 +147,7 @@ export function LogVaccinationSheet({
         dueDate: dateToApiDateString(dueDate),
       });
       onSaved?.();
+      await loadHistory();
       onClose();
     } catch (e) {
       setError(getErrorMessage(e));
@@ -308,6 +331,29 @@ export function LogVaccinationSheet({
                 multiline
                 textAlignVertical="top"
               />
+
+              <SectionLabel text="VACCINATION HISTORY" />
+              {historyLoading ? (
+                <AppText variant="bodySmall" color={SheetColors.label} style={styles.historyEmpty}>
+                  Loading history...
+                </AppText>
+              ) : history.length === 0 ? (
+                <AppText variant="bodySmall" color={SheetColors.label} style={styles.historyEmpty}>
+                  No completed vaccinations yet.
+                </AppText>
+              ) : (
+                history.map((item, index) => (
+                  <View key={`${item.vaccineName}-${item.administeredDate}-${index}`} style={styles.historyRow}>
+                    <AppText variant="bodySmall" weight="700" color={SheetColors.inputText}>
+                      {item.vaccineName}
+                    </AppText>
+                    <AppText variant="caption" color={SheetColors.label}>
+                      {new Date(item.administeredDate).toLocaleDateString()}
+                      {item.vetName ? ` · ${item.vetName}` : ''}
+                    </AppText>
+                  </View>
+                ))
+              )}
             </ScrollView>
 
             <View style={styles.footer}>
@@ -430,4 +476,13 @@ const styles = StyleSheet.create({
   },
   saveBtn: { width: '100%', borderRadius: Radius.full, minHeight: 52 },
   saveBtnText: { fontSize: 16, fontWeight: '700' },
+  historyEmpty: {
+    marginBottom: Spacing.md,
+  },
+  historyRow: {
+    backgroundColor: SheetColors.inputBg,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
 });

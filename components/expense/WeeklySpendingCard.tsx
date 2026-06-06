@@ -1,9 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
-import { WEEKLY_BUDGET } from './expenseTrackerData';
 
 const cardShadow = Platform.select({
   ios: {
@@ -15,8 +14,24 @@ const cardShadow = Platform.select({
   android: { elevation: 4 },
 });
 
-export function WeeklySpendingCard() {
-  const { limitLabel, spentPercent, remainingLabel, status } = WEEKLY_BUDGET;
+interface WeeklySpendingCardProps {
+  limitLabel: string;
+  spentPercent: number;
+  remainingLabel: string;
+  status: string;
+  loading?: boolean;
+  onEditPress?: () => void;
+}
+
+export function WeeklySpendingCard({
+  limitLabel,
+  spentPercent,
+  remainingLabel,
+  status,
+  loading,
+  onEditPress,
+}: WeeklySpendingCardProps) {
+  const isOver = status === 'Over Budget';
 
   return (
     <View style={[styles.card, cardShadow]}>
@@ -24,35 +39,45 @@ export function WeeklySpendingCard() {
         <AppText variant="bodySmall" color="rgba(255,255,255,0.75)">
           Weekly Spending Limit
         </AppText>
-        <View style={styles.statusBadge}>
-          <Ionicons name="checkmark-circle" size={14} color={HomeTheme.green} />
-          <AppText variant="caption" weight="700" color={HomeTheme.green}>
+        <View style={[styles.statusBadge, isOver && styles.statusOver]}>
+          <Ionicons
+            name={isOver ? 'alert-circle' : 'checkmark-circle'}
+            size={14}
+            color={isOver ? '#FFCDD2' : HomeTheme.green}
+          />
+          <AppText variant="caption" weight="700" color={isOver ? '#FFCDD2' : HomeTheme.green}>
             {status}
           </AppText>
         </View>
       </View>
 
-      <AppText variant="h1" weight="800" color={HomeTheme.white} style={styles.limitAmount}>
-        {limitLabel}
-      </AppText>
-
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${spentPercent}%` }]} />
-      </View>
-
-      <View style={styles.bottomRow}>
-        <View style={styles.remainingRow}>
-          <View style={styles.dot} />
-          <AppText variant="bodySmall" weight="600" color={HomeTheme.white}>
-            {remainingLabel}
+      {loading ? (
+        <ActivityIndicator color={HomeTheme.white} style={styles.loader} />
+      ) : (
+        <>
+          <AppText variant="h1" weight="800" color={HomeTheme.white} style={styles.limitAmount}>
+            {limitLabel}
           </AppText>
-        </View>
-        <TouchableOpacity style={styles.editBtn} activeOpacity={0.85}>
-          <AppText variant="caption" weight="700" color={HomeTheme.white}>
-            Edit Budget
-          </AppText>
-        </TouchableOpacity>
-      </View>
+
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${spentPercent}%` }]} />
+          </View>
+
+          <View style={styles.bottomRow}>
+            <View style={styles.remainingRow}>
+              <View style={styles.dot} />
+              <AppText variant="bodySmall" weight="600" color={HomeTheme.white}>
+                {remainingLabel}
+              </AppText>
+            </View>
+            <TouchableOpacity style={styles.editBtn} activeOpacity={0.85} onPress={onEditPress}>
+              <AppText variant="caption" weight="700" color={HomeTheme.white}>
+                Edit Budget
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
     </View>
   );
 }
@@ -78,6 +103,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: Radius.full,
+  },
+  statusOver: {
+    backgroundColor: 'rgba(198,40,40,0.25)',
+  },
+  loader: {
+    marginVertical: Spacing.lg,
   },
   limitAmount: {
     fontSize: 36,

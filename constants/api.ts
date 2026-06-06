@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
     byId: (userId: string) => `/users/${userId}`,
     avatar: '/users/avatar',
     changePassword: '/users/change-password',
+    changeEmail: '/users/change-email',
+    verifyEmailChange: '/users/verify-email-change',
     deviceToken: '/users/device-token',
   },
   pets: {
@@ -89,6 +91,7 @@ export const API_ENDPOINTS = {
     list: '/notifications',
     markAllRead: '/notifications/mark-all-read',
     markRead: (id: string) => `/notifications/${id}/read`,
+    byId: (id: string) => `/notifications/${id}`,
   },
   invitations: {
     generate: '/invitations/generate',
@@ -100,5 +103,34 @@ export const API_ENDPOINTS = {
     removeMemberByPet: (petId: string, userId: string) => `/pets/${petId}/members/${userId}`,
     updateMemberPermissionsByPet: (petId: string, userId: string) =>
       `/pets/${petId}/members/${userId}/permissions`,
+  },
+  premium: {
+    plans: '/premium/plans',
+    subscribe: '/premium/subscribe',
+    status: '/premium/status',
+    cancel: '/premium/cancel',
+  },
+  payment: {
+    invoices: '/payment/invoices',
+    createPaymentIntent: '/payment/create-payment-intent',
+    updatePaymentMethod: '/payment/update-payment-method',
+  },
+  journal: {
+    list: '/journal',
+    create: '/journal',
+    byId: (id: string) => `/journal/${id}`,
+    image: (id: string) => `/journal/${id}/image`,
+  },
+  expenses: {
+    list: '/expenses',
+    summary: '/expenses/summary',
+    create: '/expenses',
+    byId: (id: string) => `/expenses/${id}`,
+  },
+  budget: {
+    list: '/budget',
+    remaining: '/budget/remaining',
+    create: '/budget',
+    byId: (id: string) => `/budget/${id}`,
   },
 } as const;
