@@ -59,6 +59,30 @@ export interface MedicineScheduleItem {
   };
 }
 
+export interface UpdateMedicineScheduleRequest {
+  dose?: string;
+  time?: string;
+  doseForm?: MedicineDoseForm;
+  remainingPills?: number;
+  startDate?: string;
+  endDate?: string;
+  lowStockThreshold?: number;
+  notes?: string;
+  note?: string;
+  reminder?: boolean;
+  reminderTime?: string;
+  reminderMinutes?: number;
+}
+
+export interface RefillMedicineRequest {
+  additionalPills: number;
+}
+
+export interface MedicineHistoryEntry {
+  date: string;
+  completedBy?: string;
+}
+
 export interface CompleteMedicineRequest {
   status?: 'done' | 'skipped';
 }

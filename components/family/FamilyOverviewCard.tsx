@@ -16,6 +16,9 @@ interface FamilyOverviewCardProps {
   showInviteSection?: boolean;
   onShareCode?: () => void;
   onInvitePress?: () => void;
+  onEmailInvitePress?: () => void;
+  onCreateHubPress?: () => void;
+  hasFamilyHub?: boolean;
 }
 
 export function FamilyOverviewCard({
@@ -29,6 +32,9 @@ export function FamilyOverviewCard({
   showInviteSection = true,
   onShareCode,
   onInvitePress,
+  onEmailInvitePress,
+  onCreateHubPress,
+  hasFamilyHub = false,
 }: FamilyOverviewCardProps) {
   return (
     <View style={styles.card}>
@@ -76,16 +82,40 @@ export function FamilyOverviewCard({
           </View>
 
           <AppButton
-            title="Invite Member"
+            title="Invite via Link / QR"
             onPress={onInvitePress ?? (() => {})}
             disabled={!canInvite || loadingInvite}
             variant="success"
             size="md"
             style={styles.inviteBtn}
             textStyle={styles.inviteBtnText}
-            icon={<Ionicons name="person-add-outline" size={20} color={HomeTheme.white} />}
+            icon={<Ionicons name="link-outline" size={20} color={HomeTheme.white} />}
           />
         </>
+      ) : null}
+
+      {showInviteSection && isPremium ? (
+        hasFamilyHub ? (
+          <AppButton
+            title="Invite by Email"
+            onPress={onEmailInvitePress ?? (() => {})}
+            variant="outline"
+            size="md"
+            style={styles.emailBtn}
+            textStyle={styles.emailBtnText}
+            icon={<Ionicons name="mail-outline" size={20} color={HomeTheme.cardGreen} />}
+          />
+        ) : (
+          <AppButton
+            title="Set Up Email Family Hub"
+            onPress={onCreateHubPress ?? (() => {})}
+            variant="outline"
+            size="md"
+            style={styles.emailBtn}
+            textStyle={styles.emailBtnText}
+            icon={<Ionicons name="people-outline" size={20} color={HomeTheme.cardGreen} />}
+          />
+        )
       ) : null}
     </View>
   );
@@ -172,5 +202,18 @@ const styles = StyleSheet.create({
   inviteBtnText: {
     fontSize: 16,
     fontWeight: '700',
+  },
+  emailBtn: {
+    width: '100%',
+    borderRadius: Radius.full,
+    minHeight: 48,
+    marginTop: Spacing.sm,
+    borderColor: 'rgba(255,255,255,0.35)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  emailBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: HomeTheme.white,
   },
 });

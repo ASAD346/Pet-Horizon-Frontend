@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-nat
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
-import { fetchGroomingAlerts } from '@/services/grooming/groomingApi';
+import { fetchGroomingAlerts, fetchUpcomingGrooming } from '@/services/grooming/groomingApi';
 import type { GroomingRecord } from '@/types/grooming';
 
 interface GroomingAlertsRowProps {
@@ -23,8 +23,16 @@ export function GroomingAlertsRow({ token, petId, onAlertPress }: GroomingAlerts
     }
     setLoading(true);
     try {
-      const data = await fetchGroomingAlerts(token, { petId, withinDays: 7 });
-      setAlerts(data.slice(0, 2));
+      const [alertsData, upcomingData] = await Promise.all([
+        fetchGroomingAlerts(token, { petId, withinDays: 7 }),
+        fetchUpcomingGrooming(token),
+      ]);
+      const upcomingForPet = upcomingData.filter((item) => item.petId === petId);
+      const merged = [...alertsData, ...upcomingForPet];
+      const unique = merged.filter(
+        (item, index, arr) => arr.findIndex((other) => other._id === item._id) === index,
+      );
+      setAlerts(unique.slice(0, 2));
     } catch {
       setAlerts([]);
     } finally {

@@ -2,7 +2,14 @@ import { useCallback, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
-import { completeWalkSchedule, fetchTodayWalkSchedules } from '@/services/schedules/walkApi';
+import {
+  completeWalkSchedule,
+  deleteWalkSchedule,
+  fetchTodayWalkSchedules,
+  rescheduleWalkSchedule,
+  updateWalkSchedule,
+} from '@/services/schedules/walkApi';
+import type { RescheduleWalkRequest, UpdateWalkScheduleRequest } from '@/types/walk';
 import type { WalkScheduleItem } from '@/types/walk';
 
 export function useWalkSchedules(token: string | null, petId: string | null | undefined) {
@@ -56,11 +63,65 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
     [token, reload],
   );
 
+  const rescheduleWalk = useCallback(
+    async (scheduleId: string, body: RescheduleWalkRequest) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await rescheduleWalkSchedule(token, scheduleId, body);
+        await reload();
+      } catch (error) {
+        log.fail('Walk', 'Reschedule failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const updateWalk = useCallback(
+    async (scheduleId: string, body: UpdateWalkScheduleRequest) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await updateWalkSchedule(token, scheduleId, body);
+        await reload();
+      } catch (error) {
+        log.fail('Walk', 'Update failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const removeWalk = useCallback(
+    async (scheduleId: string) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await deleteWalkSchedule(token, scheduleId);
+        await reload();
+      } catch (error) {
+        log.fail('Walk', 'Delete failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
   return {
     schedules,
     loading,
     actionId,
     reload,
     completeWalk,
+    rescheduleWalk,
+    updateWalk,
+    removeWalk,
   };
 }

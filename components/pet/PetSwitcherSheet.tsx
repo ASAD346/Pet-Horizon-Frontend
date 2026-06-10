@@ -116,12 +116,26 @@ export function PetSwitcherSheet({
           </TouchableOpacity>
 
           {onAddPet ? (
-            <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>
-              <Ionicons name="add-circle-outline" size={18} color={HomeTheme.text} />
-              <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
-                Add another pet
-              </AppText>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>
+                <Ionicons name="add-circle-outline" size={18} color={HomeTheme.text} />
+                <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
+                  Add another pet
+                </AppText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={() => {
+                  onClose();
+                  router.push('/pet/bulk' as Href);
+                }}
+              >
+                <Ionicons name="copy-outline" size={18} color={HomeTheme.cardGreen} />
+                <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
+                  Add multiple pets
+                </AppText>
+              </TouchableOpacity>
+            </>
           ) : null}
         </Pressable>
       </Pressable>

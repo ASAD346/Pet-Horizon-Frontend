@@ -7,6 +7,7 @@ import type {
   CompleteFeedingResponse,
   CreateFeedingScheduleRequest,
   FeedingScheduleItem,
+  UpdateFeedingScheduleRequest,
 } from '@/types/feeding';
 import type { PetPermissionsResponse } from '@/types/pet';
 
@@ -94,6 +95,44 @@ export async function completeFeedingSchedule(
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Complete feeding failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function updateFeedingSchedule(
+  token: string,
+  scheduleId: string,
+  body: UpdateFeedingScheduleRequest,
+): Promise<FeedingScheduleItem> {
+  log.info(SCOPE, 'PUT /schedules/feeding/:id', { scheduleId });
+  try {
+    const data = await apiRequest<FeedingScheduleItem>(API_ENDPOINTS.schedules.feedingById(scheduleId), {
+      method: 'PUT',
+      token,
+      body,
+    });
+    log.ok(SCOPE, 'Feeding schedule updated', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Update feeding failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function deleteFeedingSchedule(
+  token: string,
+  scheduleId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /schedules/feeding/:id', { scheduleId });
+  try {
+    const data = await apiRequest<{ message: string }>(API_ENDPOINTS.schedules.feedingById(scheduleId), {
+      method: 'DELETE',
+      token,
+    });
+    log.ok(SCOPE, 'Feeding schedule deleted', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Delete feeding failed', getErrorMessage(error));
     throw error;
   }
 }

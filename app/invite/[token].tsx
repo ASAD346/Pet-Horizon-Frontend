@@ -18,12 +18,13 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { acceptPetInvite, fetchInviteInfo } from '@/services/family/familyApi';
+import { setStoredFamilyHubId } from '@/services/family/familyHubStorage';
 import type { InviteInfoResponse } from '@/types/family';
 
 export default function InviteAcceptScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ token?: string | string[] }>();
-  const { token: authToken, isAuthenticated } = useAuth();
+  const { token: authToken, isAuthenticated, user } = useAuth();
   const inviteToken = Array.isArray(params.token) ? params.token[0] : params.token;
 
   const [info, setInfo] = useState<InviteInfoResponse | null>(null);
@@ -62,6 +63,9 @@ export default function InviteAcceptScreen() {
     setError(null);
     try {
       const result = await acceptPetInvite(authToken, inviteToken);
+      if (result.familyId && user?._id) {
+        await setStoredFamilyHubId(user._id, result.familyId);
+      }
       Alert.alert('Welcome!', result.message || 'You joined the pet care team.', [
         { text: 'OK', onPress: () => router.replace('/(tabs)/community') },
       ]);

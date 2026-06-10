@@ -5,6 +5,8 @@ export type ScheduleSectionKey = 'feeding' | 'walk' | 'medicine' | 'vaccination'
 
 export interface FeedingEntryState {
   id: string;
+  /** Set when loaded from API — PUT/DELETE use this id */
+  scheduleId?: string;
   mealType: string;
   amount: string;
   unit: string;
@@ -16,6 +18,7 @@ export interface FeedingEntryState {
 
 export interface WalkEntryState {
   id: string;
+  scheduleId?: string;
   walkTime: string;
   duration: string;
   walkClockTime: Date;
@@ -26,6 +29,7 @@ export interface WalkEntryState {
 
 export interface MedicineEntryState {
   id: string;
+  scheduleId?: string;
   medicineName: string;
   doseAmount: string;
   doseForm: MedicineDoseForm;
@@ -35,6 +39,8 @@ export interface MedicineEntryState {
   startDate: Date | null;
   endDate: Date | null;
   totalPills: string;
+  remainingPills?: string;
+  lowStockThreshold?: string;
   reminderOn: boolean;
   reminderMinutes: number;
   notes: string;
@@ -42,6 +48,7 @@ export interface MedicineEntryState {
 
 export interface VaccinationEntryState {
   id: string;
+  scheduleId?: string;
   vaccineName: string;
   dueDate: Date | null;
   reminderOn: boolean;
@@ -54,6 +61,7 @@ export interface VaccinationEntryState {
 
 export interface GroomingEntryState {
   id: string;
+  recordId?: string;
   groomingType: string;
   scheduledDate: Date | null;
   reminderOn: boolean;

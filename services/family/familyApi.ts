@@ -43,10 +43,15 @@ export async function generatePetInvite(
   }
 }
 
-export async function acceptPetInvite(token: string, inviteToken: string): Promise<{ message: string; petId?: string }> {
+export async function acceptPetInvite(
+  token: string,
+  inviteToken: string,
+): Promise<{ message: string; petId?: string; familyId?: string }> {
   log.info(SCOPE, 'POST /invitations/accept');
   try {
-    const data = await apiRequest<{ message: string; petId?: string }>(API_ENDPOINTS.invitations.accept, {
+    const data = await apiRequest<{ message: string; petId?: string; familyId?: string }>(
+      API_ENDPOINTS.invitations.accept,
+      {
       method: 'POST',
       token,
       body: { token: inviteToken },

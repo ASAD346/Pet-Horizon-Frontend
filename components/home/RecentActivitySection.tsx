@@ -1,61 +1,60 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
+import { activityCategoryStyle, formatActivityTime } from '@/lib/activity/activityDisplay';
 import { HomeTheme, Spacing } from '../../constants/theme';
+import type { ActivityEntry } from '@/types/activity';
 
-const ACTIVITIES = [
-  {
-    id: '1',
-    title: 'Morning Walk Completed',
-    time: 'Today, 08:00 AM',
-    icon: 'walk' as const,
-    color: '#5CB35D',
-    bg: '#E8F5E9',
-  },
-  {
-    id: '2',
-    title: 'Breakfast Served',
-    time: 'Today, 07:35 AM',
-    icon: 'silverware-fork-knife' as const,
-    color: '#F5A623',
-    bg: '#FFF4E0',
-  },
-  {
-    id: '3',
-    title: 'Gave vitamins',
-    time: 'Yesterday',
-    icon: 'pill' as const,
-    color: '#5B9BD5',
-    bg: '#E3F2FD',
-  },
-];
+interface RecentActivitySectionProps {
+  entries?: ActivityEntry[];
+  loading?: boolean;
+  onSeeAllPress?: () => void;
+}
 
-export function RecentActivitySection() {
+export function RecentActivitySection({
+  entries = [],
+  loading = false,
+  onSeeAllPress,
+}: RecentActivitySectionProps) {
+  const preview = entries.slice(0, 3);
+
   return (
     <View style={styles.section}>
-      <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={() => {}} />
-      {ACTIVITIES.map((item) => (
-        <View key={item.id} style={homePillCard.card}>
-          <ColorIconBadge
-            color={item.color}
-            backgroundColor={item.bg}
-            materialIcon={item.icon}
-            size={44}
-            iconSize={22}
-          />
-          <View style={styles.textBlock}>
-            <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-              {item.title}
-            </AppText>
-            <AppText variant="caption" color={HomeTheme.textMuted}>
-              {item.time}
-            </AppText>
-          </View>
-        </View>
-      ))}
+      <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={onSeeAllPress} />
+      {loading && preview.length === 0 ? (
+        <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
+      ) : preview.length === 0 ? (
+        <AppText variant="caption" color={HomeTheme.textMuted} style={styles.empty}>
+          No activities logged today.
+        </AppText>
+      ) : (
+        preview.map((item) => {
+          const style = activityCategoryStyle(item.category);
+          return (
+            <View key={item._id} style={homePillCard.card}>
+              <ColorIconBadge
+                color={style.color}
+                backgroundColor={style.bg}
+                materialIcon={style.icon}
+                size={44}
+                iconSize={22}
+              />
+              <View style={styles.textBlock}>
+                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                  {item.title}
+                  {item.isCompleted ? ' ✓' : ''}
+                </AppText>
+                <AppText variant="caption" color={HomeTheme.textMuted}>
+                  {formatActivityTime(item.date)}
+                </AppText>
+              </View>
+            </View>
+          );
+        })
+      )}
     </View>
   );
 }
@@ -68,5 +67,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: Spacing.sm,
     gap: 2,
+  },
+  loader: {
+    marginVertical: Spacing.md,
+  },
+  empty: {
+    marginBottom: Spacing.sm,
   },
 });

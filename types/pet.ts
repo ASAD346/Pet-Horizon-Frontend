@@ -30,6 +30,17 @@ export interface CreatePetRequest {
   weight?: number;
   weightUnit?: string;
   image?: string | null;
+  familyId?: string;
+}
+
+export interface BulkCreatePetsRequest {
+  pets: CreatePetRequest[];
+  familyId?: string;
+}
+
+export interface BulkCreatePetsResponse {
+  pets: ApiPet[];
+  created: number;
 }
 
 export interface UpdatePetRequest {

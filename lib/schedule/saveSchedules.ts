@@ -9,11 +9,20 @@ import {
   parseTotalPills,
 } from '@/lib/medicine/medicineForm';
 import type { ScheduleSectionsState } from '@/lib/schedule/types';
-import { createGroomingRecord } from '@/services/grooming/groomingApi';
-import { createFeedingSchedule } from '@/services/schedules/feedingApi';
-import { createMedicineSchedule } from '@/services/schedules/medicineApi';
-import { createVaccinationSchedule } from '@/services/schedules/vaccinationApi';
-import { createWalkSchedule } from '@/services/schedules/walkApi';
+import { createGroomingRecord, updateGroomingRecord } from '@/services/grooming/groomingApi';
+import {
+  createFeedingSchedule,
+  updateFeedingSchedule,
+} from '@/services/schedules/feedingApi';
+import {
+  createMedicineSchedule,
+  updateMedicineSchedule,
+} from '@/services/schedules/medicineApi';
+import {
+  createVaccinationSchedule,
+  updateVaccinationSchedule,
+} from '@/services/schedules/vaccinationApi';
+import { createWalkSchedule, updateWalkSchedule } from '@/services/schedules/walkApi';
 import { parseDurationMinutes } from '@/lib/walk/walkForm';
 
 export interface SaveSchedulesResult {
@@ -52,20 +61,24 @@ export async function saveAllSchedules(
       }
       const timeHHmm = dateToTimeHHmm(entry.feedingTime);
       const noteText = entry.notes.trim();
+      const payload = {
+        mealType: entry.mealType,
+        time: timeHHmm,
+        amount: entry.amount.trim(),
+        unit: entry.unit,
+        notes: noteText || undefined,
+        reminder: entry.notificationsOn,
+        reminderMinutes: entry.notificationsOn ? entry.reminderMinutes : undefined,
+        reminderTime: entry.notificationsOn
+          ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
+          : undefined,
+      };
       try {
-        await createFeedingSchedule(token, {
-          petId,
-          mealType: entry.mealType,
-          time: timeHHmm,
-          amount: entry.amount.trim(),
-          unit: entry.unit,
-          notes: noteText || undefined,
-          reminder: entry.notificationsOn,
-          reminderMinutes: entry.notificationsOn ? entry.reminderMinutes : undefined,
-          reminderTime: entry.notificationsOn
-            ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
-            : undefined,
-        });
+        if (entry.scheduleId) {
+          await updateFeedingSchedule(token, entry.scheduleId, payload);
+        } else {
+          await createFeedingSchedule(token, { petId, ...payload });
+        }
         savedCount += 1;
       } catch (e) {
         pushError(errors, label, e instanceof Error ? e.message : 'Save failed.');
@@ -84,19 +97,26 @@ export async function saveAllSchedules(
       }
       const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
       const noteText = entry.notes.trim();
+      const payload = {
+        time: timeHHmm,
+        duration: durationMinutes,
+        notes: noteText || undefined,
+        reminder: entry.notificationsOn,
+        reminderMinutes: entry.notificationsOn ? entry.reminderMinutes : undefined,
+        reminderTime: entry.notificationsOn
+          ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
+          : undefined,
+      };
       try {
-        await createWalkSchedule(token, {
-          petId,
-          walkTime: entry.walkTime,
-          time: timeHHmm,
-          duration: durationMinutes,
-          notes: noteText || undefined,
-          reminder: entry.notificationsOn,
-          reminderMinutes: entry.notificationsOn ? entry.reminderMinutes : undefined,
-          reminderTime: entry.notificationsOn
-            ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
-            : undefined,
-        });
+        if (entry.scheduleId) {
+          await updateWalkSchedule(token, entry.scheduleId, payload);
+        } else {
+          await createWalkSchedule(token, {
+            petId,
+            walkTime: entry.walkTime,
+            ...payload,
+          });
+        }
         savedCount += 1;
       } catch (e) {
         pushError(errors, label, e instanceof Error ? e.message : 'Save failed.');
@@ -133,26 +153,50 @@ export async function saveAllSchedules(
       }
       const timeHHmm = dateToTimeHHmm(entry.medicineTime);
       const noteText = entry.notes.trim();
+      const lowThreshold = entry.lowStockThreshold
+        ? parseInt(entry.lowStockThreshold, 10)
+        : undefined;
       try {
-        await createMedicineSchedule(token, {
-          petId,
-          medicineName: name,
-          dose,
-          time: timeHHmm,
-          doseForm: entry.doseForm,
-          frequency: entry.frequency,
-          daysOfWeek: entry.frequency === 'weekly' ? entry.daysOfWeek : undefined,
-          totalPills: pills,
-          remainingPills: pills,
-          notes: noteText || undefined,
-          startDate: entry.startDate ? dateToApiDateString(entry.startDate) : undefined,
-          endDate: entry.endDate ? dateToApiDateString(entry.endDate) : undefined,
-          reminder: entry.reminderOn,
-          reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
-          reminderTime: entry.reminderOn
-            ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
-            : undefined,
-        });
+        if (entry.scheduleId) {
+          await updateMedicineSchedule(token, entry.scheduleId, {
+            dose,
+            time: timeHHmm,
+            doseForm: entry.doseForm,
+            remainingPills: entry.remainingPills
+              ? parseInt(entry.remainingPills, 10)
+              : undefined,
+            lowStockThreshold: lowThreshold,
+            startDate: entry.startDate ? dateToApiDateString(entry.startDate) : undefined,
+            endDate: entry.endDate ? dateToApiDateString(entry.endDate) : undefined,
+            notes: noteText || undefined,
+            reminder: entry.reminderOn,
+            reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
+            reminderTime: entry.reminderOn
+              ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
+              : undefined,
+          });
+        } else {
+          await createMedicineSchedule(token, {
+            petId,
+            medicineName: name,
+            dose,
+            time: timeHHmm,
+            doseForm: entry.doseForm,
+            frequency: entry.frequency,
+            daysOfWeek: entry.frequency === 'weekly' ? entry.daysOfWeek : undefined,
+            totalPills: pills,
+            remainingPills: pills,
+            lowStockThreshold: lowThreshold,
+            notes: noteText || undefined,
+            startDate: entry.startDate ? dateToApiDateString(entry.startDate) : undefined,
+            endDate: entry.endDate ? dateToApiDateString(entry.endDate) : undefined,
+            reminder: entry.reminderOn,
+            reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
+            reminderTime: entry.reminderOn
+              ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
+              : undefined,
+          });
+        }
         savedCount += 1;
       } catch (e) {
         pushError(errors, label, e instanceof Error ? e.message : 'Save failed.');
@@ -173,18 +217,25 @@ export async function saveAllSchedules(
         continue;
       }
       const noteText = entry.notes.trim();
+      const payload = {
+        dueDate: dateToApiDateString(entry.dueDate),
+        reminder: entry.reminderOn,
+        frequency: entry.frequency,
+        reminderTime: dateToTimeHHmm(entry.reminderTime),
+        notes: noteText || undefined,
+      };
       try {
-        await createVaccinationSchedule(token, {
-          petId,
-          vaccineName: entry.vaccineName.trim(),
-          dueDate: dateToApiDateString(entry.dueDate),
-          reminder: entry.reminderOn,
-          frequency: entry.frequency,
-          reminderTime: dateToTimeHHmm(entry.reminderTime),
-          isRecurring: entry.isRecurring,
-          recurrenceInterval: entry.isRecurring ? entry.recurrenceInterval : undefined,
-          notes: noteText || undefined,
-        });
+        if (entry.scheduleId) {
+          await updateVaccinationSchedule(token, entry.scheduleId, payload);
+        } else {
+          await createVaccinationSchedule(token, {
+            petId,
+            vaccineName: entry.vaccineName.trim(),
+            ...payload,
+            isRecurring: entry.isRecurring,
+            recurrenceInterval: entry.isRecurring ? entry.recurrenceInterval : undefined,
+          });
+        }
         savedCount += 1;
       } catch (e) {
         pushError(errors, label, e instanceof Error ? e.message : 'Save failed.');
@@ -205,13 +256,26 @@ export async function saveAllSchedules(
         }
         const noteText = entry.notes.trim();
         try {
-          await createGroomingRecord(token, {
-            petId,
-            type: entry.groomingType,
-            scheduledDate: entry.scheduledDate ? dateToApiDateString(entry.scheduledDate) : undefined,
-            reminder: entry.reminderOn,
-            notes: noteText || undefined,
-          });
+          if (entry.recordId) {
+            await updateGroomingRecord(token, entry.recordId, {
+              type: entry.groomingType,
+              scheduledDate: entry.scheduledDate
+                ? dateToApiDateString(entry.scheduledDate)
+                : undefined,
+              reminder: entry.reminderOn,
+              notes: noteText || undefined,
+            });
+          } else {
+            await createGroomingRecord(token, {
+              petId,
+              type: entry.groomingType,
+              scheduledDate: entry.scheduledDate
+                ? dateToApiDateString(entry.scheduledDate)
+                : undefined,
+              reminder: entry.reminderOn,
+              notes: noteText || undefined,
+            });
+          }
           savedCount += 1;
         } catch (e) {
           pushError(errors, label, e instanceof Error ? e.message : 'Save failed.');

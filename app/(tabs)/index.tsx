@@ -11,9 +11,13 @@ import {
 
     PetProfileCard,
 
+    PetCareHubSection,
+
     QuickActionsSection,
 
     RecentActivitySection,
+
+    ReminderCardsRow,
 
     GroomingAlertsRow,
 
@@ -46,6 +50,12 @@ import { useGroomingRecords } from '@/hooks/useGroomingRecords';
 
 import { useVaccinationSchedules } from '@/hooks/useVaccinationSchedules';
 
+import { useActivityTimeline } from '@/hooks/useActivityTimeline';
+
+import { useLowStockAlert } from '@/hooks/useLowStockAlert';
+
+import { useMedicalRecords } from '@/hooks/useMedicalRecords';
+
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 import { petToProfileProps } from '@/services/pets/petDisplay';
@@ -61,12 +71,14 @@ import { LogJournalSheet } from '@/components/journal';
 import { LogMedicineSheet } from '@/components/log-medicine';
 
 import { LogWalkSheet } from '@/components/log-walk';
+import { RescheduleWalkSheet } from '@/components/log-walk/RescheduleWalkSheet';
 
 import { LogVaccinationSheet } from '@/components/log-vaccination';
 
 import { HomeTheme, Spacing } from '@/constants/theme';
 
 import type { GroomingRecord } from '@/types/grooming';
+import type { WalkScheduleItem } from '@/types/walk';
 
 
 
@@ -186,7 +198,17 @@ export default function HomeScreen() {
 
   } = useVaccinationSchedules(token, pet?._id);
 
+  const petId = pet?._id ?? null;
 
+  const { entries: activityEntries, loading: activityLoading } = useActivityTimeline(
+    token,
+    petId,
+    Boolean(petId),
+  );
+
+  const { alert: lowStockAlert } = useLowStockAlert(token, petId, Boolean(petId));
+
+  const { upcoming: upcomingMedical } = useMedicalRecords(token, petId, Boolean(petId));
 
   const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading || tasksLoading;
 
@@ -221,6 +243,10 @@ export default function HomeScreen() {
   const [groomingManageVisible, setGroomingManageVisible] = useState(false);
 
   const [groomingManageRecord, setGroomingManageRecord] = useState<GroomingRecord | null>(null);
+
+  const [rescheduleWalkVisible, setRescheduleWalkVisible] = useState(false);
+
+  const [rescheduleWalkSchedule, setRescheduleWalkSchedule] = useState<WalkScheduleItem | null>(null);
 
   const openGroomingManage = (recordId: string) => {
 
@@ -394,11 +420,47 @@ export default function HomeScreen() {
 
           onManageGrooming={openGroomingManage}
 
+          onRescheduleWalk={(schedule) => {
+            setRescheduleWalkSchedule(schedule);
+            setRescheduleWalkVisible(true);
+          }}
+
           onCompleteVaccination={completeVaccination}
+
+          onSeeAllPress={() => router.push('/(tabs)/explore' as Href)}
 
         />
 
-        <RecentActivitySection />
+        <ReminderCardsRow
+          lowStockVisible={Boolean(lowStockAlert?.isLow)}
+          lowStockSubtitle={
+            lowStockAlert
+              ? `${lowStockAlert.currentStock} left (threshold ${lowStockAlert.lowThreshold})`
+              : undefined
+          }
+          onLowStockPress={() => router.push('/pet-care/inventory' as Href)}
+          onRestockPress={() => router.push('/pet-care/inventory' as Href)}
+          medicalVisible={Boolean(upcomingMedical?.nextDueDate)}
+          medicalTitle={upcomingMedical?.title || upcomingMedical?.recordType || 'Upcoming visit'}
+          medicalSubtitle={
+            upcomingMedical?.nextDueDate
+              ? new Date(upcomingMedical.nextDueDate).toLocaleDateString('en-US', {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                })
+              : undefined
+          }
+          onMedicalPress={() => router.push('/pet-care/medical' as Href)}
+        />
+
+        <PetCareHubSection onPress={() => router.push('/pet-care' as Href)} />
+
+        <RecentActivitySection
+          entries={activityEntries}
+          loading={activityLoading}
+          onSeeAllPress={() => router.push('/pet-care/activity-timeline' as Href)}
+        />
 
         <View style={styles.tabSpacer} />
 
@@ -496,6 +558,17 @@ export default function HomeScreen() {
 
         onUpdated={reloadGrooming}
 
+      />
+
+      <RescheduleWalkSheet
+        visible={rescheduleWalkVisible}
+        schedule={rescheduleWalkSchedule}
+        token={token}
+        onClose={() => {
+          setRescheduleWalkVisible(false);
+          setRescheduleWalkSchedule(null);
+        }}
+        onSaved={reloadWalks}
       />
 
       <PetSwitcherSheet

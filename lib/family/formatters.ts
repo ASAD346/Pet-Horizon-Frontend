@@ -1,5 +1,6 @@
 import type { ApiUser } from '@/types/auth';
-import type { FamilyMemberDisplay, PetMemberRow } from '@/types/family';
+import type { ApiPet } from '@/types/pet';
+import type { FamilyHubMemberRow, FamilyMemberDisplay, PetMemberRow } from '@/types/family';
 
 const MODULE_LABELS: Record<string, string> = {
   feeding: 'Feeding',
@@ -92,4 +93,47 @@ export function buildGuestMemberDisplay(
 export function isPetOwner(petOwnerId: string | null | undefined, userId: string | undefined): boolean {
   if (!petOwnerId || !userId) return false;
   return String(petOwnerId) === String(userId);
+}
+
+export function buildFamilyHubMembersList(
+  members: FamilyHubMemberRow[],
+  currentUserId?: string,
+): FamilyMemberDisplay[] {
+  return members.map((member, index) => {
+    const user = member.userId;
+    const name = user.fullName?.trim() || user.email?.split('@')[0] || 'Member';
+    const isAdmin = member.role === 'admin';
+    const isSelf = currentUserId === user._id;
+
+    return {
+      id: user._id,
+      name: isSelf ? `${name} (You)` : name,
+      subtitle: isAdmin ? 'ADMIN 👑' : 'Family member',
+      isAdmin,
+      avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length],
+      email: user.email,
+    };
+  });
+}
+
+export function resolveFamilyIdFromPets(pets: ApiPet[], activePetId?: string | null): string | null {
+  if (activePetId) {
+    const active = pets.find((pet) => pet._id === activePetId);
+    if (active?.familyId) return active.familyId;
+  }
+  const familyPet = pets.find((pet) => pet.familyId);
+  return familyPet?.familyId ?? null;
+}
+
+export function petsInFamily(pets: ApiPet[], familyId: string | null | undefined): ApiPet[] {
+  if (!familyId) return [];
+  return pets.filter((pet) => pet.familyId === familyId);
+}
+
+export function isFamilyAdmin(
+  members: FamilyHubMemberRow[],
+  userId: string | undefined,
+): boolean {
+  if (!userId) return false;
+  return members.some((member) => member.userId._id === userId && member.role === 'admin');
 }

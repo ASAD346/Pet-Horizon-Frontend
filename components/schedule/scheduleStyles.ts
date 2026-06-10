@@ -1,10 +1,45 @@
-import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { homeCardShadow } from '@/components/home/homeStyles';
 import { ScheduleTheme } from './scheduleTheme';
 
+export const ScheduleColors = {
+  label: ScheduleTheme.textMuted,
+  fieldText: ScheduleTheme.text,
+  placeholder: ScheduleTheme.textMuted,
+} as const;
+
 export const scheduleFieldStyles = StyleSheet.create({
+  entryCard: {
+    backgroundColor: ScheduleTheme.cardBg,
+    borderRadius: 14,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: ScheduleTheme.fieldBorder,
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  fieldLabel: {
+    marginBottom: 4,
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: 14,
+    marginTop: Spacing.xs,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: ScheduleTheme.dashedBorder,
+    backgroundColor: HomeTheme.white,
+  },
   sectionCard: {
     backgroundColor: ScheduleTheme.cardBg,
     borderRadius: 20,

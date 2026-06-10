@@ -71,9 +71,9 @@ export function FeedingSchedulePanel({
     onChangeEntries([
       ...entries,
       {
-        ...createFeedingEntry(mealType, base.unit || unitOptions[0]?.value ?? ''),
+        ...createFeedingEntry(mealType, base.unit || (unitOptions[0]?.value ?? '')),
         amount: base.amount,
-        unit: base.unit || unitOptions[0]?.value ?? '',
+        unit: base.unit || (unitOptions[0]?.value ?? ''),
         notificationsOn: base.notificationsOn,
         reminderMinutes: base.reminderMinutes,
         notes: base.notes,

@@ -64,4 +64,55 @@ export interface FamilyMemberDisplay {
   subtitle: string;
   isAdmin: boolean;
   avatarColor: string;
+  email?: string;
+}
+
+export interface ApiFamily {
+  _id: string;
+  name: string;
+  createdBy: string;
+  isPremiumHub?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateFamilyRequest {
+  name: string;
+}
+
+export interface FamilyHubMemberUser {
+  _id: string;
+  fullName?: string;
+  email?: string;
+  profileImage?: string | null;
+}
+
+export interface FamilyHubMemberRow {
+  _id: string;
+  familyId: string;
+  userId: FamilyHubMemberUser;
+  role: 'admin' | 'member' | string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface FamilyPetPermission {
+  petId: string;
+  accessLevel?: 'admin' | 'edit' | 'readonly';
+  allowedModules?: string[];
+}
+
+export interface EmailFamilyInviteRequest {
+  inviteeEmail: string;
+  permissions: FamilyPetPermission[];
+}
+
+export interface EmailFamilyInviteResponse {
+  inviteToken: string;
+  invitationId: string;
+  expiresAt: string;
+}
+
+export interface UpdateFamilyMemberPermissionsRequest {
+  permissions: FamilyPetPermission[];
 }

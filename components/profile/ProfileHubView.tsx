@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Spacing } from '@/constants/theme';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
-import { fetchUserProfile } from '@/services/users/userApi';
+import { deleteUserAccount, fetchUserProfile } from '@/services/users/userApi';
 import { fetchPremiumStatus } from '@/services/premium/premiumApi';
 import type { PremiumStatusResponse } from '@/types/premium';
 import { PremiumUpgradeBanner } from './PremiumUpgradeBanner';
@@ -64,6 +64,40 @@ export function ProfileHubView() {
     await reload();
     setRefreshing(false);
   }, [reload]);
+
+  const handleDeleteAccount = useCallback(() => {
+    if (!token || !user?._id) return;
+
+    Alert.alert(
+      'Delete account',
+      'This permanently deletes your account, pets, and personal data. Family hubs with other members must be cleared first. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert('Confirm deletion', 'Are you absolutely sure?', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Yes, delete',
+                style: 'destructive',
+                onPress: async () => {
+                  try {
+                    await deleteUserAccount(token, user._id);
+                    await logout();
+                    router.replace('/auth/login');
+                  } catch (error) {
+                    Alert.alert('Could not delete account', getErrorMessage(error));
+                  }
+                },
+              },
+            ]);
+          },
+        },
+      ],
+    );
+  }, [token, user?._id, logout, router]);
 
   const handleLogout = useCallback(async () => {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -155,6 +189,22 @@ export function ProfileHubView() {
           )}
         </ProfileMenuSection>
 
+        <ProfileMenuSection title="SUPPORT">
+          <ProfileMenuRow
+            icon="help-circle-outline"
+            title="Help & Support"
+            subtitle="Contact us and view message history"
+            onPress={() => router.push('/profile/support' as Href)}
+          />
+        </ProfileMenuSection>
+
+        <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount} activeOpacity={0.85}>
+          <Ionicons name="trash-outline" size={20} color="#C62828" />
+          <AppText variant="body" weight="700" color="#C62828">
+            Delete account
+          </AppText>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
           <Ionicons name="log-out-outline" size={20} color="#C62828" />
           <AppText variant="body" weight="700" color="#C62828">
@@ -186,13 +236,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 8,
   },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 24,
+    marginTop: 16,
+    paddingVertical: 10,
+  },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     marginHorizontal: 24,
-    marginTop: 8,
+    marginTop: 4,
     paddingVertical: 14,
   },
 });

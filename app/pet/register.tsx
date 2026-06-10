@@ -28,7 +28,16 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/lib/api/errors';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
-import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchSpecies, updatePet } from '@/services/pets/petApi';
+import {
+  createAndActivatePet,
+  createPet,
+  deletePet,
+  fetchBreeds,
+  fetchPetById,
+  fetchSpecies,
+  setActivePet,
+  updatePet,
+} from '@/services/pets/petApi';
 import { uploadPetImage } from '@/services/pets/uploadPetImage';
 import {
   hasRegisterPetFieldErrors,
@@ -40,10 +49,12 @@ const DEFAULT_BIRTHDAY = new Date(2021, 4, 15);
 
 export default function RegisterPetScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string; petId?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; petId?: string; familyId?: string }>();
   const isAddMode = params.mode === 'add';
   const isEditMode = params.mode === 'edit' && Boolean(params.petId);
   const editPetId = Array.isArray(params.petId) ? params.petId[0] : params.petId;
+  const familyId = Array.isArray(params.familyId) ? params.familyId[0] : params.familyId;
+  const isFamilyPetMode = Boolean(familyId) && isAddMode;
   const { token, user, setSession } = useAuth();
 
   const [speciesList, setSpeciesList] = useState<string[]>([]);
@@ -210,9 +221,15 @@ export default function RegisterPetScreen() {
         weightUnit: apiWeightUnit,
       };
 
-      let pet = isEditMode && editPetId
-        ? await updatePet(token, editPetId, payload)
-        : await createAndActivatePet(token, payload);
+      let pet;
+      if (isEditMode && editPetId) {
+        pet = await updatePet(token, editPetId, payload);
+      } else if (familyId) {
+        pet = await createPet(token, { ...payload, familyId });
+        await setActivePet(token, pet._id);
+      } else {
+        pet = await createAndActivatePet(token, payload);
+      }
 
       if (photoUri) {
         try {
@@ -250,6 +267,7 @@ export default function RegisterPetScreen() {
     isAddMode,
     isEditMode,
     editPetId,
+    familyId,
     petName,
     router,
     setSession,
@@ -301,7 +319,13 @@ export default function RegisterPetScreen() {
           >
             <View style={styles.header}>
               <AppText variant="h3" weight="800" align="center" style={styles.title}>
-                {isEditMode ? 'Edit pet profile' : isAddMode ? 'Add another pet' : 'Tell us about your furry friend!'}
+                {isEditMode
+                  ? 'Edit pet profile'
+                  : isFamilyPetMode
+                    ? 'Add pet to family hub'
+                    : isAddMode
+                      ? 'Add another pet'
+                      : 'Tell us about your furry friend!'}
               </AppText>
               <AppText variant="bodySmall" color={LoginTheme.tagline} align="center" style={styles.subtitle}>
                 Let&apos;s create a profile to help you track their healthy lifestyle.

@@ -8,9 +8,11 @@ import {
 } from '@/lib/vaccination/vaccinationForm';
 import {
   completeVaccinationSchedule,
+  deleteVaccinationSchedule,
   fetchVaccinationSchedules,
+  updateVaccinationSchedule,
 } from '@/services/schedules/vaccinationApi';
-import type { VaccinationScheduleItem } from '@/types/vaccination';
+import type { UpdateVaccinationScheduleRequest, VaccinationScheduleItem } from '@/types/vaccination';
 
 export function useVaccinationSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<VaccinationScheduleItem[]>([]);
@@ -77,11 +79,47 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
     [token, reload, schedules],
   );
 
+  const updateVaccination = useCallback(
+    async (scheduleId: string, body: UpdateVaccinationScheduleRequest) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await updateVaccinationSchedule(token, scheduleId, body);
+        await reload();
+      } catch (error) {
+        log.fail('Vaccination', 'Update failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const removeVaccination = useCallback(
+    async (scheduleId: string) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await deleteVaccinationSchedule(token, scheduleId);
+        await reload();
+      } catch (error) {
+        log.fail('Vaccination', 'Delete failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
   return {
     schedules,
     loading,
     actionId,
     reload,
     completeVaccination,
+    updateVaccination,
+    removeVaccination,
   };
 }

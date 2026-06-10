@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -27,13 +28,18 @@ import {
   createWalkEntry,
   pickDefaultUnitFromList,
 } from '@/lib/schedule/defaults';
+import { deleteScheduleEntryByKey } from '@/lib/schedule/deleteScheduleEntry';
+import { loadExistingSchedules } from '@/lib/schedule/loadSchedules';
 import { hasEnabledSection, saveAllSchedules } from '@/lib/schedule/saveSchedules';
 import type { ScheduleSectionKey, ScheduleSectionsState } from '@/lib/schedule/types';
 import { fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
+import { MedicineLowStockBanner } from './MedicineLowStockBanner';
 import { ScheduleSectionCard } from './ScheduleSectionCard';
+import { SCHEDULE_SECTIONS } from './scheduleTheme';
 import { scheduleFieldStyles } from './scheduleStyles';
+import { WalkStatsPanel } from './WalkStatsPanel';
 import { FeedingEntryCard } from './entries/FeedingEntryCard';
 import { WalkEntryCard } from './entries/WalkEntryCard';
 import { MedicineEntryCard } from './entries/MedicineEntryCard';
@@ -42,61 +48,15 @@ import { GroomingEntryCard } from './entries/GroomingEntryCard';
 
 const TAB_BAR_CLEARANCE = 100;
 
-const SECTION_META: {
-  key: ScheduleSectionKey;
-  title: string;
-  subtitle: string;
-  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  color: string;
-  bg: string;
-  addLabel: string;
-}[] = [
-  {
-    key: 'feeding',
-    title: 'Feeding Schedule',
-    subtitle: 'Meal times and portions',
-    icon: 'silverware-fork-knife',
-    color: '#F5A623',
-    bg: '#FFF4E0',
-    addLabel: 'Add meal',
-  },
-  {
-    key: 'walk',
-    title: 'Daily Walks',
-    subtitle: 'Walk times and duration',
-    icon: 'walk',
-    color: '#5CB35D',
-    bg: '#E8F5E9',
-    addLabel: 'Add walk',
-  },
-  {
-    key: 'medicine',
-    title: 'Medicine',
-    subtitle: 'Doses and reminders',
-    icon: 'pill',
-    color: '#5B9BD5',
-    bg: '#E3F2FD',
-    addLabel: 'Add medicine',
-  },
-  {
-    key: 'vaccination',
-    title: 'Vaccinations',
-    subtitle: 'Due dates and boosters',
-    icon: 'needle',
-    color: '#673AB7',
-    bg: '#EDE7F6',
-    addLabel: 'Add vaccine',
-  },
-  {
-    key: 'grooming',
-    title: 'Grooming',
-    subtitle: 'Bath, haircut, and care tasks',
-    icon: 'content-cut',
-    color: '#E91E8C',
-    bg: '#FCE4F0',
-    addLabel: 'Add task',
-  },
-];
+function remoteIdForEntry(
+  key: ScheduleSectionKey,
+  entry: ScheduleSectionsState[ScheduleSectionKey]['entries'][number],
+): string | undefined {
+  if (key === 'grooming') {
+    return 'recordId' in entry ? entry.recordId : undefined;
+  }
+  return 'scheduleId' in entry ? entry.scheduleId : undefined;
+}
 
 export function ScheduleSetupView() {
   const insets = useSafeAreaInsets();
@@ -112,6 +72,27 @@ export function ScheduleSetupView() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [schedulesLoading, setSchedulesLoading] = useState(false);
+
+  const reloadSchedules = useCallback(
+    async (
+      authToken: string,
+      petId: string,
+      defaults: { mealType: string; unit: string; groomingType: string },
+    ) => {
+      setSchedulesLoading(true);
+      try {
+        const loaded = await loadExistingSchedules(authToken, petId, defaults);
+        setSections(loaded);
+      } catch (e) {
+        setFormError(e instanceof Error ? e.message : 'Unable to load existing schedules.');
+        setSections(createInitialScheduleState(defaults.mealType, defaults.unit, defaults.groomingType));
+      } finally {
+        setSchedulesLoading(false);
+      }
+    },
+    [],
+  );
 
   const loadFeatures = useCallback(async () => {
     if (!token || !pet?._id) {
@@ -141,14 +122,18 @@ export function ScheduleSetupView() {
       setUnitOptions(unitOpts);
       setGroomingTypeOptions(groomingInfo.types ?? []);
       setGroomingVisible(groomingInfo.groomingVisible);
-      setSections(createInitialScheduleState(defaultMeal, defaultUnit, defaultGrooming));
+      await reloadSchedules(token, pet._id, {
+        mealType: defaultMeal,
+        unit: defaultUnit,
+        groomingType: defaultGrooming,
+      });
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Unable to load schedule options.');
       setSections(createInitialScheduleState());
     } finally {
       setFeaturesLoading(false);
     }
-  }, [token, pet?._id]);
+  }, [token, pet?._id, reloadSchedules]);
 
   useEffect(() => {
     loadFeatures();
@@ -208,15 +193,43 @@ export function ScheduleSetupView() {
     });
   };
 
-  const removeEntry = (key: ScheduleSectionKey, id: string) => {
-    setSections((prev) => {
-      const section = prev[key];
-      if (section.entries.length <= 1) return prev;
-      return {
-        ...prev,
-        [key]: { ...section, entries: section.entries.filter((e) => e.id !== id) },
-      };
-    });
+  const removeEntry = async (key: ScheduleSectionKey, id: string) => {
+    const section = sections[key];
+    const entry = section.entries.find((e) => e.id === id);
+    if (!entry || section.entries.length <= 1) return;
+
+    const remoteId = entry ? remoteIdForEntry(key, entry) : undefined;
+    const performRemove = () => {
+      setSections((prev) => {
+        const current = prev[key];
+        if (current.entries.length <= 1) return prev;
+        return {
+          ...prev,
+          [key]: { ...current, entries: current.entries.filter((e) => e.id !== id) },
+        };
+      });
+    };
+
+    if (!remoteId || !token) {
+      performRemove();
+      return;
+    }
+
+    Alert.alert('Remove schedule?', 'This will delete the saved schedule from your pet profile.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteScheduleEntryByKey(token, key, remoteId);
+            performRemove();
+          } catch (e) {
+            Alert.alert('Delete failed', e instanceof Error ? e.message : 'Could not delete schedule.');
+          }
+        },
+      },
+    ]);
   };
 
   const handleSaveAll = async () => {
@@ -242,11 +255,13 @@ export function ScheduleSetupView() {
         setFormError(result.errors.join('\n'));
       } else {
         setFormSuccess(`${result.savedCount} schedule(s) saved successfully.`);
-        setSections(createInitialScheduleState(
-          mealTypeOptions[0]?.value ?? '',
-          unitOptions[0]?.value ?? '',
-          groomingTypeOptions[0]?.value ?? '',
-        ));
+      }
+      if (token && pet._id) {
+        await reloadSchedules(token, pet._id, {
+          mealType: mealTypeOptions[0]?.value ?? '',
+          unit: unitOptions[0]?.value ?? '',
+          groomingType: groomingTypeOptions[0]?.value ?? '',
+        });
       }
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Unable to save schedules.');
@@ -255,7 +270,7 @@ export function ScheduleSetupView() {
     }
   };
 
-  const visibleSections = SECTION_META.filter(
+  const visibleSections = SCHEDULE_SECTIONS.filter(
     (section) => section.key !== 'grooming' || groomingVisible,
   );
 
@@ -288,7 +303,7 @@ export function ScheduleSetupView() {
             </View>
           </View>
 
-          {petLoading || featuresLoading ? (
+          {petLoading || featuresLoading || schedulesLoading ? (
             <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
           ) : !pet ? (
             <View style={styles.emptyBox}>
@@ -301,24 +316,26 @@ export function ScheduleSetupView() {
               {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
               {formError ? <AuthErrorBanner message={formError} /> : null}
 
-              {visibleSections.map((meta) => (
+              <MedicineLowStockBanner token={token} petId={pet._id} />
+
+              {visibleSections.map((sectionMeta) => (
                 <ScheduleSectionCard
-                  key={meta.key}
-                  title={meta.title}
-                  subtitle={meta.subtitle}
-                  icon={meta.icon}
-                  accentColor={meta.color}
-                  accentBg={meta.bg}
-                  enabled={sections[meta.key].enabled}
-                  onToggle={(enabled) => toggleSection(meta.key, enabled)}
+                  key={sectionMeta.key}
+                  section={sectionMeta}
+                  enabled={sections[sectionMeta.key].enabled}
+                  onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
                 >
-                  {meta.key === 'feeding'
+                  {sectionMeta.key === 'walk' && sections.walk.enabled ? (
+                    <WalkStatsPanel token={token} petId={pet._id} />
+                  ) : null}
+
+                  {sectionMeta.key === 'feeding'
                     ? sections.feeding.entries.map((entry, index) => (
                         <FeedingEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           mealTypeOptions={mealTypeOptions}
                           unitOptions={unitOptions}
                           canRemove={sections.feeding.entries.length > 1}
@@ -338,13 +355,13 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'walk'
+                  {sectionMeta.key === 'walk'
                     ? sections.walk.entries.map((entry, index) => (
                         <WalkEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           canRemove={sections.walk.entries.length > 1}
                           onChange={(next) =>
                             setSections((prev) => ({
@@ -360,14 +377,24 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'medicine'
+                  {sectionMeta.key === 'medicine'
                     ? sections.medicine.entries.map((entry, index) => (
                         <MedicineEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           canRemove={sections.medicine.entries.length > 1}
+                          token={token}
+                          onRefilled={() => {
+                            if (token && pet._id) {
+                              reloadSchedules(token, pet._id, {
+                                mealType: mealTypeOptions[0]?.value ?? '',
+                                unit: unitOptions[0]?.value ?? '',
+                                groomingType: groomingTypeOptions[0]?.value ?? '',
+                              });
+                            }
+                          }}
                           onChange={(next) =>
                             setSections((prev) => ({
                               ...prev,
@@ -384,13 +411,13 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'vaccination'
+                  {sectionMeta.key === 'vaccination'
                     ? sections.vaccination.entries.map((entry, index) => (
                         <VaccinationEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           canRemove={sections.vaccination.entries.length > 1}
                           onChange={(next) =>
                             setSections((prev) => ({
@@ -408,13 +435,14 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'grooming'
+                  {sectionMeta.key === 'grooming'
                     ? sections.grooming.entries.map((entry, index) => (
                         <GroomingEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
+                          accentBg={sectionMeta.bg}
                           typeOptions={groomingTypeOptions}
                           canRemove={sections.grooming.entries.length > 1}
                           onChange={(next) =>
@@ -435,19 +463,19 @@ export function ScheduleSetupView() {
 
                   <TouchableOpacity
                     style={scheduleFieldStyles.addBtn}
-                    onPress={() => addEntry(meta.key)}
+                    onPress={() => addEntry(sectionMeta.key)}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name="add-circle" size={20} color={meta.color} />
-                    <AppText variant="bodySmall" weight="700" color={meta.color}>
-                      {meta.addLabel}
+                    <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
+                    <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
+                      {sectionMeta.addLabel}
                     </AppText>
                   </TouchableOpacity>
                 </ScheduleSectionCard>
               ))}
 
               <AppButton
-                title="Save All Schedules"
+                title="Save Schedules"
                 onPress={handleSaveAll}
                 loading={saving}
                 disabled={saving || featuresLoading}

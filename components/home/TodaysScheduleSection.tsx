@@ -69,7 +69,9 @@ interface TodaysScheduleSectionProps {
   onCompleteMedicine?: (scheduleId: string) => void;
   onCompleteGrooming?: (recordId: string) => void;
   onManageGrooming?: (recordId: string) => void;
+  onRescheduleWalk?: (schedule: WalkScheduleItem) => void;
   onCompleteVaccination?: (scheduleId: string) => void;
+  onSeeAllPress?: () => void;
 }
 
 function rowSortKey(row: ScheduleRow): number {
@@ -199,7 +201,9 @@ export function TodaysScheduleSection({
   onCompleteMedicine,
   onCompleteGrooming,
   onManageGrooming,
+  onRescheduleWalk,
   onCompleteVaccination,
+  onSeeAllPress,
 }: TodaysScheduleSectionProps) {
   const items = useMemo(
     () =>
@@ -215,7 +219,7 @@ export function TodaysScheduleSection({
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
+      <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={onSeeAllPress} />
 
       {loading ? (
         <ActivityIndicator color={HomeTheme.green} style={styles.loader} />
@@ -302,6 +306,30 @@ export function TodaysScheduleSection({
                     <AppText variant="caption" weight="600" color="#8FAF8F">
                       Done
                     </AppText>
+                  </TouchableOpacity>
+                </View>
+              ) : row.kind === 'walk' && onRescheduleWalk ? (
+                <View style={styles.actionRow}>
+                  <TouchableOpacity
+                    style={styles.skipBtn}
+                    activeOpacity={0.85}
+                    onPress={() => onRescheduleWalk(row.item)}
+                  >
+                    <Ionicons name="time-outline" size={16} color={HomeTheme.textMuted} />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.doneBtn}
+                    activeOpacity={0.85}
+                    disabled={busy || !onComplete}
+                    onPress={() => onComplete?.(rowId(row))}
+                  >
+                    {busy ? (
+                      <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                    ) : (
+                      <AppText variant="caption" weight="600" color="#8FAF8F">
+                        Done
+                      </AppText>
+                    )}
                   </TouchableOpacity>
                 </View>
               ) : row.kind === 'grooming' && onManageGrooming ? (

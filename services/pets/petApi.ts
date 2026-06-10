@@ -6,6 +6,8 @@ import type {
   ActivePetIdResponse,
   ApiPet,
   BreedsListResponse,
+  BulkCreatePetsRequest,
+  BulkCreatePetsResponse,
   CreatePetRequest,
   SetActivePetResponse,
   SpeciesListResponse,
@@ -87,6 +89,25 @@ export async function createPet(token: string, payload: CreatePetRequest): Promi
     return pet;
   } catch (error) {
     log.fail(SCOPE, 'Create pet failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function createPetsBulk(
+  token: string,
+  payload: BulkCreatePetsRequest,
+): Promise<BulkCreatePetsResponse> {
+  log.info(SCOPE, 'POST /pets/bulk', { count: payload.pets.length });
+  try {
+    const data = await apiRequest<BulkCreatePetsResponse>(API_ENDPOINTS.pets.bulk, {
+      method: 'POST',
+      token,
+      body: payload,
+    });
+    log.ok(SCOPE, 'Bulk pets created', { created: data.created });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Bulk create pets failed', getErrorMessage(error));
     throw error;
   }
 }

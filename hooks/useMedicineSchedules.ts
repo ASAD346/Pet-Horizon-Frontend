@@ -4,9 +4,18 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
   completeMedicineSchedule,
+  deleteMedicineSchedule,
+  fetchMedicineHistory,
+  fetchMedicineLowStock,
   fetchTodayMedicineSchedules,
+  refillMedicineSchedule,
+  updateMedicineSchedule,
 } from '@/services/schedules/medicineApi';
-import type { MedicineScheduleItem } from '@/types/medicine';
+import type {
+  MedicineScheduleItem,
+  RefillMedicineRequest,
+  UpdateMedicineScheduleRequest,
+} from '@/types/medicine';
 
 export function useMedicineSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<MedicineScheduleItem[]>([]);
@@ -59,11 +68,84 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
     [token, reload],
   );
 
+  const updateMedicine = useCallback(
+    async (scheduleId: string, body: UpdateMedicineScheduleRequest) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await updateMedicineSchedule(token, scheduleId, body);
+        await reload();
+      } catch (error) {
+        log.fail('Medicine', 'Update failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const removeMedicine = useCallback(
+    async (scheduleId: string) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await deleteMedicineSchedule(token, scheduleId);
+        await reload();
+      } catch (error) {
+        log.fail('Medicine', 'Delete failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const refillMedicine = useCallback(
+    async (scheduleId: string, body: RefillMedicineRequest) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await refillMedicineSchedule(token, scheduleId, body);
+        await reload();
+      } catch (error) {
+        log.fail('Medicine', 'Refill failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const loadLowStock = useCallback(async () => {
+    if (!token) return [];
+    try {
+      return await fetchMedicineLowStock(token);
+    } catch {
+      return [];
+    }
+  }, [token]);
+
+  const loadHistory = useCallback(
+    async (scheduleId: string) => {
+      if (!token) return [];
+      return fetchMedicineHistory(token, scheduleId);
+    },
+    [token],
+  );
+
   return {
     schedules,
     loading,
     actionId,
     reload,
     completeMedicine,
+    updateMedicine,
+    removeMedicine,
+    refillMedicine,
+    loadLowStock,
+    loadHistory,
   };
 }

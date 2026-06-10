@@ -43,23 +43,51 @@ function ReminderCard({ variant, title, subtitle, actionLabel, onAction }: Remin
   );
 }
 
-export function ReminderCardsRow() {
+interface ReminderCardsRowProps {
+  lowStockVisible?: boolean;
+  lowStockSubtitle?: string;
+  onLowStockPress?: () => void;
+  onRestockPress?: () => void;
+  medicalVisible?: boolean;
+  medicalTitle?: string;
+  medicalSubtitle?: string;
+  onMedicalPress?: () => void;
+}
+
+export function ReminderCardsRow({
+  lowStockVisible = false,
+  lowStockSubtitle = 'Stock is below your threshold.',
+  onLowStockPress,
+  onRestockPress,
+  medicalVisible = false,
+  medicalTitle = 'Upcoming visit',
+  medicalSubtitle = 'Check medical records',
+  onMedicalPress,
+}: ReminderCardsRowProps) {
+  if (!lowStockVisible && !medicalVisible) {
+    return null;
+  }
+
   return (
     <View style={styles.row}>
-      <ReminderCard
-        variant="warning"
-        title="Low Food Stock!"
-        subtitle="Only 2 days of dog food left!"
-        actionLabel="Mark Restocked"
-        onAction={() => {}}
-      />
-      <ReminderCard
-        variant="info"
-        title="Vet Checkup"
-        subtitle="Tomorrow at 10:00 AM"
-        actionLabel="View Details"
-        onAction={() => {}}
-      />
+      {lowStockVisible ? (
+        <ReminderCard
+          variant="warning"
+          title="Low stock"
+          subtitle={lowStockSubtitle}
+          actionLabel="Restock"
+          onAction={onRestockPress ?? onLowStockPress}
+        />
+      ) : null}
+      {medicalVisible ? (
+        <ReminderCard
+          variant="info"
+          title={medicalTitle}
+          subtitle={medicalSubtitle}
+          actionLabel="View details"
+          onAction={onMedicalPress}
+        />
+      ) : null}
     </View>
   );
 }

@@ -30,6 +30,18 @@ export async function fetchGroomingTypes(
   }
 }
 
+export async function fetchUpcomingGrooming(token: string): Promise<GroomingRecord[]> {
+  log.info(SCOPE, 'GET /grooming/upcoming');
+  try {
+    const data = await apiRequest<GroomingRecord[]>(API_ENDPOINTS.grooming.upcoming, { token });
+    log.ok(SCOPE, 'Upcoming grooming loaded', { count: data.length });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Load upcoming grooming failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
 export async function fetchGroomingRecords(
   token: string,
   petId: string,

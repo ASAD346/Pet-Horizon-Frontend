@@ -35,6 +35,23 @@ export interface WalkScheduleItem {
   };
 }
 
+export interface UpdateWalkScheduleRequest {
+  time?: string;
+  duration?: number;
+  notes?: string;
+  note?: string;
+  reminder?: boolean;
+  reminderTime?: string;
+  reminderMinutes?: number;
+}
+
+export interface RescheduleWalkRequest {
+  newTime: string;
+  date?: string;
+}
+
+export type WalkStatsResponse = Record<string, number>;
+
 export interface CompleteWalkRequest {
   status?: 'done' | 'skipped';
 }

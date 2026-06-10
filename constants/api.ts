@@ -40,9 +40,14 @@ export const API_ENDPOINTS = {
     verifyEmailChange: '/users/verify-email-change',
     deviceToken: '/users/device-token',
   },
+  contact: {
+    send: '/contact/send',
+    history: '/contact/history',
+  },
   pets: {
     list: '/pets',
     create: '/pets',
+    bulk: '/pets/bulk',
     byId: (petId: string) => `/pets/${petId}`,
     image: (petId: string) => `/pets/${petId}/image`,
     active: '/pets/active',
@@ -63,11 +68,13 @@ export const API_ENDPOINTS = {
     feedingComplete: (id: string) => `/schedules/feeding/${id}/complete`,
     feedingSkip: (id: string) => `/schedules/feeding/${id}/skip`,
     walk: '/schedules/walk',
+    walkList: '/schedules/walk',
     walkById: (id: string) => `/schedules/walk/${id}`,
     walkComplete: (id: string) => `/schedules/walk/${id}/complete`,
     walkReschedule: (id: string) => `/schedules/walk/${id}/reschedule`,
     walkStats: '/schedules/walk/stats',
     medicine: '/schedules/medicine',
+    medicineList: '/schedules/medicine',
     medicineById: (id: string) => `/schedules/medicine/${id}`,
     medicineComplete: (id: string) => `/schedules/medicine/${id}/complete`,
     medicineRefill: (id: string) => `/schedules/medicine/${id}/refill`,
@@ -99,6 +106,15 @@ export const API_ENDPOINTS = {
     info: (token: string) => `/invitations/info/${token}`,
   },
   family: {
+    create: '/families',
+    byId: (familyId: string) => `/families/${familyId}`,
+    invite: (familyId: string) => `/families/${familyId}/invite`,
+    members: (familyId: string) => `/families/${familyId}/members`,
+    removeMember: (familyId: string, userId: string) => `/families/${familyId}/members/${userId}`,
+    updateMemberPermissions: (familyId: string, userId: string) =>
+      `/families/${familyId}/members/${userId}/permissions`,
+    revokePetAccess: (familyId: string, userId: string, petId: string) =>
+      `/families/${familyId}/members/${userId}/permissions/${petId}`,
     membersByPet: (petId: string) => `/pets/${petId}/members`,
     removeMemberByPet: (petId: string, userId: string) => `/pets/${petId}/members/${userId}`,
     updateMemberPermissionsByPet: (petId: string, userId: string) =>
@@ -132,5 +148,27 @@ export const API_ENDPOINTS = {
     remaining: '/budget/remaining',
     create: '/budget',
     byId: (id: string) => `/budget/${id}`,
+  },
+  activity: {
+    timeline: (petId: string) => `/pets/${petId}/activity-timeline`,
+    entry: (petId: string, id: string) => `/pets/${petId}/activity-timeline/${id}`,
+    complete: (petId: string, id: string) => `/pets/${petId}/activity-timeline/${id}/complete`,
+  },
+  inventory: {
+    summary: '/inventory',
+    items: '/inventory/items',
+    createItem: '/inventory/items',
+    restock: '/inventory/restock',
+    adjust: '/inventory',
+    lowStock: '/inventory/low-stock-alert',
+    transactions: '/inventory/transactions',
+  },
+  health: {
+    list: '/health',
+    byId: (id: string) => `/health/${id}`,
+  },
+  medical: {
+    list: '/medical',
+    byId: (id: string) => `/medical/${id}`,
   },
 } as const;

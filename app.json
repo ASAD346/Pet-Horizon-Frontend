@@ -52,6 +52,13 @@
           "photosPermission": "Allow Pet Horizon to access your photos to add a pet picture.",
           "cameraPermission": "Allow Pet Horizon to use the camera for pet photos."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#5CB35D"
+        }
       ]
     ],
     "experiments": {

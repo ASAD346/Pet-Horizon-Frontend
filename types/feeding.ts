@@ -41,6 +41,18 @@ export interface CompleteFeedingRequest {
   status?: 'done' | 'skipped';
 }
 
+export interface UpdateFeedingScheduleRequest {
+  mealType?: string;
+  time?: string;
+  amount?: string;
+  unit?: string;
+  notes?: string;
+  note?: string;
+  reminder?: boolean;
+  reminderTime?: string;
+  reminderMinutes?: number;
+}
+
 export interface CompleteFeedingResponse {
   scheduleLog: { _id: string; status: string; completedAt: string };
   journalCreated?: boolean;

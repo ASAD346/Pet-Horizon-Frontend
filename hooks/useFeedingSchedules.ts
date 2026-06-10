@@ -4,10 +4,12 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
   completeFeedingSchedule,
+  deleteFeedingSchedule,
   fetchFeedingSchedules,
   skipFeedingSchedule,
+  updateFeedingSchedule,
 } from '@/services/schedules/feedingApi';
-import type { FeedingScheduleItem } from '@/types/feeding';
+import type { FeedingScheduleItem, UpdateFeedingScheduleRequest } from '@/types/feeding';
 
 export function useFeedingSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<FeedingScheduleItem[]>([]);
@@ -80,6 +82,40 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
     [token, reload],
   );
 
+  const updateFeeding = useCallback(
+    async (scheduleId: string, body: UpdateFeedingScheduleRequest) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await updateFeedingSchedule(token, scheduleId, body);
+        await reload();
+      } catch (error) {
+        log.fail('Feeding', 'Update failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
+  const removeFeeding = useCallback(
+    async (scheduleId: string) => {
+      if (!token) return;
+      setActionId(scheduleId);
+      try {
+        await deleteFeedingSchedule(token, scheduleId);
+        await reload();
+      } catch (error) {
+        log.fail('Feeding', 'Delete failed', getErrorMessage(error));
+        throw error;
+      } finally {
+        setActionId(null);
+      }
+    },
+    [token, reload],
+  );
+
   return {
     schedules,
     loading,
@@ -87,5 +123,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
     reload,
     completeFeeding,
     skipFeeding,
+    updateFeeding,
+    removeFeeding,
   };
 }
