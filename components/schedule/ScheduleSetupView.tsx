@@ -33,6 +33,7 @@ import { fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
 import { ScheduleSectionCard } from './ScheduleSectionCard';
+import { SCHEDULE_SECTIONS } from './scheduleTheme';
 import { scheduleFieldStyles } from './scheduleStyles';
 import { FeedingEntryCard } from './entries/FeedingEntryCard';
 import { WalkEntryCard } from './entries/WalkEntryCard';
@@ -41,62 +42,6 @@ import { VaccinationEntryCard } from './entries/VaccinationEntryCard';
 import { GroomingEntryCard } from './entries/GroomingEntryCard';
 
 const TAB_BAR_CLEARANCE = 100;
-
-const SECTION_META: {
-  key: ScheduleSectionKey;
-  title: string;
-  subtitle: string;
-  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  color: string;
-  bg: string;
-  addLabel: string;
-}[] = [
-  {
-    key: 'feeding',
-    title: 'Feeding Schedule',
-    subtitle: 'Meal times and portions',
-    icon: 'silverware-fork-knife',
-    color: '#F5A623',
-    bg: '#FFF4E0',
-    addLabel: 'Add meal',
-  },
-  {
-    key: 'walk',
-    title: 'Daily Walks',
-    subtitle: 'Walk times and duration',
-    icon: 'walk',
-    color: '#5CB35D',
-    bg: '#E8F5E9',
-    addLabel: 'Add walk',
-  },
-  {
-    key: 'medicine',
-    title: 'Medicine',
-    subtitle: 'Doses and reminders',
-    icon: 'pill',
-    color: '#5B9BD5',
-    bg: '#E3F2FD',
-    addLabel: 'Add medicine',
-  },
-  {
-    key: 'vaccination',
-    title: 'Vaccinations',
-    subtitle: 'Due dates and boosters',
-    icon: 'needle',
-    color: '#673AB7',
-    bg: '#EDE7F6',
-    addLabel: 'Add vaccine',
-  },
-  {
-    key: 'grooming',
-    title: 'Grooming',
-    subtitle: 'Bath, haircut, and care tasks',
-    icon: 'content-cut',
-    color: '#E91E8C',
-    bg: '#FCE4F0',
-    addLabel: 'Add task',
-  },
-];
 
 export function ScheduleSetupView() {
   const insets = useSafeAreaInsets();
@@ -255,7 +200,7 @@ export function ScheduleSetupView() {
     }
   };
 
-  const visibleSections = SECTION_META.filter(
+  const visibleSections = SCHEDULE_SECTIONS.filter(
     (section) => section.key !== 'grooming' || groomingVisible,
   );
 
@@ -301,24 +246,20 @@ export function ScheduleSetupView() {
               {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
               {formError ? <AuthErrorBanner message={formError} /> : null}
 
-              {visibleSections.map((meta) => (
+              {visibleSections.map((sectionMeta) => (
                 <ScheduleSectionCard
-                  key={meta.key}
-                  title={meta.title}
-                  subtitle={meta.subtitle}
-                  icon={meta.icon}
-                  accentColor={meta.color}
-                  accentBg={meta.bg}
-                  enabled={sections[meta.key].enabled}
-                  onToggle={(enabled) => toggleSection(meta.key, enabled)}
+                  key={sectionMeta.key}
+                  section={sectionMeta}
+                  enabled={sections[sectionMeta.key].enabled}
+                  onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
                 >
-                  {meta.key === 'feeding'
+                  {sectionMeta.key === 'feeding'
                     ? sections.feeding.entries.map((entry, index) => (
                         <FeedingEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           mealTypeOptions={mealTypeOptions}
                           unitOptions={unitOptions}
                           canRemove={sections.feeding.entries.length > 1}
@@ -338,13 +279,13 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'walk'
+                  {sectionMeta.key === 'walk'
                     ? sections.walk.entries.map((entry, index) => (
                         <WalkEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           canRemove={sections.walk.entries.length > 1}
                           onChange={(next) =>
                             setSections((prev) => ({
@@ -360,13 +301,13 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'medicine'
+                  {sectionMeta.key === 'medicine'
                     ? sections.medicine.entries.map((entry, index) => (
                         <MedicineEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           canRemove={sections.medicine.entries.length > 1}
                           onChange={(next) =>
                             setSections((prev) => ({
@@ -384,13 +325,13 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'vaccination'
+                  {sectionMeta.key === 'vaccination'
                     ? sections.vaccination.entries.map((entry, index) => (
                         <VaccinationEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
                           canRemove={sections.vaccination.entries.length > 1}
                           onChange={(next) =>
                             setSections((prev) => ({
@@ -408,13 +349,14 @@ export function ScheduleSetupView() {
                       ))
                     : null}
 
-                  {meta.key === 'grooming'
+                  {sectionMeta.key === 'grooming'
                     ? sections.grooming.entries.map((entry, index) => (
                         <GroomingEntryCard
                           key={entry.id}
                           entry={entry}
                           index={index}
-                          accentColor={meta.color}
+                          accentColor={sectionMeta.color}
+                          accentBg={sectionMeta.bg}
                           typeOptions={groomingTypeOptions}
                           canRemove={sections.grooming.entries.length > 1}
                           onChange={(next) =>
@@ -435,12 +377,12 @@ export function ScheduleSetupView() {
 
                   <TouchableOpacity
                     style={scheduleFieldStyles.addBtn}
-                    onPress={() => addEntry(meta.key)}
+                    onPress={() => addEntry(sectionMeta.key)}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name="add-circle" size={20} color={meta.color} />
-                    <AppText variant="bodySmall" weight="700" color={meta.color}>
-                      {meta.addLabel}
+                    <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
+                    <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
+                      {sectionMeta.addLabel}
                     </AppText>
                   </TouchableOpacity>
                 </ScheduleSectionCard>

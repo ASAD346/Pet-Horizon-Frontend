@@ -4,6 +4,12 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { homeCardShadow } from '@/components/home/homeStyles';
 import { ScheduleTheme } from './scheduleTheme';
 
+export const ScheduleColors = {
+  label: ScheduleTheme.textMuted,
+  fieldText: ScheduleTheme.text,
+  placeholder: ScheduleTheme.textMuted,
+} as const;
+
 export const scheduleFieldStyles = StyleSheet.create({
   sectionCard: {
     backgroundColor: ScheduleTheme.cardBg,
@@ -29,6 +35,29 @@ export const scheduleFieldStyles = StyleSheet.create({
   sectionBody: {
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.md,
+  },
+  entryCard: {
+    backgroundColor: ScheduleTheme.fieldBg,
+    borderRadius: 14,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  fieldLabel: {
+    marginBottom: 6,
+  },
+  addBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingVertical: 12,
+    marginTop: Spacing.xs,
   },
   mealChipRow: {
     flexDirection: 'row',
