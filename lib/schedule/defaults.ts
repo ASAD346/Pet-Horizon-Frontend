@@ -105,11 +105,11 @@ export function createInitialScheduleState(
   defaultGroomingType = '',
 ): ScheduleSectionsState {
   return {
-    feeding: { enabled: false, entries: [createFeedingEntry(defaultMealType, defaultUnit)] },
-    walk: { enabled: false, entries: [createWalkEntry()] },
-    medicine: { enabled: false, entries: [createMedicineEntry()] },
-    vaccination: { enabled: false, entries: [createVaccinationEntry()] },
-    grooming: { enabled: false, entries: [createGroomingEntry(defaultGroomingType)] },
+    feeding: { enabled: false, entries: [] },
+    walk: { enabled: false, entries: [] },
+    medicine: { enabled: false, entries: [] },
+    vaccination: { enabled: false, entries: [] },
+    grooming: { enabled: false, entries: [] },
   };
 }
 

@@ -122,6 +122,23 @@ export function defaultFeedingTimeDate(): Date {
   return d;
 }
 
+/** Convert backend HH:mm to Date (today's date). */
+export function timeHHmmToDate(hhmm: string): Date {
+  const match = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  const d = new Date();
+  if (!match) return d;
+  d.setHours(parseInt(match[1], 10), parseInt(match[2], 10), 0, 0);
+  return d;
+}
+
+/** Parse API YYYY-MM-DD to local Date. */
+export function apiDateStringToDate(value: string | undefined | null): Date | null {
+  if (!value) return null;
+  const parts = value.split('-').map(Number);
+  if (parts.length !== 3 || parts.some((n) => Number.isNaN(n))) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+}
+
 /** Convert backend HH:mm to 12-hour display label. */
 export function formatTimeHHmmDisplay(hhmm: string): string {
   const match = hhmm.match(/^(\d{1,2}):(\d{2})$/);

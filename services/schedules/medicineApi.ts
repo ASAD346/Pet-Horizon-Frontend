@@ -6,6 +6,7 @@ import type {
   CompleteMedicineRequest,
   CompleteMedicineResponse,
   CreateMedicineScheduleRequest,
+  MedicineDoseForm,
   MedicineScheduleItem,
 } from '@/types/medicine';
 
@@ -85,6 +86,74 @@ export async function completeMedicineSchedule(
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Complete medicine failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function fetchMedicineSchedules(
+  token: string,
+  petId: string,
+): Promise<MedicineScheduleItem[]> {
+  log.info(SCOPE, 'GET /schedules/medicine', { petId });
+  try {
+    const data = await apiRequest<MedicineScheduleItem[]>(
+      `${API_ENDPOINTS.schedules.medicine}?petId=${encodeURIComponent(petId)}`,
+      { token },
+    );
+    log.ok(SCOPE, 'Medicine schedules loaded', { count: data.length });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'List medicine failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export interface UpdateMedicineScheduleRequest {
+  dose?: string;
+  time?: string;
+  doseForm?: MedicineDoseForm;
+  remainingPills?: number;
+  startDate?: string;
+  endDate?: string;
+  notes?: string;
+  reminder?: boolean;
+  reminderMinutes?: number;
+  reminderTime?: string;
+}
+
+export async function updateMedicineSchedule(
+  token: string,
+  scheduleId: string,
+  body: UpdateMedicineScheduleRequest,
+): Promise<MedicineScheduleItem> {
+  log.info(SCOPE, 'PUT /schedules/medicine/:id', { scheduleId });
+  try {
+    const data = await apiRequest<MedicineScheduleItem>(
+      API_ENDPOINTS.schedules.medicineById(scheduleId),
+      { method: 'PUT', token, body },
+    );
+    log.ok(SCOPE, 'Medicine schedule updated', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Update medicine failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function deleteMedicineSchedule(
+  token: string,
+  scheduleId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /schedules/medicine/:id', { scheduleId });
+  try {
+    const data = await apiRequest<{ message: string }>(
+      API_ENDPOINTS.schedules.medicineById(scheduleId),
+      { method: 'DELETE', token },
+    );
+    log.ok(SCOPE, 'Medicine schedule deleted', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Delete medicine failed', getErrorMessage(error));
     throw error;
   }
 }

@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { PushNotificationRegistrar } from '@/components/PushNotificationRegistrar';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
 export default function RootLayout() {
@@ -12,6 +13,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <PushNotificationRegistrar />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="auth/login" options={{ headerShown: false }} />
@@ -20,7 +22,7 @@ export default function RootLayout() {
         <Stack.Screen name="pet/register" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen name="invite" options={{ headerShown: false }} />
+        <Stack.Screen name="invite/[token]" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
       </Stack>

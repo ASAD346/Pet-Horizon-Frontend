@@ -115,3 +115,51 @@ export async function skipFeedingSchedule(
     throw error;
   }
 }
+
+export interface UpdateFeedingScheduleRequest {
+  mealType?: string;
+  time?: string;
+  amount?: string;
+  unit?: string;
+  notes?: string;
+  reminder?: boolean;
+  reminderMinutes?: number;
+  reminderTime?: string;
+}
+
+export async function updateFeedingSchedule(
+  token: string,
+  scheduleId: string,
+  body: UpdateFeedingScheduleRequest,
+): Promise<FeedingScheduleItem> {
+  log.info(SCOPE, 'PUT /schedules/feeding/:id', { scheduleId });
+  try {
+    const data = await apiRequest<FeedingScheduleItem>(
+      API_ENDPOINTS.schedules.feedingById(scheduleId),
+      { method: 'PUT', token, body },
+    );
+    log.ok(SCOPE, 'Feeding schedule updated', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Update feeding failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function deleteFeedingSchedule(
+  token: string,
+  scheduleId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /schedules/feeding/:id', { scheduleId });
+  try {
+    const data = await apiRequest<{ message: string }>(
+      API_ENDPOINTS.schedules.feedingById(scheduleId),
+      { method: 'DELETE', token },
+    );
+    log.ok(SCOPE, 'Feeding schedule deleted', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Delete feeding failed', getErrorMessage(error));
+    throw error;
+  }
+}
