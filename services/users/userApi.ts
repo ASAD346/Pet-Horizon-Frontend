@@ -108,3 +108,23 @@ export async function verifyEmailChange(token: string, otp: string): Promise<{ m
     throw error;
   }
 }
+
+export async function registerDeviceToken(
+  token: string,
+  fcmToken: string,
+  platform: 'android' | 'ios',
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'POST /users/device-token', { platform });
+  try {
+    const data = await apiRequest<{ message: string }>(API_ENDPOINTS.users.deviceToken, {
+      method: 'POST',
+      token,
+      body: { fcmToken, platform },
+    });
+    log.ok(SCOPE, 'Device token saved');
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Device token registration failed', getErrorMessage(error));
+    throw error;
+  }
+}

@@ -75,3 +75,68 @@ export async function completeWalkSchedule(
     throw error;
   }
 }
+
+export async function fetchWalkSchedules(
+  token: string,
+  petId: string,
+): Promise<WalkScheduleItem[]> {
+  log.info(SCOPE, 'GET /schedules/walk', { petId });
+  try {
+    const data = await apiRequest<WalkScheduleItem[]>(
+      `${API_ENDPOINTS.schedules.walk}?petId=${encodeURIComponent(petId)}`,
+      { token },
+    );
+    log.ok(SCOPE, 'Walk schedules loaded', { count: data.length });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'List walks failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export interface UpdateWalkScheduleRequest {
+  time?: string;
+  duration?: number;
+  notes?: string;
+  reminder?: boolean;
+  reminderMinutes?: number;
+  reminderTime?: string;
+}
+
+export async function updateWalkSchedule(
+  token: string,
+  scheduleId: string,
+  body: UpdateWalkScheduleRequest,
+): Promise<WalkScheduleItem> {
+  log.info(SCOPE, 'PUT /schedules/walk/:id', { scheduleId });
+  try {
+    const data = await apiRequest<WalkScheduleItem>(API_ENDPOINTS.schedules.walkById(scheduleId), {
+      method: 'PUT',
+      token,
+      body,
+    });
+    log.ok(SCOPE, 'Walk schedule updated', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Update walk failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function deleteWalkSchedule(
+  token: string,
+  scheduleId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /schedules/walk/:id', { scheduleId });
+  try {
+    const data = await apiRequest<{ message: string }>(API_ENDPOINTS.schedules.walkById(scheduleId), {
+      method: 'DELETE',
+      token,
+    });
+    log.ok(SCOPE, 'Walk schedule deleted', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Delete walk failed', getErrorMessage(error));
+    throw error;
+  }
+}

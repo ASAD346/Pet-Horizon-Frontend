@@ -77,6 +77,20 @@ export function parseTotalPills(value: string): number | null {
   return n;
 }
 
+export function parseDoseString(dose: string): { amount: string; doseForm: MedicineDoseForm } {
+  const trimmed = dose.trim().toLowerCase();
+  if (!trimmed) return { amount: '1', doseForm: 'tablet' };
+  if (trimmed.includes('ml')) {
+    const n = parseFloat(trimmed);
+    return { amount: Number.isNaN(n) ? '1' : String(n), doseForm: 'syrup' };
+  }
+  const tabletMatch = trimmed.match(/^([\d.]+)\s*tablets?$/);
+  if (tabletMatch) return { amount: tabletMatch[1], doseForm: 'tablet' };
+  const n = parseFloat(trimmed);
+  if (!Number.isNaN(n)) return { amount: String(n), doseForm: 'tablet' };
+  return { amount: '1', doseForm: 'tablet' };
+}
+
 export function getFrequencyLabel(value: string): string {
   const found = FREQUENCY_OPTIONS.find((o) => o.value === value.toLowerCase());
   return found?.label ?? value.charAt(0).toUpperCase() + value.slice(1);

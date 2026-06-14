@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "162625002184",
+    "project_id": "pet-horizon-df2fa",
+    "storage_bucket": "pet-horizon-df2fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:162625002184:android:5be28938a56dabda0823fd",
+        "android_client_info": {
+          "package_name": "com.anonymous.PetHorizon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAL14FjYelDKZYQ6cmx0CVjB166AUKIUU4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

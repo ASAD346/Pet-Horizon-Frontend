@@ -34,6 +34,7 @@ export const scheduleFieldStyles = StyleSheet.create({
   },
   sectionBody: {
     paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
   entryCard: {
