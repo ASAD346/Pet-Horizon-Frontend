@@ -9,7 +9,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
@@ -51,9 +51,8 @@ import { ScheduleSectionCard } from './ScheduleSectionCard';
 import { ScheduleEntrySummaryCard } from './ScheduleEntrySummaryCard';
 import { ScheduleEntryEditorSheet } from './ScheduleEntryEditorSheet';
 import { SCHEDULE_SECTIONS, type ScheduleSectionTheme } from './scheduleTheme';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { scheduleFieldStyles } from './scheduleStyles';
-
-const TAB_BAR_CLEARANCE = 100;
 
 type EditorEntry =
   | FeedingEntryState
@@ -69,7 +68,7 @@ interface EditorState {
 }
 
 export function ScheduleSetupView() {
-  const insets = useSafeAreaInsets();
+  const { clearance: tabBarClearance } = useTabBarLayout();
   const { token } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
 
@@ -275,7 +274,7 @@ export function ScheduleSetupView() {
           style={styles.scroll}
           contentContainerStyle={[
             styles.content,
-            { paddingBottom: Math.max(insets.bottom, Spacing.md) + TAB_BAR_CLEARANCE },
+            { paddingBottom: tabBarClearance },
           ]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"

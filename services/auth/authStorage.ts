@@ -1,17 +1,72 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import { log } from '@/lib/log';
 import type { ApiUser, AuthSession } from '@/types/auth';
 
 const TOKEN_KEY = 'pet_horizon_auth_token';
 const USER_KEY = 'pet_horizon_auth_user';
+const STORAGE_BACKEND_KEY = 'pet_horizon_auth_backend';
+
+type StorageBackend = 'secure' | 'async';
+
+async function markBackend(backend: StorageBackend): Promise<void> {
+  await AsyncStorage.setItem(STORAGE_BACKEND_KEY, backend);
+}
+
+async function getBackend(): Promise<StorageBackend> {
+  const value = await AsyncStorage.getItem(STORAGE_BACKEND_KEY);
+  return value === 'async' ? 'async' : 'secure';
+}
+
+async function writeItem(key: string, value: string): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(key, value);
+    await markBackend('secure');
+  } catch (error) {
+    log.warn('AuthStorage', 'SecureStore write failed — using AsyncStorage', {
+      key,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    await AsyncStorage.setItem(key, value);
+    await markBackend('async');
+  }
+}
+
+async function readItem(key: string): Promise<string | null> {
+  const backend = await getBackend();
+
+  if (backend === 'async') {
+    return AsyncStorage.getItem(key);
+  }
+
+  try {
+    const secureValue = await SecureStore.getItemAsync(key);
+    if (secureValue) return secureValue;
+  } catch (error) {
+    log.warn('AuthStorage', 'SecureStore read failed — trying AsyncStorage', {
+      key,
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+
+  return AsyncStorage.getItem(key);
+}
+
+async function deleteItem(key: string): Promise<void> {
+  await Promise.allSettled([
+    SecureStore.deleteItemAsync(key),
+    AsyncStorage.removeItem(key),
+  ]);
+}
 
 export async function saveSession(session: AuthSession): Promise<void> {
-  await SecureStore.setItemAsync(TOKEN_KEY, session.token);
-  await SecureStore.setItemAsync(USER_KEY, JSON.stringify(session.user));
+  await writeItem(TOKEN_KEY, session.token);
+  await writeItem(USER_KEY, JSON.stringify(session.user));
 }
 
 export async function loadSession(): Promise<AuthSession | null> {
-  const token = await SecureStore.getItemAsync(TOKEN_KEY);
-  const userJson = await SecureStore.getItemAsync(USER_KEY);
+  const token = await readItem(TOKEN_KEY);
+  const userJson = await readItem(USER_KEY);
 
   if (!token || !userJson) {
     return null;
@@ -19,18 +74,27 @@ export async function loadSession(): Promise<AuthSession | null> {
 
   try {
     const user = JSON.parse(userJson) as ApiUser;
+    if (!user?._id || !user.email) {
+      throw new Error('Stored user is incomplete');
+    }
     return { token, user };
-  } catch {
+  } catch (error) {
+    log.fail('AuthStorage', 'Invalid stored session — clearing', {
+      message: error instanceof Error ? error.message : String(error),
+    });
     await clearSession();
     return null;
   }
 }
 
 export async function clearSession(): Promise<void> {
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
-  await SecureStore.deleteItemAsync(USER_KEY);
+  await Promise.all([
+    deleteItem(TOKEN_KEY),
+    deleteItem(USER_KEY),
+    AsyncStorage.removeItem(STORAGE_BACKEND_KEY),
+  ]);
 }
 
 export async function getStoredToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(TOKEN_KEY);
+  return readItem(TOKEN_KEY);
 }

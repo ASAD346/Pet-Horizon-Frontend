@@ -1,9 +1,11 @@
+import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React from 'react';
 import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
+import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
+import { useAuth } from '@/contexts/AuthContext';
 import { AppButton } from '../components/ui/AppButton';
 import { AppText } from '../components/ui/AppText';
 import { Palette, Spacing } from '../constants/theme';
@@ -12,6 +14,13 @@ const { width, height } = Dimensions.get('window');
 
 export default function GetStartedScreen() {
   const router = useRouter();
+  const { isAuthenticated, isBootstrapping } = useAuth();
+
+  useAuthEntryRedirect();
+
+  if (isBootstrapping || isAuthenticated) {
+    return <AuthEntryLoader />;
+  }
 
   return (
     <View style={styles.container}>

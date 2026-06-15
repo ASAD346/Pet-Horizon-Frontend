@@ -64,6 +64,7 @@ import { LogWalkSheet } from '@/components/log-walk';
 
 import { LogVaccinationSheet } from '@/components/log-vaccination';
 
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { HomeTheme, Spacing } from '@/constants/theme';
 
 import type { GroomingRecord } from '@/types/grooming';
@@ -87,6 +88,7 @@ function formatDateLabel(date: Date): string {
 
 
 export default function HomeScreen() {
+  const { clearance: tabBarClearance } = useTabBarLayout();
 
   const router = useRouter();
 
@@ -254,7 +256,7 @@ export default function HomeScreen() {
 
         style={styles.scroll}
 
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
 
         showsVerticalScrollIndicator={false}
 
@@ -399,8 +401,6 @@ export default function HomeScreen() {
         />
 
         <RecentActivitySection />
-
-        <View style={styles.tabSpacer} />
 
       </ScrollView>
 
@@ -551,14 +551,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
 
     paddingTop: Spacing.sm,
-
-    paddingBottom: Spacing.md,
-
-  },
-
-  tabSpacer: {
-
-    height: 88,
 
   },
 

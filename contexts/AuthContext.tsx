@@ -40,8 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           log.info('Auth', 'No stored session');
         }
-      } catch {
-        log.fail('Auth', 'Session restore failed');
+      } catch (error) {
+        log.fail('Auth', 'Session restore failed', {
+          message: error instanceof Error ? error.message : String(error),
+        });
       } finally {
         if (mounted) {
           setIsBootstrapping(false);

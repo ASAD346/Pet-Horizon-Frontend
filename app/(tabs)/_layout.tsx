@@ -1,10 +1,12 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { HomeTheme } from '@/constants/theme';
+import { TAB_BAR_HEIGHT, TAB_BAR_SIDE_MARGIN, getTabBarMetrics } from '@/lib/layout/tabBarMetrics';
 
 type TabIconProps = {
   focused: boolean;
@@ -25,13 +27,29 @@ function TabIcon({ focused, activeIcon, inactiveIcon }: TabIconProps) {
 }
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const { bottomOffset, height } = getTabBarMetrics(insets.bottom);
+
+  const tabBarStyle = useMemo(
+    () => [
+      styles.tabBar,
+      {
+        bottom: bottomOffset,
+        height,
+        left: TAB_BAR_SIDE_MARGIN,
+        right: TAB_BAR_SIDE_MARGIN,
+      },
+    ],
+    [bottomOffset, height],
+  );
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarShowLabel: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle,
       }}>
       <Tabs.Screen
         name="index"
@@ -85,15 +103,11 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 24 : 16,
-    left: 16,
-    right: 16,
-    height: 68,
-    borderRadius: 34,
+    borderRadius: TAB_BAR_HEIGHT / 2,
     backgroundColor: HomeTheme.surface,
     borderTopWidth: 0,
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'ios' ? 8 : 10,
+    paddingBottom: 8,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
