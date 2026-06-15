@@ -15,6 +15,7 @@ export const ProfileTheme = {
   premiumGradientEnd: '#563D8A',
 } as const;
 
+/** @deprecated Use `useTabBarLayout().clearance` for scroll padding under the floating tab bar. */
 export const TAB_BAR_CLEARANCE = 100;
 
 export function formatPlanPrice(price: number): string {

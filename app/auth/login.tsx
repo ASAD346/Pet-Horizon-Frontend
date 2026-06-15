@@ -16,6 +16,7 @@ import {
   LoginHeaderDecor,
   SocialLoginButtons,
 } from '@/components/auth/login';
+import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useAuth, getAuthLoginErrorMessage } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api/errors';
@@ -30,7 +31,9 @@ import {
 export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ verified?: string; message?: string }>();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isBootstrapping } = useAuth();
+
+  useAuthEntryRedirect();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -122,6 +125,10 @@ export default function LoginScreen() {
       params: { email: email.trim().toLowerCase(), verify: '1' },
     });
   }, [email, router]);
+
+  if (isBootstrapping || isAuthenticated) {
+    return <AuthEntryLoader />;
+  }
 
   return (
     <View style={styles.root}>

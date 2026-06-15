@@ -22,6 +22,7 @@ import { EditBudgetSheet } from './EditBudgetSheet';
 import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { HomeTheme, Spacing } from '../../constants/theme';
 
 interface ExpenseTrackerViewProps {
@@ -34,6 +35,7 @@ export function ExpenseTrackerView({
   onNotificationsPress,
 }: ExpenseTrackerViewProps) {
   const router = useRouter();
+  const { clearance: tabBarClearance } = useTabBarLayout();
   const { token } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
   const { expenses, loading: expensesLoading, error, reload: reloadExpenses } = useExpenses(
@@ -57,7 +59,7 @@ export function ExpenseTrackerView({
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
@@ -91,12 +93,11 @@ export function ExpenseTrackerView({
           loading={expensesLoading || petLoading}
         />
 
-        <View style={styles.tabSpacer} />
       </ScrollView>
 
       {pet ? (
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, { bottom: tabBarClearance + Spacing.sm }]}
           activeOpacity={0.9}
           onPress={() => router.push('/expense/add' as Href)}
         >
@@ -131,15 +132,10 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
-  },
-  tabSpacer: {
-    height: 88,
   },
   fab: {
     position: 'absolute',
     right: Spacing.lg,
-    bottom: 100,
     width: 56,
     height: 56,
     borderRadius: 28,

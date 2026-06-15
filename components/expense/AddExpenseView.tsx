@@ -31,7 +31,7 @@ const inputShadow = Platform.select({
   android: { elevation: 2 },
 });
 
-const TAB_BAR_CLEARANCE = 88;
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 
 interface AddExpenseViewProps {
   petId?: string | null;
@@ -51,9 +51,10 @@ export function AddExpenseView({
   embeddedInTabs = false,
 }: AddExpenseViewProps) {
   const insets = useSafeAreaInsets();
+  const { clearance: tabBarClearance } = useTabBarLayout();
   const footerPadding =
-    Math.max(insets.bottom, Spacing.md) + (embeddedInTabs ? TAB_BAR_CLEARANCE : 0);
-  const scrollBottomPadding = embeddedInTabs ? TAB_BAR_CLEARANCE : Spacing.lg;
+    Math.max(insets.bottom, Spacing.md) + (embeddedInTabs ? tabBarClearance : 0);
+  const scrollBottomPadding = embeddedInTabs ? tabBarClearance : Spacing.lg;
 
   const [category, setCategory] = useState('Food');
   const [amount, setAmount] = useState('');

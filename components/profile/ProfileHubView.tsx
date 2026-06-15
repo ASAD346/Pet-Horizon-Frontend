@@ -23,10 +23,12 @@ import type { PremiumStatusResponse } from '@/types/premium';
 import { PremiumUpgradeBanner } from './PremiumUpgradeBanner';
 import { ProfileMenuRow, ProfileMenuSection } from './ProfileMenuRow';
 import { ProfileUserCard } from './ProfileUserCard';
-import { ProfileTheme, TAB_BAR_CLEARANCE } from './profileTheme';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { ProfileTheme } from './profileTheme';
 
 export function ProfileHubView() {
   const router = useRouter();
+  const { clearance: tabBarClearance } = useTabBarLayout();
   const { token, user, logout, setSession } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -92,7 +94,7 @@ export function ProfileHubView() {
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: tabBarClearance }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={ProfileTheme.green} />
@@ -179,9 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
-  scroll: {
-    paddingBottom: TAB_BAR_CLEARANCE,
-  },
+  scroll: {},
   premiumActiveWrap: {
     paddingHorizontal: 24,
     marginBottom: 8,

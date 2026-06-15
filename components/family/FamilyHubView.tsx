@@ -28,11 +28,11 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { generatePetInvite } from '@/services/family/familyApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
 
-const TAB_BAR_CLEARANCE = 100;
-
 export function FamilyHubView() {
+  const { clearance: tabBarClearance } = useTabBarLayout();
   const { token, user } = useAuth();
   const { pet, loading: petLoading, reload: reloadPet } = useActivePet(token);
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
@@ -137,7 +137,7 @@ export function FamilyHubView() {
       <FamilyHubHeader notificationCount={3} />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarClearance }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -240,9 +240,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: HomeTheme.background,
   },
-  scrollContent: {
-    paddingBottom: TAB_BAR_CLEARANCE,
-  },
+  scrollContent: {},
   bannerWrap: {
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,

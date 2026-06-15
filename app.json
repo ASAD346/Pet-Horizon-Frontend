@@ -46,7 +46,12 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "configureAndroidBackup": true
+        }
+      ],
       [
         "expo-image-picker",
         {
