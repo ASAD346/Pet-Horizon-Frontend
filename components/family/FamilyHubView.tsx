@@ -217,7 +217,8 @@ export function FamilyHubView() {
         onClose={() => setInviteSheetVisible(false)}
         petId={pet?._id ?? null}
         token={token}
-        onInviteGenerated={(data) => setInvite(data)}
+        cachedInvite={invite}
+        onInviteGenerated={setInvite}
       />
 
       <MemberPermissionsSheet

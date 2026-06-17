@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -27,6 +27,7 @@ interface InviteFamilySheetProps {
   onClose: () => void;
   petId: string | null;
   token: string | null;
+  cachedInvite?: GenerateInviteResponse | null;
   onInviteGenerated?: (invite: GenerateInviteResponse) => void;
 }
 
@@ -35,6 +36,7 @@ export function InviteFamilySheet({
   onClose,
   petId,
   token,
+  cachedInvite = null,
   onInviteGenerated,
 }: InviteFamilySheetProps) {
   const insets = useSafeAreaInsets();
@@ -42,35 +44,57 @@ export function InviteFamilySheet({
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<GenerateInviteResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const onInviteGeneratedRef = useRef(onInviteGenerated);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    onInviteGeneratedRef.current = onInviteGenerated;
+  }, [onInviteGenerated]);
 
   const loadInvite = useCallback(async () => {
     if (!petId || !token) {
       setError('Select a pet before inviting members.');
+      setInvite(null);
       return;
     }
+
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
 
     setLoading(true);
     setError(null);
     setCopied(false);
     try {
       const data = await generatePetInvite(token, { petId });
+      if (requestIdRef.current !== requestId) return;
       setInvite(data);
-      onInviteGenerated?.(data);
+      onInviteGeneratedRef.current?.(data);
     } catch (err) {
+      if (requestIdRef.current !== requestId) return;
       setInvite(null);
       setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (requestIdRef.current === requestId) {
+        setLoading(false);
+      }
     }
-  }, [petId, token, onInviteGenerated]);
+  }, [petId, token]);
 
   useEffect(() => {
-    if (visible) {
-      loadInvite();
-    } else {
+    if (!visible) {
       setCopied(false);
+      return;
     }
-  }, [visible, loadInvite]);
+
+    if (cachedInvite?.inviteLink) {
+      setInvite(cachedInvite);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
+    loadInvite();
+  }, [visible, petId, token, cachedInvite?.inviteLink, cachedInvite?.inviteToken, loadInvite]);
 
   const handleCopyLink = async () => {
     if (!invite?.inviteLink) return;
@@ -108,6 +132,11 @@ export function InviteFamilySheet({
           {error ? (
             <View style={styles.banner}>
               <AuthErrorBanner message={error} />
+              <TouchableOpacity style={styles.retryBtn} onPress={loadInvite} activeOpacity={0.8}>
+                <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
+                  Try again
+                </AppText>
+              </TouchableOpacity>
             </View>
           ) : null}
 
@@ -198,6 +227,11 @@ const styles = StyleSheet.create({
   },
   banner: {
     marginBottom: Spacing.sm,
+  },
+  retryBtn: {
+    alignSelf: 'flex-start',
+    marginTop: Spacing.xs,
+    paddingVertical: Spacing.xs,
   },
   linkRow: {
     flexDirection: 'row',

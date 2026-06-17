@@ -3,7 +3,7 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../../ui/AppText';
-import { LoginTheme, Spacing } from '../../../constants/theme';
+import { LoginTheme, Radius, Spacing } from '../../../constants/theme';
 
 const PETS = [
   { icon: 'dog' as const, label: 'DOG' },
@@ -25,11 +25,13 @@ interface LoginBrandingProps {
 export function LoginBranding({ compact = false }: LoginBrandingProps) {
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
-      <Image
-        source={require('../../../assets/images/logo.png')}
-        style={[styles.logo, compact && styles.logoCompact]}
-        contentFit="contain"
-      />
+      <View style={[styles.logoCard, compact && styles.logoCardCompact]}>
+        <Image
+          source={require('../../../assets/images/logo.png')}
+          style={[styles.logo, compact && styles.logoCompact]}
+          contentFit="contain"
+        />
+      </View>
 
       <View style={styles.titleRow}>
         <AppText style={[styles.brandPet, compact && styles.brandPetCompact, { fontFamily: serifFont }]}>
@@ -79,10 +81,31 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.xs,
     marginBottom: Spacing.sm,
   },
+  logoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(92, 179, 93, 0.18)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+      },
+      android: { elevation: 4 },
+    }),
+  },
+  logoCardCompact: {
+    borderRadius: Radius.md,
+    padding: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
   logo: {
     width: 88,
     height: 88,
-    marginBottom: Spacing.sm,
   },
   logoCompact: {
     width: 68,

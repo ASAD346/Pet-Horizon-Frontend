@@ -18,6 +18,7 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivePet } from '@/hooks/useActivePet';
 import { mealTypeOptionsForSpecies, unitOptionsForSpecies } from '@/lib/feeding/feedingForm';
+import { getGroomingTypeOptions, getSpeciesFeatures } from '@/lib/species/speciesFeatures';
 import {
   createFeedingEntry,
   createGroomingEntry,
@@ -119,21 +120,49 @@ export function ScheduleSetupView() {
     setFormError(null);
 
     try {
-      const [perms, groomingInfo] = await Promise.all([
+      const localFeatures = getSpeciesFeatures(pet.species);
+      let speciesFeatures = localFeatures;
+      let groomingTypes = getGroomingTypeOptions(pet.species);
+      let groomingVisible = localFeatures.groomingVisible;
+
+      const [permsResult, groomingResult] = await Promise.allSettled([
         fetchPetPermissions(token, pet._id),
         fetchGroomingTypes(token, pet._id),
       ]);
 
-      const mealOpts = mealTypeOptionsForSpecies(perms.speciesFeatures?.mealTypes ?? []);
-      const unitOpts = unitOptionsForSpecies(perms.speciesFeatures?.inventoryUnits ?? []);
+      if (permsResult.status === 'fulfilled' && permsResult.value.speciesFeatures) {
+        speciesFeatures = {
+          ...localFeatures,
+          ...permsResult.value.speciesFeatures,
+          mealTypes:
+            permsResult.value.speciesFeatures.mealTypes?.length
+              ? permsResult.value.speciesFeatures.mealTypes
+              : localFeatures.mealTypes,
+          inventoryUnits:
+            permsResult.value.speciesFeatures.inventoryUnits?.length
+              ? permsResult.value.speciesFeatures.inventoryUnits
+              : localFeatures.inventoryUnits,
+        };
+      }
+
+      if (groomingResult.status === 'fulfilled') {
+        groomingTypes =
+          groomingResult.value.types?.length
+            ? groomingResult.value.types
+            : getGroomingTypeOptions(pet.species);
+        groomingVisible = groomingResult.value.groomingVisible;
+      }
+
+      const mealOpts = mealTypeOptionsForSpecies(speciesFeatures.mealTypes);
+      const unitOpts = unitOptionsForSpecies(speciesFeatures.inventoryUnits);
       const meal = mealOpts[0]?.value ?? '';
-      const unit = pickDefaultUnitFromList(perms.speciesFeatures?.inventoryUnits ?? []);
-      const grooming = groomingInfo.types?.[0]?.value ?? '';
+      const unit = pickDefaultUnitFromList(speciesFeatures.inventoryUnits);
+      const grooming = groomingTypes[0]?.value ?? '';
 
       setMealTypeOptions(mealOpts);
       setUnitOptions(unitOpts);
-      setGroomingTypeOptions(groomingInfo.types ?? []);
-      setGroomingVisible(groomingInfo.groomingVisible);
+      setGroomingTypeOptions(groomingTypes);
+      setGroomingVisible(groomingVisible);
       setDefaultMeal(meal);
       setDefaultUnit(unit);
       setDefaultGrooming(grooming);
@@ -142,7 +171,7 @@ export function ScheduleSetupView() {
     } finally {
       setFeaturesLoading(false);
     }
-  }, [token, pet?._id]);
+  }, [token, pet?._id, pet?.species]);
 
   useEffect(() => {
     loadFeatures();

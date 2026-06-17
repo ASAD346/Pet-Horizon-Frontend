@@ -50,6 +50,8 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarShowLabel: false,
         tabBarStyle,
+        tabBarItemStyle: styles.tabBarItem,
+        tabBarIconStyle: styles.tabBarIcon,
       }}>
       <Tabs.Screen
         name="index"
@@ -100,24 +102,38 @@ export default function TabLayout() {
   );
 }
 
+const TAB_ICON_SIZE = 46;
+
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
     borderRadius: TAB_BAR_HEIGHT / 2,
     backgroundColor: HomeTheme.surface,
     borderTopWidth: 0,
-    paddingTop: 8,
-    paddingBottom: 8,
+    paddingTop: 0,
+    paddingBottom: 0,
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 10,
   },
+  tabBarItem: {
+    flex: 1,
+    height: TAB_BAR_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 0,
+    marginVertical: 0,
+  },
+  tabBarIcon: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
   tabCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: TAB_ICON_SIZE,
+    height: TAB_ICON_SIZE,
+    borderRadius: TAB_ICON_SIZE / 2,
     backgroundColor: HomeTheme.surfaceMuted,
     alignItems: 'center',
     justifyContent: 'center',
