@@ -1,10 +1,11 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,6 +43,7 @@ export default function LoginScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const [showVerifyAction, setShowVerifyAction] = useState(false);
+  const loginInFlightRef = useRef(false);
 
   React.useEffect(() => {
     const verified = params.verified === '1' || params.verified === 'true';
@@ -89,6 +91,8 @@ export default function LoginScreen() {
   );
 
   const handleLogin = useCallback(async () => {
+    if (loginInFlightRef.current) return;
+
     Keyboard.dismiss();
     clearErrors();
 
@@ -98,6 +102,7 @@ export default function LoginScreen() {
       return;
     }
 
+    loginInFlightRef.current = true;
     setLoading(true);
 
     try {
@@ -115,6 +120,7 @@ export default function LoginScreen() {
         setShowVerifyAction(true);
       }
     } finally {
+      loginInFlightRef.current = false;
       setLoading(false);
     }
   }, [clearErrors, email, login, navigateAfterLogin, password]);
@@ -138,8 +144,13 @@ export default function LoginScreen() {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
         >
-          <View style={styles.content}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <Animated.View entering={FadeIn.duration(700)}>
               <LoginBranding />
             </Animated.View>
@@ -167,12 +178,9 @@ export default function LoginScreen() {
                 showVerifyAction={showVerifyAction}
               />
 
-              <SocialLoginButtons
-                onGooglePress={() => {}}
-                onApplePress={() => {}}
-              />
+              <SocialLoginButtons onGooglePress={() => {}} onApplePress={() => {}} />
             </Animated.View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
@@ -192,14 +200,15 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: Spacing.xl,
     paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xl,
     justifyContent: 'space-between',
   },
   formBlock: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: 'flex-start',
     paddingTop: Spacing.md,
   },

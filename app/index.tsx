@@ -2,15 +2,22 @@ import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
+import { AuthLogoMark } from '@/components/auth/AuthLogoMark';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppButton } from '../components/ui/AppButton';
 import { AppText } from '../components/ui/AppText';
-import { Palette, Spacing } from '../constants/theme';
+import { HomeTheme, Palette, Spacing } from '../constants/theme';
 
 const { width, height } = Dimensions.get('window');
+
+const HIGHLIGHTS = [
+  { icon: 'calendar-outline' as const, label: 'Care schedules' },
+  { icon: 'people-outline' as const, label: 'Family sharing' },
+  { icon: 'heart-outline' as const, label: 'Happy pets' },
+];
 
 export default function GetStartedScreen() {
   const router = useRouter();
@@ -24,53 +31,47 @@ export default function GetStartedScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top Image Section */}
       <View style={styles.imageSection}>
         <Image
           source={require('../assets/images/onboarding.png')}
           style={styles.backgroundImage}
           contentFit="cover"
         />
+        <View style={styles.imageOverlay} />
       </View>
 
-      {/* Bottom Card Section */}
-      <Animated.View
-        entering={FadeInUp.duration(1000).springify()}
-        style={styles.card}
-      >
-        {/* Pagination Indicators */}
-        <View style={styles.indicatorContainer}>
-          <View style={[styles.indicator, styles.activeIndicator]} />
-          <View style={styles.indicator} />
-          <View style={styles.indicator} />
-        </View>
-
+      <Animated.View entering={FadeInUp.duration(800).springify()} style={styles.card}>
         <View style={styles.content}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-            contentFit="contain"
-          />
+          <AuthLogoMark style={styles.logoMark} />
 
           <View style={styles.textSection}>
             <AppText variant="h1" align="center" style={styles.title}>
               Hey! Welcome
             </AppText>
             <AppText variant="body" color={Palette.gray[500]} align="center" style={styles.subtitle}>
-              never miss a meal, walk or cuddle
+              Never miss a meal, walk, or cuddle
             </AppText>
           </View>
 
-          <View style={styles.footer}>
-            <AppButton
-              title="Get Started"
-              onPress={() => router.push('/auth/login')}
-              style={styles.startButton}
-              textStyle={styles.buttonText}
-              icon={<Ionicons name="chevron-forward" size={20} color="white" style={styles.icon} />}
-              variant="secondary"
-            />
+          <View style={styles.highlightsRow}>
+            {HIGHLIGHTS.map((item) => (
+              <View key={item.label} style={styles.highlightChip}>
+                <Ionicons name={item.icon} size={16} color={HomeTheme.cardGreen} />
+                <AppText variant="caption" weight="600" color={HomeTheme.text} style={styles.chipLabel}>
+                  {item.label}
+                </AppText>
+              </View>
+            ))}
           </View>
+
+          <AppButton
+            title="Get Started"
+            onPress={() => router.push('/auth/login')}
+            style={styles.startButton}
+            textStyle={styles.buttonText}
+            icon={<Ionicons name="chevron-forward" size={20} color="white" />}
+            variant="secondary"
+          />
         </View>
       </Animated.View>
     </View>
@@ -88,84 +89,83 @@ const styles = StyleSheet.create({
   backgroundImage: {
     flex: 1,
   },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+  },
   card: {
     position: 'absolute',
     bottom: 0,
-    height: height * 0.52,
+    minHeight: height * 0.5,
     width: '100%',
     backgroundColor: Palette.white,
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
     paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xl,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 20,
-  },
-  indicatorContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: Spacing.xl,
-  },
-  indicator: {
-    width: 24,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#E0E0E0',
-  },
-  activeIndicator: {
-    backgroundColor: Palette.success,
-    width: 32,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 16,
   },
   content: {
-    flex: 1,
     width: '100%',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
+    gap: Spacing.md,
   },
-  logo: {
-    width: 140,
-    height: 100,
-    marginBottom: Spacing.md,
+  logoMark: {
+    marginBottom: Spacing.xs,
   },
   textSection: {
-    marginBottom: Spacing.xl,
     alignItems: 'center',
+    gap: Spacing.xs,
   },
   title: {
-    fontSize: 34,
+    fontSize: 32,
     fontWeight: '800',
     color: '#262626',
-    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 18,
-    lineHeight: 26,
+    fontSize: 16,
+    lineHeight: 24,
     color: Palette.gray[500],
-    maxWidth: width * 0.8,
+    maxWidth: width * 0.82,
   },
-  footer: {
+  highlightsRow: {
     width: '100%',
-    paddingHorizontal: Spacing.lg,
-    position: 'absolute',
-    bottom: height * 0.05,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  highlightChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0F8F0',
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  chipLabel: {
+    fontSize: 11,
   },
   startButton: {
-    backgroundColor: Palette.success,
+    backgroundColor: HomeTheme.cardGreen,
     width: '100%',
-    borderRadius: 15,
-    height: 56,
+    borderRadius: 14,
+    minHeight: 54,
     flexDirection: 'row-reverse',
     justifyContent: 'center',
-    gap: 12,
+    marginTop: Spacing.sm,
   },
   buttonText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-  },
-  icon: {
-    marginLeft: 0,
   },
 });

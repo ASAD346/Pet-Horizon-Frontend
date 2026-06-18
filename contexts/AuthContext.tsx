@@ -133,11 +133,11 @@ export function getAuthVerifyEmailErrorMessage(error: unknown): string {
 
 export function getAuthLoginErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.isNetworkError) {
-      return error.message;
+    if (error.isNetworkError || error.code === 'TIMEOUT') {
+      return 'Could not reach the server. Check your connection and try again.';
     }
     if (error.isUnauthorized) {
-      return 'Invalid email or password. Please try again.';
+      return 'Incorrect email or password. Please try again.';
     }
     if (error.isForbidden) {
       return error.message;

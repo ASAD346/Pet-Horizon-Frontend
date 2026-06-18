@@ -3,11 +3,13 @@ import { PlatformPressable } from '@react-navigation/elements';
 import * as Haptics from 'expo-haptics';
 import { StyleSheet } from 'react-native';
 
+import { TAB_BAR_HEIGHT } from '@/lib/layout/tabBarMetrics';
+
 export function HapticTab(props: BottomTabBarButtonProps) {
   return (
     <PlatformPressable
       {...props}
-      style={[styles.tabButton, props.style]}
+      style={[props.style, styles.tabButton]}
       onPressIn={(ev) => {
         if (process.env.EXPO_OS === 'ios') {
           // Add a soft haptic feedback when pressing down on the tabs.
@@ -22,6 +24,7 @@ export function HapticTab(props: BottomTabBarButtonProps) {
 const styles = StyleSheet.create({
   tabButton: {
     flex: 1,
+    height: TAB_BAR_HEIGHT,
     alignItems: 'center',
     justifyContent: 'center',
   },
