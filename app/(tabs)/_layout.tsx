@@ -8,6 +8,10 @@ import { HapticTab } from '@/components/haptic-tab';
 import { HomeTheme } from '@/constants/theme';
 import { TAB_BAR_HEIGHT, TAB_BAR_SIDE_MARGIN, getTabBarMetrics } from '@/lib/layout/tabBarMetrics';
 
+const TAB_SLOT_SIZE = 44;
+const TAB_ICON_SIZE = 22;
+const TAB_INACTIVE_ICON_SIZE = 24;
+
 type TabIconProps = {
   focused: boolean;
   activeIcon: React.ComponentProps<typeof Ionicons>['name'];
@@ -16,12 +20,14 @@ type TabIconProps = {
 
 function TabIcon({ focused, activeIcon, inactiveIcon }: TabIconProps) {
   return (
-    <View style={[styles.tabCircle, focused && styles.tabCircleActive]}>
-      <Ionicons
-        name={focused ? activeIcon : inactiveIcon}
-        size={22}
-        color={focused ? HomeTheme.white : HomeTheme.text}
-      />
+    <View style={styles.tabSlot}>
+      {focused ? (
+        <View style={styles.tabCircleActive}>
+          <Ionicons name={activeIcon} size={TAB_ICON_SIZE} color={HomeTheme.white} />
+        </View>
+      ) : (
+        <Ionicons name={inactiveIcon} size={TAB_INACTIVE_ICON_SIZE} color={HomeTheme.text} />
+      )}
     </View>
   );
 }
@@ -49,9 +55,11 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarShowLabel: false,
+        tabBarLabel: () => null,
         tabBarStyle,
         tabBarItemStyle: styles.tabBarItem,
         tabBarIconStyle: styles.tabBarIcon,
+        tabBarLabelStyle: styles.tabBarLabel,
       }}>
       <Tabs.Screen
         name="index"
@@ -102,16 +110,16 @@ export default function TabLayout() {
   );
 }
 
-const TAB_ICON_SIZE = 46;
-
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
     borderRadius: TAB_BAR_HEIGHT / 2,
     backgroundColor: HomeTheme.surface,
     borderTopWidth: 0,
+    paddingHorizontal: 8,
     paddingTop: 0,
     paddingBottom: 0,
+    overflow: 'hidden',
     elevation: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -123,22 +131,33 @@ const styles = StyleSheet.create({
     height: TAB_BAR_HEIGHT,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
     marginVertical: 0,
+    minWidth: 0,
   },
   tabBarIcon: {
     marginTop: 0,
     marginBottom: 0,
   },
-  tabCircle: {
-    width: TAB_ICON_SIZE,
-    height: TAB_ICON_SIZE,
-    borderRadius: TAB_ICON_SIZE / 2,
-    backgroundColor: HomeTheme.surfaceMuted,
+  tabBarLabel: {
+    height: 0,
+    margin: 0,
+    padding: 0,
+    overflow: 'hidden',
+  },
+  tabSlot: {
+    width: TAB_SLOT_SIZE,
+    height: TAB_SLOT_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tabCircleActive: {
+    width: TAB_SLOT_SIZE,
+    height: TAB_SLOT_SIZE,
+    borderRadius: TAB_SLOT_SIZE / 2,
     backgroundColor: HomeTheme.cardGreen,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

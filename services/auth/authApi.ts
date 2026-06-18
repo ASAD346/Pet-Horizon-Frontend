@@ -29,6 +29,7 @@ export async function loginWithEmailPassword(payload: LoginRequest): Promise<Log
     const data = await apiRequest<LoginResponse>(API_ENDPOINTS.auth.login, {
       method: 'POST',
       body: { email, password: payload.password },
+      timeoutMs: 12000,
     });
     log.ok(SCOPE, 'Login success', { userId: data.user._id, email: data.user.email });
     return data;
