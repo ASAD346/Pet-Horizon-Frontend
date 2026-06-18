@@ -5,6 +5,8 @@ import { log } from '@/lib/log';
 import type {
   ForgotPasswordRequest,
   ForgotPasswordResponse,
+  GoogleLoginRequest,
+  GoogleLoginResponse,
   LoginRequest,
   LoginResponse,
   RegisterRequest,
@@ -20,6 +22,22 @@ const SCOPE = 'AuthAPI';
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+export async function loginWithGoogle(payload: GoogleLoginRequest): Promise<GoogleLoginResponse> {
+  log.info(SCOPE, 'POST /auth/google');
+  try {
+    const data = await apiRequest<GoogleLoginResponse>(API_ENDPOINTS.auth.google, {
+      method: 'POST',
+      body: { idToken: payload.idToken },
+      timeoutMs: 12000,
+    });
+    log.ok(SCOPE, 'Google login success', { userId: data.user._id, email: data.user.email });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Google login failed', { error: getErrorMessage(error) });
+    throw error;
+  }
 }
 
 export async function loginWithEmailPassword(payload: LoginRequest): Promise<LoginResponse> {

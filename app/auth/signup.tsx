@@ -17,6 +17,7 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { LoginTheme, Spacing } from '@/constants/theme';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import {
   registerAccount,
   resendVerificationEmail,
@@ -47,6 +48,7 @@ function parseEmailParam(value: string | string[] | undefined): string {
 export default function SignupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string; verify?: string }>();
+  const { handleGoogleSignIn, googleLoading } = useGoogleAuth();
 
   const [step, setStep] = useState<SignupStep>('signup');
   const [fullName, setFullName] = useState('');
@@ -236,7 +238,12 @@ export default function SignupScreen() {
               {step === 'signup' ? (
                 <SocialLoginButtons
                   compact
-                  onGooglePress={() => {}}
+                  googleLoading={googleLoading}
+                  onGooglePress={() => {
+                    clearErrors();
+                    setFormInfo(null);
+                    void handleGoogleSignIn(setFormError);
+                  }}
                   onApplePress={() => {}}
                 />
               ) : null}

@@ -82,6 +82,15 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface GoogleLoginRequest {
+  idToken: string;
+}
+
+export interface GoogleLoginResponse {
+  token: string;
+  user: ApiUser;
+}
+
 export interface ResetPasswordResponse {
   message: string;
 }

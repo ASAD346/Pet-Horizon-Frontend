@@ -29,6 +29,7 @@ export const API_ENDPOINTS = {
     verifyEmail: '/auth/verify-email',
     resendVerification: '/auth/resend-verification',
     login: '/auth/login',
+    google: '/auth/google',
     forgotPassword: '/auth/forgot-password',
     resetPassword: '/auth/reset-password',
   },

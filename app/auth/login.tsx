@@ -23,6 +23,7 @@ import { useAuth, getAuthLoginErrorMessage } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { LoginTheme, Spacing } from '@/constants/theme';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import {
   hasFieldErrors,
   validateLoginForm,
@@ -33,6 +34,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ verified?: string; message?: string }>();
   const { login, isAuthenticated, isBootstrapping } = useAuth();
+  const { handleGoogleSignIn, googleLoading } = useGoogleAuth();
 
   useAuthEntryRedirect();
 
@@ -178,7 +180,14 @@ export default function LoginScreen() {
                 showVerifyAction={showVerifyAction}
               />
 
-              <SocialLoginButtons onGooglePress={() => {}} onApplePress={() => {}} />
+              <SocialLoginButtons
+                googleLoading={googleLoading}
+                onGooglePress={() => {
+                  clearErrors();
+                  void handleGoogleSignIn(setFormError);
+                }}
+                onApplePress={() => {}}
+              />
             </Animated.View>
           </ScrollView>
         </KeyboardAvoidingView>

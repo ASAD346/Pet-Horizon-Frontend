@@ -9,6 +9,8 @@ interface SocialLoginButtonsProps {
   onGooglePress: () => void;
   onApplePress: () => void;
   compact?: boolean;
+  googleLoading?: boolean;
+  googleLabel?: string;
 }
 
 const buttonShadow = Platform.select({
@@ -24,16 +26,24 @@ const buttonShadow = Platform.select({
   default: {},
 });
 
-export function SocialLoginButtons({ onGooglePress, onApplePress, compact = false }: SocialLoginButtonsProps) {
+export function SocialLoginButtons({
+  onGooglePress,
+  onApplePress,
+  compact = false,
+  googleLoading = false,
+  googleLabel = 'Continue with Google',
+}: SocialLoginButtonsProps) {
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
       <OrDivider compact={compact} />
 
       <AppButton
-        title="Login With Google"
+        title={googleLabel}
         onPress={onGooglePress}
         variant="success"
         size="sm"
+        loading={googleLoading}
+        disabled={googleLoading}
         style={[styles.socialButton, compact && styles.socialButtonCompact]}
         textStyle={styles.socialButtonText}
         icon={<AntDesign name="google" size={18} color="#FFFFFF" />}

@@ -8,7 +8,7 @@ import React, {
 } from 'react';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
-import { loginWithEmailPassword } from '@/services/auth/authApi';
+import { loginWithEmailPassword, loginWithGoogle as loginWithGoogleApi } from '@/services/auth/authApi';
 import { clearSession, loadSession, saveSession } from '@/services/auth/authStorage';
 import type { ApiUser, AuthSession } from '@/types/auth';
 
@@ -18,6 +18,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isBootstrapping: boolean;
   login: (email: string, password: string) => Promise<AuthSession>;
+  loginWithGoogle: (idToken: string) => Promise<AuthSession>;
   logout: () => Promise<void>;
   setSession: (session: AuthSession) => Promise<void>;
 }
@@ -78,6 +79,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [setSession]);
 
+  const loginWithGoogle = useCallback(async (idToken: string) => {
+    log.info('Auth', 'Google login attempt');
+    try {
+      const response = await loginWithGoogleApi({ idToken });
+      const next: AuthSession = { token: response.token, user: response.user };
+      await setSession(next);
+      log.ok('Auth', 'Google session saved', {
+        userId: next.user._id,
+        activePetId: next.user.activePetId ?? null,
+      });
+      return next;
+    } catch (error) {
+      log.fail('Auth', 'Google login session not saved');
+      throw error;
+    }
+  }, [setSession]);
+
   const logout = useCallback(async () => {
     await clearSession();
     setSessionState(null);
@@ -91,10 +109,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated: Boolean(session?.token),
       isBootstrapping,
       login,
+      loginWithGoogle,
       logout,
       setSession,
     }),
-    [session, isBootstrapping, login, logout, setSession],
+    [session, isBootstrapping, login, loginWithGoogle, logout, setSession],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -129,6 +148,22 @@ export function getAuthVerifyEmailErrorMessage(error: unknown): string {
     return error.message;
   }
   return 'Unable to verify your email. Please try again.';
+}
+
+export function getAuthGoogleErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.isNetworkError || error.code === 'TIMEOUT') {
+      return 'Could not reach the server. Check your connection and try again.';
+    }
+    if (error.status === 503) {
+      return 'Google sign-in is not configured on the server yet. Please try email login.';
+    }
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Unable to sign in with Google. Please try again.';
 }
 
 export function getAuthLoginErrorMessage(error: unknown): string {
