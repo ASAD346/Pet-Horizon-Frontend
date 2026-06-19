@@ -217,9 +217,7 @@ export function TodaysScheduleSection({
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
 
-      {loading ? (
-        <ActivityIndicator color={HomeTheme.green} style={styles.loader} />
-      ) : items.length === 0 ? (
+      {loading ? null : items.length === 0 ? (
         <View style={[homePillCard.card, styles.emptyCard]}>
           <AppText variant="bodySmall" color={HomeTheme.textMuted}>
             No schedules yet. Use Quick Actions to add one.

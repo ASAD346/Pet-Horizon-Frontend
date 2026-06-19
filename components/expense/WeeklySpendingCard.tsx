@@ -15,41 +15,75 @@ const cardShadow = Platform.select({
 });
 
 interface WeeklySpendingCardProps {
+  periodLabel: string;
+  periodType: 'weekly' | 'monthly';
   limitLabel: string;
   spentPercent: number;
   remainingLabel: string;
   status: string;
+  hasBudget?: boolean;
   loading?: boolean;
   onEditPress?: () => void;
+  onPeriodChange?: (period: 'weekly' | 'monthly') => void;
 }
 
 export function WeeklySpendingCard({
+  periodLabel,
+  periodType,
   limitLabel,
   spentPercent,
   remainingLabel,
   status,
+  hasBudget = false,
   loading,
   onEditPress,
+  onPeriodChange,
 }: WeeklySpendingCardProps) {
-  const isOver = status === 'Over Budget';
+  const isOver = status === 'Over budget';
 
   return (
     <View style={[styles.card, cardShadow]}>
       <View style={styles.topRow}>
         <AppText variant="bodySmall" color="rgba(255,255,255,0.75)">
-          Weekly Spending Limit
+          {periodLabel}
         </AppText>
-        <View style={[styles.statusBadge, isOver && styles.statusOver]}>
-          <Ionicons
-            name={isOver ? 'alert-circle' : 'checkmark-circle'}
-            size={14}
-            color={isOver ? '#FFCDD2' : HomeTheme.green}
-          />
-          <AppText variant="caption" weight="700" color={isOver ? '#FFCDD2' : HomeTheme.green}>
-            {status}
-          </AppText>
-        </View>
+        {hasBudget ? (
+          <View style={[styles.statusBadge, isOver && styles.statusOver]}>
+            <Ionicons
+              name={isOver ? 'alert-circle' : 'checkmark-circle'}
+              size={14}
+              color={isOver ? '#FFCDD2' : HomeTheme.green}
+            />
+            <AppText variant="caption" weight="700" color={isOver ? '#FFCDD2' : HomeTheme.green}>
+              {status}
+            </AppText>
+          </View>
+        ) : null}
       </View>
+
+      {onPeriodChange ? (
+        <View style={styles.periodToggle}>
+          {(['weekly', 'monthly'] as const).map((option) => {
+            const selected = periodType === option;
+            return (
+              <TouchableOpacity
+                key={option}
+                style={[styles.periodChip, selected && styles.periodChipActive]}
+                onPress={() => onPeriodChange(option)}
+                activeOpacity={0.85}
+              >
+                <AppText
+                  variant="caption"
+                  weight="700"
+                  color={selected ? HomeTheme.text : 'rgba(255,255,255,0.75)'}
+                >
+                  {option === 'weekly' ? 'Weekly' : 'Monthly'}
+                </AppText>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      ) : null}
 
       {loading ? (
         <ActivityIndicator color={HomeTheme.white} style={styles.loader} />
@@ -59,13 +93,17 @@ export function WeeklySpendingCard({
             {limitLabel}
           </AppText>
 
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${spentPercent}%` }]} />
-          </View>
+          {hasBudget ? (
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: `${spentPercent}%` }]} />
+            </View>
+          ) : (
+            <View style={styles.progressTrack} />
+          )}
 
           <View style={styles.bottomRow}>
             <View style={styles.remainingRow}>
-              <View style={styles.dot} />
+              {!hasBudget ? <View style={styles.dot} /> : null}
               <AppText variant="bodySmall" weight="600" color={HomeTheme.white}>
                 {remainingLabel}
               </AppText>
@@ -94,6 +132,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.sm,
+  },
+  periodToggle: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  periodChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  periodChipActive: {
+    backgroundColor: HomeTheme.white,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -136,6 +188,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    flex: 1,
+    paddingRight: Spacing.sm,
   },
   dot: {
     width: 8,

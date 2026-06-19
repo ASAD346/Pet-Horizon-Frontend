@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 import { useRouter, type Href } from 'expo-router';
 
@@ -16,6 +16,8 @@ import {
     RecentActivitySection,
 
     GroomingAlertsRow,
+
+    PetBirthdayBanner,
 
     TodaysScheduleSection,
 
@@ -48,6 +50,8 @@ import { useVaccinationSchedules } from '@/hooks/useVaccinationSchedules';
 
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
+import { isBirthdayToday } from '@/lib/pet/birthdayUtils';
+
 import { petToProfileProps } from '@/services/pets/petDisplay';
 
 import { LogFoodSheet } from '@/components/log-food';
@@ -65,6 +69,7 @@ import { LogWalkSheet } from '@/components/log-walk';
 import { LogVaccinationSheet } from '@/components/log-vaccination';
 
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 
 import type { GroomingRecord } from '@/types/grooming';
@@ -96,7 +101,7 @@ export default function HomeScreen() {
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
 
-  const { profileStats } = useDashboardStatus(token);
+  const { profileStats, status: dashboardStatus } = useDashboardStatus(token);
 
   const { tasks: dashboardTasks, loading: tasksLoading } = useUpcomingTasks(token);
 
@@ -202,6 +207,9 @@ export default function HomeScreen() {
 
   const petImageUrl = resolveMediaUrl(profileStats?.photoUrl ?? pet?.image);
 
+  const petBirthday = dashboardStatus?.birthday ?? pet?.birthday ?? null;
+  const showBirthdayBanner = !loading && Boolean(pet?.name) && isBirthdayToday(petBirthday);
+
 
 
   const userName = user?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there';
@@ -246,6 +254,24 @@ export default function HomeScreen() {
     setPetSwitcherVisible(false);
   };
 
+  const isPremium = profileStats?.isPremium ?? user?.premiumStatus === 'premium';
+
+  const handleAddPet = () => {
+    if (!canAddAnotherPet(pets.length, isPremium)) {
+      Alert.alert(
+        'Premium required',
+        'Free accounts include one pet. Upgrade to Premium to add more pets.',
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'View Premium', onPress: () => router.push('/profile/premium' as Href) },
+        ],
+      );
+      return;
+    }
+    setPetSwitcherVisible(false);
+    router.push({ pathname: '/pet/register', params: { mode: 'add' } });
+  };
+
 
 
   return (
@@ -276,6 +302,10 @@ export default function HomeScreen() {
 
         />
 
+        {showBirthdayBanner ? (
+          <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
+        ) : null}
+
         <PetProfileCard
 
           {...(profile ?? {})}
@@ -284,9 +314,9 @@ export default function HomeScreen() {
 
           loading={loading}
 
-          onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
+          isBirthdayToday={showBirthdayBanner}
 
-          onAddPet={() => router.push({ pathname: '/pet/register', params: { mode: 'add' } })}
+          onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
 
         />
 
@@ -512,13 +542,7 @@ export default function HomeScreen() {
 
         onSelectPet={handleSwitchPet}
 
-        onAddPet={() => {
-
-          setPetSwitcherVisible(false);
-
-          router.push({ pathname: '/pet/register', params: { mode: 'add' } });
-
-        }}
+        onAddPet={handleAddPet}
 
       />
 

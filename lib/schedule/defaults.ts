@@ -39,7 +39,7 @@ export function createFeedingEntry(
     amount: '2',
     unit,
     feedingTime: defaultFeedingTimeDate(),
-    notificationsOn: true,
+    notificationsOn: false,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
   };
@@ -51,7 +51,7 @@ export function createWalkEntry(): WalkEntryState {
     walkTime: WALK_TIME_OPTIONS[0].value,
     duration: '45',
     walkClockTime: defaultWalkTimeDate(),
-    notificationsOn: true,
+    notificationsOn: false,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
   };
@@ -69,7 +69,7 @@ export function createMedicineEntry(): MedicineEntryState {
     startDate: null,
     endDate: null,
     totalPills: '30',
-    reminderOn: true,
+    reminderOn: false,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
   };
@@ -80,7 +80,7 @@ export function createVaccinationEntry(): VaccinationEntryState {
     id: newEntryId(),
     vaccineName: '',
     dueDate: defaultDueDate(),
-    reminderOn: true,
+    reminderOn: false,
     frequency: '7_days',
     reminderTime: defaultReminderTimeDate(),
     isRecurring: false,
@@ -94,7 +94,7 @@ export function createGroomingEntry(groomingType = ''): GroomingEntryState {
     id: newEntryId(),
     groomingType,
     scheduledDate: defaultScheduledDate(),
-    reminderOn: true,
+    reminderOn: false,
     notes: '',
   };
 }

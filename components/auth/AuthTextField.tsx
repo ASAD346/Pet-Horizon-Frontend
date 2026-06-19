@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -6,6 +6,7 @@ import {
   Platform,
   ViewStyle,
   TextInputProps,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
@@ -27,6 +28,7 @@ interface AuthTextFieldProps
   compact?: boolean;
   error?: string;
   style?: ViewStyle;
+  showPasswordToggle?: boolean;
 }
 
 export function AuthTextField({
@@ -42,7 +44,12 @@ export function AuthTextField({
   style,
   maxLength,
   editable = true,
+  showPasswordToggle = false,
 }: AuthTextFieldProps) {
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const isPassword = Boolean(secureTextEntry);
+  const masked = isPassword && !passwordVisible;
+
   return (
     <View style={[styles.wrapper, compact && styles.wrapperCompact, style]}>
       <View
@@ -59,12 +66,25 @@ export function AuthTextField({
           placeholder={placeholder}
           placeholderTextColor={LoginTheme.inputPlaceholder}
           keyboardType={keyboardType}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={masked}
           autoCapitalize={autoCapitalize}
           maxLength={maxLength}
           editable={editable}
           style={styles.input}
         />
+        {isPassword && showPasswordToggle ? (
+          <TouchableOpacity
+            onPress={() => setPasswordVisible((prev) => !prev)}
+            hitSlop={10}
+            accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
+          >
+            <Ionicons
+              name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
+              size={20}
+              color={LoginTheme.inputPlaceholder}
+            />
+          </TouchableOpacity>
+        ) : null}
       </View>
       {error ? (
         <AppText variant="caption" color="#C62828" style={styles.errorText}>

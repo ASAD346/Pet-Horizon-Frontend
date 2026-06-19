@@ -1,8 +1,20 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput } from 'react-native';
+import { View, TouchableOpacity, TextInput, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { SectionLabel, SheetOptionPicker, ThemedTimePicker } from '@/components/sheets';
+import {
+  FormChipRow,
+  FormPickerField,
+  FormSection,
+  FormSectionLabel,
+  FormSuffixInput,
+  FormSwitchRow,
+  FormTextField,
+  SectionLabel,
+  SheetOptionPicker,
+  ThemedTimePicker,
+  formSheetStyles,
+} from '@/components/sheets';
 import type { SheetOption } from '@/components/sheets';
 import { HomeTheme } from '@/constants/theme';
 import {
@@ -23,7 +35,9 @@ interface WalkEntryCardProps {
   entry: WalkEntryState;
   index: number;
   accentColor: string;
+  accentBg?: string;
   canRemove: boolean;
+  embeddedInSheet?: boolean;
   onChange: (next: WalkEntryState) => void;
   onRemove: () => void;
 }
@@ -32,12 +46,101 @@ export function WalkEntryCard({
   entry,
   index,
   accentColor,
+  accentBg = '#E8F5E9',
   canRemove,
+  embeddedInSheet = false,
   onChange,
   onRemove,
 }: WalkEntryCardProps) {
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
+
+  const pickers = (
+    <>
+      <ThemedTimePicker
+        visible={timePickerVisible}
+        value={entry.walkClockTime}
+        onClose={() => setTimePickerVisible(false)}
+        onConfirm={(date) => {
+          onChange({ ...entry, walkClockTime: date });
+          setTimePickerVisible(false);
+        }}
+      />
+      <SheetOptionPicker
+        visible={reminderPickerVisible}
+        title="Remind me after"
+        options={REMINDER_OPTIONS}
+        selectedValue={String(entry.reminderMinutes)}
+        onClose={() => setReminderPickerVisible(false)}
+        onSelect={(value) => onChange({ ...entry, reminderMinutes: Number(value) })}
+      />
+    </>
+  );
+
+  if (embeddedInSheet) {
+    return (
+      <>
+        <FormSection title="Walk details" icon="walk" accentColor={accentColor} accentBg={accentBg}>
+          <FormSectionLabel text="WHICH WALK?" />
+          <FormChipRow
+            options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            selected={entry.walkTime}
+            onSelect={(walkTime) => onChange({ ...entry, walkTime })}
+            accentColor={accentColor}
+          />
+          <View style={formSheetStyles.twoColRow}>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="TIME" />
+              <FormPickerField
+                label={formatTimeDisplay(entry.walkClockTime)}
+                icon="time-outline"
+                onPress={() => setTimePickerVisible(true)}
+              />
+            </View>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="DURATION" />
+              <FormSuffixInput
+                value={entry.duration}
+                onChangeText={(duration) => onChange({ ...entry, duration })}
+                suffix="min"
+                keyboardType="number-pad"
+              />
+            </View>
+          </View>
+        </FormSection>
+
+        <FormSection title="Reminders" icon="bell-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormSwitchRow
+            label="Remind me before walk"
+            value={entry.notificationsOn}
+            onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+            accentColor={accentColor}
+          />
+          {entry.notificationsOn ? (
+            <>
+              <FormSectionLabel text="REMINDER TIMING" />
+              <FormPickerField
+                label={getReminderMinutesLabel(entry.reminderMinutes)}
+                icon="chevron-down"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </>
+          ) : null}
+        </FormSection>
+
+        <FormSection title="Notes" icon="text-box-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormTextField
+            value={entry.notes}
+            onChangeText={(notes) => onChange({ ...entry, notes })}
+            placeholder="Park route, leash preference..."
+            multiline
+          />
+        </FormSection>
+
+        {pickers}
+      </>
+    );
+  }
 
   return (
     <View style={scheduleFieldStyles.entryCard}>
@@ -73,10 +176,7 @@ export function WalkEntryCard({
       <View style={scheduleFieldStyles.twoColRow}>
         <View style={scheduleFieldStyles.halfCol}>
           <SectionLabel text="TIME" />
-          <TouchableOpacity
-            style={scheduleFieldStyles.pickerField}
-            onPress={() => setTimePickerVisible(true)}
-          >
+          <TouchableOpacity style={scheduleFieldStyles.pickerField} onPress={() => setTimePickerVisible(true)}>
             <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
               {formatTimeDisplay(entry.walkClockTime)}
             </AppText>
@@ -102,34 +202,23 @@ export function WalkEntryCard({
       <View style={scheduleFieldStyles.twoColRow}>
         <View style={scheduleFieldStyles.halfCol}>
           <SectionLabel text="NOTIFICATIONS" />
-          <TouchableOpacity
-            style={[
-              scheduleFieldStyles.notifyBtn,
-              entry.notificationsOn && { backgroundColor: accentColor },
-            ]}
-            onPress={() => onChange({ ...entry, notificationsOn: !entry.notificationsOn })}
-          >
-            <Ionicons
-              name={entry.notificationsOn ? 'notifications' : 'notifications-off-outline'}
-              size={18}
-              color={entry.notificationsOn ? HomeTheme.white : HomeTheme.text}
-            />
-            <AppText
-              variant="caption"
-              weight="700"
-              color={entry.notificationsOn ? HomeTheme.white : HomeTheme.text}
-            >
-              {entry.notificationsOn ? 'On' : 'Off'}
+          <View style={scheduleFieldStyles.switchRow}>
+            <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
+              Remind me
             </AppText>
-          </TouchableOpacity>
+            <Switch
+              value={entry.notificationsOn}
+              onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+              trackColor={{ false: '#E0E0E0', true: accentColor }}
+              thumbColor={HomeTheme.white}
+              ios_backgroundColor="#E0E0E0"
+            />
+          </View>
         </View>
         {entry.notificationsOn ? (
           <View style={scheduleFieldStyles.halfCol}>
             <SectionLabel text="REMINDER" />
-            <TouchableOpacity
-              style={scheduleFieldStyles.pickerField}
-              onPress={() => setReminderPickerVisible(true)}
-            >
+            <TouchableOpacity style={scheduleFieldStyles.pickerField} onPress={() => setReminderPickerVisible(true)}>
               <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
                 {getReminderMinutesLabel(entry.reminderMinutes)}
               </AppText>
@@ -139,7 +228,7 @@ export function WalkEntryCard({
         ) : null}
       </View>
 
-      <SectionLabel text="NOTES (OPTIONAL)" />
+      <SectionLabel text="NOTES" />
       <TextInput
         value={entry.notes}
         onChangeText={(notes) => onChange({ ...entry, notes })}
@@ -149,24 +238,7 @@ export function WalkEntryCard({
         multiline
       />
 
-      <ThemedTimePicker
-        visible={timePickerVisible}
-        value={entry.walkClockTime}
-        onClose={() => setTimePickerVisible(false)}
-        onConfirm={(date) => {
-          onChange({ ...entry, walkClockTime: date });
-          setTimePickerVisible(false);
-        }}
-      />
-
-      <SheetOptionPicker
-        visible={reminderPickerVisible}
-        title="Remind me after"
-        options={REMINDER_OPTIONS}
-        selectedValue={String(entry.reminderMinutes)}
-        onClose={() => setReminderPickerVisible(false)}
-        onSelect={(value) => onChange({ ...entry, reminderMinutes: Number(value) })}
-      />
+      {pickers}
     </View>
   );
 }

@@ -69,7 +69,6 @@ export default function GetStartedScreen() {
             onPress={() => router.push('/auth/login')}
             style={styles.startButton}
             textStyle={styles.buttonText}
-            icon={<Ionicons name="chevron-forward" size={20} color="white" />}
             variant="secondary"
           />
         </View>
@@ -160,7 +159,6 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 14,
     minHeight: 54,
-    flexDirection: 'row-reverse',
     justifyContent: 'center',
     marginTop: Spacing.sm,
   },

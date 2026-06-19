@@ -6,6 +6,7 @@ import {
   Pressable,
   TouchableOpacity,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
@@ -130,6 +131,17 @@ export function ThemedDatePicker({
       (viewYear === max.getFullYear() && viewMonth < max.getMonth())
     : true;
 
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const minYear = min ? min.getFullYear() : currentYear - 30;
+    const maxYear = max ? max.getFullYear() : currentYear;
+    const years: number[] = [];
+    for (let y = maxYear; y >= minYear; y -= 1) {
+      years.push(y);
+    }
+    return years;
+  }, [min, max]);
+
   const handleDayPress = (date: Date) => {
     if (isDisabled(date)) return;
     setSelected(date);
@@ -183,6 +195,65 @@ export function ThemedDatePicker({
               />
             </TouchableOpacity>
           </View>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.monthPickerRow}
+          >
+            {MONTH_NAMES.map((name, index) => {
+              const disabled = Boolean(
+                (min &&
+                  viewYear === min.getFullYear() &&
+                  index < min.getMonth()) ||
+                (max &&
+                  viewYear === max.getFullYear() &&
+                  index > max.getMonth()),
+              );
+              const active = viewMonth === index;
+              return (
+                <TouchableOpacity
+                  key={name}
+                  style={[styles.pickerChip, active && styles.pickerChipActive, disabled && styles.pickerChipDisabled]}
+                  onPress={() => !disabled && setViewMonth(index)}
+                  disabled={disabled}
+                >
+                  <AppText
+                    variant="caption"
+                    weight={active ? '700' : '500'}
+                    color={active ? LoginTheme.footerText : LoginTheme.charcoal}
+                  >
+                    {name.slice(0, 3)}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.yearPickerRow}
+          >
+            {yearOptions.map((year) => {
+              const active = viewYear === year;
+              return (
+                <TouchableOpacity
+                  key={year}
+                  style={[styles.pickerChip, active && styles.pickerChipActive]}
+                  onPress={() => setViewYear(year)}
+                >
+                  <AppText
+                    variant="caption"
+                    weight={active ? '700' : '500'}
+                    color={active ? LoginTheme.footerText : LoginTheme.charcoal}
+                  >
+                    {year}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
           <View style={styles.weekRow}>
             {WEEKDAYS.map((label) => (
@@ -297,8 +368,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.xs,
+  },
+  monthPickerRow: {
+    gap: Spacing.xs,
+    paddingBottom: Spacing.sm,
+  },
+  yearPickerRow: {
+    gap: Spacing.xs,
+    paddingBottom: Spacing.md,
+  },
+  pickerChip: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.full,
+    backgroundColor: LoginTheme.inputBg,
+    minWidth: 44,
+    alignItems: 'center',
+  },
+  pickerChipActive: {
+    backgroundColor: LoginTheme.green,
+  },
+  pickerChipDisabled: {
+    opacity: 0.35,
   },
   navBtn: {
     width: 36,

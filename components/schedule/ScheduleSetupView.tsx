@@ -15,8 +15,10 @@ import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActivePet } from '@/hooks/useActivePet';
+import { useNotifications } from '@/hooks/useNotifications';
 import { mealTypeOptionsForSpecies, unitOptionsForSpecies } from '@/lib/feeding/feedingForm';
 import { getGroomingTypeOptions, getSpeciesFeatures } from '@/lib/species/speciesFeatures';
 import {
@@ -68,10 +70,19 @@ interface EditorState {
   entry: EditorEntry;
 }
 
-export function ScheduleSetupView() {
+interface ScheduleSetupViewProps {
+  onJournalPress?: () => void;
+  onNotificationsPress?: () => void;
+}
+
+export function ScheduleSetupView({
+  onJournalPress,
+  onNotificationsPress,
+}: ScheduleSetupViewProps) {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { token } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
+  const { unreadCount } = useNotifications(token);
 
   const [sections, setSections] = useState<ScheduleSectionsState>(() => createInitialScheduleState());
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
@@ -195,7 +206,7 @@ export function ScheduleSetupView() {
     if (key === 'walk') return createWalkEntry();
     if (key === 'medicine') return createMedicineEntry();
     if (key === 'vaccination') return createVaccinationEntry();
-    return createGroomingEntry(defaultGrooming);
+    return createGroomingEntry('');
   };
 
   const openAddEditor = (sectionMeta: ScheduleSectionTheme) => {
@@ -291,7 +302,8 @@ export function ScheduleSetupView() {
     (section) => section.key !== 'grooming' || groomingVisible,
   );
 
-  const loading = petLoading || featuresLoading || schedulesLoading;
+  const initialLoading = petLoading || featuresLoading;
+  const refreshingSchedules = schedulesLoading && !initialLoading;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -308,22 +320,26 @@ export function ScheduleSetupView() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.header}>
-            <View style={styles.headerText}>
-              <AppText variant="h2" weight="800" color={HomeTheme.text}>
-                Care Schedules
-              </AppText>
-              <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
-                Set up feeding, walks, medicine, vaccines, and grooming for your pet.
-              </AppText>
-            </View>
-            <View style={styles.headerArt}>
-              <MaterialCommunityIcons name="calendar-heart" size={36} color={HomeTheme.cardGreen} />
-            </View>
-          </View>
+          <ScreenHeader
+            title="Care Schedules"
+            notificationCount={unreadCount}
+            onJournalPress={onJournalPress}
+            onNotificationsPress={onNotificationsPress}
+          />
+          <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
+            Set up feeding, walks, medicine, vaccines, and grooming for your pet.
+          </AppText>
 
-          {loading ? (
-            <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
+          {refreshingSchedules ? (
+            <ActivityIndicator color={HomeTheme.cardGreen} size="small" style={styles.refreshIndicator} />
+          ) : null}
+
+          {initialLoading ? (
+            <>
+              {[0, 1, 2].map((key) => (
+                <View key={key} style={styles.skeletonCard} />
+              ))}
+            </>
           ) : !pet ? (
             <View style={styles.emptyBox}>
               <AppText variant="bodySmall" color={HomeTheme.textMuted}>
@@ -335,7 +351,8 @@ export function ScheduleSetupView() {
               {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
               {formError ? <AuthErrorBanner message={formError} /> : null}
 
-              {visibleSections.map((sectionMeta) => {
+              <View style={refreshingSchedules ? styles.contentDimmed : undefined}>
+                {visibleSections.map((sectionMeta) => {
                 const sectionState = sections[sectionMeta.key];
                 return (
                   <ScheduleSectionCard
@@ -345,9 +362,17 @@ export function ScheduleSetupView() {
                     onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
                   >
                     {sectionState.entries.length === 0 ? (
-                      <AppText variant="caption" color={HomeTheme.textMuted} style={styles.emptyHint}>
-                        No schedules yet. Tap below to add one.
-                      </AppText>
+                      <View style={styles.emptyHintBox}>
+                        <MaterialCommunityIcons
+                          name={sectionMeta.icon}
+                          size={28}
+                          color={sectionMeta.color}
+                          style={styles.emptyHintIcon}
+                        />
+                        <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
+                          No {sectionMeta.title.toLowerCase()} yet. Tap below to add your first one.
+                        </AppText>
+                      </View>
                     ) : (
                       sectionState.entries.map((entry) => {
                         const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
@@ -367,7 +392,7 @@ export function ScheduleSetupView() {
                     )}
 
                     <TouchableOpacity
-                      style={scheduleFieldStyles.addBtn}
+                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color }]}
                       onPress={() => openAddEditor(sectionMeta)}
                       activeOpacity={0.85}
                     >
@@ -379,6 +404,7 @@ export function ScheduleSetupView() {
                   </ScheduleSectionCard>
                 );
               })}
+              </View>
             </>
           )}
         </ScrollView>
@@ -419,30 +445,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
-    gap: Spacing.md,
-  },
-  headerText: {
-    flex: 1,
-  },
   subtitle: {
-    marginTop: Spacing.xs,
+    marginBottom: Spacing.lg,
     lineHeight: 20,
-  },
-  headerArt: {
-    width: 56,
-    height: 56,
-    borderRadius: Radius.lg,
-    backgroundColor: '#E8F5E9',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   loader: {
     marginVertical: Spacing.xl,
+  },
+  refreshIndicator: {
+    alignSelf: 'center',
+    marginBottom: Spacing.sm,
+  },
+  skeletonCard: {
+    height: 88,
+    backgroundColor: '#ECECEC',
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.md,
+  },
+  contentDimmed: {
+    opacity: 0.55,
   },
   emptyBox: {
     backgroundColor: HomeTheme.surface,
@@ -458,7 +479,14 @@ const styles = StyleSheet.create({
       android: { elevation: 2 },
     }),
   },
-  emptyHint: {
+  emptyHintBox: {
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
     marginBottom: Spacing.sm,
+  },
+  emptyHintIcon: {
+    marginBottom: Spacing.sm,
+    opacity: 0.85,
   },
 });

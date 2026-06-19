@@ -104,7 +104,6 @@ export function ProfileHubView() {
           name={displayName}
           email={user?.email ?? ''}
           imageUrl={resolveMediaUrl(user?.profileImage)}
-          onEditPress={() => router.push('/profile/edit' as Href)}
         />
 
         {isPremium ? (

@@ -1,7 +1,13 @@
-import React from 'react';
-import { View, StyleSheet, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from 'react-native-reanimated';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
@@ -17,8 +23,26 @@ interface PetProfileCardProps {
   imageSource?: number;
   imageUrl?: string;
   loading?: boolean;
-  onAddPet?: () => void;
+  isBirthdayToday?: boolean;
   onPress?: () => void;
+}
+
+function AvatarPlaceholder() {
+  const pulse = useSharedValue(0.35);
+
+  useEffect(() => {
+    pulse.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
+  }, [pulse]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
+  }));
+
+  return (
+    <Animated.View style={[styles.avatar, styles.avatarPlaceholder, animatedStyle]}>
+      <Ionicons name="paw" size={28} color="rgba(255,255,255,0.85)" />
+    </Animated.View>
+  );
 }
 
 export function PetProfileCard({
@@ -33,7 +57,7 @@ export function PetProfileCard({
   imageSource = require('../../assets/images/onboarding.png'),
   imageUrl,
   loading = false,
-  onAddPet,
+  isBirthdayToday = false,
   onPress,
 }: PetProfileCardProps) {
   const avatarSource = imageUrl ? { uri: imageUrl } : imageSource;
@@ -42,31 +66,18 @@ export function PetProfileCard({
 
   return (
     <CardWrapper style={styles.card} {...cardProps}>
-      {onAddPet ? (
-        <TouchableOpacity
-          style={styles.addPetBtn}
-          onPress={onAddPet}
-          activeOpacity={0.85}
-          accessibilityLabel="Add pet"
-        >
-          <Ionicons name="add" size={22} color={HomeTheme.white} />
-        </TouchableOpacity>
-      ) : null}
-
-      {loading ? (
-        <View style={styles.loadingRow}>
-          <ActivityIndicator color={HomeTheme.white} />
-        </View>
-      ) : null}
-
       <View style={styles.top}>
-        <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
+        {loading ? (
+          <AvatarPlaceholder />
+        ) : (
+          <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
+        )}
         <View style={styles.info}>
           <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name}>
-            {name}
+            {loading ? 'Loading…' : name}
           </AppText>
           <AppText variant="bodySmall" color={HomeTheme.white} style={styles.meta}>
-            {breed} · {age}
+            {loading ? '—' : isBirthdayToday ? `🎂 Birthday today · ${breed}` : `${breed} · ${age}`}
           </AppText>
           <View style={styles.tags}>
             <View style={styles.tag}>
@@ -126,24 +137,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     ...cardShadow,
   },
-  addPetBtn: {
-    position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: HomeTheme.tagOnGreen,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  loadingRow: {
-    position: 'absolute',
-    top: Spacing.md,
-    left: Spacing.md,
-    zIndex: 2,
-  },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -155,6 +148,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.5)',
     marginRight: Spacing.md,
+  },
+  avatarPlaceholder: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   info: {
     flex: 1,

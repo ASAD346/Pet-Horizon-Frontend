@@ -1,13 +1,22 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
+import {
+  FormChipRow,
+  FormPickerField,
+  FormSection,
+  FormSectionLabel,
+  FormSwitchRow,
+  FormTextField,
+  SectionLabel,
+} from '@/components/sheets';
 import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
+import { HomeTheme } from '@/constants/theme';
 import { formatDateLabel, defaultScheduledDate } from '@/lib/grooming/groomingForm';
 import type { GroomingEntryState } from '@/lib/schedule/types';
 import type { GroomingTypeOption } from '@/types/grooming';
-import { ScheduleTheme } from '../scheduleTheme';
-import { scheduleFieldStyles } from '../scheduleStyles';
+import { ScheduleColors, scheduleFieldStyles } from '../scheduleStyles';
 
 interface GroomingEntryCardProps {
   entry: GroomingEntryState;
@@ -16,111 +25,143 @@ interface GroomingEntryCardProps {
   accentBg: string;
   typeOptions: GroomingTypeOption[];
   canRemove: boolean;
+  embeddedInSheet?: boolean;
   onChange: (next: GroomingEntryState) => void;
   onRemove: () => void;
 }
 
 export function GroomingEntryCard({
   entry,
+  index,
   accentColor,
   accentBg,
   typeOptions,
   canRemove,
+  embeddedInSheet = false,
   onChange,
   onRemove,
 }: GroomingEntryCardProps) {
   const [datePickerVisible, setDatePickerVisible] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
-  const typeLabel =
-    typeOptions.find((t) => t.value === entry.groomingType)?.label ?? entry.groomingType;
+  const datePicker = (
+    <ThemedDatePicker
+      visible={datePickerVisible}
+      title="Scheduled date"
+      value={entry.scheduledDate ?? defaultScheduledDate()}
+      onClose={() => setDatePickerVisible(false)}
+      onConfirm={(date) => {
+        onChange({ ...entry, scheduledDate: date });
+        setDatePickerVisible(false);
+      }}
+    />
+  );
 
-  return (
-    <View style={scheduleFieldStyles.fieldBlock}>
-      <View style={scheduleFieldStyles.compactRow}>
-        <View style={[scheduleFieldStyles.timeRowIcon, { backgroundColor: accentBg }]}>
-          <MaterialCommunityIcons name="content-cut" size={18} color={accentColor} />
-        </View>
-        <View style={scheduleFieldStyles.compactRowBody}>
-          <AppText variant="bodySmall" weight="800" color={ScheduleTheme.text}>
-            {typeLabel || 'Select task'}
-          </AppText>
-          <TouchableOpacity onPress={() => setDatePickerVisible(true)} activeOpacity={0.85}>
-            <AppText variant="caption" color={ScheduleTheme.textMuted}>
-              {entry.scheduledDate ? formatDateLabel(entry.scheduledDate) : 'Set date'}
-            </AppText>
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity style={scheduleFieldStyles.rowMenuBtn} onPress={() => setExpanded((v) => !v)}>
-          <Ionicons name={expanded ? 'chevron-up' : 'ellipsis-vertical'} size={18} color={ScheduleTheme.textMuted} />
-        </TouchableOpacity>
-      </View>
+  if (embeddedInSheet) {
+    return (
+      <>
+        <FormSection title="Grooming task" icon="content-cut" accentColor={accentColor} accentBg={accentBg}>
+          <FormSectionLabel text="TASK TYPE" />
+          <FormChipRow
+            options={typeOptions.map((t) => ({ value: t.value, label: t.label }))}
+            selected={entry.groomingType}
+            onSelect={(groomingType) => onChange({ ...entry, groomingType })}
+            accentColor={accentColor}
+          />
+          <FormSectionLabel text="SCHEDULED DATE" />
+          <FormPickerField
+            label={entry.scheduledDate ? formatDateLabel(entry.scheduledDate) : 'Select date'}
+            icon="calendar-outline"
+            onPress={() => setDatePickerVisible(true)}
+          />
+        </FormSection>
 
-      {expanded ? (
-        <View style={scheduleFieldStyles.expandedPanel}>
-          <AppText variant="caption" weight="700" color={ScheduleTheme.textMuted} style={scheduleFieldStyles.fieldBlock}>
-            TASK TYPE
-          </AppText>
-          <View style={scheduleFieldStyles.chipRow}>
-            {typeOptions.map((option) => {
-              const selected = entry.groomingType === option.value;
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor, borderWidth: 0 }]}
-                  onPress={() => onChange({ ...entry, groomingType: option.value })}
-                >
-                  <AppText variant="caption" weight="700" color={selected ? '#FFFFFF' : ScheduleTheme.text}>
-                    {option.label}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+        <FormSection title="Reminders" icon="bell-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormSwitchRow
+            label="Remind me before grooming"
+            value={entry.reminderOn}
+            onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
+            accentColor={accentColor}
+          />
+        </FormSection>
 
-          <TouchableOpacity
-            style={[scheduleFieldStyles.notifyBtn, entry.reminderOn && { backgroundColor: accentColor }]}
-            onPress={() => onChange({ ...entry, reminderOn: !entry.reminderOn })}
-          >
-            <Ionicons
-              name={entry.reminderOn ? 'notifications' : 'notifications-off-outline'}
-              size={18}
-              color={entry.reminderOn ? '#FFFFFF' : ScheduleTheme.text}
-            />
-            <AppText variant="caption" weight="700" color={entry.reminderOn ? '#FFFFFF' : ScheduleTheme.text}>
-              Reminder {entry.reminderOn ? 'On' : 'Off'}
-            </AppText>
-          </TouchableOpacity>
-
-          <TextInput
+        <FormSection title="Notes" icon="text-box-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormTextField
             value={entry.notes}
             onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Notes (optional)"
-            placeholderTextColor={ScheduleTheme.textMuted}
-            style={[scheduleFieldStyles.textInput, scheduleFieldStyles.notesInput]}
+            placeholder="Salon name, special instructions..."
             multiline
           />
+        </FormSection>
 
-          {canRemove ? (
-            <TouchableOpacity onPress={onRemove} style={scheduleFieldStyles.fieldBlock}>
-              <AppText variant="caption" weight="700" color={accentColor}>
-                Remove task
+        {datePicker}
+      </>
+    );
+  }
+
+  return (
+    <View style={scheduleFieldStyles.entryCard}>
+      <View style={scheduleFieldStyles.entryHeader}>
+        <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
+          Task {index + 1}
+        </AppText>
+        {canRemove ? (
+          <TouchableOpacity onPress={onRemove} hitSlop={8}>
+            <Ionicons name="close-circle" size={22} color={ScheduleColors.label} />
+          </TouchableOpacity>
+        ) : null}
+      </View>
+
+      <SectionLabel text="TASK TYPE" />
+      <View style={scheduleFieldStyles.chipRow}>
+        {typeOptions.map((option) => {
+          const selected = entry.groomingType === option.value;
+          return (
+            <TouchableOpacity
+              key={option.value}
+              style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor, borderColor: accentColor }]}
+              onPress={() => onChange({ ...entry, groomingType: option.value })}
+            >
+              <AppText variant="caption" weight="600" color={selected ? HomeTheme.white : HomeTheme.text}>
+                {option.label}
               </AppText>
             </TouchableOpacity>
-          ) : null}
-        </View>
-      ) : null}
+          );
+        })}
+      </View>
 
-      <ThemedDatePicker
-        visible={datePickerVisible}
-        title="Scheduled date"
-        value={entry.scheduledDate ?? defaultScheduledDate()}
-        onClose={() => setDatePickerVisible(false)}
-        onConfirm={(date) => {
-          onChange({ ...entry, scheduledDate: date });
-          setDatePickerVisible(false);
-        }}
+      <SectionLabel text="SCHEDULED DATE" />
+      <TouchableOpacity style={scheduleFieldStyles.pickerField} onPress={() => setDatePickerVisible(true)}>
+        <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
+          {entry.scheduledDate ? formatDateLabel(entry.scheduledDate) : 'Select date'}
+        </AppText>
+        <Ionicons name="calendar-outline" size={18} color={ScheduleColors.label} />
+      </TouchableOpacity>
+
+      <SectionLabel text="NOTIFICATIONS" />
+      <View style={scheduleFieldStyles.switchRow}>
+        <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
+          Remind me
+        </AppText>
+        <Switch
+          value={entry.reminderOn}
+          onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
+          trackColor={{ false: '#E0E0E0', true: accentColor }}
+          thumbColor={HomeTheme.white}
+          ios_backgroundColor="#E0E0E0"
+        />
+      </View>
+
+      <SectionLabel text="NOTES" />
+      <TextInput
+        value={entry.notes}
+        onChangeText={(notes) => onChange({ ...entry, notes })}
+        placeholder="Extra details..."
+        placeholderTextColor={ScheduleColors.placeholder}
+        style={[scheduleFieldStyles.textInput, scheduleFieldStyles.notesInput]}
+        multiline
       />
+
+      {datePicker}
     </View>
   );
 }

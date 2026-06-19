@@ -42,7 +42,10 @@ export function ExpenseTrackerView({
     token,
     pet?._id,
   );
-  const { budget, loading: budgetLoading, reload: reloadBudget } = useBudget(token, pet?._id);
+  const { budget, loading: budgetLoading, periodType, setPeriodType, reload: reloadBudget } = useBudget(
+    token,
+    pet?._id,
+  );
   const { unreadCount } = useNotifications(token);
 
   const [category, setCategory] = useState<ExpenseTrackerCategory>('all');
@@ -78,11 +81,15 @@ export function ExpenseTrackerView({
         {error ? <AuthErrorBanner message={error} /> : null}
 
         <WeeklySpendingCard
+          periodLabel={budget.periodLabel}
+          periodType={budget.periodType}
           limitLabel={budget.limitLabel}
           spentPercent={budget.spentPercent}
           remainingLabel={budget.remainingLabel}
           status={budget.status}
+          hasBudget={budget.hasBudget}
           loading={budgetLoading || petLoading}
+          onPeriodChange={setPeriodType}
           onEditPress={() => setBudgetSheetVisible(true)}
         />
 
@@ -111,6 +118,7 @@ export function ExpenseTrackerView({
         token={token}
         budgetId={budget.budgetId}
         currentLimit={budget.amountLimit}
+        periodType={periodType}
         onClose={() => setBudgetSheetVisible(false)}
         onSaved={() => {
           reloadBudget();

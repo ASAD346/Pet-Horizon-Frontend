@@ -81,6 +81,7 @@ export function SignupFormSection({
         value={password}
         onChangeText={onPasswordChange}
         secureTextEntry
+        showPasswordToggle
         compact
         error={fieldErrors?.password}
       />
@@ -91,6 +92,7 @@ export function SignupFormSection({
         value={confirmPassword}
         onChangeText={onConfirmPasswordChange}
         secureTextEntry
+        showPasswordToggle
         compact
         error={fieldErrors?.confirmPassword}
       />

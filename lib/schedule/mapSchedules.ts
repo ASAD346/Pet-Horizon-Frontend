@@ -74,7 +74,7 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
     amount: meta.amount ?? '',
     unit: meta.unit ?? '',
     feedingTime: timeHHmmToDate(item.timeOfDay),
-    notificationsOn: meta.reminder !== false,
+    notificationsOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
   };
@@ -88,7 +88,7 @@ export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
     walkTime: meta.walkTime ?? 'morning',
     duration: meta.duration != null ? String(meta.duration) : '30',
     walkClockTime: timeHHmmToDate(item.timeOfDay),
-    notificationsOn: meta.reminder !== false,
+    notificationsOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
   };
@@ -114,7 +114,7 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
         : meta.remainingPills != null
           ? String(meta.remainingPills)
           : '30',
-    reminderOn: meta.reminder !== false,
+    reminderOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
   };
@@ -128,7 +128,7 @@ export function mapVaccinationItem(item: VaccinationScheduleItem): VaccinationEn
     scheduleId: item._id,
     vaccineName: meta.vaccineName ?? item.title ?? '',
     dueDate: apiDateStringToDate(dueRaw ?? undefined),
-    reminderOn: meta.reminder !== false,
+    reminderOn: meta.reminder === true,
     frequency: normalizeVaccinationFrequency(meta.frequency),
     reminderTime: timeHHmmToDate(meta.reminderTime ?? '09:00'),
     isRecurring: meta.isRecurring ?? false,
@@ -143,7 +143,7 @@ export function mapGroomingItem(item: GroomingRecord): GroomingEntryState {
     recordId: item._id,
     groomingType: item.groomingType,
     scheduledDate: apiDateStringToDate(item.scheduledDate ?? undefined),
-    reminderOn: item.reminderEnabled !== false,
+    reminderOn: item.reminderEnabled === true,
     notes: item.notes ?? '',
   };
 }

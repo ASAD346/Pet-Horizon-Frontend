@@ -1,20 +1,22 @@
 import type { ApiPet } from '@/types/pet';
+import { parseBirthdayParts } from '@/lib/pet/birthdayUtils';
 
 export function formatPetAge(birthday?: string | null): string {
-  if (!birthday) return '—';
-  const born = new Date(birthday);
-  if (Number.isNaN(born.getTime())) return '—';
+  const parts = parseBirthdayParts(birthday);
+  if (!parts) return '—';
 
   const now = new Date();
-  let years = now.getFullYear() - born.getFullYear();
-  const monthDiff = now.getMonth() - born.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < born.getDate())) {
+  let years = now.getFullYear() - parts.year;
+  if (
+    now.getMonth() < parts.month ||
+    (now.getMonth() === parts.month && now.getDate() < parts.day)
+  ) {
     years -= 1;
   }
   if (years < 1) {
     const months = Math.max(
       0,
-      (now.getFullYear() - born.getFullYear()) * 12 + now.getMonth() - born.getMonth(),
+      (now.getFullYear() - parts.year) * 12 + now.getMonth() - parts.month,
     );
     return months <= 1 ? '1 month' : `${months} months`;
   }

@@ -111,6 +111,17 @@ export default function ForgotPasswordScreen() {
     try {
       const result = await requestPasswordReset({ email });
       log.ok('ForgotPassword', 'Reset code requested');
+
+      if (result.emailConfigured && result.emailSent === false) {
+        const deliveryError =
+          result.emailError ||
+          result.hint ||
+          'We could not send the reset email. Check the address or try again in a few minutes.';
+        setFormError(deliveryError);
+        setFormInfo(null);
+        return;
+      }
+
       goToResetStep(result.message, {
         devOtp: result.devOtp,
         expiresInMinutes: result.expiresInMinutes,
@@ -165,6 +176,16 @@ export default function ForgotPasswordScreen() {
 
     try {
       const result = await requestPasswordReset({ email });
+
+      if (result.emailConfigured && result.emailSent === false) {
+        setFormError(
+          result.emailError ||
+            result.hint ||
+            'We could not send the reset email. Check the address or try again in a few minutes.',
+        );
+        return;
+      }
+
       setFormInfo(
         buildResetInfoMessage(result.message, {
           devOtp: result.devOtp,

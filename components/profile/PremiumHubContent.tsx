@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
@@ -11,11 +12,14 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AppBrandModal } from '@/components/ui/AppBrandModal';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActivePet } from '@/hooks/useActivePet';
 import { getErrorMessage } from '@/lib/api/errors';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 import {
   createPaymentIntent,
   fetchPremiumPlans,
@@ -26,25 +30,27 @@ import { fetchUserProfile } from '@/services/users/userApi';
 import type { PremiumPlan } from '@/types/premium';
 import { ProfileScreenHeader } from './ProfileScreenHeader';
 import { SecureCheckoutSheet } from './SecureCheckoutSheet';
+import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
 import {
   ProfileTheme,
   formatPlanPrice,
-  planFeatureLabel,
   planPeriodLabel,
 } from './profileTheme';
 
-const HERO_IMAGE =
-  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?auto=format&fit=crop&w=900&q=80';
+const FALLBACK_HERO = require('../../assets/images/onboarding.png');
 
 const FEATURES = [
   { icon: 'paw' as const, label: 'Unlimited Pets' },
-  { icon: 'people' as const, label: 'Family Sharing' },
+  { icon: 'notifications' as const, label: 'Smart Reminders' },
   { icon: 'stats-chart' as const, label: 'Pro Stats' },
 ];
+
+const ALLOWED_PLAN_IDS = new Set(['monthly', 'yearly']);
 
 export function PremiumHubContent() {
   const router = useRouter();
   const { token, user, setSession } = useAuth();
+  const { pet } = useActivePet(token);
   const [plans, setPlans] = useState<PremiumPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
@@ -52,6 +58,13 @@ export function PremiumHubContent() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+  const [successVisible, setSuccessVisible] = useState(false);
+  const [termsVisible, setTermsVisible] = useState(false);
+
+  const heroSource = useMemo(() => {
+    const url = resolveMediaUrl(pet?.image);
+    return url ? { uri: url } : FALLBACK_HERO;
+  }, [pet?.image]);
 
   const loadPlans = useCallback(async () => {
     if (!token) return;
@@ -61,11 +74,12 @@ export function PremiumHubContent() {
         fetchPremiumPlans(token),
         fetchPremiumStatus(token),
       ]);
-      setPlans(planList);
+      const filtered = planList.filter((p) => ALLOWED_PLAN_IDS.has(p.planId));
+      setPlans(filtered);
       setIsPremium(status.isPremium);
-      if (planList.length > 0) {
-        const yearly = planList.find((p) => p.planId === 'yearly');
-        setSelectedPlanId(yearly?.planId ?? planList[0].planId);
+      if (filtered.length > 0) {
+        const yearly = filtered.find((p) => p.planId === 'yearly');
+        setSelectedPlanId(yearly?.planId ?? filtered[0].planId);
       }
     } catch (error) {
       Alert.alert('Premium', getErrorMessage(error));
@@ -81,7 +95,6 @@ export function PremiumHubContent() {
   const selectedPlan = plans.find((p) => p.planId === selectedPlanId) ?? null;
   const monthlyPlan = plans.find((p) => p.planId === 'monthly');
   const yearlyPlan = plans.find((p) => p.planId === 'yearly');
-  const familyPlan = plans.find((p) => p.planId === 'family_hub');
 
   const handleStartTrial = () => {
     if (isPremium) {
@@ -104,9 +117,7 @@ export function PremiumHubContent() {
       await setSession({ token, user: { ...profile, premiumStatus: 'premium' } });
       setIsPremium(true);
       setCheckoutVisible(false);
-      Alert.alert('Welcome to Premium', 'Your subscription is now active.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      setSuccessVisible(true);
     } catch (error) {
       setCheckoutError(getErrorMessage(error));
     } finally {
@@ -147,14 +158,18 @@ export function PremiumHubContent() {
 
   return (
     <View style={styles.container}>
-      <Image source={{ uri: HERO_IMAGE }} style={styles.hero} contentFit="cover" />
+      <Image source={heroSource} style={styles.hero} contentFit="cover" />
 
       <SafeAreaView style={styles.safeTop} edges={['top']}>
         <ProfileScreenHeader title="" onBack={() => router.back()} />
       </SafeAreaView>
 
       <View style={styles.sheet}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sheetContent}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+          contentContainerStyle={styles.sheetContent}
+        >
           <AppText variant="caption" weight="700" color={ProfileTheme.green} style={styles.kicker}>
             PREMIUM HUB
           </AppText>
@@ -182,27 +197,6 @@ export function PremiumHubContent() {
                 {renderPlanCard(yearlyPlan, true)}
               </View>
 
-              {familyPlan ? (
-                <TouchableOpacity
-                  style={[styles.familyCard, selectedPlanId === familyPlan.planId && styles.familySelected]}
-                  onPress={() => setSelectedPlanId(familyPlan.planId)}
-                  activeOpacity={0.9}
-                >
-                  <View>
-                    <AppText variant="body" weight="700" color={ProfileTheme.text}>
-                      Family Plan
-                    </AppText>
-                    <AppText variant="caption" color={ProfileTheme.textMuted}>
-                      {planFeatureLabel(familyPlan.planId)}
-                    </AppText>
-                  </View>
-                  <AppText variant="body" weight="800" color={ProfileTheme.green}>
-                    {formatPlanPrice(familyPlan.price)}
-                    {planPeriodLabel(familyPlan.planId, familyPlan.periodDays)}
-                  </AppText>
-                </TouchableOpacity>
-              ) : null}
-
               {isPremium ? (
                 <View style={styles.banner}>
                   <AuthInfoBanner message="You already have premium active on this account." />
@@ -226,9 +220,20 @@ export function PremiumHubContent() {
             }
           />
 
-          <AppText variant="caption" color={ProfileTheme.textMuted} style={styles.disclaimer}>
-            Cancel anytime. Terms & Privacy apply.
-          </AppText>
+          <View style={styles.disclaimerRow}>
+            <AppText variant="caption" color={ProfileTheme.textMuted}>
+              Cancel anytime.{' '}
+            </AppText>
+            <Pressable onPress={() => setTermsVisible(true)} hitSlop={6}>
+              <AppText variant="caption" weight="700" color={ProfileTheme.green} style={styles.link}>
+                Terms & Conditions
+              </AppText>
+            </Pressable>
+            <AppText variant="caption" color={ProfileTheme.textMuted}>
+              {' '}
+              apply.
+            </AppText>
+          </View>
         </ScrollView>
       </View>
 
@@ -240,6 +245,19 @@ export function PremiumHubContent() {
         loading={checkoutLoading}
         error={checkoutError}
       />
+
+      <AppBrandModal
+        visible={successVisible}
+        title="Congratulations!"
+        message="Your premium subscription is now active. Enjoy unlimited pets, smart reminders, and pro stats."
+        confirmLabel="Continue"
+        onConfirm={() => {
+          setSuccessVisible(false);
+          router.back();
+        }}
+      />
+
+      <TermsAndConditionsSheet visible={termsVisible} onClose={() => setTermsVisible(false)} />
     </View>
   );
 }
@@ -250,8 +268,11 @@ const styles = StyleSheet.create({
     backgroundColor: ProfileTheme.background,
   },
   hero: {
-    ...StyleSheet.absoluteFillObject,
-    height: '48%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '34%',
   },
   safeTop: {
     position: 'absolute',
@@ -261,27 +282,29 @@ const styles = StyleSheet.create({
   },
   sheet: {
     flex: 1,
-    marginTop: '38%',
+    marginTop: '30%',
     backgroundColor: ProfileTheme.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     overflow: 'hidden',
   },
   sheetContent: {
-    padding: 24,
-    paddingBottom: 40,
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 24,
+    flexGrow: 1,
   },
   kicker: {
     letterSpacing: 1,
     marginBottom: 4,
   },
   title: {
-    marginBottom: 16,
+    marginBottom: 14,
   },
   featureRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   featureItem: {
     alignItems: 'center',
@@ -289,12 +312,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   loader: {
-    marginVertical: 24,
+    marginVertical: 16,
   },
   planRow: {
     flexDirection: 'row',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   planCard: {
     flex: 1,
@@ -323,21 +346,6 @@ const styles = StyleSheet.create({
   planPrice: {
     marginTop: 8,
   },
-  familyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: ProfileTheme.background,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: ProfileTheme.border,
-    marginBottom: 20,
-  },
-  familySelected: {
-    borderColor: ProfileTheme.green,
-    backgroundColor: '#F1FAF1',
-  },
   banner: {
     marginBottom: 12,
   },
@@ -345,13 +353,20 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 999,
     minHeight: 52,
-    marginBottom: 12,
+    marginTop: 4,
+    marginBottom: 10,
   },
   ctaText: {
     fontSize: 16,
     fontWeight: '700',
   },
-  disclaimer: {
-    textAlign: 'center',
+  disclaimerRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  link: {
+    textDecorationLine: 'underline',
   },
 });

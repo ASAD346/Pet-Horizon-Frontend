@@ -57,7 +57,29 @@ export function FeedingSchedulePanel({
     return map;
   }, [entries]);
 
-  const syncShared = (patch: Partial<FeedingEntryState>) => {
+  const updateMealNotifications = (mealType: string, notificationsOn: boolean) => {
+    onChangeEntries(
+      entries.map((e) => (e.mealType === mealType ? { ...e, notificationsOn } : e)),
+    );
+  };
+
+  const updateMealReminderMinutes = (mealType: string, reminderMinutes: number) => {
+    onChangeEntries(
+      entries.map((e) => (e.mealType === mealType ? { ...e, reminderMinutes } : e)),
+    );
+  };
+
+  const updateSharedAmount = (amount: string) => {
+    onChangeEntries(entries.map((e) => ({ ...e, amount })));
+  };
+
+  const updateSharedUnit = (unit: string) => {
+    onChangeEntries(entries.map((e) => ({ ...e, unit })));
+  };
+
+  const syncAllReminderSettings = (
+    patch: Partial<Pick<FeedingEntryState, 'notificationsOn' | 'reminderMinutes'>>,
+  ) => {
     if (entries.length === 0) return;
     onChangeEntries(entries.map((e) => ({ ...e, ...patch })));
   };
@@ -152,7 +174,7 @@ export function FeedingSchedulePanel({
       </AppText>
       <TextInput
         value={shared.amount}
-        onChangeText={(amount) => syncShared({ amount })}
+        onChangeText={updateSharedAmount}
         keyboardType="decimal-pad"
         style={scheduleFieldStyles.textInput}
         placeholder="Amount"
@@ -167,7 +189,7 @@ export function FeedingSchedulePanel({
             <TouchableOpacity
               key={option.value}
               style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor, borderWidth: 0 }]}
-              onPress={() => syncShared({ unit: option.value })}
+              onPress={() => updateSharedUnit(option.value)}
             >
               <AppText variant="caption" weight="700" color={selected ? '#FFFFFF' : ScheduleTheme.text}>
                 {option.label}
@@ -182,7 +204,9 @@ export function FeedingSchedulePanel({
           <SectionLabel text="NOTIFICATIONS" />
           <TouchableOpacity
             style={scheduleFieldStyles.pickerField}
-            onPress={() => syncShared({ notificationsOn: !shared.notificationsOn })}
+            onPress={() =>
+              syncAllReminderSettings({ notificationsOn: !shared.notificationsOn })
+            }
           >
             <AppText variant="caption" weight="600" color={ScheduleTheme.text}>
               {shared.notificationsOn ? 'On' : 'Off'}
@@ -226,7 +250,7 @@ export function FeedingSchedulePanel({
         options={REMINDER_OPTIONS}
         selectedValue={String(shared.reminderMinutes ?? DEFAULT_REMINDER_MINUTES)}
         onClose={() => setReminderPickerVisible(false)}
-        onSelect={(value) => syncShared({ reminderMinutes: Number(value) })}
+        onSelect={(value) => syncAllReminderSettings({ reminderMinutes: Number(value) })}
       />
     </View>
   );
