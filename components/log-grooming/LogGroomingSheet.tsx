@@ -1,39 +1,30 @@
 import { getErrorMessage } from '@/lib/api/errors';
 import {
-    dateToApiDateString,
-    defaultScheduledDate,
-    formatDateLabel,
+  dateToApiDateString,
+  defaultScheduledDate,
+  formatDateLabel,
 } from '@/lib/grooming/groomingForm';
 import { log } from '@/lib/log';
+import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import { createGroomingRecord, fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
-import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Radius, Spacing } from '../../constants/theme';
-import { AuthErrorBanner } from '../auth/AuthErrorBanner';
+  FormChipRow,
+  FormPickerField,
+  FormSection,
+  FormSectionLabel,
+  FormSheetShell,
+  FormSwitchRow,
+  FormTextField,
+  formSheetStyles,
+} from '../sheets';
 import { ThemedDatePicker } from '../pet/ThemedDatePicker';
-import { SectionLabel, SheetColors, SheetHeroIllustration } from '../sheets';
-import { AppButton } from '../ui/AppButton';
 import { AppText } from '../ui/AppText';
+import { HomeTheme } from '../../constants/theme';
 
-const Accent = {
-  primary: '#E91E8C',
-  border: '#FFCDD2',
-  bg: '#FCE4F0',
-};
+const GROOMING_THEME = LOG_SHEET_THEMES.grooming;
 
 interface LogGroomingSheetProps {
   visible: boolean;
@@ -50,8 +41,6 @@ export function LogGroomingSheet({
   token,
   onSaved,
 }: LogGroomingSheetProps) {
-  const insets = useSafeAreaInsets();
-
   const [typeOptions, setTypeOptions] = useState<GroomingTypeOption[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
   const [loadingTypes, setLoadingTypes] = useState(false);
@@ -138,148 +127,81 @@ export function LogGroomingSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <>
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Log Grooming"
+        subtitle="Schedule a grooming task and set reminders."
+        icon={GROOMING_THEME.icon}
+        accentColor={GROOMING_THEME.color}
+        accentBg={GROOMING_THEME.bg}
+        saveLabel="Save Grooming"
+        onSave={handleSave}
+        saving={saving}
+        saveDisabled={loadingTypes || !groomingVisible || !groomingType}
+        error={error}
       >
-        <Pressable style={styles.overlay} onPress={onClose}>
-          <Pressable
-            style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.handle} />
-            <View style={styles.header}>
-              <AppText variant="h3" weight="800" color={SheetColors.title} style={styles.headerTitle}>
-                Grooming Tasks
-              </AppText>
-              <TouchableOpacity onPress={onClose} hitSlop={12}>
-                <Ionicons name="close" size={22} color={SheetColors.chipText} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.scrollContent}
+        {loadingTypes ? (
+          <ActivityIndicator color={GROOMING_THEME.color} style={{ marginVertical: 24 }} />
+        ) : !groomingVisible ? (
+          <AppText variant="bodySmall" color={HomeTheme.textMuted} style={{ marginVertical: 12 }}>
+            Grooming is not available for this pet species.
+          </AppText>
+        ) : (
+          <>
+            <FormSection
+              title="Task details"
+              icon="content-cut"
+              accentColor={GROOMING_THEME.color}
+              accentBg={GROOMING_THEME.bg}
             >
-              {error ? <AuthErrorBanner message={error} /> : null}
-
-              <SheetHeroIllustration
-                borderColor={Accent.border}
-                backgroundColor={Accent.bg}
-                heartColor={Accent.primary}
+              <FormSectionLabel text="TASK TYPE" />
+              <FormChipRow
+                options={typeOptions.map((o) => ({ value: o.value, label: o.label }))}
+                selected={groomingType}
+                onSelect={setGroomingType}
+                accentColor={GROOMING_THEME.color}
               />
 
-              {loadingTypes ? (
-                <ActivityIndicator color={Accent.primary} style={styles.loader} />
-              ) : !groomingVisible ? (
-                <View style={styles.unavailableBox}>
-                  <AppText variant="bodySmall" color={SheetColors.chipText}>
-                    Grooming is not available for this pet species.
-                  </AppText>
-                </View>
-              ) : (
-                <>
-                  <SectionLabel text="TASK TYPE" />
-                  <View style={styles.chipRow}>
-                    {typeOptions.map((option) => {
-                      const selected = groomingType === option.value;
-                      return (
-                        <TouchableOpacity
-                          key={option.value}
-                          style={[styles.chip, selected && { backgroundColor: Accent.primary }]}
-                          onPress={() => setGroomingType(option.value)}
-                          activeOpacity={0.85}
-                        >
-                          <AppText
-                            variant="bodySmall"
-                            weight="600"
-                            color={selected ? '#FFFFFF' : SheetColors.chipText}
-                          >
-                            {option.label}
-                          </AppText>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-
-                  <SectionLabel text="SCHEDULED DATE" />
-                  <View style={styles.dateFieldRow}>
-                    <TouchableOpacity
-                      style={[styles.pickerField, styles.dateField]}
-                      activeOpacity={0.85}
-                      onPress={() => setScheduledPickerVisible(true)}
-                    >
-                      <AppText
-                        variant="bodySmall"
-                        weight="600"
-                        color={scheduledDate ? SheetColors.inputText : SheetColors.placeholder}
-                      >
-                        {scheduledDate ? formatDateLabel(scheduledDate) : 'Optional'}
-                      </AppText>
-                      <Ionicons name="calendar-outline" size={18} color={SheetColors.label} />
-                    </TouchableOpacity>
-                    {scheduledDate ? (
-                      <TouchableOpacity
-                        style={styles.clearDateBtn}
-                        onPress={() => setScheduledDate(null)}
-                        hitSlop={8}
-                      >
-                        <Ionicons name="close-circle" size={20} color={SheetColors.label} />
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-
-                  <SectionLabel text="REMINDER" />
-                  <TouchableOpacity
-                    style={[styles.notifyBtn, reminderOn && { backgroundColor: Accent.primary }]}
-                    onPress={() => setReminderOn((v) => !v)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons
-                      name={reminderOn ? 'notifications' : 'notifications-off-outline'}
-                      size={20}
-                      color={reminderOn ? '#FFFFFF' : SheetColors.chipText}
-                    />
-                    <AppText
-                      variant="bodySmall"
-                      weight="700"
-                      color={reminderOn ? '#FFFFFF' : SheetColors.chipText}
-                    >
-                      {reminderOn ? 'On' : 'Off'}
-                    </AppText>
-                  </TouchableOpacity>
-
-                  <SectionLabel text="NOTES" />
-                  <TextInput
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholder="Specific instructions..."
-                    placeholderTextColor={SheetColors.placeholder}
-                    style={[styles.textInput, styles.notesInput]}
-                    multiline
-                    textAlignVertical="top"
-                  />
-                </>
-              )}
-            </ScrollView>
-
-            <View style={styles.footer}>
-              <AppButton
-                title="Save Grooming"
-                onPress={handleSave}
-                loading={saving}
-                disabled={saving || loadingTypes || !groomingVisible || !groomingType}
-                variant="success"
-                size="md"
-                style={[styles.saveBtn, { backgroundColor: Accent.primary }]}
-                textStyle={styles.saveBtnText}
+              <FormSectionLabel text="SCHEDULED DATE" />
+              <FormPickerField
+                label={scheduledDate ? formatDateLabel(scheduledDate) : 'Tap to pick a date'}
+                icon="calendar-outline"
+                onPress={() => setScheduledPickerVisible(true)}
               />
-            </View>
-          </Pressable>
-        </Pressable>
-      </KeyboardAvoidingView>
+            </FormSection>
+
+            <FormSection
+              title="Reminders"
+              icon="bell-outline"
+              accentColor={GROOMING_THEME.color}
+              accentBg={GROOMING_THEME.bg}
+            >
+              <FormSwitchRow
+                label="Remind me before appointment"
+                value={reminderOn}
+                onValueChange={setReminderOn}
+                accentColor={GROOMING_THEME.color}
+              />
+            </FormSection>
+
+            <FormSection
+              title="Notes"
+              icon="text-box-outline"
+              accentColor={GROOMING_THEME.color}
+              accentBg={GROOMING_THEME.bg}
+            >
+              <FormTextField
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Specific instructions..."
+                multiline
+              />
+            </FormSection>
+          </>
+        )}
+      </FormSheetShell>
 
       <ThemedDatePicker
         visible={scheduledPickerVisible}
@@ -291,108 +213,6 @@ export function LogGroomingSheet({
           setScheduledPickerVisible(false);
         }}
       />
-    </Modal>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: { flex: 1, justifyContent: 'flex-end' },
-  overlay: { flex: 1, backgroundColor: SheetColors.overlay, justifyContent: 'flex-end' },
-  sheet: {
-    backgroundColor: SheetColors.sheetBg,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    maxHeight: '92%',
-    paddingTop: Spacing.sm,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D0D0D0',
-    marginBottom: Spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  headerTitle: { flex: 1, fontSize: 22, lineHeight: 28 },
-  scrollContent: { paddingHorizontal: Spacing.lg, paddingBottom: Spacing.md },
-  loader: { marginVertical: Spacing.md },
-  unavailableBox: {
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.md },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.full,
-    backgroundColor: SheetColors.chipBg,
-  },
-  pickerField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    marginBottom: Spacing.md,
-    minHeight: 48,
-  },
-  dateFieldRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  dateField: {
-    flex: 1,
-    marginBottom: 0,
-  },
-  clearDateBtn: {
-    marginBottom: Spacing.md,
-    padding: 2,
-  },
-  notifyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingVertical: 14,
-    marginBottom: Spacing.md,
-    minHeight: 48,
-  },
-  textInput: {
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    fontSize: 14,
-    color: SheetColors.inputText,
-    marginBottom: Spacing.md,
-  },
-  notesInput: {
-    minHeight: 88,
-    paddingTop: Spacing.md,
-    borderWidth: 1,
-    borderColor: SheetColors.border,
-    backgroundColor: SheetColors.sheetBg,
-  },
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: SheetColors.border,
-  },
-  saveBtn: { width: '100%', borderRadius: Radius.full, minHeight: 52 },
-  saveBtnText: { fontSize: 16, fontWeight: '700' },
-});

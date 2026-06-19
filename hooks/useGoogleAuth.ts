@@ -1,21 +1,13 @@
 import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-import {
-  GoogleSignin,
-  isErrorWithCode,
-  isSuccessResponse,
-  statusCodes,
-} from '@react-native-google-signin/google-signin';
 import { useAuth, getAuthGoogleErrorMessage } from '@/contexts/AuthContext';
-import { configureGoogleSignIn } from '@/lib/auth/googleSignIn';
+import { ApiError } from '@/lib/api/errors';
+import {
+  isGoogleSignInSupported,
+  requestGoogleIdToken,
+  signOutGoogle,
+} from '@/lib/auth/googleSignIn';
 import { log } from '@/lib/log';
-
-class GoogleSignInCancelledError extends Error {
-  constructor() {
-    super('Google sign-in was cancelled');
-    this.name = 'GoogleSignInCancelledError';
-  }
-}
 
 export function useGoogleAuth() {
   const router = useRouter();
@@ -42,36 +34,18 @@ export function useGoogleAuth() {
       setGoogleLoading(true);
 
       try {
-        configureGoogleSignIn();
-        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-        const response = await GoogleSignin.signIn();
-
-        if (!isSuccessResponse(response)) {
-          throw new GoogleSignInCancelledError();
-        }
-
-        let idToken = response.data.idToken;
-        if (!idToken) {
-          const tokens = await GoogleSignin.getTokens();
-          idToken = tokens.idToken;
-        }
-        if (!idToken) {
-          throw new Error(
-            'Google did not return a sign-in token. Add a Web OAuth client in Google Cloud Console and set EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID in .env, then rebuild the APK.',
-          );
-        }
-
+        const idToken = await requestGoogleIdToken();
         const session = await loginWithGoogle(idToken);
         log.ok('GoogleAuth', 'UI success — routing', {
           activePetId: session.user.activePetId ?? null,
         });
         navigateAfterAuth(session.user.activePetId);
       } catch (error) {
-        if (error instanceof GoogleSignInCancelledError) {
+        if (error instanceof Error && error.name === 'GoogleSignInCancelledError') {
           return;
         }
-        if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) {
-          return;
+        if (error instanceof ApiError) {
+          await signOutGoogle().catch(() => {});
         }
         const message = getAuthGoogleErrorMessage(error);
         log.fail('GoogleAuth', 'UI error', message);
@@ -84,5 +58,9 @@ export function useGoogleAuth() {
     [loginWithGoogle, navigateAfterAuth],
   );
 
-  return { handleGoogleSignIn, googleLoading };
+  return {
+    handleGoogleSignIn,
+    googleLoading,
+    googleSignInAvailable: isGoogleSignInSupported(),
+  };
 }

@@ -28,7 +28,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getErrorMessage } from '@/lib/api/errors';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
-import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchSpecies, updatePet } from '@/services/pets/petApi';
+import { dateToApiDateString } from '@/lib/grooming/groomingForm';
+import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, fetchSpecies, updatePet } from '@/services/pets/petApi';
+import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { uploadPetImage } from '@/services/pets/uploadPetImage';
 import {
   hasRegisterPetFieldErrors,
@@ -187,6 +189,22 @@ export default function RegisterPetScreen() {
       return;
     }
 
+    if (isAddMode) {
+      const existingPets = await fetchPets(token);
+      const isPremium = user?.premiumStatus === 'premium';
+      if (!canAddAnotherPet(existingPets.length, isPremium)) {
+        Alert.alert(
+          'Premium required',
+          'Free accounts include one pet. Upgrade to Premium to add more pets.',
+          [
+            { text: 'Not now', style: 'cancel', onPress: () => router.back() },
+            { text: 'View Premium', onPress: () => router.push('/profile/premium') },
+          ],
+        );
+        return;
+      }
+    }
+
     const validation = validateRegisterPetForm(petName, species, breed, weight);
     if (hasRegisterPetFieldErrors(validation)) {
       log.fail('AddPet', 'Validation failed', { ...validation });
@@ -205,7 +223,7 @@ export default function RegisterPetScreen() {
         species,
         breed: breed.trim(),
         gender,
-        birthday: birthday.toISOString(),
+        birthday: dateToApiDateString(birthday),
         weight: weightNum,
         weightUnit: apiWeightUnit,
       };

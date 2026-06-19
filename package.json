@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "build:apk": "eas build --platform android --profile preview",
     "build:apk:prod": "eas build --platform android --profile production",
-    "build:apk:local": "eas build --platform android --profile preview --local"
+    "build:apk:local": "eas build --platform android --profile preview --local",
+    "build:release:local": "powershell -ExecutionPolicy Bypass -File ./scripts/build-android-release.ps1"
   },
   "dependencies": {
     "@apollo/client": "^4.1.9",

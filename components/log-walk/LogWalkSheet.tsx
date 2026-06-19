@@ -1,23 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { View } from 'react-native';
 import {
-  View,
-  StyleSheet,
-  Modal,
-  Pressable,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  Platform,
-  KeyboardAvoidingView,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { AppText } from '../ui/AppText';
-import { AppButton } from '../ui/AppButton';
-import { AuthErrorBanner } from '../auth/AuthErrorBanner';
-import { SheetHeroIllustration, SectionLabel, SheetOptionPicker, ThemedTimePicker } from '../sheets';
+  FormChipRow,
+  FormPickerField,
+  FormSection,
+  FormSectionLabel,
+  FormSheetShell,
+  FormSuffixInput,
+  FormSwitchRow,
+  FormTextField,
+  SheetOptionPicker,
+  ThemedTimePicker,
+  formSheetStyles,
+} from '../sheets';
 import type { SheetOption } from '../sheets';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -27,6 +23,7 @@ import {
   getReminderMinutesLabel,
   REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
+import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
   dateToTimeHHmm,
   defaultWalkTimeDate,
@@ -40,18 +37,7 @@ const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.
   label: option.label,
 }));
 
-const Colors = {
-  sheetBg: '#FFFFFF',
-  overlay: 'rgba(0,0,0,0.45)',
-  label: '#9E9E9E',
-  chipBg: '#F3F3F3',
-  chipText: '#5A5A5A',
-  inputBg: '#EFEFEF',
-  inputText: '#3A3A3A',
-  placeholder: '#9E9E9E',
-  border: '#E8E8E8',
-  title: '#1A1A1A',
-};
+const WALK_THEME = LOG_SHEET_THEMES.walk;
 
 interface LogWalkSheetProps {
   visible: boolean;
@@ -61,32 +47,6 @@ interface LogWalkSheetProps {
   onSaved?: () => void;
 }
 
-function InputWithSuffix({
-  value,
-  onChangeText,
-  suffix,
-  keyboardType = 'default',
-}: {
-  value: string;
-  onChangeText: (t: string) => void;
-  suffix: string;
-  keyboardType?: 'default' | 'decimal-pad' | 'number-pad';
-}) {
-  return (
-    <View style={styles.suffixInputWrap}>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        style={styles.suffixInput}
-      />
-      <AppText variant="bodySmall" weight="600" color={Colors.label} style={styles.suffixText}>
-        {suffix}
-      </AppText>
-    </View>
-  );
-}
-
 export function LogWalkSheet({
   visible,
   onClose,
@@ -94,8 +54,6 @@ export function LogWalkSheet({
   token,
   onSaved,
 }: LogWalkSheetProps) {
-  const insets = useSafeAreaInsets();
-
   const [walkTime, setWalkTime] = useState<string>(WALK_TIME_OPTIONS[0].value);
   const [duration, setDuration] = useState('45');
   const [walkClockTime, setWalkClockTime] = useState(defaultWalkTimeDate);
@@ -128,8 +86,9 @@ export function LogWalkSheet({
       setError('Add a pet before saving a walk schedule.');
       return;
     }
+
     const durationMinutes = parseDurationMinutes(duration);
-    if (!durationMinutes) {
+    if (durationMinutes === null) {
       setError('Enter a valid duration in minutes.');
       return;
     }
@@ -161,150 +120,89 @@ export function LogWalkSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <>
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Log Walk"
+        subtitle="Set a daily walk time and optional reminders."
+        icon={WALK_THEME.icon}
+        accentColor={WALK_THEME.color}
+        accentBg={WALK_THEME.bg}
+        saveLabel="Save Walk"
+        onSave={handleSave}
+        saving={saving}
+        error={error}
       >
-        <Pressable style={styles.overlay} onPress={onClose}>
-          <Pressable
-            style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.handle} />
+        <FormSection
+          title="Walk details"
+          icon="walk"
+          accentColor={WALK_THEME.color}
+          accentBg={WALK_THEME.bg}
+        >
+          <FormSectionLabel text="WHICH WALK?" />
+          <FormChipRow
+            options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            selected={walkTime}
+            onSelect={setWalkTime}
+            accentColor={WALK_THEME.color}
+          />
 
-            <View style={styles.header}>
-              <AppText variant="h3" weight="800" color={Colors.title} style={styles.headerTitle}>
-                Daily Walks
-              </AppText>
-              <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-                <Ionicons name="close" size={22} color={Colors.chipText} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.scrollContent}
-            >
-              {error ? <AuthErrorBanner message={error} /> : null}
-
-              <SheetHeroIllustration borderColor="#C8E6C9" backgroundColor="#F5F9F4" heartColor="#5CB35D" />
-
-              <SectionLabel text="WHICH WALK?" />
-              <View style={styles.chipRow}>
-                {WALK_TIME_OPTIONS.map((option) => {
-                  const selected = walkTime === option.value;
-                  return (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[styles.chip, selected && styles.chipSelected]}
-                      onPress={() => setWalkTime(option.value)}
-                      activeOpacity={0.85}
-                    >
-                      <AppText
-                        variant="bodySmall"
-                        weight="600"
-                        color={selected ? HomeTheme.white : Colors.chipText}
-                      >
-                        {option.label}
-                      </AppText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <View style={styles.twoColRow}>
-                <View style={styles.halfCol}>
-                  <SectionLabel text="TIME" />
-                  <TouchableOpacity
-                    style={styles.pickerField}
-                    activeOpacity={0.85}
-                    onPress={() => setTimePickerVisible(true)}
-                  >
-                    <AppText variant="bodySmall" weight="600" color={Colors.inputText}>
-                      {formatTimeDisplay(walkClockTime)}
-                    </AppText>
-                    <Ionicons name="time-outline" size={18} color={Colors.label} />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.halfCol}>
-                  <SectionLabel text="DURATION" />
-                  <InputWithSuffix
-                    value={duration}
-                    onChangeText={setDuration}
-                    suffix="min"
-                    keyboardType="number-pad"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.twoColRow}>
-                <View style={styles.halfCol}>
-                  <SectionLabel text="NOTIFICATIONS" />
-                  <TouchableOpacity
-                    style={[styles.notifyBtn, notificationsOn && styles.notifyBtnOn]}
-                    onPress={() => setNotificationsOn((v) => !v)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons
-                      name={notificationsOn ? 'notifications' : 'notifications-off-outline'}
-                      size={20}
-                      color={notificationsOn ? HomeTheme.white : Colors.chipText}
-                    />
-                    <AppText
-                      variant="bodySmall"
-                      weight="700"
-                      color={notificationsOn ? HomeTheme.white : Colors.chipText}
-                    >
-                      {notificationsOn ? 'On' : 'Off'}
-                    </AppText>
-                  </TouchableOpacity>
-                </View>
-                {notificationsOn ? (
-                  <View style={styles.halfCol}>
-                    <SectionLabel text="REMINDER" />
-                    <TouchableOpacity
-                      style={styles.pickerField}
-                      activeOpacity={0.85}
-                      onPress={() => setReminderPickerVisible(true)}
-                    >
-                      <AppText variant="bodySmall" weight="600" color={Colors.inputText}>
-                        {getReminderMinutesLabel(reminderMinutes)}
-                      </AppText>
-                      <Ionicons name="chevron-down" size={18} color={Colors.label} />
-                    </TouchableOpacity>
-                  </View>
-                ) : null}
-              </View>
-
-              <SectionLabel text="NOTES (OPTIONAL)" />
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Park route, leash preference..."
-                placeholderTextColor={Colors.placeholder}
-                style={[styles.textInput, styles.notesInput]}
-                multiline
-                textAlignVertical="top"
-              />
-            </ScrollView>
-
-            <View style={styles.footer}>
-              <AppButton
-                title="Save Walk Schedule"
-                onPress={handleSave}
-                loading={saving}
-                disabled={saving}
-                variant="success"
-                size="md"
-                style={styles.saveBtn}
-                textStyle={styles.saveBtnText}
+          <View style={formSheetStyles.twoColRow}>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="TIME" />
+              <FormPickerField
+                label={formatTimeDisplay(walkClockTime)}
+                icon="time-outline"
+                onPress={() => setTimePickerVisible(true)}
               />
             </View>
-          </Pressable>
-        </Pressable>
-      </KeyboardAvoidingView>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="DURATION" />
+              <FormSuffixInput
+                value={duration}
+                onChangeText={setDuration}
+                suffix="min"
+                keyboardType="number-pad"
+                placeholder="45"
+              />
+            </View>
+          </View>
+        </FormSection>
+
+        <FormSection
+          title="Reminders"
+          icon="bell-outline"
+          accentColor={WALK_THEME.color}
+          accentBg={WALK_THEME.bg}
+        >
+          <FormSwitchRow
+            label="Remind me before walk"
+            value={notificationsOn}
+            onValueChange={setNotificationsOn}
+            accentColor={WALK_THEME.color}
+          />
+          {notificationsOn ? (
+            <>
+              <FormSectionLabel text="REMINDER TIMING" />
+              <FormPickerField
+                label={getReminderMinutesLabel(reminderMinutes)}
+                icon="chevron-down"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </>
+          ) : null}
+        </FormSection>
+
+        <FormSection title="Notes" icon="text-box-outline" accentColor={WALK_THEME.color} accentBg={WALK_THEME.bg}>
+          <FormTextField
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Park route, leash preference..."
+            multiline
+          />
+        </FormSection>
+      </FormSheetShell>
 
       <SheetOptionPicker
         visible={reminderPickerVisible}
@@ -324,156 +222,6 @@ export function LogWalkSheet({
           setTimePickerVisible(false);
         }}
       />
-    </Modal>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: Colors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Colors.sheetBg,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    maxHeight: '92%',
-    paddingTop: Spacing.sm,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D0D0D0',
-    marginBottom: Spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.sm,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 22,
-    lineHeight: 28,
-    paddingRight: Spacing.sm,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.full,
-    backgroundColor: Colors.chipBg,
-  },
-  chipSelected: {
-    backgroundColor: HomeTheme.green,
-  },
-  twoColRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.xs,
-  },
-  halfCol: {
-    flex: 1,
-  },
-  pickerField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    marginBottom: Spacing.md,
-    minHeight: 48,
-  },
-  suffixInputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
-    minHeight: 48,
-  },
-  suffixInput: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.inputText,
-    fontWeight: '600',
-    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
-  },
-  suffixText: {
-    marginLeft: Spacing.xs,
-  },
-  notifyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
-    backgroundColor: Colors.inputBg,
-    borderRadius: Radius.md,
-    paddingVertical: 14,
-    marginBottom: Spacing.md,
-    minHeight: 48,
-  },
-  notifyBtnOn: {
-    backgroundColor: HomeTheme.green,
-  },
-  textInput: {
-    backgroundColor: Colors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    fontSize: 14,
-    color: Colors.inputText,
-    fontWeight: '500',
-    marginBottom: Spacing.md,
-  },
-  notesInput: {
-    minHeight: 88,
-    paddingTop: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.sheetBg,
-  },
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: Colors.border,
-  },
-  saveBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    backgroundColor: HomeTheme.green,
-    minHeight: 52,
-  },
-  saveBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

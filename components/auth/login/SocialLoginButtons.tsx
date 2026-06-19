@@ -11,6 +11,7 @@ interface SocialLoginButtonsProps {
   compact?: boolean;
   googleLoading?: boolean;
   googleLabel?: string;
+  googleDisabled?: boolean;
 }
 
 const buttonShadow = Platform.select({
@@ -32,6 +33,7 @@ export function SocialLoginButtons({
   compact = false,
   googleLoading = false,
   googleLabel = 'Continue with Google',
+  googleDisabled = false,
 }: SocialLoginButtonsProps) {
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
@@ -43,7 +45,7 @@ export function SocialLoginButtons({
         variant="success"
         size="sm"
         loading={googleLoading}
-        disabled={googleLoading}
+        disabled={googleLoading || googleDisabled}
         style={[styles.socialButton, compact && styles.socialButtonCompact]}
         textStyle={styles.socialButtonText}
         icon={<AntDesign name="google" size={18} color="#FFFFFF" />}

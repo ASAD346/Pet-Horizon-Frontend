@@ -21,7 +21,7 @@ export interface TabBarLayoutMetrics {
  */
 export function getTabBarMetrics(insetsBottom: number): TabBarLayoutMetrics {
   const bottomOffset = insetsBottom + TAB_BAR_FLOAT_GAP;
-  const clearance = bottomOffset + TAB_BAR_HEIGHT + Spacing.md;
+  const clearance = bottomOffset + TAB_BAR_HEIGHT + Spacing.xl + Spacing.sm;
   return {
     bottomOffset,
     clearance,

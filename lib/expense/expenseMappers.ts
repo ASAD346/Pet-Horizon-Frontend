@@ -107,13 +107,21 @@ export function currentMonthKey(date = new Date()): string {
   return `${y}-${m}`;
 }
 
-export function mapWeeklyBudgetDisplay(budget?: BudgetRemainingItem | null) {
+export function mapBudgetDisplay(
+  budget: BudgetRemainingItem | null | undefined,
+  periodType: 'weekly' | 'monthly' = 'weekly',
+) {
+  const periodLabel =
+    periodType === 'weekly' ? 'Weekly Spending Limit' : 'Monthly Spending Limit';
+
   if (!budget) {
     return {
+      periodLabel,
+      periodType,
       limitLabel: 'No budget set',
       spentPercent: 0,
       remainingLabel: 'Tap Edit Budget',
-      status: 'Set Budget',
+      status: 'Not set',
       hasBudget: false as const,
       budgetId: undefined as string | undefined,
       amountLimit: undefined as number | undefined,
@@ -126,14 +134,21 @@ export function mapWeeklyBudgetDisplay(budget?: BudgetRemainingItem | null) {
       : 0;
 
   return {
-    limitLabel: `${formatCurrency(budget.amountLimit)} /wk`,
+    periodLabel,
+    periodType,
+    limitLabel: formatCurrency(budget.amountLimit),
     spentPercent,
-    remainingLabel: `${formatCurrency(budget.remaining)} Left`,
-    status: budget.isOverBudget ? 'Over Budget' : 'On Track',
+    remainingLabel: `${formatCurrency(budget.remaining)} left`,
+    status: budget.isOverBudget ? 'Over budget' : 'On track',
     hasBudget: true as const,
     budgetId: budget.budgetId,
     amountLimit: budget.amountLimit,
   };
+}
+
+/** @deprecated Use mapBudgetDisplay */
+export function mapWeeklyBudgetDisplay(budget?: BudgetRemainingItem | null) {
+  return mapBudgetDisplay(budget, 'weekly');
 }
 
 export const API_EXPENSE_CATEGORIES = [

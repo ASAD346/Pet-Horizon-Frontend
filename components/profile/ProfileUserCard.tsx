@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { AppText } from '@/components/ui/AppText';
@@ -11,10 +11,9 @@ interface ProfileUserCardProps {
   name: string;
   email: string;
   imageUrl?: string;
-  onEditPress: () => void;
 }
 
-export function ProfileUserCard({ name, email, imageUrl, onEditPress }: ProfileUserCardProps) {
+export function ProfileUserCard({ name, email, imageUrl }: ProfileUserCardProps) {
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -34,11 +33,6 @@ export function ProfileUserCard({ name, email, imageUrl, onEditPress }: ProfileU
           </AppText>
         </View>
       </View>
-      <TouchableOpacity style={styles.editBtn} onPress={onEditPress} activeOpacity={0.8}>
-        <AppText variant="caption" weight="700" color={ProfileTheme.purple} style={styles.editText}>
-          EDIT PROFILE
-        </AppText>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -55,7 +49,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.md,
   },
   avatar: {
     width: 72,
@@ -71,12 +64,5 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     gap: 4,
-  },
-  editBtn: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-  },
-  editText: {
-    letterSpacing: 0.8,
   },
 });

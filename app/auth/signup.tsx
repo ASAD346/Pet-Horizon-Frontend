@@ -18,6 +18,7 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { useToast } from '@/contexts/ToastContext';
 import {
   registerAccount,
   resendVerificationEmail,
@@ -49,6 +50,7 @@ export default function SignupScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string; verify?: string }>();
   const { handleGoogleSignIn, googleLoading } = useGoogleAuth();
+  const { showToast } = useToast();
 
   const [step, setStep] = useState<SignupStep>('signup');
   const [fullName, setFullName] = useState('');
@@ -59,7 +61,6 @@ export default function SignupScreen() {
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [formInfo, setFormInfo] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors | VerifyEmailFieldErrors>({});
 
   useEffect(() => {
@@ -69,7 +70,6 @@ export default function SignupScreen() {
     }
     if (parseVerifyParam(params.verify)) {
       setStep('verify');
-      setFormInfo('Enter the verification code sent to your email.');
     }
   }, [params.email, params.verify]);
 
@@ -78,21 +78,25 @@ export default function SignupScreen() {
     setFieldErrors({});
   }, []);
 
-  const goToVerifyStep = useCallback((message: string, devOtp?: string) => {
-    setStep('verify');
-    setPassword('');
-    setConfirmPassword('');
-    setOtp('');
-    const devHint = devOtp ? ` Dev code: ${devOtp}` : '';
-    setFormInfo(`${message}${devHint}`);
-    setFormError(null);
-    setFieldErrors({});
-  }, []);
+  const goToVerifyStep = useCallback(
+    (message: string, devOtp?: string) => {
+      showToast(message);
+      if (devOtp) {
+        showToast(`Dev code: ${devOtp}`);
+      }
+      setStep('verify');
+      setPassword('');
+      setConfirmPassword('');
+      setOtp('');
+      setFormError(null);
+      setFieldErrors({});
+    },
+    [showToast],
+  );
 
   const handleSignUp = useCallback(async () => {
     Keyboard.dismiss();
     clearErrors();
-    setFormInfo(null);
 
     const validation = validateSignupForm(fullName, email, password, confirmPassword);
     if (hasSignupFieldErrors(validation)) {
@@ -155,14 +159,16 @@ export default function SignupScreen() {
 
     try {
       const result = await resendVerificationEmail(email);
-      const devHint = result.devOtp ? ` Dev code: ${result.devOtp}` : '';
-      setFormInfo(`${result.message}${devHint}`);
+      showToast(result.message);
+      if (result.devOtp) {
+        showToast(`Dev code: ${result.devOtp}`);
+      }
     } catch (error) {
       setFormError(getErrorMessage(error, 'Unable to resend the code. Please try again.'));
     } finally {
       setResendLoading(false);
     }
-  }, [clearErrors, email, otp]);
+  }, [clearErrors, email, showToast]);
 
   const handleLogin = useCallback(() => {
     router.back();
@@ -213,18 +219,11 @@ export default function SignupScreen() {
                 />
               ) : (
                 <VerifyEmailFormSection
-                  email={email}
                   otp={otp}
                   loading={loading}
                   resendLoading={resendLoading}
                   formError={formError}
-                  formInfo={formInfo}
                   fieldErrors={fieldErrors as VerifyEmailFieldErrors}
-                  emailEditable={!email.trim()}
-                  onEmailChange={(text) => {
-                    setEmail(text);
-                    if (formError || (fieldErrors as VerifyEmailFieldErrors).email) clearErrors();
-                  }}
                   onOtpChange={(text) => {
                     setOtp(text.replace(/\D/g, '').slice(0, 6));
                     if (formError || (fieldErrors as VerifyEmailFieldErrors).otp) clearErrors();
@@ -241,7 +240,6 @@ export default function SignupScreen() {
                   googleLoading={googleLoading}
                   onGooglePress={() => {
                     clearErrors();
-                    setFormInfo(null);
                     void handleGoogleSignIn(setFormError);
                   }}
                   onApplePress={() => {}}

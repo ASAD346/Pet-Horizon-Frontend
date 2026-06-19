@@ -158,6 +158,9 @@ export function getAuthGoogleErrorMessage(error: unknown): string {
     if (error.status === 503) {
       return 'Google sign-in is not configured on the server yet. Please try email login.';
     }
+    if (error.status === 404) {
+      return 'Google sign-in is not available on the server yet. Ask the developer to redeploy the backend with the latest code.';
+    }
     return error.message;
   }
   if (error instanceof Error) {

@@ -6,5 +6,6 @@ export { UpNextSection } from './UpNextSection';
 export { TodaysScheduleSection } from './TodaysScheduleSection';
 export { RecentActivitySection } from './RecentActivitySection';
 export { GroomingAlertsRow } from './GroomingAlertsRow';
+export { PetBirthdayBanner } from './PetBirthdayBanner';
 export { ColorIconBadge } from './ColorIconBadge';
 export { SectionHeader } from './SectionHeader';

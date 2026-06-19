@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { fetchGroomingAlerts } from '@/services/grooming/groomingApi';
@@ -12,23 +12,24 @@ interface GroomingAlertsRowProps {
   onAlertPress?: (record: GroomingRecord) => void;
 }
 
+function groomingTypeLabel(type: string): string {
+  if (!type) return 'Grooming';
+  return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+}
+
 export function GroomingAlertsRow({ token, petId, onAlertPress }: GroomingAlertsRowProps) {
   const [alerts, setAlerts] = useState<GroomingRecord[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const reload = useCallback(async () => {
     if (!token || !petId) {
       setAlerts([]);
       return;
     }
-    setLoading(true);
     try {
       const data = await fetchGroomingAlerts(token, { petId, withinDays: 7 });
       setAlerts(data.slice(0, 2));
     } catch {
       setAlerts([]);
-    } finally {
-      setLoading(false);
     }
   }, [token, petId]);
 
@@ -36,37 +37,60 @@ export function GroomingAlertsRow({ token, petId, onAlertPress }: GroomingAlerts
     reload();
   }, [reload]);
 
-  if (loading) {
-    return <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />;
-  }
-
   if (alerts.length === 0) {
     return null;
   }
 
   return (
     <View style={styles.row}>
-      {alerts.map((alert) => (
-        <View key={alert._id} style={styles.card}>
-          <View style={styles.iconWrap}>
-            <Ionicons name="cut-outline" size={18} color={HomeTheme.cardGreen} />
-          </View>
-          <AppText variant="bodySmall" weight="800" color={HomeTheme.text} numberOfLines={1}>
-            Grooming {alert.alertType === 'overdue' ? 'Overdue' : 'Due'}
-          </AppText>
-          <AppText variant="caption" color={HomeTheme.textMuted} numberOfLines={2} style={styles.subtitle}>
-            {alert.groomingType}
-            {alert.remainingDays != null ? ` · ${alert.remainingDays}d` : ''}
-          </AppText>
-          {onAlertPress ? (
-            <TouchableOpacity onPress={() => onAlertPress(alert)}>
-              <AppText variant="caption" weight="700" color={HomeTheme.cardGreen}>
-                Manage
+      {alerts.map((alert) => {
+        const overdue = alert.alertType === 'overdue';
+        const accent = overdue ? '#E53935' : '#7B1FA2';
+        const cardBg = overdue ? '#FFF5F5' : '#F8F0FC';
+
+        return (
+          <TouchableOpacity
+            key={alert._id}
+            style={styles.cardWrap}
+            activeOpacity={0.9}
+            onPress={() => onAlertPress?.(alert)}
+            disabled={!onAlertPress}
+          >
+            <View style={[styles.card, { backgroundColor: cardBg }]}>
+              <View style={styles.topRow}>
+                <View style={[styles.iconWrap, { backgroundColor: `${accent}18` }]}>
+                  <MaterialCommunityIcons name="content-cut" size={20} color={accent} />
+                </View>
+                <View style={[styles.badge, { backgroundColor: `${accent}20` }]}>
+                  <AppText variant="caption" weight="800" color={accent}>
+                    {overdue ? 'Overdue' : 'Due soon'}
+                  </AppText>
+                </View>
+              </View>
+
+              <AppText variant="bodySmall" weight="800" color={HomeTheme.text} numberOfLines={1}>
+                {groomingTypeLabel(alert.groomingType)}
               </AppText>
-            </TouchableOpacity>
-          ) : null}
-        </View>
-      ))}
+              <AppText variant="caption" color={HomeTheme.textMuted} numberOfLines={1} style={styles.subtitle}>
+                {alert.remainingDays != null
+                  ? overdue
+                    ? `${Math.abs(alert.remainingDays)} day${Math.abs(alert.remainingDays) === 1 ? '' : 's'} overdue`
+                    : `Due in ${alert.remainingDays} day${alert.remainingDays === 1 ? '' : 's'}`
+                  : 'Schedule grooming'}
+              </AppText>
+
+              {onAlertPress ? (
+                <View style={styles.actionRow}>
+                  <AppText variant="caption" weight="700" color={accent}>
+                    Manage schedule
+                  </AppText>
+                  <Ionicons name="chevron-forward" size={14} color={accent} />
+                </View>
+              ) : null}
+            </View>
+          </TouchableOpacity>
+        );
+      })}
     </View>
   );
 }
@@ -77,28 +101,42 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.lg,
   },
-  loader: {
-    marginBottom: Spacing.lg,
+  cardWrap: {
+    flex: 1,
   },
   card: {
-    flex: 1,
-    backgroundColor: HomeTheme.surface,
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: HomeTheme.surfaceMuted,
+    borderColor: 'rgba(0,0,0,0.06)',
+    minHeight: 132,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
   },
   iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#E8F5E9',
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.sm,
+  },
+  badge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
   },
   subtitle: {
     marginTop: 4,
     marginBottom: Spacing.sm,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 'auto',
   },
 });

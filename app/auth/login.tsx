@@ -18,7 +18,7 @@ import {
   SocialLoginButtons,
 } from '@/components/auth/login';
 import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
-import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useToast } from '@/contexts/ToastContext';
 import { useAuth, getAuthLoginErrorMessage } from '@/contexts/AuthContext';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
@@ -34,6 +34,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ verified?: string; message?: string }>();
   const { login, isAuthenticated, isBootstrapping } = useAuth();
+  const { showToast } = useToast();
   const { handleGoogleSignIn, googleLoading } = useGoogleAuth();
 
   useAuthEntryRedirect();
@@ -41,7 +42,6 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const [showVerifyAction, setShowVerifyAction] = useState(false);
@@ -51,9 +51,9 @@ export default function LoginScreen() {
     const verified = params.verified === '1' || params.verified === 'true';
     const message = Array.isArray(params.message) ? params.message[0] : params.message;
     if (verified && message) {
-      setSuccessMessage(message);
+      showToast(message);
     }
-  }, [params.message, params.verified]);
+  }, [params.message, params.verified, showToast]);
 
   const clearErrors = useCallback(() => {
     setFormError(null);
@@ -158,8 +158,6 @@ export default function LoginScreen() {
             </Animated.View>
 
             <Animated.View entering={FadeInDown.delay(150).duration(700)} style={styles.formBlock}>
-              {successMessage ? <AuthInfoBanner message={successMessage} /> : null}
-
               <LoginFormSection
                 email={email}
                 password={password}

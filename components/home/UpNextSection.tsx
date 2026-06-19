@@ -239,15 +239,17 @@ export function UpNextSection({
     [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 
-  const useDashboard = dashboardTasks.length > 0;
+  const hasLocalSchedules =
+    feedingSchedules.length > 0 ||
+    walkSchedules.length > 0 ||
+    medicineSchedules.length > 0 ||
+    groomingRecords.length > 0 ||
+    vaccinationSchedules.length > 0;
+
+  const useDashboard = !hasLocalSchedules && dashboardTasks.length > 0;
 
   if (loading) {
-    return (
-      <View style={styles.section}>
-        <SectionHeader title="Up Next" />
-        <ActivityIndicator color={HomeTheme.green} style={styles.loader} />
-      </View>
-    );
+    return null;
   }
 
   if (!useDashboard && pending.length === 0) {
@@ -379,12 +381,15 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingRight: Spacing.sm,
+    paddingBottom: Spacing.xs,
     gap: Spacing.sm,
+    alignItems: 'stretch',
   },
   card: {
     width: 260,
-    marginBottom: 0,
+    marginBottom: Spacing.xs,
     marginRight: Spacing.sm,
+    alignSelf: 'stretch',
   },
   textBlock: {
     flex: 1,

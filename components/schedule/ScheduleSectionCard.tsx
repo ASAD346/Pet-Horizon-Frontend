@@ -4,7 +4,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme } from '@/constants/theme';
 import { scheduleFieldStyles } from './scheduleStyles';
-import { sectionDisplayTitle, type ScheduleSectionTheme } from './scheduleTheme';
+import { type ScheduleSectionTheme } from './scheduleTheme';
 
 interface ScheduleSectionCardProps {
   section: ScheduleSectionTheme;
@@ -29,7 +29,7 @@ export function ScheduleSectionCard({
         </View>
         <View style={styles.titleBlock}>
           <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-            {sectionDisplayTitle(section)}
+            {section.title}
           </AppText>
         </View>
         <Switch

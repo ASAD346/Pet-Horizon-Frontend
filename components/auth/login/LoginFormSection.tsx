@@ -55,6 +55,7 @@ export function LoginFormSection({
         value={password}
         onChangeText={onPasswordChange}
         secureTextEntry
+        showPasswordToggle
         error={fieldErrors?.password}
       />
 

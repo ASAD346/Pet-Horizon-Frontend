@@ -3,21 +3,16 @@ import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AppButton } from '../../ui/AppButton';
 import { AuthErrorBanner } from '../AuthErrorBanner';
-import { AuthInfoBanner } from '../AuthInfoBanner';
 import { AuthTextField } from '../AuthTextField';
 import { LoginTheme, Spacing } from '../../../constants/theme';
 import type { VerifyEmailFieldErrors } from '../../../services/auth/validation';
 
 interface VerifyEmailFormSectionProps {
-  email: string;
   otp: string;
   loading: boolean;
   resendLoading?: boolean;
   formError?: string | null;
-  formInfo?: string | null;
   fieldErrors?: VerifyEmailFieldErrors;
-  emailEditable?: boolean;
-  onEmailChange: (text: string) => void;
   onOtpChange: (text: string) => void;
   onVerify: () => void;
   onResendCode: () => void;
@@ -37,15 +32,11 @@ const buttonShadow = Platform.select({
 });
 
 export function VerifyEmailFormSection({
-  email,
   otp,
   loading,
   resendLoading = false,
   formError,
-  formInfo,
   fieldErrors,
-  emailEditable = false,
-  onEmailChange,
   onOtpChange,
   onVerify,
   onResendCode,
@@ -62,20 +53,7 @@ export function VerifyEmailFormSection({
         Enter the 6-digit code we sent to your email.
       </AppText>
 
-      {formInfo ? <AuthInfoBanner message={formInfo} /> : null}
       {formError ? <AuthErrorBanner message={formError} /> : null}
-
-      <AuthTextField
-        placeholder="Email Address"
-        icon="mail-outline"
-        value={email}
-        onChangeText={onEmailChange}
-        keyboardType="email-address"
-        compact
-        error={fieldErrors?.email}
-        autoCapitalize="none"
-        editable={emailEditable}
-      />
 
       <AuthTextField
         placeholder="Verification code"
@@ -91,7 +69,7 @@ export function VerifyEmailFormSection({
       <TouchableOpacity
         style={styles.resendRow}
         onPress={onResendCode}
-        disabled={busy || !email.trim()}
+        disabled={busy}
       >
         <AppText variant="bodySmall" color={LoginTheme.green} weight="600">
           {resendLoading ? 'Sending code…' : 'Resend code'}

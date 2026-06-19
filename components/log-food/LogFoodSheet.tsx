@@ -12,46 +12,32 @@ import {
     unitOptionsForSpecies,
 } from '@/lib/feeding/feedingForm';
 import { log } from '@/lib/log';
+import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
-import { Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    View,
-} from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
-import { AuthErrorBanner } from '../auth/AuthErrorBanner';
+  FormChipRow,
+  FormPickerField,
+  FormSection,
+  FormSectionLabel,
+  FormSheetShell,
+  FormSwitchRow,
+  FormTextField,
+  SheetOptionPicker,
+  ThemedTimePicker,
+  formSheetStyles,
+} from '../sheets';
 import type { SheetOption } from '../sheets';
-import { SectionLabel, SheetHeroIllustration, SheetOptionPicker, ThemedTimePicker } from '../sheets';
-import { AppButton } from '../ui/AppButton';
 import { AppText } from '../ui/AppText';
+import { HomeTheme } from '../../constants/theme';
 
 const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
   value: String(option.value),
   label: option.label,
 }));
 
-const LogFoodColors = {
-  sheetBg: '#FFFFFF',
-  overlay: 'rgba(0,0,0,0.45)',
-  label: '#9E9E9E',
-  chipBg: '#F3F3F3',
-  chipText: '#5A5A5A',
-  inputBg: '#EFEFEF',
-  inputText: '#3A3A3A',
-  placeholder: '#9E9E9E',
-  border: '#E8E8E8',
-  title: '#1A1A1A',
-};
+const FOOD_THEME = LOG_SHEET_THEMES.food;
 
 interface LogFoodSheetProps {
   visible: boolean;
@@ -68,8 +54,6 @@ export function LogFoodSheet({
   token,
   onSaved,
 }: LogFoodSheetProps) {
-  const insets = useSafeAreaInsets();
-
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [mealType, setMealType] = useState('');
@@ -202,188 +186,114 @@ export function LogFoodSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <>
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Log Food"
+        subtitle="Record a meal and set optional feeding reminders."
+        icon={FOOD_THEME.icon}
+        accentColor={FOOD_THEME.color}
+        accentBg={FOOD_THEME.bg}
+        saveLabel="Save Feeding"
+        onSave={handleSave}
+        saving={saving}
+        saveDisabled={featuresLoading || !mealType || !unit}
+        error={error}
       >
-        <Pressable style={styles.overlay} onPress={onClose}>
-          <Pressable
-            style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            <View style={styles.handle} />
+        <FormSection
+          title="Meal details"
+          icon="bowl-mix-outline"
+          accentColor={FOOD_THEME.color}
+          accentBg={FOOD_THEME.bg}
+        >
+          <FormSectionLabel text="MEAL TYPE" />
+          {featuresLoading ? (
+            <ActivityIndicator color={FOOD_THEME.color} style={{ marginBottom: 12 }} />
+          ) : mealTypeOptions.length === 0 ? (
+            <AppText variant="bodySmall" color={HomeTheme.textMuted} style={{ marginBottom: 12 }}>
+              No meal types available for this pet.
+            </AppText>
+          ) : (
+            <FormChipRow
+              options={mealTypeOptions}
+              selected={mealType}
+              onSelect={setMealType}
+              accentColor={FOOD_THEME.color}
+            />
+          )}
 
-            <View style={styles.header}>
-              <AppText variant="h3" weight="800" color={LogFoodColors.title} style={styles.headerTitle}>
-                Log Food
-              </AppText>
-              <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.closeBtn}>
-                <Ionicons name="close" size={22} color={LogFoodColors.chipText} />
-              </TouchableOpacity>
-            </View>
+          <FormSectionLabel text="AMOUNT" />
+          <FormTextField
+            value={amount}
+            onChangeText={setAmount}
+            keyboardType="decimal-pad"
+            placeholder="Enter portion amount"
+          />
 
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.scrollContent}
-            >
-              {error ? <AuthErrorBanner message={error} /> : null}
+          <FormSectionLabel text="UNIT" />
+          {featuresLoading ? (
+            <ActivityIndicator color={FOOD_THEME.color} style={{ marginBottom: 12 }} />
+          ) : unitOptions.length === 0 ? (
+            <AppText variant="bodySmall" color={HomeTheme.textMuted}>
+              No units available for this pet.
+            </AppText>
+          ) : (
+            <FormChipRow
+              options={unitOptions}
+              selected={unit}
+              onSelect={setUnit}
+              accentColor={FOOD_THEME.color}
+            />
+          )}
+        </FormSection>
 
-              <SheetHeroIllustration
-                borderColor="#FFE0B2"
-                backgroundColor="#FFF8E1"
-                heartColor="#F5A623"
-              />
-
-              <SectionLabel text="MEAL TYPE" />
-              {featuresLoading ? (
-                <ActivityIndicator color={HomeTheme.green} style={styles.mealLoader} />
-              ) : mealTypeOptions.length === 0 ? (
-                <AppText variant="bodySmall" color={LogFoodColors.label} style={styles.mealEmpty}>
-                  No meal types available for this pet.
-                </AppText>
-              ) : (
-                <View style={styles.chipRow}>
-                  {mealTypeOptions.map((option) => {
-                    const selected = mealType === option.value;
-                    return (
-                      <TouchableOpacity
-                        key={option.value}
-                        style={[styles.chip, selected && styles.chipSelected]}
-                        onPress={() => setMealType(option.value)}
-                        activeOpacity={0.85}
-                      >
-                        <AppText
-                          variant="bodySmall"
-                          weight="600"
-                          color={selected ? HomeTheme.white : LogFoodColors.chipText}
-                        >
-                          {option.label}
-                        </AppText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-
-              <AppText variant="bodySmall" weight="700" color={LogFoodColors.title} style={styles.amountLabel}>
-                Amount
-              </AppText>
-              <TextInput
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="decimal-pad"
-                style={styles.textInput}
-              />
-
-              <SectionLabel text="UNIT" />
-              {featuresLoading ? (
-                <ActivityIndicator color={HomeTheme.green} style={styles.mealLoader} />
-              ) : unitOptions.length === 0 ? (
-                <AppText variant="bodySmall" color={LogFoodColors.label} style={styles.mealEmpty}>
-                  No units available for this pet.
-                </AppText>
-              ) : (
-                <View style={styles.chipRow}>
-                  {unitOptions.map((option) => {
-                    const selected = unit === option.value;
-                    return (
-                      <TouchableOpacity
-                        key={option.value}
-                        style={[styles.chip, selected && styles.chipSelected]}
-                        onPress={() => setUnit(option.value)}
-                        activeOpacity={0.85}
-                      >
-                        <AppText
-                          variant="bodySmall"
-                          weight="600"
-                          color={selected ? HomeTheme.white : LogFoodColors.chipText}
-                        >
-                          {option.label}
-                        </AppText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              )}
-
-              <View style={styles.twoColRow}>
-                <View style={styles.halfCol}>
-                  <SectionLabel text="TIME" />
-                  <TouchableOpacity
-                    style={styles.pickerField}
-                    activeOpacity={0.85}
-                    onPress={() => setFeedingTimePickerVisible(true)}
-                  >
-                    <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
-                      {formatTimeDisplay(feedingTime)}
-                    </AppText>
-                    <Ionicons name="time-outline" size={18} color={LogFoodColors.label} />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.halfCol}>
-                  <SectionLabel text="NOTIFICATIONS" />
-                  <TouchableOpacity
-                    style={styles.pickerField}
-                    activeOpacity={0.85}
-                    onPress={() => setNotificationsOn((v) => !v)}
-                  >
-                    <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
-                      {notificationsOn ? 'On' : 'Off'}
-                    </AppText>
-                    <Ionicons
-                      name={notificationsOn ? 'notifications-outline' : 'notifications-off-outline'}
-                      size={18}
-                      color={LogFoodColors.label}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {notificationsOn ? (
-                <>
-                  <SectionLabel text="REMINDER" />
-                  <TouchableOpacity
-                    style={styles.pickerField}
-                    activeOpacity={0.85}
-                    onPress={() => setReminderPickerVisible(true)}
-                  >
-                    <AppText variant="bodySmall" weight="600" color={LogFoodColors.inputText}>
-                      {getReminderMinutesLabel(reminderMinutes)}
-                    </AppText>
-                    <Ionicons name="chevron-down" size={18} color={LogFoodColors.label} />
-                  </TouchableOpacity>
-                </>
-              ) : null}
-
-              <SectionLabel text="NOTES (OPTIONAL)" />
-              <TextInput
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Add extra details..."
-                placeholderTextColor={LogFoodColors.placeholder}
-                style={[styles.textInput, styles.notesInput]}
-                multiline
-                textAlignVertical="top"
-              />
-            </ScrollView>
-
-            <View style={styles.footer}>
-              <AppButton
-                title="Save Feeding"
-                onPress={handleSave}
-                loading={saving}
-                disabled={saving || featuresLoading || !mealType || !unit}
-                variant="success"
-                size="md"
-                style={styles.saveBtn}
-                textStyle={styles.saveBtnText}
+        <FormSection
+          title="Schedule & reminders"
+          icon="calendar-clock"
+          accentColor={FOOD_THEME.color}
+          accentBg={FOOD_THEME.bg}
+        >
+          <View style={formSheetStyles.twoColRow}>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="TIME" />
+              <FormPickerField
+                label={formatTimeDisplay(feedingTime)}
+                icon="time-outline"
+                onPress={() => setFeedingTimePickerVisible(true)}
               />
             </View>
-          </Pressable>
-        </Pressable>
-      </KeyboardAvoidingView>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="NOTIFY" />
+              <FormSwitchRow
+                label="Remind me"
+                value={notificationsOn}
+                onValueChange={setNotificationsOn}
+                accentColor={FOOD_THEME.color}
+              />
+            </View>
+          </View>
+          {notificationsOn ? (
+            <>
+              <FormSectionLabel text="REMINDER" />
+              <FormPickerField
+                label={getReminderMinutesLabel(reminderMinutes)}
+                icon="chevron-down"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </>
+          ) : null}
+        </FormSection>
+
+        <FormSection title="Notes" icon="text-box-outline" accentColor={FOOD_THEME.color} accentBg={FOOD_THEME.bg}>
+          <FormTextField
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Extra details about this meal..."
+            multiline
+          />
+        </FormSection>
+      </FormSheetShell>
 
       <SheetOptionPicker
         visible={reminderPickerVisible}
@@ -403,132 +313,6 @@ export function LogFoodSheet({
           setFeedingTimePickerVisible(false);
         }}
       />
-    </Modal>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: LogFoodColors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: LogFoodColors.sheetBg,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    maxHeight: '92%',
-    paddingTop: Spacing.sm,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D0D0D0',
-    marginBottom: Spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.md,
-  },
-  headerTitle: {
-    flex: 1,
-    fontSize: 22,
-    lineHeight: 28,
-    paddingRight: Spacing.sm,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  mealLoader: {
-    marginBottom: Spacing.md,
-  },
-  mealEmpty: {
-    marginBottom: Spacing.md,
-  },
-  chip: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.full,
-    backgroundColor: LogFoodColors.chipBg,
-  },
-  chipSelected: {
-    backgroundColor: HomeTheme.green,
-  },
-  textInput: {
-    backgroundColor: LogFoodColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    fontSize: 14,
-    color: LogFoodColors.inputText,
-    fontWeight: '500',
-    marginBottom: Spacing.md,
-  },
-  amountLabel: {
-    marginBottom: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  twoColRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  halfCol: {
-    flex: 1,
-  },
-  pickerField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: LogFoodColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    marginBottom: Spacing.md,
-  },
-  notesInput: {
-    minHeight: 88,
-    paddingTop: Spacing.md,
-    borderWidth: 1,
-    borderColor: LogFoodColors.border,
-    backgroundColor: LogFoodColors.sheetBg,
-  },
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: LogFoodColors.border,
-  },
-  saveBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    backgroundColor: HomeTheme.green,
-    minHeight: 52,
-  },
-  saveBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

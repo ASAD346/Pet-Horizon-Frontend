@@ -5,8 +5,9 @@ export const ScheduleTheme = {
   cardBg: '#FFFFFF',
   text: '#1A1A1A',
   textMuted: '#9E9E9E',
-  fieldBg: '#F5F5F5',
-  fieldBorder: '#EEEEEE',
+  fieldBg: '#FFFFFF',
+  fieldBorder: '#D4D4D4',
+  fieldBorderFocus: '#B0B0B0',
   dashedBorder: '#D0D0D0',
   ctaOrange: '#F48024',
   ctaOrangeShadow: '#D96A12',
@@ -76,5 +77,5 @@ export const SCHEDULE_SECTIONS: ScheduleSectionTheme[] = [
 ];
 
 export function sectionDisplayTitle(section: ScheduleSectionTheme): string {
-  return section.optional ? `${section.title} (Optional)` : section.title;
+  return section.title;
 }

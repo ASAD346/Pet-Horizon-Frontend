@@ -1,4 +1,4 @@
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { isExpoGo } from '@/lib/runtime/isExpoGo';
 
 /** Android OAuth client (package + SHA-1 in Google Cloud Console). */
 export const GOOGLE_ANDROID_CLIENT_ID =
@@ -13,11 +13,23 @@ export const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ||
   '162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com';
 
+const EXPO_GO_MESSAGE =
+  'Continue with Google requires the Pet Horizon APK (EAS build). It does not work in Expo Go — install the latest APK on your phone.';
+
 let configured = false;
 
-export function configureGoogleSignIn(): void {
-  if (configured) return;
+export function isGoogleSignInSupported(): boolean {
+  return !isExpoGo();
+}
 
+export function getGoogleSignInUnavailableMessage(): string {
+  return EXPO_GO_MESSAGE;
+}
+
+export async function configureGoogleSignIn(): Promise<void> {
+  if (configured || !isGoogleSignInSupported()) return;
+
+  const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
   const webClientId = GOOGLE_WEB_CLIENT_ID || GOOGLE_ANDROID_CLIENT_ID;
   GoogleSignin.configure({
     webClientId,
@@ -26,6 +38,57 @@ export function configureGoogleSignIn(): void {
   configured = true;
 }
 
+export async function requestGoogleIdToken(): Promise<string> {
+  if (!isGoogleSignInSupported()) {
+    throw new Error(EXPO_GO_MESSAGE);
+  }
+
+  const {
+    GoogleSignin,
+    isSuccessResponse,
+  } = await import('@react-native-google-signin/google-signin');
+
+  try {
+    await configureGoogleSignIn();
+    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+    const response = await GoogleSignin.signIn();
+
+    if (!isSuccessResponse(response)) {
+      const cancelled = new Error('Google sign-in was cancelled');
+      cancelled.name = 'GoogleSignInCancelledError';
+      throw cancelled;
+    }
+
+    let idToken = response.data.idToken;
+    if (!idToken) {
+      const tokens = await GoogleSignin.getTokens();
+      idToken = tokens.idToken;
+    }
+    if (!idToken) {
+      throw new Error(
+        'Google did not return a sign-in token. Rebuild the APK after setting EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID.',
+      );
+    }
+
+    return idToken;
+  } catch (error) {
+    const { isErrorWithCode, statusCodes } = await import('@react-native-google-signin/google-signin');
+    if (isErrorWithCode(error) && error.code === statusCodes.SIGN_IN_CANCELLED) {
+      const cancelled = new Error('Google sign-in was cancelled');
+      cancelled.name = 'GoogleSignInCancelledError';
+      throw cancelled;
+    }
+    throw error;
+  }
+}
+
 export function isGoogleSignInConfigured(): boolean {
   return Boolean(GOOGLE_WEB_CLIENT_ID || GOOGLE_ANDROID_CLIENT_ID);
+}
+
+/** Clears cached Google account so the account picker shows again after a failed login. */
+export async function signOutGoogle(): Promise<void> {
+  if (!isGoogleSignInSupported()) return;
+  const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+  await GoogleSignin.signOut();
 }

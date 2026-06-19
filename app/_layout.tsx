@@ -1,10 +1,11 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AppStatusBar } from '@/components/ui/AppStatusBar';
 import 'react-native-reanimated';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { PushNotificationRegistrar } from '@/components/PushNotificationRegistrar';
 import { useColorScheme } from '../hooks/use-color-scheme';
 
@@ -13,6 +14,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+    <ToastProvider>
     <AuthProvider>
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <PushNotificationRegistrar />
@@ -28,9 +30,10 @@ export default function RootLayout() {
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
       </Stack>
-      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+      <AppStatusBar />
     </ThemeProvider>
     </AuthProvider>
+    </ToastProvider>
     </SafeAreaProvider>
   );
 }
