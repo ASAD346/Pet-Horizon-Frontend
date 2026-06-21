@@ -26,8 +26,12 @@ import {
   formatJoinCode,
   isPetOwner,
 } from '@/lib/family/formatters';
+import {
+  buildInviteShareMessage,
+  resolveInviteAppLink,
+  resolveInviteWebLink,
+} from '@/lib/family/inviteLinks';
 import { getErrorMessage } from '@/lib/api/errors';
-import { generatePetInvite } from '@/services/family/familyApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
@@ -42,8 +46,6 @@ export function FamilyHubView() {
 
   const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
   const [invite, setInvite] = useState<GenerateInviteResponse | null>(null);
-  const [inviteLoading, setInviteLoading] = useState(false);
-  const [inviteError, setInviteError] = useState<string | null>(null);
   const [guestMembers, setGuestMembers] = useState<FamilyMemberDisplay[]>([]);
   const [guestLoading, setGuestLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -98,44 +100,22 @@ export function FamilyHubView() {
     }
   }, [token, pet?._id, isOwner, user, shouldBlockGuestUI, markGuestLoaded, resetGuestScope]);
 
-  const loadInvitePreview = useCallback(async () => {
-    if (!canInvite || !pet?._id || !token) {
-      setInvite(null);
-      setInviteError(null);
-      return;
-    }
-
-    setInviteLoading(true);
-    setInviteError(null);
-    try {
-      const data = await generatePetInvite(token, { petId: pet._id });
-      setInvite(data);
-    } catch (err) {
-      setInvite(null);
-      setInviteError(getErrorMessage(err));
-    } finally {
-      setInviteLoading(false);
-    }
-  }, [canInvite, pet?._id, token]);
-
-  useEffect(() => {
-    loadInvitePreview();
-  }, [loadInvitePreview]);
-
   useEffect(() => {
     loadGuestAccess();
   }, [loadGuestAccess]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([reloadPet(), reloadMembers(), loadInvitePreview(), loadGuestAccess()]);
+    await Promise.all([reloadPet(), reloadMembers(), loadGuestAccess()]);
     setRefreshing(false);
-  }, [reloadPet, reloadMembers, loadInvitePreview, loadGuestAccess]);
+  }, [reloadPet, reloadMembers, loadGuestAccess]);
 
   const handleShareCode = useCallback(async () => {
     if (!invite) return;
+    const webLink = resolveInviteWebLink(invite);
+    const appLink = resolveInviteAppLink(invite);
     try {
-      await Share.share({ message: invite.shareText });
+      await Share.share({ message: buildInviteShareMessage(invite, webLink, appLink) });
     } catch {
       // User dismissed share sheet.
     }
@@ -176,12 +156,6 @@ export function FamilyHubView() {
           </View>
         ) : null}
 
-        {inviteError ? (
-          <View style={styles.bannerWrap}>
-            <AuthErrorBanner message={inviteError} />
-          </View>
-        ) : null}
-
         {membersError ? (
           <View style={styles.bannerWrap}>
             <AuthErrorBanner message={membersError} />
@@ -196,7 +170,7 @@ export function FamilyHubView() {
               petCount={1}
               isPremium={isPremium}
               joinCode={joinCode}
-              loadingInvite={inviteLoading}
+              loadingInvite={false}
               canInvite={canInvite}
               showInviteSection={isOwner}
               onShareCode={handleShareCode}
@@ -230,8 +204,9 @@ export function FamilyHubView() {
         onClose={() => setInviteSheetVisible(false)}
         petId={pet?._id ?? null}
         token={token}
-        cachedInvite={invite}
-        onInviteGenerated={setInvite}
+        onInviteGenerated={(generated) => {
+          setInvite(generated);
+        }}
       />
 
       <MemberPermissionsSheet
