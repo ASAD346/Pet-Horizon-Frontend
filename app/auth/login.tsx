@@ -33,12 +33,12 @@ import {
 
 export default function LoginScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ verified?: string; message?: string }>();
+  const params = useLocalSearchParams<{ verified?: string; message?: string; redirect?: string }>();
   const { login, isAuthenticated, isBootstrapping } = useAuth();
   const { showToast } = useToast();
   const { handleGoogleSignIn, googleLoading } = useGoogleAuth();
 
-  useAuthEntryRedirect();
+  useAuthEntryRedirect(false);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -82,15 +82,21 @@ export default function LoginScreen() {
     [clearErrors, fieldErrors.password, formError],
   );
 
+  const redirectPath = Array.isArray(params.redirect) ? params.redirect[0] : params.redirect;
+
   const navigateAfterLogin = useCallback(
     (activePetId?: string | null) => {
+      if (redirectPath) {
+        router.replace(redirectPath as Parameters<typeof router.replace>[0]);
+        return;
+      }
       if (activePetId) {
         router.replace('/(tabs)');
       } else {
         router.replace('/pet/register');
       }
     },
-    [router],
+    [redirectPath, router],
   );
 
   const handleLogin = useCallback(async () => {

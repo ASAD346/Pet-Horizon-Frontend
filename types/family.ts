@@ -47,6 +47,10 @@ export interface InviteInfoResponse {
   } | null;
   expiresAt: string;
   userRegistered?: boolean;
+  permissions?: {
+    accessLevel?: string;
+    allowedModules?: string[];
+  };
   deepLink?: string;
   universalLink?: string;
   appStoreUrl?: string;

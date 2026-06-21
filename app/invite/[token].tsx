@@ -17,6 +17,7 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonInviteCard } from '@/components/ui/skeletons';
 import { getErrorMessage } from '@/lib/api/errors';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { formatInviteModules } from '@/lib/family/invitePermissions';
 import { acceptPetInvite, fetchInviteInfo } from '@/services/family/familyApi';
 import type { InviteInfoResponse } from '@/types/family';
 
@@ -54,10 +55,19 @@ export default function InviteAcceptScreen() {
   }, [loadInfo]);
 
   const handleAccept = async () => {
-    if (!authToken || !inviteToken) {
+    if (!inviteToken) return;
+
+    if (!isAuthenticated) {
       router.replace({ pathname: '/auth/login', params: { redirect: `/invite/${inviteToken}` } });
       return;
     }
+
+    if (info && !info.valid) {
+      setError('This invitation is no longer valid.');
+      return;
+    }
+
+    if (!authToken) return;
     setAccepting(true);
     setError(null);
     try {
@@ -91,6 +101,10 @@ export default function InviteAcceptScreen() {
 
         {info ? (
           <>
+            {!info.valid ? (
+              <AuthInfoBanner message="This invitation has expired or was already used." />
+            ) : null}
+
             <View style={styles.card}>
               {info.pet?.photoUrl ? (
                 <Image
@@ -111,6 +125,16 @@ export default function InviteAcceptScreen() {
               <AppText variant="caption" color={HomeTheme.textMuted} style={styles.expires}>
                 Expires {new Date(info.expiresAt).toLocaleDateString()}
               </AppText>
+              {info.permissions?.allowedModules?.length ? (
+                <View style={styles.accessWrap}>
+                  <AppText variant="caption" weight="700" color={HomeTheme.textMuted} style={styles.accessLabel}>
+                    YOU WILL GET ACCESS TO
+                  </AppText>
+                  <AppText variant="bodySmall" weight="600" color={HomeTheme.text} align="center">
+                    {formatInviteModules(info.permissions.allowedModules)}
+                  </AppText>
+                </View>
+              ) : null}
             </View>
 
             {!isAuthenticated ? (
@@ -121,6 +145,7 @@ export default function InviteAcceptScreen() {
               title={isAuthenticated ? 'Accept Invitation' : 'Sign in to Accept'}
               onPress={handleAccept}
               loading={accepting}
+              disabled={!info.valid}
               variant="success"
               size="md"
               style={styles.acceptBtn}
@@ -177,6 +202,18 @@ const styles = StyleSheet.create({
   },
   expires: {
     marginTop: Spacing.sm,
+  },
+  accessWrap: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E8E8E8',
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  accessLabel: {
+    letterSpacing: 0.8,
   },
   acceptBtn: {
     width: '100%',
