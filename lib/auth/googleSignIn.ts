@@ -16,6 +16,29 @@ export const GOOGLE_WEB_CLIENT_ID =
 const EXPO_GO_MESSAGE =
   'Continue with Google requires the Pet Horizon APK (EAS build). It does not work in Expo Go — install the latest APK on your phone.';
 
+/** Default React Native debug keystore — used by local release APK builds. */
+export const LOCAL_RELEASE_SHA1 =
+  '5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25';
+
+export const ANDROID_PACKAGE_NAME = 'com.anonymous.PetHorizon';
+
+export function getGoogleDeveloperErrorMessage(): string {
+  return (
+    'Google Sign-In is not configured for this APK. In Firebase Console → Project Settings → ' +
+    `Pet Horizon Android app, add SHA-1 fingerprint ${LOCAL_RELEASE_SHA1}, enable Google under ` +
+    'Authentication → Sign-in method, download a fresh google-services.json, run `npm run google:sync-android`, ' +
+    'then rebuild and reinstall the APK.'
+  );
+}
+
+function isGoogleDeveloperError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toUpperCase();
+  if (message.includes('DEVELOPER_ERROR') || message.includes('DEVELOPER ERROR')) return true;
+  const code = (error as Error & { code?: string | number }).code;
+  return code === 10 || code === '10';
+}
+
 let configured = false;
 
 export function isGoogleSignInSupported(): boolean {
@@ -77,6 +100,9 @@ export async function requestGoogleIdToken(): Promise<string> {
       const cancelled = new Error('Google sign-in was cancelled');
       cancelled.name = 'GoogleSignInCancelledError';
       throw cancelled;
+    }
+    if (isGoogleDeveloperError(error)) {
+      throw new Error(getGoogleDeveloperErrorMessage());
     }
     throw error;
   }

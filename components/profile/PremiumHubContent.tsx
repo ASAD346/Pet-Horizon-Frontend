@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -16,7 +15,7 @@ import { AppBrandModal } from '@/components/ui/AppBrandModal';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { getErrorMessage } from '@/lib/api/errors';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
@@ -36,6 +35,7 @@ import {
   formatPlanPrice,
   planPeriodLabel,
 } from './profileTheme';
+import { SkeletonPremiumPlans } from '@/components/ui/skeletons';
 
 const FALLBACK_HERO = require('../../assets/images/onboarding.png');
 
@@ -189,7 +189,7 @@ export function PremiumHubContent() {
           </View>
 
           {loading ? (
-            <ActivityIndicator color={ProfileTheme.green} style={styles.loader} />
+            <SkeletonPremiumPlans />
           ) : (
             <>
               <View style={styles.planRow}>

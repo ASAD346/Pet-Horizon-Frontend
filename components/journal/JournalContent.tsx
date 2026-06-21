@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   RefreshControl,
   ScrollView,
@@ -10,7 +9,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
 import {
@@ -38,6 +37,7 @@ import { JournalMonthHeader } from './JournalMonthHeader';
 import { JOURNAL_CATEGORY_CHIPS, type JournalCategory } from './journalData';
 import { TodaysPhotosSection } from './TodaysPhotosSection';
 import { JournalTheme, Spacing } from '../../constants/theme';
+import { SkeletonJournalScreen } from '@/components/ui/skeletons';
 
 interface JournalContentProps {
   active?: boolean;
@@ -159,11 +159,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   }
 
   if (loading && entries.length === 0) {
-    return (
-      <View style={styles.loaderWrap}>
-        <ActivityIndicator size="large" color={JournalTheme.navy} />
-      </View>
-    );
+    return <SkeletonJournalScreen />;
   }
 
   return (

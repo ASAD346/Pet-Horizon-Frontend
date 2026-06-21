@@ -125,6 +125,10 @@ export interface UpdateFeedingScheduleRequest {
   reminder?: boolean;
   reminderMinutes?: number;
   reminderTime?: string;
+  date?: string;
+  scheduleDate?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export async function updateFeedingSchedule(

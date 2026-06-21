@@ -1,53 +1,61 @@
+import { useCallback, useState } from 'react';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
-    completeGroomingRecord,
-    fetchGroomingRecords,
-    fetchGroomingTypes,
+  completeGroomingRecord,
+  fetchGroomingRecords,
+  fetchGroomingTypes,
 } from '@/services/grooming/groomingApi';
 import type { GroomingRecord } from '@/types/grooming';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useStaleFocusLoader } from './useStaleFocusLoader';
+
+interface GroomingLoadResult {
+  records: GroomingRecord[];
+  groomingVisible: boolean;
+}
 
 export function useGroomingRecords(token: string | null, petId: string | null | undefined) {
   const [records, setRecords] = useState<GroomingRecord[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const scopeKey = token && petId ? `${token}:${petId}` : null;
 
-  const reload = useCallback(async () => {
+  const load = useCallback(async (): Promise<GroomingLoadResult> => {
     if (!token || !petId) {
-      setRecords([]);
-      setGroomingVisible(true);
-      if (!token) log.warn('Grooming', 'Skipping load — not signed in');
-      else if (!petId) log.warn('Grooming', 'Skipping load — no active pet');
-      return;
+      return { records: [], groomingVisible: true };
     }
 
-    setLoading(true);
-    try {
-      const typesInfo = await fetchGroomingTypes(token, petId);
-      setGroomingVisible(typesInfo.groomingVisible);
-      if (!typesInfo.groomingVisible) {
-        setRecords([]);
-        log.warn('Grooming', 'Module hidden for pet species', { species: typesInfo.species });
-        return;
-      }
-      const data = await fetchGroomingRecords(token, petId, 'upcoming');
-      setRecords(data);
-    } catch (error) {
-      setRecords([]);
-      log.fail('Grooming', 'Home records load failed', getErrorMessage(error));
-    } finally {
-      setLoading(false);
+    const typesInfo = await fetchGroomingTypes(token, petId);
+    if (!typesInfo.groomingVisible) {
+      log.warn('Grooming', 'Module hidden for pet species', { species: typesInfo.species });
+      return { records: [], groomingVisible: false };
     }
+
+    const data = await fetchGroomingRecords(token, petId, 'upcoming');
+    return { records: data, groomingVisible: typesInfo.groomingVisible };
   }, [token, petId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload]),
-  );
+  const reload = useStaleFocusLoader({
+    scopeKey,
+    enabled: Boolean(token && petId),
+    load,
+    onSuccess: ({ records: rows, groomingVisible: visible }) => {
+      setRecords(rows);
+      setGroomingVisible(visible);
+    },
+    onClear: () => {
+      setRecords([]);
+      setGroomingVisible(true);
+    },
+    onError: (error, isFirstLoad) => {
+      if (isFirstLoad) {
+        setRecords([]);
+        log.fail('Grooming', 'Home records load failed', getErrorMessage(error));
+      }
+    },
+    setLoading,
+  });
 
   const completeGrooming = useCallback(
     async (recordId: string) => {

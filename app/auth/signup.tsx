@@ -13,12 +13,12 @@ import { SignupFormSection, VerifyEmailFormSection } from '@/components/auth/sig
 import {
   getAuthSignupErrorMessage,
   getAuthVerifyEmailErrorMessage,
-} from '@/contexts/AuthContext';
+} from '@/lib/auth/authErrors';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import { useToast } from '@/contexts/ToastContext';
+import { useToast } from '@/hooks/useToast';
 import {
   registerAccount,
   resendVerificationEmail,

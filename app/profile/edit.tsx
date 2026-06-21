@@ -20,7 +20,7 @@ import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme } from '@/components/profile/profileTheme';
 import { SectionLabel, SheetColors } from '@/components/sheets';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
 import {

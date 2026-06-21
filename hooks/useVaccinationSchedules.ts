@@ -1,47 +1,42 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { getErrorMessage } from '@/lib/api/errors';
-import { log } from '@/lib/log';
 import {
   computeNextDueDate,
   dateToApiDateString,
 } from '@/lib/vaccination/vaccinationForm';
+import { log } from '@/lib/log';
 import {
   completeVaccinationSchedule,
   fetchVaccinationSchedules,
 } from '@/services/schedules/vaccinationApi';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
+import { useStaleFocusLoader } from './useStaleFocusLoader';
 
 export function useVaccinationSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<VaccinationScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const scopeKey = token && petId ? `${token}:${petId}` : null;
 
-  const reload = useCallback(async () => {
-    if (!token || !petId) {
-      setSchedules([]);
-      if (!token) log.warn('Vaccination', 'Skipping load — not signed in');
-      else if (!petId) log.warn('Vaccination', 'Skipping load — no active pet');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const data = await fetchVaccinationSchedules(token, petId);
-      setSchedules(data);
-    } catch (error) {
-      setSchedules([]);
-      log.fail('Vaccination', 'Home schedules load failed', getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
+  const load = useCallback(async () => {
+    if (!token || !petId) return [];
+    return fetchVaccinationSchedules(token, petId);
   }, [token, petId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload]),
-  );
+  const reload = useStaleFocusLoader({
+    scopeKey,
+    enabled: Boolean(token && petId),
+    load,
+    onSuccess: setSchedules,
+    onClear: () => setSchedules([]),
+    onError: (error, isFirstLoad) => {
+      if (isFirstLoad) {
+        setSchedules([]);
+        log.fail('Vaccination', 'Home schedules load failed', getErrorMessage(error));
+      }
+    },
+    setLoading,
+  });
 
   const completeVaccination = useCallback(
     async (scheduleId: string) => {

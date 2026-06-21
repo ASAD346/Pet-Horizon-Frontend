@@ -16,7 +16,7 @@ export function FormSheetHero({ icon, accentColor, accentBg, title, subtitle }: 
   return (
     <View style={[formSheetStyles.hero, { backgroundColor: accentBg, borderColor: `${accentColor}22` }]}>
       <View style={[formSheetStyles.heroIconWrap, { backgroundColor: `${accentColor}18` }]}>
-        <MaterialCommunityIcons name={icon} size={28} color={accentColor} />
+        <MaterialCommunityIcons name={icon} size={24} color={accentColor} />
       </View>
       <View style={formSheetStyles.heroText}>
         {title ? (

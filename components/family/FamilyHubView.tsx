@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   Share,
@@ -16,7 +15,9 @@ import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
 import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
 import { MembersListSection } from '@/components/family/MembersListSection';
 import { HomeTheme, Spacing } from '@/constants/theme';
-import { useAuth } from '@/contexts/AuthContext';
+import { SkeletonFamilyOverviewCard } from '@/components/ui/skeletons';
+import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
+import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { usePetMembers } from '@/hooks/usePetMembers';
 import {
@@ -48,6 +49,10 @@ export function FamilyHubView() {
   const [refreshing, setRefreshing] = useState(false);
   const [permissionsVisible, setPermissionsVisible] = useState(false);
   const [selectedMember, setSelectedMember] = useState<PetMemberRow | null>(null);
+  const guestScopeKey =
+    token && pet?._id && !isOwner ? `${token}:${pet._id}:guest` : null;
+  const { shouldBlockUI: shouldBlockGuestUI, markLoaded: markGuestLoaded, reset: resetGuestScope } =
+    useStaleLoadScope(guestScopeKey);
 
   const manageableMemberIds = useMemo(
     () => members.map((member) => member.userId._id),
@@ -68,24 +73,30 @@ export function FamilyHubView() {
 
   const loadGuestAccess = useCallback(async () => {
     if (!token || !pet?._id || isOwner || !user) {
+      resetGuestScope();
       setGuestMembers([]);
       return;
     }
 
-    setGuestLoading(true);
+    const block = shouldBlockGuestUI();
+    if (block) setGuestLoading(true);
+
     try {
       const perms = await fetchPetPermissions(token, pet._id);
       setGuestMembers([
         buildGuestMemberDisplay(user, perms.allowedModules ?? [], perms.accessLevel),
       ]);
+      markGuestLoaded();
     } catch {
-      setGuestMembers([
-        buildGuestMemberDisplay(user, [], 'readonly'),
-      ]);
+      if (block) {
+        setGuestMembers([
+          buildGuestMemberDisplay(user, [], 'readonly'),
+        ]);
+      }
     } finally {
       setGuestLoading(false);
     }
-  }, [token, pet?._id, isOwner, user]);
+  }, [token, pet?._id, isOwner, user, shouldBlockGuestUI, markGuestLoaded, resetGuestScope]);
 
   const loadInvitePreview = useCallback(async () => {
     if (!canInvite || !pet?._id || !token) {
@@ -148,7 +159,9 @@ export function FamilyHubView() {
         }
       >
         {petLoading && !pet ? (
-          <ActivityIndicator color={HomeTheme.cardGreen} style={styles.centerLoader} />
+          <View style={styles.skeletonWrap}>
+            <SkeletonFamilyOverviewCard />
+          </View>
         ) : null}
 
         {!petLoading && !pet ? (
@@ -246,7 +259,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,
   },
-  centerLoader: {
-    marginVertical: Spacing.xl,
+  skeletonWrap: {
+    paddingHorizontal: Spacing.lg,
   },
 });

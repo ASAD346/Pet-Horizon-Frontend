@@ -16,7 +16,8 @@ import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme, formatPlanPrice } from '@/components/profile/profileTheme';
 import { SectionLabel, SheetColors } from '@/components/sheets';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
-import { useAuth } from '@/contexts/AuthContext';
+import { SkeletonBillingHistory } from '@/components/ui/skeletons';
+import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
   cancelPremium,
@@ -163,9 +164,7 @@ export default function BillingScreen() {
 
         <SectionLabel text="BILLING HISTORY" />
         {loading ? (
-          <AppText variant="bodySmall" color={ProfileTheme.textMuted}>
-            Loading invoices...
-          </AppText>
+          <SkeletonBillingHistory count={3} />
         ) : invoices.length === 0 ? (
           <AppText variant="bodySmall" color={ProfileTheme.textMuted}>
             No invoices yet.

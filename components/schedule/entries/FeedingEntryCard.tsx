@@ -22,6 +22,7 @@ import {
   REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
 import type { FeedingEntryState } from '@/lib/schedule/types';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { ScheduleColors, scheduleFieldStyles } from '../scheduleStyles';
 
 const REMINDER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((o) => ({
@@ -90,23 +91,34 @@ export function FeedingEntryCard({
             onSelect={(mealType) => onChange({ ...entry, mealType })}
             accentColor={accentColor}
           />
-          <FormSectionLabel text="AMOUNT" />
-          <FormTextField
-            value={entry.amount}
-            onChangeText={(amount) => onChange({ ...entry, amount })}
-            keyboardType="decimal-pad"
-            placeholder="Enter portion amount"
-          />
-          <FormSectionLabel text="UNIT" />
-          <FormChipRow
-            options={unitOptions}
-            selected={entry.unit}
-            onSelect={(unit) => onChange({ ...entry, unit })}
-            accentColor={accentColor}
-          />
+          <View style={formSheetStyles.twoColRow}>
+            <View style={[formSheetStyles.halfCol, { flex: 1.15 }]}>
+              <FormSectionLabel text="AMOUNT" />
+              <FormTextField
+                value={entry.amount}
+                onChangeText={(amount) => onChange({ ...entry, amount })}
+                keyboardType="decimal-pad"
+                placeholder="0"
+              />
+            </View>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="UNIT" />
+              <FormChipRow
+                options={unitOptions}
+                selected={entry.unit}
+                onSelect={(unit) => onChange({ ...entry, unit })}
+                accentColor={accentColor}
+              />
+            </View>
+          </View>
         </FormSection>
 
         <FormSection title="Schedule & reminders" icon="calendar-clock" accentColor={accentColor} accentBg={accentBg}>
+          <ScheduleDateFields
+            value={entry.scheduleDate}
+            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+            accentColor={accentColor}
+          />
           <View style={formSheetStyles.twoColRow}>
             <View style={formSheetStyles.halfCol}>
               <FormSectionLabel text="TIME" />
@@ -116,33 +128,28 @@ export function FeedingEntryCard({
                 onPress={() => setTimePickerVisible(true)}
               />
             </View>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="NOTIFY" />
-              <FormSwitchRow
-                label="Remind me"
-                value={entry.notificationsOn}
-                onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
-                accentColor={accentColor}
-              />
-            </View>
+            {entry.notificationsOn ? (
+              <View style={formSheetStyles.halfCol}>
+                <FormSectionLabel text="REMINDER" />
+                <FormPickerField
+                  label={getReminderMinutesLabel(entry.reminderMinutes)}
+                  icon="chevron-down"
+                  onPress={() => setReminderPickerVisible(true)}
+                />
+              </View>
+            ) : null}
           </View>
-          {entry.notificationsOn ? (
-            <>
-              <FormSectionLabel text="REMINDER" />
-              <FormPickerField
-                label={getReminderMinutesLabel(entry.reminderMinutes)}
-                icon="chevron-down"
-                onPress={() => setReminderPickerVisible(true)}
-              />
-            </>
-          ) : null}
-        </FormSection>
-
-        <FormSection title="Notes" icon="text-box-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormSwitchRow
+            label="Remind me"
+            value={entry.notificationsOn}
+            onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+            accentColor={accentColor}
+          />
+          <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
             onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Extra details about this meal..."
+            placeholder="Optional details..."
             multiline
           />
         </FormSection>

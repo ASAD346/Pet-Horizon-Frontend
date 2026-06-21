@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -13,8 +12,9 @@ import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { SkeletonInviteCard } from '@/components/ui/skeletons';
 import { getErrorMessage } from '@/lib/api/errors';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { acceptPetInvite, fetchInviteInfo } from '@/services/family/familyApi';
@@ -75,7 +75,7 @@ export default function InviteAcceptScreen() {
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={HomeTheme.cardGreen} style={styles.loader} />
+        <SkeletonInviteCard />
       </SafeAreaView>
     );
   }

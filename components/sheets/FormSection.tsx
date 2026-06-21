@@ -23,10 +23,10 @@ export function FormSection({ title, icon, accentColor, accentBg, children }: Fo
               { backgroundColor: accentBg ?? FormSheetColors.pageBg },
             ]}
           >
-            <MaterialCommunityIcons name={icon} size={18} color={accentColor ?? FormSheetColors.label} />
+            <MaterialCommunityIcons name={icon} size={22} color={accentColor ?? FormSheetColors.label} />
           </View>
         ) : null}
-        <AppText variant="bodySmall" weight="800" color={FormSheetColors.text}>
+        <AppText variant="caption" weight="800" color={FormSheetColors.text} style={{ letterSpacing: 0.3 }}>
           {title}
         </AppText>
       </View>

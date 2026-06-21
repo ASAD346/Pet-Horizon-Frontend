@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { HomeTheme } from '@/constants/theme';
+import { SkeletonScreenLayout } from '@/components/ui/skeletons';
 
 /**
  * Restores the user to the right screen after a cold start when a session exists.
@@ -22,7 +23,7 @@ export function useAuthEntryRedirect(enabled = true) {
 export function AuthEntryLoader() {
   return (
     <View style={styles.loader}>
-      <ActivityIndicator size="large" color={HomeTheme.cardGreen} />
+      <SkeletonScreenLayout />
     </View>
   );
 }
@@ -30,8 +31,6 @@ export function AuthEntryLoader() {
 const styles = StyleSheet.create({
   loader: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: HomeTheme.background,
   },
 });

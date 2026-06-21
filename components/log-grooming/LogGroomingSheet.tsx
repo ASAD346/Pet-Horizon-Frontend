@@ -1,18 +1,22 @@
 import { getErrorMessage } from '@/lib/api/errors';
 import {
-  dateToApiDateString,
   defaultScheduledDate,
-  formatDateLabel,
 } from '@/lib/grooming/groomingForm';
 import { log } from '@/lib/log';
 import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
+import {
+  buildGroomingDatePayload,
+  createDefaultScheduleDate,
+  validateScheduleDate,
+  type ScheduleDateState,
+} from '@/lib/schedule/scheduleDate';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { createGroomingRecord, fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator } from 'react-native';
+import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import {
   FormChipRow,
-  FormPickerField,
   FormSection,
   FormSectionLabel,
   FormSheetShell,
@@ -20,7 +24,6 @@ import {
   FormTextField,
   formSheetStyles,
 } from '../sheets';
-import { ThemedDatePicker } from '../pet/ThemedDatePicker';
 import { AppText } from '../ui/AppText';
 import { HomeTheme } from '../../constants/theme';
 
@@ -45,10 +48,12 @@ export function LogGroomingSheet({
   const [groomingVisible, setGroomingVisible] = useState(true);
   const [loadingTypes, setLoadingTypes] = useState(false);
   const [groomingType, setGroomingType] = useState('');
-  const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
+  const [scheduleDate, setScheduleDate] = useState<ScheduleDateState>(() => ({
+    ...createDefaultScheduleDate('single'),
+    singleDate: defaultScheduledDate(),
+  }));
   const [reminderOn, setReminderOn] = useState(true);
   const [notes, setNotes] = useState('');
-  const [scheduledPickerVisible, setScheduledPickerVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,7 +79,7 @@ export function LogGroomingSheet({
   }, [petId, token]);
 
   const resetForm = useCallback(() => {
-    setScheduledDate(defaultScheduledDate());
+    setScheduleDate({ ...createDefaultScheduleDate('single'), singleDate: defaultScheduledDate() });
     setReminderOn(true);
     setNotes('');
     setError(null);
@@ -100,8 +105,14 @@ export function LogGroomingSheet({
       setError('Select a grooming type.');
       return;
     }
+    const dateError = validateScheduleDate(scheduleDate);
+    if (dateError) {
+      setError(dateError);
+      return;
+    }
 
     const noteText = notes.trim();
+    const datePayload = buildGroomingDatePayload(scheduleDate);
 
     setSaving(true);
     setError(null);
@@ -109,13 +120,12 @@ export function LogGroomingSheet({
       await createGroomingRecord(token, {
         petId,
         type: groomingType,
-        scheduledDate: scheduledDate ? dateToApiDateString(scheduledDate) : undefined,
+        ...datePayload,
         reminder: reminderOn,
         notes: noteText || undefined,
       });
       log.ok('LogGrooming', 'Grooming record saved', {
         type: groomingType,
-        scheduledDate: scheduledDate ? dateToApiDateString(scheduledDate) : null,
       });
       onSaved?.();
       onClose();
@@ -132,7 +142,6 @@ export function LogGroomingSheet({
         visible={visible}
         onClose={onClose}
         title="Log Grooming"
-        subtitle="Schedule a grooming task and set reminders."
         icon={GROOMING_THEME.icon}
         accentColor={GROOMING_THEME.color}
         accentBg={GROOMING_THEME.bg}
@@ -141,9 +150,10 @@ export function LogGroomingSheet({
         saving={saving}
         saveDisabled={loadingTypes || !groomingVisible || !groomingType}
         error={error}
+        compact
       >
         {loadingTypes ? (
-          <ActivityIndicator color={GROOMING_THEME.color} style={{ marginVertical: 24 }} />
+          <SkeletonChipGrid count={4} />
         ) : !groomingVisible ? (
           <AppText variant="bodySmall" color={HomeTheme.textMuted} style={{ marginVertical: 12 }}>
             Grooming is not available for this pet species.
@@ -164,11 +174,18 @@ export function LogGroomingSheet({
                 accentColor={GROOMING_THEME.color}
               />
 
-              <FormSectionLabel text="SCHEDULED DATE" />
-              <FormPickerField
-                label={scheduledDate ? formatDateLabel(scheduledDate) : 'Tap to pick a date'}
-                icon="calendar-outline"
-                onPress={() => setScheduledPickerVisible(true)}
+            </FormSection>
+
+            <FormSection
+              title="Schedule dates"
+              icon="calendar-clock"
+              accentColor={GROOMING_THEME.color}
+              accentBg={GROOMING_THEME.bg}
+            >
+              <ScheduleDateFields
+                value={scheduleDate}
+                onChange={setScheduleDate}
+                accentColor={GROOMING_THEME.color}
               />
             </FormSection>
 
@@ -202,17 +219,6 @@ export function LogGroomingSheet({
           </>
         )}
       </FormSheetShell>
-
-      <ThemedDatePicker
-        visible={scheduledPickerVisible}
-        title="Scheduled date"
-        value={scheduledDate ?? defaultScheduledDate()}
-        onClose={() => setScheduledPickerVisible(false)}
-        onConfirm={(date) => {
-          setScheduledDate(date);
-          setScheduledPickerVisible(false);
-        }}
-      />
     </>
   );
 }

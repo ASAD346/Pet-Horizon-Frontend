@@ -24,7 +24,7 @@ import {
   WeightInput,
   WeightUnit,
 } from '@/components/pet';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/errors';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';

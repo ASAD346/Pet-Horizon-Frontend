@@ -5,10 +5,10 @@ import {
   TouchableOpacity,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
+import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import { getSpeciesIcon } from '../../services/pets/speciesIcons';
 import { LoginTheme, Radius, Spacing } from '../../constants/theme';
 
@@ -44,12 +44,7 @@ export function SpeciesSelector({
       </AppText>
 
       {loading ? (
-        <View style={styles.loadingRow}>
-          <ActivityIndicator size="small" color={LoginTheme.green} />
-          <AppText variant="bodySmall" color={LoginTheme.tagline} style={styles.loadingText}>
-            Loading species…
-          </AppText>
-        </View>
+        <SkeletonChipGrid count={6} />
       ) : (
         <ScrollView
           horizontal

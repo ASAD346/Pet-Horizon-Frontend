@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -16,11 +15,16 @@ import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { useAuth } from '@/contexts/AuthContext';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
-import { mealTypeOptionsForSpecies, unitOptionsForSpecies } from '@/lib/feeding/feedingForm';
-import { getGroomingTypeOptions, getSpeciesFeatures } from '@/lib/species/speciesFeatures';
+import {
+  featureOptionsFromRemote,
+  hydrateScheduleFeaturesFromSpecies,
+  type ScheduleFeatureOptions,
+} from '@/lib/schedule/hydrateScheduleFeatures';
+import { getSpeciesFeatures } from '@/lib/species/speciesFeatures';
 import {
   createFeedingEntry,
   createGroomingEntry,
@@ -28,10 +32,13 @@ import {
   createMedicineEntry,
   createVaccinationEntry,
   createWalkEntry,
-  pickDefaultUnitFromList,
 } from '@/lib/schedule/defaults';
 import { deleteScheduleEntry } from '@/lib/schedule/deleteScheduleEntry';
 import { loadExistingSchedules } from '@/lib/schedule/loadSchedules';
+import {
+  getCachedSchedules,
+  setCachedSchedules,
+} from '@/lib/schedule/scheduleCache';
 import {
   scheduleEntryRemoteId,
   scheduleEntrySubtitle,
@@ -75,6 +82,15 @@ interface ScheduleSetupViewProps {
   onNotificationsPress?: () => void;
 }
 
+function ScheduleEntriesSkeleton() {
+  return (
+    <View style={styles.entriesSkeleton}>
+      <Skeleton width="100%" height={56} borderRadius={Radius.md} />
+      <Skeleton width="100%" height={56} borderRadius={Radius.md} />
+    </View>
+  );
+}
+
 export function ScheduleSetupView({
   onJournalPress,
   onNotificationsPress,
@@ -92,7 +108,6 @@ export function ScheduleSetupView({
   const [defaultMeal, setDefaultMeal] = useState('');
   const [defaultUnit, setDefaultUnit] = useState('');
   const [defaultGrooming, setDefaultGrooming] = useState('');
-  const [featuresLoading, setFeaturesLoading] = useState(false);
   const [schedulesLoading, setSchedulesLoading] = useState(false);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [editorSaving, setEditorSaving] = useState(false);
@@ -101,96 +116,126 @@ export function ScheduleSetupView({
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
-  const reloadSchedules = useCallback(async () => {
+  const groomingVisibleRef = useRef(groomingVisible);
+  groomingVisibleRef.current = groomingVisible;
+
+  const applyFeatureOptions = useCallback((options: ScheduleFeatureOptions) => {
+    setMealTypeOptions(options.mealTypeOptions);
+    setUnitOptions(options.unitOptions);
+    setGroomingTypeOptions(options.groomingTypeOptions);
+    setGroomingVisible(options.groomingVisible);
+    setDefaultMeal(options.defaultMeal);
+    setDefaultUnit(options.defaultUnit);
+    setDefaultGrooming(options.defaultGrooming);
+  }, []);
+
+  const reloadSchedules = useCallback(
+    async (petId: string, options?: { silent?: boolean }) => {
+      if (!token) return;
+
+      if (!options?.silent) {
+        setSchedulesLoading(true);
+      }
+
+      try {
+        const loaded = await loadExistingSchedules(token, petId, {
+          groomingVisible: groomingVisibleRef.current,
+        });
+        setSections(loaded);
+        setCachedSchedules(petId, loaded);
+        setFormError(null);
+      } catch (e) {
+        setFormError(e instanceof Error ? e.message : 'Unable to load schedules.');
+      } finally {
+        setSchedulesLoading(false);
+      }
+    },
+    [token],
+  );
+
+  useEffect(() => {
     if (!token || !pet?._id) {
-      setSections(createInitialScheduleState());
+      if (!petLoading) {
+        setSections(createInitialScheduleState());
+        setMealTypeOptions([]);
+        setUnitOptions([]);
+        setGroomingTypeOptions([]);
+      }
       return;
     }
 
-    setSchedulesLoading(true);
-    try {
-      const loaded = await loadExistingSchedules(token, pet._id, { groomingVisible });
-      setSections(loaded);
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : 'Unable to load schedules.');
-    } finally {
-      setSchedulesLoading(false);
-    }
-  }, [token, pet?._id, groomingVisible]);
+    const petId = pet._id;
+    const localOptions = hydrateScheduleFeaturesFromSpecies(pet.species);
+    applyFeatureOptions(localOptions);
 
-  const loadFeatures = useCallback(async () => {
-    if (!token || !pet?._id) {
-      setMealTypeOptions([]);
-      setUnitOptions([]);
-      setGroomingTypeOptions([]);
-      setSections(createInitialScheduleState());
-      return;
+    const cached = getCachedSchedules(petId);
+    if (cached) {
+      setSections(cached);
     }
 
-    setFeaturesLoading(true);
-    setFormError(null);
+    let cancelled = false;
 
-    try {
-      const localFeatures = getSpeciesFeatures(pet.species);
-      let speciesFeatures = localFeatures;
-      let groomingTypes = getGroomingTypeOptions(pet.species);
-      let groomingVisible = localFeatures.groomingVisible;
+    void (async () => {
+      setSchedulesLoading(!cached);
+      try {
+        const [permsResult, groomingResult, schedulesResult] = await Promise.allSettled([
+          fetchPetPermissions(token, petId),
+          fetchGroomingTypes(token, petId),
+          loadExistingSchedules(token, petId, {
+            groomingVisible: localOptions.groomingVisible,
+          }),
+        ]);
 
-      const [permsResult, groomingResult] = await Promise.allSettled([
-        fetchPetPermissions(token, pet._id),
-        fetchGroomingTypes(token, pet._id),
-      ]);
+        if (cancelled) return;
 
-      if (permsResult.status === 'fulfilled' && permsResult.value.speciesFeatures) {
-        speciesFeatures = {
-          ...localFeatures,
-          ...permsResult.value.speciesFeatures,
-          mealTypes:
-            permsResult.value.speciesFeatures.mealTypes?.length
-              ? permsResult.value.speciesFeatures.mealTypes
-              : localFeatures.mealTypes,
-          inventoryUnits:
-            permsResult.value.speciesFeatures.inventoryUnits?.length
-              ? permsResult.value.speciesFeatures.inventoryUnits
-              : localFeatures.inventoryUnits,
-        };
+        const localFeatures = getSpeciesFeatures(pet.species);
+        let remoteMealTypes = localFeatures.mealTypes;
+        let remoteInventoryUnits = localFeatures.inventoryUnits;
+        let remoteGroomingVisible = localOptions.groomingVisible;
+        let remoteGroomingTypes = localOptions.groomingTypeOptions;
+
+        if (permsResult.status === 'fulfilled' && permsResult.value.speciesFeatures) {
+          const remote = permsResult.value.speciesFeatures;
+          if (remote.mealTypes?.length) remoteMealTypes = remote.mealTypes;
+          if (remote.inventoryUnits?.length) remoteInventoryUnits = remote.inventoryUnits;
+          if (typeof remote.groomingVisible === 'boolean') {
+            remoteGroomingVisible = remote.groomingVisible;
+          }
+        }
+
+        if (groomingResult.status === 'fulfilled') {
+          if (groomingResult.value.types?.length) {
+            remoteGroomingTypes = groomingResult.value.types;
+          }
+          remoteGroomingVisible = groomingResult.value.groomingVisible;
+        }
+
+        applyFeatureOptions(
+          featureOptionsFromRemote(pet.species, {
+            mealTypes: remoteMealTypes,
+            inventoryUnits: remoteInventoryUnits,
+            groomingVisible: remoteGroomingVisible,
+            groomingTypes: remoteGroomingTypes,
+          }),
+        );
+
+        if (schedulesResult.status === 'fulfilled') {
+          setSections(schedulesResult.value);
+          setCachedSchedules(petId, schedulesResult.value);
+        } else if (!cached) {
+          setFormError('Unable to load saved schedules.');
+        }
+      } finally {
+        if (!cancelled) {
+          setSchedulesLoading(false);
+        }
       }
+    })();
 
-      if (groomingResult.status === 'fulfilled') {
-        groomingTypes =
-          groomingResult.value.types?.length
-            ? groomingResult.value.types
-            : getGroomingTypeOptions(pet.species);
-        groomingVisible = groomingResult.value.groomingVisible;
-      }
-
-      const mealOpts = mealTypeOptionsForSpecies(speciesFeatures.mealTypes);
-      const unitOpts = unitOptionsForSpecies(speciesFeatures.inventoryUnits);
-      const meal = mealOpts[0]?.value ?? '';
-      const unit = pickDefaultUnitFromList(speciesFeatures.inventoryUnits);
-      const grooming = groomingTypes[0]?.value ?? '';
-
-      setMealTypeOptions(mealOpts);
-      setUnitOptions(unitOpts);
-      setGroomingTypeOptions(groomingTypes);
-      setGroomingVisible(groomingVisible);
-      setDefaultMeal(meal);
-      setDefaultUnit(unit);
-      setDefaultGrooming(grooming);
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : 'Unable to load schedule options.');
-    } finally {
-      setFeaturesLoading(false);
-    }
-  }, [token, pet?._id, pet?.species]);
-
-  useEffect(() => {
-    loadFeatures();
-  }, [loadFeatures]);
-
-  useEffect(() => {
-    if (!featuresLoading) reloadSchedules();
-  }, [reloadSchedules, featuresLoading]);
+    return () => {
+      cancelled = true;
+    };
+  }, [token, pet?._id, pet?.species, petLoading, applyFeatureOptions]);
 
   const toggleSection = (key: ScheduleSectionKey, enabled: boolean) => {
     setSections((prev) => ({
@@ -206,7 +251,7 @@ export function ScheduleSetupView({
     if (key === 'walk') return createWalkEntry();
     if (key === 'medicine') return createMedicineEntry();
     if (key === 'vaccination') return createVaccinationEntry();
-    return createGroomingEntry('');
+    return createGroomingEntry(defaultGrooming);
   };
 
   const openAddEditor = (sectionMeta: ScheduleSectionTheme) => {
@@ -249,7 +294,7 @@ export function ScheduleSetupView({
       setFormSuccess(
         editor.mode === 'add' ? 'Schedule added successfully.' : 'Schedule updated successfully.',
       );
-      await reloadSchedules();
+      await reloadSchedules(pet._id);
     } catch (e) {
       setEditorError(e instanceof Error ? e.message : 'Unable to save schedule.');
     } finally {
@@ -257,31 +302,24 @@ export function ScheduleSetupView({
     }
   };
 
-  const confirmDeleteEntry = (
-    sectionMeta: ScheduleSectionTheme,
-    entry: EditorEntry,
-  ) => {
+  const confirmDeleteEntry = (sectionMeta: ScheduleSectionTheme, entry: EditorEntry) => {
     const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
     if (!remoteId || !token) return;
 
     const title = scheduleEntryTitle(sectionMeta.key, entry);
 
-    Alert.alert(
-      'Delete schedule',
-      `Remove "${title}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => void handleDeleteEntry(sectionMeta.key, remoteId),
-        },
-      ],
-    );
+    Alert.alert('Delete schedule', `Remove "${title}"? This cannot be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => void handleDeleteEntry(sectionMeta.key, remoteId),
+      },
+    ]);
   };
 
   const handleDeleteEntry = async (key: ScheduleSectionKey, remoteId: string) => {
-    if (!token) return;
+    if (!token || !pet?._id) return;
 
     setDeletingId(remoteId);
     setFormError(null);
@@ -290,7 +328,7 @@ export function ScheduleSetupView({
     try {
       await deleteScheduleEntry(token, key, remoteId);
       setFormSuccess('Schedule deleted.');
-      await reloadSchedules();
+      await reloadSchedules(pet._id);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : 'Unable to delete schedule.');
     } finally {
@@ -302,8 +340,7 @@ export function ScheduleSetupView({
     (section) => section.key !== 'grooming' || groomingVisible,
   );
 
-  const initialLoading = petLoading || featuresLoading;
-  const refreshingSchedules = schedulesLoading && !initialLoading;
+  const awaitingPet = petLoading && !pet;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -313,10 +350,7 @@ export function ScheduleSetupView({
       >
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.content,
-            { paddingBottom: tabBarClearance },
-          ]}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -330,16 +364,13 @@ export function ScheduleSetupView({
             Set up feeding, walks, medicine, vaccines, and grooming for your pet.
           </AppText>
 
-          {refreshingSchedules ? (
-            <ActivityIndicator color={HomeTheme.cardGreen} size="small" style={styles.refreshIndicator} />
-          ) : null}
+          {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
+          {formError ? <AuthErrorBanner message={formError} /> : null}
 
-          {initialLoading ? (
-            <>
-              {[0, 1, 2].map((key) => (
-                <View key={key} style={styles.skeletonCard} />
-              ))}
-            </>
+          {awaitingPet ? (
+            <View style={styles.awaitingPet}>
+              <Skeleton width="100%" height={120} borderRadius={Radius.lg} />
+            </View>
           ) : !pet ? (
             <View style={styles.emptyBox}>
               <AppText variant="bodySmall" color={HomeTheme.textMuted}>
@@ -347,65 +378,60 @@ export function ScheduleSetupView({
               </AppText>
             </View>
           ) : (
-            <>
-              {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
-              {formError ? <AuthErrorBanner message={formError} /> : null}
-
-              <View style={refreshingSchedules ? styles.contentDimmed : undefined}>
-                {visibleSections.map((sectionMeta) => {
-                const sectionState = sections[sectionMeta.key];
-                return (
-                  <ScheduleSectionCard
-                    key={sectionMeta.key}
-                    section={sectionMeta}
-                    enabled={sectionState.enabled}
-                    onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
-                  >
-                    {sectionState.entries.length === 0 ? (
-                      <View style={styles.emptyHintBox}>
-                        <MaterialCommunityIcons
-                          name={sectionMeta.icon}
-                          size={28}
-                          color={sectionMeta.color}
-                          style={styles.emptyHintIcon}
-                        />
-                        <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
-                          No {sectionMeta.title.toLowerCase()} yet. Tap below to add your first one.
-                        </AppText>
-                      </View>
-                    ) : (
-                      sectionState.entries.map((entry) => {
-                        const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
-                        return (
-                          <ScheduleEntrySummaryCard
-                            key={entry.id}
-                            title={scheduleEntryTitle(sectionMeta.key, entry)}
-                            subtitle={scheduleEntrySubtitle(sectionMeta.key, entry)}
-                            accentColor={sectionMeta.color}
-                            accentBg={sectionMeta.bg}
-                            onEdit={() => openEditEditor(sectionMeta, entry)}
-                            onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
-                            deleting={!!remoteId && deletingId === remoteId}
-                          />
-                        );
-                      })
-                    )}
-
-                    <TouchableOpacity
-                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color }]}
-                      onPress={() => openAddEditor(sectionMeta)}
-                      activeOpacity={0.85}
-                    >
-                      <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
-                      <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
-                        {sectionMeta.addLabel}
+            visibleSections.map((sectionMeta) => {
+              const sectionState = sections[sectionMeta.key];
+              return (
+                <ScheduleSectionCard
+                  key={sectionMeta.key}
+                  section={sectionMeta}
+                  enabled={sectionState.enabled}
+                  onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
+                >
+                  {schedulesLoading && sectionState.entries.length === 0 ? (
+                    <ScheduleEntriesSkeleton />
+                  ) : sectionState.entries.length === 0 ? (
+                    <View style={styles.emptyHintBox}>
+                      <MaterialCommunityIcons
+                        name={sectionMeta.icon}
+                        size={28}
+                        color={sectionMeta.color}
+                        style={styles.emptyHintIcon}
+                      />
+                      <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
+                        No {sectionMeta.title.toLowerCase()} yet. Tap below to add your first one.
                       </AppText>
-                    </TouchableOpacity>
-                  </ScheduleSectionCard>
-                );
-              })}
-              </View>
-            </>
+                    </View>
+                  ) : (
+                    sectionState.entries.map((entry) => {
+                      const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
+                      return (
+                        <ScheduleEntrySummaryCard
+                          key={entry.id}
+                          title={scheduleEntryTitle(sectionMeta.key, entry)}
+                          subtitle={scheduleEntrySubtitle(sectionMeta.key, entry)}
+                          accentColor={sectionMeta.color}
+                          accentBg={sectionMeta.bg}
+                          onEdit={() => openEditEditor(sectionMeta, entry)}
+                          onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
+                          deleting={!!remoteId && deletingId === remoteId}
+                        />
+                      );
+                    })
+                  )}
+
+                  <TouchableOpacity
+                    style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color }]}
+                    onPress={() => openAddEditor(sectionMeta)}
+                    activeOpacity={0.85}
+                  >
+                    <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
+                    <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
+                      {sectionMeta.addLabel}
+                    </AppText>
+                  </TouchableOpacity>
+                </ScheduleSectionCard>
+              );
+            })
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -449,21 +475,12 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     lineHeight: 20,
   },
-  loader: {
-    marginVertical: Spacing.xl,
+  awaitingPet: {
+    marginBottom: Spacing.lg,
   },
-  refreshIndicator: {
-    alignSelf: 'center',
+  entriesSkeleton: {
+    gap: Spacing.sm,
     marginBottom: Spacing.sm,
-  },
-  skeletonCard: {
-    height: 88,
-    backgroundColor: '#ECECEC',
-    borderRadius: Radius.lg,
-    marginBottom: Spacing.md,
-  },
-  contentDimmed: {
-    opacity: 0.55,
   },
   emptyBox: {
     backgroundColor: HomeTheme.surface,

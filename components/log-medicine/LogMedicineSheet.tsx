@@ -15,7 +15,6 @@ import {
   formSheetStyles,
 } from '../sheets';
 import type { SheetOption } from '../sheets';
-import { ThemedDatePicker } from '../pet/ThemedDatePicker';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -26,16 +25,20 @@ import {
 } from '@/lib/feeding/feedingForm';
 import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
+  buildScheduleDatePayload,
+  createDefaultScheduleDate,
+  validateScheduleDate,
+  type ScheduleDateState,
+} from '@/lib/schedule/scheduleDate';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
+import {
   buildDoseString,
-  dateToApiDateString,
   dateToTimeHHmm,
   DAYS_OF_WEEK_OPTIONS,
   defaultMedicineTimeDate,
   DOSE_FORM_OPTIONS,
-  formatDateLabel,
   formatTimeDisplay,
   FREQUENCY_OPTIONS,
-  isStartBeforeOrEqualEnd,
   parseTotalPills,
 } from '@/lib/medicine/medicineForm';
 import { createMedicineSchedule } from '@/services/schedules/medicineApi';
@@ -69,15 +72,12 @@ export function LogMedicineSheet({
   const [frequency, setFrequency] = useState<MedicineFrequency>('daily');
   const [daysOfWeek, setDaysOfWeek] = useState<DayOfWeekCode[]>([]);
   const [medicineTime, setMedicineTime] = useState(defaultMedicineTimeDate);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [scheduleDate, setScheduleDate] = useState<ScheduleDateState>(createDefaultScheduleDate('ongoing'));
   const [totalPills, setTotalPills] = useState('30');
   const [reminderOn, setReminderOn] = useState(true);
   const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
   const [notes, setNotes] = useState('');
   const [timePickerVisible, setTimePickerVisible] = useState(false);
-  const [startDatePickerVisible, setStartDatePickerVisible] = useState(false);
-  const [endDatePickerVisible, setEndDatePickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,8 +89,7 @@ export function LogMedicineSheet({
     setFrequency('daily');
     setDaysOfWeek([]);
     setMedicineTime(defaultMedicineTimeDate());
-    setStartDate(null);
-    setEndDate(null);
+    setScheduleDate(createDefaultScheduleDate('ongoing'));
     setTotalPills('30');
     setReminderOn(true);
     setReminderMinutes(DEFAULT_REMINDER_MINUTES);
@@ -133,8 +132,9 @@ export function LogMedicineSheet({
       return;
     }
 
-    if (startDate && endDate && !isStartBeforeOrEqualEnd(startDate, endDate)) {
-      setError('Start date must be before or equal to end date.');
+    const dateError = validateScheduleDate(scheduleDate);
+    if (dateError) {
+      setError(dateError);
       return;
     }
 
@@ -161,8 +161,7 @@ export function LogMedicineSheet({
         totalPills: pills,
         remainingPills: pills,
         notes: noteText || undefined,
-        startDate: startDate ? dateToApiDateString(startDate) : undefined,
-        endDate: endDate ? dateToApiDateString(endDate) : undefined,
+        ...buildScheduleDatePayload(scheduleDate),
         reminder: reminderOn,
         reminderMinutes: reminderOn ? reminderMinutes : undefined,
         reminderTime: reminderOn ? addMinutesToTimeHHmm(timeHHmm, reminderMinutes) : undefined,
@@ -188,7 +187,6 @@ export function LogMedicineSheet({
         visible={visible}
         onClose={onClose}
         title="Log Medicine"
-        subtitle="Track doses, frequency, and refill reminders."
         icon={MEDICINE_THEME.icon}
         accentColor={MEDICINE_THEME.color}
         accentBg={MEDICINE_THEME.bg}
@@ -196,6 +194,7 @@ export function LogMedicineSheet({
         onSave={handleSave}
         saving={saving}
         error={error}
+        compact
       >
         <FormSection
           title="Medicine info"
@@ -277,24 +276,11 @@ export function LogMedicineSheet({
             onPress={() => setTimePickerVisible(true)}
           />
 
-          <View style={formSheetStyles.twoColRow}>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="START DATE" />
-              <FormPickerField
-                label={startDate ? formatDateLabel(startDate) : 'Not set'}
-                icon="calendar-outline"
-                onPress={() => setStartDatePickerVisible(true)}
-              />
-            </View>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="END DATE" />
-              <FormPickerField
-                label={endDate ? formatDateLabel(endDate) : 'Not set'}
-                icon="calendar-outline"
-                onPress={() => setEndDatePickerVisible(true)}
-              />
-            </View>
-          </View>
+          <ScheduleDateFields
+            value={scheduleDate}
+            onChange={setScheduleDate}
+            accentColor={MEDICINE_THEME.color}
+          />
         </FormSection>
 
         <FormSection
@@ -349,32 +335,6 @@ export function LogMedicineSheet({
         }}
       />
 
-      <ThemedDatePicker
-        visible={startDatePickerVisible}
-        title="Start date"
-        value={startDate ?? new Date()}
-        maximumDate={endDate ?? undefined}
-        onClose={() => setStartDatePickerVisible(false)}
-        onConfirm={(date) => {
-          setStartDate(date);
-          if (endDate && !isStartBeforeOrEqualEnd(date, endDate)) {
-            setEndDate(null);
-          }
-          setStartDatePickerVisible(false);
-        }}
-      />
-
-      <ThemedDatePicker
-        visible={endDatePickerVisible}
-        title="End date"
-        value={endDate ?? startDate ?? new Date()}
-        minimumDate={startDate ?? undefined}
-        onClose={() => setEndDatePickerVisible(false)}
-        onConfirm={(date) => {
-          setEndDate(date);
-          setEndDatePickerVisible(false);
-        }}
-      />
     </>
   );
 }

@@ -1,40 +1,35 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { completeWalkSchedule, fetchTodayWalkSchedules } from '@/services/schedules/walkApi';
 import type { WalkScheduleItem } from '@/types/walk';
+import { useStaleFocusLoader } from './useStaleFocusLoader';
 
 export function useWalkSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<WalkScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const scopeKey = token && petId ? `${token}:${petId}` : null;
 
-  const reload = useCallback(async () => {
-    if (!token || !petId) {
-      setSchedules([]);
-      if (!token) log.warn('Walk', 'Skipping load — not signed in');
-      else if (!petId) log.warn('Walk', 'Skipping load — no active pet');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const data = await fetchTodayWalkSchedules(token, petId);
-      setSchedules(data);
-    } catch (error) {
-      setSchedules([]);
-      log.fail('Walk', 'Home schedules load failed', getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
+  const load = useCallback(async () => {
+    if (!token || !petId) return [];
+    return fetchTodayWalkSchedules(token, petId);
   }, [token, petId]);
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload]),
-  );
+  const reload = useStaleFocusLoader({
+    scopeKey,
+    enabled: Boolean(token && petId),
+    load,
+    onSuccess: setSchedules,
+    onClear: () => setSchedules([]),
+    onError: (error, isFirstLoad) => {
+      if (isFirstLoad) {
+        setSchedules([]);
+        log.fail('Walk', 'Home schedules load failed', getErrorMessage(error));
+      }
+    },
+    setLoading,
+  });
 
   const completeWalk = useCallback(
     async (scheduleId: string) => {

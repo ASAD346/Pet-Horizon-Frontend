@@ -8,6 +8,10 @@ export interface CreateWalkScheduleRequest {
   reminder?: boolean;
   reminderTime?: string;
   reminderMinutes?: number;
+  date?: string;
+  scheduleDate?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export type WalkScheduleStatus = 'pending' | 'done' | 'skipped';
@@ -33,6 +37,9 @@ export interface WalkScheduleItem {
     reminderTime?: string;
     reminderMinutes?: number;
   };
+  date?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface CompleteWalkRequest {

@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   RefreshControl,
   ScrollView,
@@ -13,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Spacing } from '@/constants/theme';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
@@ -25,6 +24,8 @@ import { ProfileMenuRow, ProfileMenuSection } from './ProfileMenuRow';
 import { ProfileUserCard } from './ProfileUserCard';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { ProfileTheme } from './profileTheme';
+import { SkeletonProfileUserCard } from '@/components/ui/skeletons';
+import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 
 export function ProfileHubView() {
   const router = useRouter();
@@ -33,14 +34,18 @@ export function ProfileHubView() {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [premiumStatus, setPremiumStatus] = useState<PremiumStatusResponse | null>(null);
+  const { shouldBlockUI, markLoaded, reset } = useStaleLoadScope(user?._id ?? null);
 
   const reload = useCallback(async () => {
     if (!token || !user?._id) {
+      reset();
       setPremiumStatus(null);
       return;
     }
 
-    setLoading(true);
+    const block = shouldBlockUI();
+    if (block) setLoading(true);
+
     try {
       const [profile, status] = await Promise.all([
         fetchUserProfile(token, user._id),
@@ -48,12 +53,15 @@ export function ProfileHubView() {
       ]);
       await setSession({ token, user: profile });
       setPremiumStatus(status);
+      markLoaded();
     } catch (error) {
-      Alert.alert('Profile', getErrorMessage(error));
+      if (block) {
+        Alert.alert('Profile', getErrorMessage(error));
+      }
     } finally {
       setLoading(false);
     }
-  }, [token, user?._id, setSession]);
+  }, [token, user?._id, setSession, shouldBlockUI, markLoaded, reset]);
 
   useFocusEffect(
     useCallback(() => {
@@ -90,7 +98,6 @@ export function ProfileHubView() {
         <AppText variant="h3" weight="800" color={ProfileTheme.text}>
           My Hub
         </AppText>
-        {loading ? <ActivityIndicator size="small" color={ProfileTheme.green} /> : null}
       </View>
 
       <ScrollView
@@ -100,11 +107,15 @@ export function ProfileHubView() {
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={ProfileTheme.green} />
         }
       >
-        <ProfileUserCard
-          name={displayName}
-          email={user?.email ?? ''}
-          imageUrl={resolveMediaUrl(user?.profileImage)}
-        />
+        {loading ? (
+          <SkeletonProfileUserCard />
+        ) : (
+          <ProfileUserCard
+            name={displayName}
+            email={user?.email ?? ''}
+            imageUrl={resolveMediaUrl(user?.profileImage)}
+          />
+        )}
 
         {isPremium ? (
           <View style={styles.premiumActiveWrap}>

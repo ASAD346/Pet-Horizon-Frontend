@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 import {
   FormChipRow,
   FormPickerField,
@@ -11,7 +11,6 @@ import {
   ThemedTimePicker,
   formSheetStyles,
 } from '../sheets';
-import { ThemedDatePicker } from '../pet/ThemedDatePicker';
 import { AppText } from '../ui/AppText';
 import { HomeTheme } from '../../constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
@@ -19,11 +18,17 @@ import { log } from '@/lib/log';
 import { formatTimeDisplay } from '@/lib/feeding/feedingForm';
 import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
-  dateToApiDateString,
+  buildVaccinationDatePayload,
+  createDefaultScheduleDate,
+  validateScheduleDate,
+  type ScheduleDateState,
+} from '@/lib/schedule/scheduleDate';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
+import { SkeletonList } from '@/components/ui/skeletons';
+import {
   dateToTimeHHmm,
   defaultDueDate,
   defaultReminderTimeDate,
-  formatDateLabel,
   VACCINATION_RECURRENCE_OPTIONS,
   VACCINATION_REMINDER_FREQUENCY_OPTIONS,
 } from '@/lib/vaccination/vaccinationForm';
@@ -52,7 +57,10 @@ export function LogVaccinationSheet({
   onSaved,
 }: LogVaccinationSheetProps) {
   const [vaccineName, setVaccineName] = useState('');
-  const [dueDate, setDueDate] = useState<Date | null>(null);
+  const [scheduleDate, setScheduleDate] = useState<ScheduleDateState>(() => ({
+    ...createDefaultScheduleDate('single'),
+    singleDate: defaultDueDate(),
+  }));
   const [reminderOn, setReminderOn] = useState(true);
   const [frequency, setFrequency] = useState<VaccinationReminderFrequency>('7_days');
   const [reminderTime, setReminderTime] = useState<Date>(() => defaultReminderTimeDate());
@@ -60,7 +68,6 @@ export function LogVaccinationSheet({
   const [recurrenceInterval, setRecurrenceInterval] =
     useState<VaccinationRecurrenceInterval>('yearly');
   const [notes, setNotes] = useState('');
-  const [duePickerVisible, setDuePickerVisible] = useState(false);
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +92,7 @@ export function LogVaccinationSheet({
 
   const resetForm = useCallback(() => {
     setVaccineName('');
-    setDueDate(defaultDueDate());
+    setScheduleDate({ ...createDefaultScheduleDate('single'), singleDate: defaultDueDate() });
     setReminderOn(true);
     setFrequency('7_days');
     setReminderTime(defaultReminderTimeDate());
@@ -111,12 +118,14 @@ export function LogVaccinationSheet({
       setError('Enter a vaccine name.');
       return;
     }
-    if (!dueDate) {
-      setError('Select a due date.');
+    const dateError = validateScheduleDate(scheduleDate);
+    if (dateError) {
+      setError(dateError);
       return;
     }
 
     const noteText = notes.trim();
+    const datePayload = buildVaccinationDatePayload(scheduleDate);
 
     setSaving(true);
     setError(null);
@@ -124,7 +133,8 @@ export function LogVaccinationSheet({
       await createVaccinationSchedule(token, {
         petId,
         vaccineName: vaccineName.trim(),
-        dueDate: dateToApiDateString(dueDate),
+        dueDate: datePayload.dueDate ?? datePayload.date ?? datePayload.startDate ?? '',
+        ...datePayload,
         reminder: reminderOn,
         frequency,
         reminderTime: dateToTimeHHmm(reminderTime),
@@ -134,7 +144,6 @@ export function LogVaccinationSheet({
       });
       log.ok('LogVaccination', 'Vaccination schedule saved', {
         vaccineName: vaccineName.trim(),
-        dueDate: dateToApiDateString(dueDate),
       });
       onSaved?.();
       await loadHistory();
@@ -152,15 +161,15 @@ export function LogVaccinationSheet({
         visible={visible}
         onClose={onClose}
         title="Log Vaccination"
-        subtitle="Track due dates, reminders, and recurring boosters."
         icon={VACCINATION_THEME.icon}
         accentColor={VACCINATION_THEME.color}
         accentBg={VACCINATION_THEME.bg}
         saveLabel="Save Vaccination"
         onSave={handleSave}
         saving={saving}
-        saveDisabled={!vaccineName.trim() || !dueDate}
+        saveDisabled={!vaccineName.trim()}
         error={error}
+        compact
       >
         <FormSection
           title="Vaccine details"
@@ -175,11 +184,18 @@ export function LogVaccinationSheet({
             placeholder="e.g. Rabies, DHPP, Bordetella"
           />
 
-          <FormSectionLabel text="DUE DATE" />
-          <FormPickerField
-            label={dueDate ? formatDateLabel(dueDate) : 'Select date'}
-            icon="calendar-outline"
-            onPress={() => setDuePickerVisible(true)}
+        </FormSection>
+
+        <FormSection
+          title="Schedule dates"
+          icon="calendar-clock"
+          accentColor={VACCINATION_THEME.color}
+          accentBg={VACCINATION_THEME.bg}
+        >
+          <ScheduleDateFields
+            value={scheduleDate}
+            onChange={setScheduleDate}
+            accentColor={VACCINATION_THEME.color}
           />
         </FormSection>
 
@@ -269,7 +285,7 @@ export function LogVaccinationSheet({
           accentBg={VACCINATION_THEME.bg}
         >
           {historyLoading ? (
-            <ActivityIndicator color={VACCINATION_THEME.color} style={{ marginVertical: 8 }} />
+            <SkeletonList count={2} />
           ) : history.length === 0 ? (
             <AppText variant="bodySmall" color={HomeTheme.textMuted}>
               No completed vaccinations yet.
@@ -289,17 +305,6 @@ export function LogVaccinationSheet({
           )}
         </FormSection>
       </FormSheetShell>
-
-      <ThemedDatePicker
-        visible={duePickerVisible}
-        title="Due date"
-        value={dueDate ?? defaultDueDate()}
-        onClose={() => setDuePickerVisible(false)}
-        onConfirm={(date) => {
-          setDueDate(date);
-          setDuePickerVisible(false);
-        }}
-      />
 
       <ThemedTimePicker
         visible={timePickerVisible}

@@ -4,15 +4,14 @@ import {
   defaultFeedingTimeDate,
   pickDefaultUnit,
 } from '@/lib/feeding/feedingForm';
-import { defaultScheduledDate } from '@/lib/grooming/groomingForm';
 import {
   defaultMedicineTimeDate,
 } from '@/lib/medicine/medicineForm';
 import {
-  defaultDueDate,
   defaultReminderTimeDate,
 } from '@/lib/vaccination/vaccinationForm';
 import { defaultWalkTimeDate, WALK_TIME_OPTIONS } from '@/lib/walk/walkForm';
+import { createDefaultScheduleDate } from '@/lib/schedule/scheduleDate';
 import type {
   FeedingEntryState,
   GroomingEntryState,
@@ -39,6 +38,7 @@ export function createFeedingEntry(
     amount: '2',
     unit,
     feedingTime: defaultFeedingTimeDate(),
+    scheduleDate: createDefaultScheduleDate('ongoing'),
     notificationsOn: false,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
@@ -51,6 +51,7 @@ export function createWalkEntry(): WalkEntryState {
     walkTime: WALK_TIME_OPTIONS[0].value,
     duration: '45',
     walkClockTime: defaultWalkTimeDate(),
+    scheduleDate: createDefaultScheduleDate('ongoing'),
     notificationsOn: false,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
@@ -66,8 +67,7 @@ export function createMedicineEntry(): MedicineEntryState {
     frequency: 'daily',
     daysOfWeek: [],
     medicineTime: defaultMedicineTimeDate(),
-    startDate: null,
-    endDate: null,
+    scheduleDate: createDefaultScheduleDate('ongoing'),
     totalPills: '30',
     reminderOn: false,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
@@ -79,7 +79,7 @@ export function createVaccinationEntry(): VaccinationEntryState {
   return {
     id: newEntryId(),
     vaccineName: '',
-    dueDate: defaultDueDate(),
+    scheduleDate: createDefaultScheduleDate('single'),
     reminderOn: false,
     frequency: '7_days',
     reminderTime: defaultReminderTimeDate(),
@@ -93,7 +93,7 @@ export function createGroomingEntry(groomingType = ''): GroomingEntryState {
   return {
     id: newEntryId(),
     groomingType,
-    scheduledDate: defaultScheduledDate(),
+    scheduleDate: createDefaultScheduleDate('single'),
     reminderOn: false,
     notes: '',
   };

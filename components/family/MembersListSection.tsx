@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
+import { SkeletonList } from '@/components/ui/skeletons';
 import { homePillCard } from '@/components/home/homeStyles';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import type { FamilyMemberDisplay } from '@/types/family';
@@ -43,7 +44,7 @@ export function MembersListSection({
       </View>
 
       {loading ? (
-        <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
+        <SkeletonList count={3} cardStyle={styles.memberCard} />
       ) : (
         members.map((member) => {
           const canManage = manageableIds.includes(member.id);
