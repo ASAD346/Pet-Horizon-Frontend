@@ -22,6 +22,8 @@ export interface CreateMedicineScheduleRequest {
   reminderMinutes?: number;
   startDate?: string;
   endDate?: string;
+  date?: string;
+  scheduleDate?: string;
 }
 
 export type MedicineScheduleStatus = 'pending' | 'done' | 'skipped';

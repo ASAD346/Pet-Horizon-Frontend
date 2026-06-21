@@ -2,10 +2,8 @@ import {
   addMinutesToTimeHHmm,
   dateToTimeHHmm,
 } from '@/lib/feeding/feedingForm';
-import { dateToApiDateString } from '@/lib/grooming/groomingForm';
 import {
   buildDoseString,
-  isStartBeforeOrEqualEnd,
   parseTotalPills,
 } from '@/lib/medicine/medicineForm';
 import { createGroomingRecord, updateGroomingRecord } from '@/services/grooming/groomingApi';
@@ -23,6 +21,12 @@ import {
 } from '@/services/schedules/vaccinationApi';
 import { createWalkSchedule, updateWalkSchedule } from '@/services/schedules/walkApi';
 import { parseDurationMinutes } from '@/lib/walk/walkForm';
+import {
+  buildGroomingDatePayload,
+  buildScheduleDatePayload,
+  buildVaccinationDatePayload,
+  validateScheduleDate,
+} from '@/lib/schedule/scheduleDate';
 import type {
   FeedingEntryState,
   GroomingEntryState,
@@ -69,6 +73,8 @@ async function saveFeedingEntry(token: string, petId: string, entry: FeedingEntr
   if (!entry.mealType) throw new Error('Select a meal type.');
   if (!entry.unit) throw new Error('Select a unit.');
   if (!entry.amount.trim()) throw new Error('Enter an amount.');
+  const dateError = validateScheduleDate(entry.scheduleDate);
+  if (dateError) throw new Error(dateError);
 
   const timeHHmm = dateToTimeHHmm(entry.feedingTime);
   const noteText = entry.notes.trim();
@@ -83,6 +89,7 @@ async function saveFeedingEntry(token: string, petId: string, entry: FeedingEntr
     reminderTime: entry.notificationsOn
       ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
       : undefined,
+    ...buildScheduleDatePayload(entry.scheduleDate),
   };
 
   if (entry.scheduleId) {
@@ -96,6 +103,8 @@ async function saveFeedingEntry(token: string, petId: string, entry: FeedingEntr
 async function saveWalkEntry(token: string, petId: string, entry: WalkEntryState) {
   const durationMinutes = parseDurationMinutes(entry.duration);
   if (!durationMinutes) throw new Error('Enter a valid duration in minutes.');
+  const dateError = validateScheduleDate(entry.scheduleDate);
+  if (dateError) throw new Error(dateError);
 
   const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
   const noteText = entry.notes.trim();
@@ -108,6 +117,7 @@ async function saveWalkEntry(token: string, petId: string, entry: WalkEntryState
     reminderTime: entry.notificationsOn
       ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
       : undefined,
+    ...buildScheduleDatePayload(entry.scheduleDate),
   };
 
   if (entry.scheduleId) {
@@ -130,14 +140,14 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
   if (entry.frequency === 'weekly' && entry.daysOfWeek.length === 0) {
     throw new Error('Select at least one day for a weekly schedule.');
   }
-  if (entry.startDate && entry.endDate && !isStartBeforeOrEqualEnd(entry.startDate, entry.endDate)) {
-    throw new Error('Start date must be before or equal to end date.');
-  }
+  const dateError = validateScheduleDate(entry.scheduleDate);
+  if (dateError) throw new Error(dateError);
   const pills = parseTotalPills(entry.totalPills);
   if (pills === null) throw new Error('Enter a valid total quantity.');
 
   const timeHHmm = dateToTimeHHmm(entry.medicineTime);
   const noteText = entry.notes.trim();
+  const datePayload = buildScheduleDatePayload(entry.scheduleDate);
 
   if (entry.scheduleId) {
     await updateMedicineSchedule(token, entry.scheduleId, {
@@ -145,8 +155,7 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
       time: timeHHmm,
       doseForm: entry.doseForm,
       remainingPills: pills,
-      startDate: entry.startDate ? dateToApiDateString(entry.startDate) : undefined,
-      endDate: entry.endDate ? dateToApiDateString(entry.endDate) : undefined,
+      ...datePayload,
       notes: noteText || undefined,
       reminder: entry.reminderOn,
       reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
@@ -168,8 +177,7 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
     totalPills: pills,
     remainingPills: pills,
     notes: noteText || undefined,
-    startDate: entry.startDate ? dateToApiDateString(entry.startDate) : undefined,
-    endDate: entry.endDate ? dateToApiDateString(entry.endDate) : undefined,
+    ...datePayload,
     reminder: entry.reminderOn,
     reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
     reminderTime: entry.reminderOn
@@ -180,14 +188,16 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
 
 async function saveVaccinationEntry(token: string, petId: string, entry: VaccinationEntryState) {
   if (!entry.vaccineName.trim()) throw new Error('Enter a vaccine name.');
-  if (!entry.dueDate) throw new Error('Select a due date.');
+  const dateError = validateScheduleDate(entry.scheduleDate);
+  if (dateError) throw new Error(dateError);
 
   const noteText = entry.notes.trim();
   const reminderTime = dateToTimeHHmm(entry.reminderTime);
+  const datePayload = buildVaccinationDatePayload(entry.scheduleDate);
 
   if (entry.scheduleId) {
     await updateVaccinationSchedule(token, entry.scheduleId, {
-      dueDate: dateToApiDateString(entry.dueDate),
+      ...datePayload,
       reminder: entry.reminderOn,
       frequency: entry.frequency,
       reminderTime,
@@ -196,10 +206,15 @@ async function saveVaccinationEntry(token: string, petId: string, entry: Vaccina
     return;
   }
 
+  if (!datePayload.dueDate && entry.scheduleDate.mode === 'single') {
+    throw new Error('Select a due date.');
+  }
+
   await createVaccinationSchedule(token, {
     petId,
     vaccineName: entry.vaccineName.trim(),
-    dueDate: dateToApiDateString(entry.dueDate),
+    dueDate: datePayload.dueDate ?? datePayload.date ?? datePayload.startDate ?? '',
+    ...datePayload,
     reminder: entry.reminderOn,
     frequency: entry.frequency,
     reminderTime,
@@ -219,11 +234,14 @@ async function saveGroomingEntry(
     throw new Error('Grooming is not available for this pet species.');
   }
   if (!entry.groomingType) throw new Error('Select a grooming type.');
+  const dateError = validateScheduleDate(entry.scheduleDate);
+  if (dateError) throw new Error(dateError);
 
   const noteText = entry.notes.trim();
+  const datePayload = buildGroomingDatePayload(entry.scheduleDate);
   const body = {
     type: entry.groomingType,
-    scheduledDate: entry.scheduledDate ? dateToApiDateString(entry.scheduledDate) : undefined,
+    ...datePayload,
     reminder: entry.reminderOn,
     notes: noteText || undefined,
   };

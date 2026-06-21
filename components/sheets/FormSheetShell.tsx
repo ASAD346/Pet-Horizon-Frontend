@@ -30,6 +30,7 @@ interface FormSheetShellProps {
   saving?: boolean;
   saveDisabled?: boolean;
   error?: string | null;
+  compact?: boolean;
   children: React.ReactNode;
 }
 
@@ -46,6 +47,7 @@ export function FormSheetShell({
   saving,
   saveDisabled,
   error,
+  compact = false,
   children,
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
@@ -65,7 +67,7 @@ export function FormSheetShell({
             <View style={formSheetStyles.handle} />
 
             <View style={formSheetStyles.topBar}>
-              <AppText variant="h3" weight="800" color={FormSheetColors.text} style={{ flex: 1 }}>
+              <AppText variant="body" weight="800" color={FormSheetColors.text} style={{ flex: 1, fontSize: 17 }}>
                 {title}
               </AppText>
               <Pressable style={formSheetStyles.closeBtn} onPress={onClose} hitSlop={8}>
@@ -78,12 +80,14 @@ export function FormSheetShell({
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={formSheetStyles.scrollContent}
             >
-              <FormSheetHero
-                icon={icon}
-                accentColor={accentColor}
-                accentBg={accentBg}
-                subtitle={subtitle}
-              />
+              {!compact && subtitle ? (
+                <FormSheetHero
+                  icon={icon}
+                  accentColor={accentColor}
+                  accentBg={accentBg}
+                  subtitle={subtitle}
+                />
+              ) : null}
 
               {error ? <AuthErrorBanner message={error} /> : null}
 

@@ -1,5 +1,6 @@
 import type { DayOfWeekCode, MedicineDoseForm, MedicineFrequency } from '@/types/medicine';
 import type { VaccinationRecurrenceInterval, VaccinationReminderFrequency } from '@/types/vaccination';
+import type { ScheduleDateState } from '@/lib/schedule/scheduleDate';
 
 export type ScheduleSectionKey = 'feeding' | 'walk' | 'medicine' | 'vaccination' | 'grooming';
 
@@ -10,6 +11,7 @@ export interface FeedingEntryState {
   amount: string;
   unit: string;
   feedingTime: Date;
+  scheduleDate: ScheduleDateState;
   notificationsOn: boolean;
   reminderMinutes: number;
   notes: string;
@@ -21,6 +23,7 @@ export interface WalkEntryState {
   walkTime: string;
   duration: string;
   walkClockTime: Date;
+  scheduleDate: ScheduleDateState;
   notificationsOn: boolean;
   reminderMinutes: number;
   notes: string;
@@ -35,8 +38,7 @@ export interface MedicineEntryState {
   frequency: MedicineFrequency;
   daysOfWeek: DayOfWeekCode[];
   medicineTime: Date;
-  startDate: Date | null;
-  endDate: Date | null;
+  scheduleDate: ScheduleDateState;
   totalPills: string;
   reminderOn: boolean;
   reminderMinutes: number;
@@ -47,7 +49,7 @@ export interface VaccinationEntryState {
   id: string;
   scheduleId?: string;
   vaccineName: string;
-  dueDate: Date | null;
+  scheduleDate: ScheduleDateState;
   reminderOn: boolean;
   frequency: VaccinationReminderFrequency;
   reminderTime: Date;
@@ -60,7 +62,7 @@ export interface GroomingEntryState {
   id: string;
   recordId?: string;
   groomingType: string;
-  scheduledDate: Date | null;
+  scheduleDate: ScheduleDateState;
   reminderOn: boolean;
   notes: string;
 }

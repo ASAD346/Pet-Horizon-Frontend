@@ -18,6 +18,7 @@ import {
   reminderFrequencyLabel,
 } from '@/lib/vaccination/vaccinationForm';
 import { getWalkTimeLabel } from '@/lib/walk/walkForm';
+import { parseScheduleDateFromApi, formatScheduleDateSummary } from '@/lib/schedule/scheduleDate';
 import { newEntryId } from '@/lib/schedule/defaults';
 import type {
   FeedingEntryState,
@@ -74,6 +75,11 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
     amount: meta.amount ?? '',
     unit: meta.unit ?? '',
     feedingTime: timeHHmmToDate(item.timeOfDay),
+    scheduleDate: parseScheduleDateFromApi({
+      date: (item as FeedingScheduleItem & { date?: string }).date,
+      startDate: (item as FeedingScheduleItem & { startDate?: string }).startDate,
+      endDate: (item as FeedingScheduleItem & { endDate?: string }).endDate,
+    }),
     notificationsOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
@@ -88,6 +94,11 @@ export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
     walkTime: meta.walkTime ?? 'morning',
     duration: meta.duration != null ? String(meta.duration) : '30',
     walkClockTime: timeHHmmToDate(item.timeOfDay),
+    scheduleDate: parseScheduleDateFromApi({
+      date: (item as WalkScheduleItem & { date?: string }).date,
+      startDate: (item as WalkScheduleItem & { startDate?: string }).startDate,
+      endDate: (item as WalkScheduleItem & { endDate?: string }).endDate,
+    }),
     notificationsOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
@@ -106,8 +117,11 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
     frequency: meta.frequency ?? 'daily',
     daysOfWeek: meta.daysOfWeek ?? [],
     medicineTime: timeHHmmToDate(item.timeOfDay),
-    startDate: apiDateStringToDate(item.startDate),
-    endDate: apiDateStringToDate(item.endDate),
+    scheduleDate: parseScheduleDateFromApi({
+      date: (item as MedicineScheduleItem & { date?: string }).date,
+      startDate: item.startDate,
+      endDate: item.endDate,
+    }),
     totalPills:
       meta.totalPills != null
         ? String(meta.totalPills)
@@ -127,7 +141,11 @@ export function mapVaccinationItem(item: VaccinationScheduleItem): VaccinationEn
     id: newEntryId(),
     scheduleId: item._id,
     vaccineName: meta.vaccineName ?? item.title ?? '',
-    dueDate: apiDateStringToDate(dueRaw ?? undefined),
+    scheduleDate: parseScheduleDateFromApi({
+      date: dueRaw ?? undefined,
+      startDate: item.startDate,
+      endDate: item.endDate,
+    }),
     reminderOn: meta.reminder === true,
     frequency: normalizeVaccinationFrequency(meta.frequency),
     reminderTime: timeHHmmToDate(meta.reminderTime ?? '09:00'),
@@ -142,7 +160,11 @@ export function mapGroomingItem(item: GroomingRecord): GroomingEntryState {
     id: newEntryId(),
     recordId: item._id,
     groomingType: item.groomingType,
-    scheduledDate: apiDateStringToDate(item.scheduledDate ?? undefined),
+    scheduleDate: parseScheduleDateFromApi({
+      date: item.scheduledDate ?? item.date ?? undefined,
+      startDate: item.startDate ?? undefined,
+      endDate: item.endDate ?? undefined,
+    }),
     reminderOn: item.reminderEnabled === true,
     notes: item.notes ?? '',
   };
@@ -215,26 +237,25 @@ export function scheduleEntrySubtitle(key: ScheduleSectionKey, entry: ScheduleEn
           : e.amount
             ? `${e.amount} · `
             : '';
-      return `${portion}${formatTimeHHmmDisplay(dateToTimeHHmm(e.feedingTime))}`;
+      return `${portion}${formatTimeHHmmDisplay(dateToTimeHHmm(e.feedingTime))} · ${formatScheduleDateSummary(e.scheduleDate)}`;
     }
     case 'walk': {
       const e = entry as WalkEntryState;
-      return `${e.duration} min · ${formatTimeDisplay(e.walkClockTime)}`;
+      return `${e.duration} min · ${formatTimeDisplay(e.walkClockTime)} · ${formatScheduleDateSummary(e.scheduleDate)}`;
     }
     case 'medicine': {
       const e = entry as MedicineEntryState;
       const freq =
         e.frequency && e.frequency !== 'daily' ? `${getFrequencyLabel(e.frequency)} · ` : '';
-      return `${freq}${formatTimeDisplay(e.medicineTime)}`;
+      return `${freq}${formatTimeDisplay(e.medicineTime)} · ${formatScheduleDateSummary(e.scheduleDate)}`;
     }
     case 'vaccination': {
       const e = entry as VaccinationEntryState;
-      const due = e.dueDate ? formatDateLabel(e.dueDate) : 'No due date';
-      return `${due} · ${reminderFrequencyLabel(e.frequency)}`;
+      return `${formatScheduleDateSummary(e.scheduleDate)} · ${reminderFrequencyLabel(e.frequency)}`;
     }
     case 'grooming': {
       const e = entry as GroomingEntryState;
-      return e.scheduledDate ? formatDateLabel(e.scheduledDate) : 'No date set';
+      return formatScheduleDateSummary(e.scheduleDate);
     }
     default:
       return '';

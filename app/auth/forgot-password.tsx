@@ -15,7 +15,7 @@ import {
 import {
   getAuthForgotPasswordErrorMessage,
   getAuthResetPasswordErrorMessage,
-} from '@/contexts/AuthContext';
+} from '@/lib/auth/authErrors';
 import { log } from '@/lib/log';
 import { LoginTheme, Spacing } from '@/constants/theme';
 import { requestPasswordReset, resetPassword } from '@/services/auth/authApi';

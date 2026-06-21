@@ -115,6 +115,8 @@ export interface UpdateMedicineScheduleRequest {
   remainingPills?: number;
   startDate?: string;
   endDate?: string;
+  date?: string;
+  scheduleDate?: string;
   notes?: string;
   reminder?: boolean;
   reminderMinutes?: number;

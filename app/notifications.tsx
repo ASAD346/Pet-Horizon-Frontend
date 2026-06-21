@@ -1,6 +1,5 @@
 import React, { useCallback } from 'react';
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -12,9 +11,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { SkeletonNotificationList } from '@/components/ui/skeletons';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function NotificationsScreen() {
       ) : null}
 
       {loading && items.length === 0 ? (
-        <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
+        <SkeletonNotificationList />
       ) : (
         <ScrollView
           contentContainerStyle={styles.content}

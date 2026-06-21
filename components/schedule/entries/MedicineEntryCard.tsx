@@ -16,6 +16,7 @@ import {
   formSheetStyles,
 } from '@/components/sheets';
 import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { HomeTheme } from '@/constants/theme';
 import {
   formatTimeDisplay,
@@ -29,7 +30,6 @@ import {
   DOSE_FORM_OPTIONS,
   formatDateLabel,
   FREQUENCY_OPTIONS,
-  isStartBeforeOrEqualEnd,
 } from '@/lib/medicine/medicineForm';
 import { ScheduleColors, scheduleFieldStyles } from '../scheduleStyles';
 
@@ -60,8 +60,6 @@ export function MedicineEntryCard({
   onRemove,
 }: MedicineEntryCardProps) {
   const [timePickerVisible, setTimePickerVisible] = useState(false);
-  const [startPickerVisible, setStartPickerVisible] = useState(false);
-  const [endPickerVisible, setEndPickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
 
   const toggleDay = (day: DayOfWeekCode) => {
@@ -80,30 +78,6 @@ export function MedicineEntryCard({
         onConfirm={(date) => {
           onChange({ ...entry, medicineTime: date });
           setTimePickerVisible(false);
-        }}
-      />
-      <ThemedDatePicker
-        visible={startPickerVisible}
-        title="Start date"
-        value={entry.startDate ?? new Date()}
-        maximumDate={entry.endDate ?? undefined}
-        onClose={() => setStartPickerVisible(false)}
-        onConfirm={(date) => {
-          const next = { ...entry, startDate: date };
-          if (entry.endDate && !isStartBeforeOrEqualEnd(date, entry.endDate)) next.endDate = null;
-          onChange(next);
-          setStartPickerVisible(false);
-        }}
-      />
-      <ThemedDatePicker
-        visible={endPickerVisible}
-        title="End date"
-        value={entry.endDate ?? entry.startDate ?? new Date()}
-        minimumDate={entry.startDate ?? undefined}
-        onClose={() => setEndPickerVisible(false)}
-        onConfirm={(date) => {
-          onChange({ ...entry, endDate: date });
-          setEndPickerVisible(false);
         }}
       />
       <SheetOptionPicker
@@ -128,7 +102,7 @@ export function MedicineEntryCard({
             placeholder="e.g. Amoxicillin"
           />
           <View style={formSheetStyles.twoColRow}>
-            <View style={formSheetStyles.halfCol}>
+            <View style={[formSheetStyles.halfCol, { flex: 1.1 }]}>
               <FormSectionLabel text="DOSE" />
               <FormSuffixInput
                 value={entry.doseAmount}
@@ -137,26 +111,26 @@ export function MedicineEntryCard({
               />
             </View>
             <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="FORM" />
-              <FormChipRow
-                options={DOSE_FORM_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-                selected={entry.doseForm}
-                onSelect={(doseForm) => onChange({ ...entry, doseForm: doseForm as MedicineEntryState['doseForm'] })}
-                accentColor={accentColor}
+              <FormSectionLabel text="SUPPLY" />
+              <FormSuffixInput
+                value={entry.totalPills}
+                onChangeText={(totalPills) => onChange({ ...entry, totalPills })}
+                suffix="pills"
+                keyboardType="number-pad"
+                placeholder="30"
               />
             </View>
           </View>
-          <FormSectionLabel text="TOTAL QUANTITY" />
-          <FormSuffixInput
-            value={entry.totalPills}
-            onChangeText={(totalPills) => onChange({ ...entry, totalPills })}
-            suffix="pills"
-            keyboardType="number-pad"
-            placeholder="30"
+          <FormSectionLabel text="FORM" />
+          <FormChipRow
+            options={DOSE_FORM_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+            selected={entry.doseForm}
+            onSelect={(doseForm) => onChange({ ...entry, doseForm: doseForm as MedicineEntryState['doseForm'] })}
+            accentColor={accentColor}
           />
         </FormSection>
 
-        <FormSection title="Schedule" icon="calendar-clock" accentColor={accentColor} accentBg={accentBg}>
+        <FormSection title="Schedule & reminders" icon="calendar-clock" accentColor={accentColor} accentBg={accentBg}>
           <FormSectionLabel text="FREQUENCY" />
           <FormChipRow
             options={FREQUENCY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
@@ -181,54 +155,42 @@ export function MedicineEntryCard({
               />
             </>
           ) : null}
-          <FormSectionLabel text="TIME" />
-          <FormPickerField
-            label={formatTimeDisplay(entry.medicineTime)}
-            icon="time-outline"
-            onPress={() => setTimePickerVisible(true)}
-          />
           <View style={formSheetStyles.twoColRow}>
             <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="START" />
+              <FormSectionLabel text="TIME" />
               <FormPickerField
-                label={entry.startDate ? formatDateLabel(entry.startDate) : 'Not set'}
-                icon="calendar-outline"
-                onPress={() => setStartPickerVisible(true)}
+                label={formatTimeDisplay(entry.medicineTime)}
+                icon="time-outline"
+                onPress={() => setTimePickerVisible(true)}
               />
             </View>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="END" />
-              <FormPickerField
-                label={entry.endDate ? formatDateLabel(entry.endDate) : 'Not set'}
-                icon="calendar-outline"
-                onPress={() => setEndPickerVisible(true)}
-              />
-            </View>
+            {entry.reminderOn ? (
+              <View style={formSheetStyles.halfCol}>
+                <FormSectionLabel text="REMINDER" />
+                <FormPickerField
+                  label={getReminderMinutesLabel(entry.reminderMinutes)}
+                  icon="chevron-down"
+                  onPress={() => setReminderPickerVisible(true)}
+                />
+              </View>
+            ) : null}
           </View>
-        </FormSection>
-
-        <FormSection title="Reminders & notes" icon="bell-outline" accentColor={accentColor} accentBg={accentBg}>
+          <ScheduleDateFields
+            value={entry.scheduleDate}
+            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+            accentColor={accentColor}
+          />
           <FormSwitchRow
             label="Remind me to give medicine"
             value={entry.reminderOn}
             onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
             accentColor={accentColor}
           />
-          {entry.reminderOn ? (
-            <>
-              <FormSectionLabel text="REMINDER TIMING" />
-              <FormPickerField
-                label={getReminderMinutesLabel(entry.reminderMinutes)}
-                icon="chevron-down"
-                onPress={() => setReminderPickerVisible(true)}
-              />
-            </>
-          ) : null}
           <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
             onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Instructions, vet name..."
+            placeholder="Optional instructions..."
             multiline
           />
         </FormSection>
@@ -363,34 +325,11 @@ export function MedicineEntryCard({
         <Ionicons name="time-outline" size={18} color={ScheduleColors.label} />
       </TouchableOpacity>
 
-      <View style={scheduleFieldStyles.twoColRow}>
-        <View style={scheduleFieldStyles.halfCol}>
-          <SectionLabel text="START DATE" />
-          <TouchableOpacity
-            style={scheduleFieldStyles.pickerField}
-            onPress={() => setStartPickerVisible(true)}
-            activeOpacity={0.85}
-          >
-            <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-              {entry.startDate ? formatDateLabel(entry.startDate) : 'Not set'}
-            </AppText>
-            <Ionicons name="calendar-outline" size={18} color={ScheduleColors.label} />
-          </TouchableOpacity>
-        </View>
-        <View style={scheduleFieldStyles.halfCol}>
-          <SectionLabel text="END DATE" />
-          <TouchableOpacity
-            style={scheduleFieldStyles.pickerField}
-            onPress={() => setEndPickerVisible(true)}
-            activeOpacity={0.85}
-          >
-            <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-              {entry.endDate ? formatDateLabel(entry.endDate) : 'Not set'}
-            </AppText>
-            <Ionicons name="calendar-outline" size={18} color={ScheduleColors.label} />
-          </TouchableOpacity>
-        </View>
-      </View>
+      <ScheduleDateFields
+        value={entry.scheduleDate}
+        onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+        accentColor={accentColor}
+      />
 
       <SectionLabel text="TOTAL QUANTITY" />
       <View style={scheduleFieldStyles.suffixInputWrap}>

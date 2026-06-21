@@ -44,7 +44,7 @@ export function FormChipRow({ options, selected, onSelect, accentColor }: FormCh
             activeOpacity={0.85}
           >
             {isSelected ? <Ionicons name="checkmark-circle" size={16} color={HomeTheme.white} /> : null}
-            <AppText variant="bodySmall" weight="700" color={isSelected ? HomeTheme.white : FormSheetColors.text}>
+            <AppText variant="caption" weight="700" color={isSelected ? HomeTheme.white : FormSheetColors.text}>
               {option.label}
             </AppText>
           </TouchableOpacity>
@@ -197,8 +197,8 @@ export function FormSuffixInput({
 
 const styles = StyleSheet.create({
   sectionLabel: {
-    letterSpacing: 0.8,
-    marginBottom: 8,
-    marginTop: 2,
+    letterSpacing: 0.6,
+    marginBottom: 6,
+    marginTop: 0,
   },
 });

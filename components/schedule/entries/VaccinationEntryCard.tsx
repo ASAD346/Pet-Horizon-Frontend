@@ -11,13 +11,11 @@ import {
   FormSwitchRow,
   FormTextField,
 } from '@/components/sheets';
-import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { HomeTheme } from '@/constants/theme';
 import { formatTimeDisplay } from '@/lib/feeding/feedingForm';
 import type { VaccinationEntryState } from '@/lib/schedule/types';
 import {
-  defaultDueDate,
-  formatDateLabel,
   VACCINATION_RECURRENCE_OPTIONS,
   VACCINATION_REMINDER_FREQUENCY_OPTIONS,
 } from '@/lib/vaccination/vaccinationForm';
@@ -44,31 +42,18 @@ export function VaccinationEntryCard({
   onChange,
   onRemove,
 }: VaccinationEntryCardProps) {
-  const [duePickerVisible, setDuePickerVisible] = useState(false);
   const [timePickerVisible, setTimePickerVisible] = useState(false);
 
   const pickers = (
-    <>
-      <ThemedDatePicker
-        visible={duePickerVisible}
-        title="Due date"
-        value={entry.dueDate ?? defaultDueDate()}
-        onClose={() => setDuePickerVisible(false)}
-        onConfirm={(date) => {
-          onChange({ ...entry, dueDate: date });
-          setDuePickerVisible(false);
-        }}
-      />
-      <ThemedTimePicker
-        visible={timePickerVisible}
-        value={entry.reminderTime}
-        onClose={() => setTimePickerVisible(false)}
-        onConfirm={(date) => {
-          onChange({ ...entry, reminderTime: date });
-          setTimePickerVisible(false);
-        }}
-      />
-    </>
+    <ThemedTimePicker
+      visible={timePickerVisible}
+      value={entry.reminderTime}
+      onClose={() => setTimePickerVisible(false)}
+      onConfirm={(date) => {
+        onChange({ ...entry, reminderTime: date });
+        setTimePickerVisible(false);
+      }}
+    />
   );
 
   if (embeddedInSheet) {
@@ -81,15 +66,11 @@ export function VaccinationEntryCard({
             onChangeText={(vaccineName) => onChange({ ...entry, vaccineName })}
             placeholder="e.g. Rabies, DHPP"
           />
-          <FormSectionLabel text="DUE DATE" />
-          <FormPickerField
-            label={entry.dueDate ? formatDateLabel(entry.dueDate) : 'Select date'}
-            icon="calendar-outline"
-            onPress={() => setDuePickerVisible(true)}
+          <ScheduleDateFields
+            value={entry.scheduleDate}
+            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+            accentColor={accentColor}
           />
-        </FormSection>
-
-        <FormSection title="Reminders" icon="bell-outline" accentColor={accentColor} accentBg={accentBg}>
           <FormSwitchRow
             label="Remind me before due date"
             value={entry.reminderOn}
@@ -98,7 +79,7 @@ export function VaccinationEntryCard({
           />
           {entry.reminderOn ? (
             <>
-              <FormSectionLabel text="REMIND ME" />
+              <FormSectionLabel text="REMINDER FREQUENCY" />
               <FormChipRow
                 options={VACCINATION_REMINDER_FREQUENCY_OPTIONS.map((o) => ({
                   value: o.value,
@@ -118,23 +99,17 @@ export function VaccinationEntryCard({
               />
             </>
           ) : null}
-        </FormSection>
-
-        <FormSection title="Recurrence" icon="repeat" accentColor={accentColor} accentBg={accentBg}>
           <FormSwitchRow
-            label={entry.isRecurring ? 'Repeats automatically' : 'One-time vaccine'}
+            label="Recurring vaccination"
             value={entry.isRecurring}
             onValueChange={(isRecurring) => onChange({ ...entry, isRecurring })}
             accentColor={accentColor}
           />
           {entry.isRecurring ? (
             <>
-              <FormSectionLabel text="REPEAT EVERY" />
+              <FormSectionLabel text="RECURRENCE" />
               <FormChipRow
-                options={VACCINATION_RECURRENCE_OPTIONS.map((o) => ({
-                  value: o.value,
-                  label: o.label,
-                }))}
+                options={VACCINATION_RECURRENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
                 selected={entry.recurrenceInterval}
                 onSelect={(recurrenceInterval) =>
                   onChange({
@@ -146,13 +121,11 @@ export function VaccinationEntryCard({
               />
             </>
           ) : null}
-        </FormSection>
-
-        <FormSection title="Notes" icon="text-box-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
             onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Clinic, batch number..."
+            placeholder="Optional details..."
             multiline
           />
         </FormSection>
@@ -166,7 +139,7 @@ export function VaccinationEntryCard({
     <View style={scheduleFieldStyles.entryCard}>
       <View style={scheduleFieldStyles.entryHeader}>
         <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
-          Vaccine {index + 1}
+          Vaccination {index + 1}
         </AppText>
         {canRemove ? (
           <TouchableOpacity onPress={onRemove} hitSlop={8}>
@@ -179,21 +152,16 @@ export function VaccinationEntryCard({
       <TextInput
         value={entry.vaccineName}
         onChangeText={(vaccineName) => onChange({ ...entry, vaccineName })}
-        placeholder="e.g. Rabies, DHPP"
+        placeholder="e.g. Rabies"
         placeholderTextColor={ScheduleColors.placeholder}
         style={scheduleFieldStyles.textInput}
       />
 
-      <SectionLabel text="DUE DATE" />
-      <TouchableOpacity
-        style={scheduleFieldStyles.pickerField}
-        onPress={() => setDuePickerVisible(true)}
-      >
-        <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-          {entry.dueDate ? formatDateLabel(entry.dueDate) : 'Select date'}
-        </AppText>
-        <Ionicons name="calendar-outline" size={18} color={ScheduleColors.label} />
-      </TouchableOpacity>
+      <ScheduleDateFields
+        value={entry.scheduleDate}
+        onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+        accentColor={accentColor}
+      />
 
       <SectionLabel text="NOTIFICATIONS" />
       <View style={scheduleFieldStyles.switchRow}>
@@ -211,28 +179,11 @@ export function VaccinationEntryCard({
 
       {entry.reminderOn ? (
         <>
-          <SectionLabel text="REMIND ME" />
-          <View style={scheduleFieldStyles.chipRow}>
-            {VACCINATION_REMINDER_FREQUENCY_OPTIONS.map((option) => {
-              const selected = entry.frequency === option.value;
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor }]}
-                  onPress={() => onChange({ ...entry, frequency: option.value })}
-                >
-                  <AppText variant="caption" weight="600" color={selected ? HomeTheme.white : HomeTheme.text}>
-                    {option.label}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
           <SectionLabel text="REMINDER TIME" />
           <TouchableOpacity
             style={scheduleFieldStyles.pickerField}
             onPress={() => setTimePickerVisible(true)}
+            activeOpacity={0.85}
           >
             <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
               {formatTimeDisplay(entry.reminderTime)}
@@ -242,51 +193,11 @@ export function VaccinationEntryCard({
         </>
       ) : null}
 
-      <SectionLabel text="RECURRING" />
-      <TouchableOpacity
-        style={[
-          scheduleFieldStyles.notifyBtn,
-          entry.isRecurring && { backgroundColor: accentColor },
-        ]}
-        onPress={() => onChange({ ...entry, isRecurring: !entry.isRecurring })}
-      >
-        <Ionicons
-          name={entry.isRecurring ? 'repeat' : 'repeat-outline'}
-          size={18}
-          color={entry.isRecurring ? HomeTheme.white : HomeTheme.text}
-        />
-        <AppText variant="caption" weight="700" color={entry.isRecurring ? HomeTheme.white : HomeTheme.text}>
-          {entry.isRecurring ? 'Repeats automatically' : 'One-time'}
-        </AppText>
-      </TouchableOpacity>
-
-      {entry.isRecurring ? (
-        <>
-          <SectionLabel text="REPEAT EVERY" />
-          <View style={scheduleFieldStyles.chipRow}>
-            {VACCINATION_RECURRENCE_OPTIONS.map((option) => {
-              const selected = entry.recurrenceInterval === option.value;
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor }]}
-                  onPress={() => onChange({ ...entry, recurrenceInterval: option.value })}
-                >
-                  <AppText variant="caption" weight="600" color={selected ? HomeTheme.white : HomeTheme.text}>
-                    {option.label}
-                  </AppText>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </>
-      ) : null}
-
-      <SectionLabel text="NOTES (OPTIONAL)" />
+      <SectionLabel text="NOTES" />
       <TextInput
         value={entry.notes}
         onChangeText={(notes) => onChange({ ...entry, notes })}
-        placeholder="Clinic, batch number..."
+        placeholder="Extra details..."
         placeholderTextColor={ScheduleColors.placeholder}
         style={[scheduleFieldStyles.textInput, scheduleFieldStyles.notesInput]}
         multiline

@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { SheetColors } from '@/components/sheets';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { SkeletonPetSwitcherList } from '@/components/ui/skeletons';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import type { ApiPet } from '@/types/pet';
 import { Image } from 'expo-image';
@@ -59,70 +60,74 @@ export function PetSwitcherSheet({
             </TouchableOpacity>
           </View>
 
-          {loading ? <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} /> : null}
+          {loading ? (
+            <SkeletonPetSwitcherList count={3} />
+          ) : (
+            <>
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {pets.map((pet) => {
+                  const active = pet._id === activePetId;
+                  const busy = switchingId === pet._id;
+                  return (
+                    <TouchableOpacity
+                      key={pet._id}
+                      style={[styles.row, active && styles.rowActive]}
+                      onPress={() => onSelectPet(pet._id)}
+                      disabled={busy || active}
+                    >
+                      <Image
+                        source={
+                          pet.image
+                            ? { uri: resolveMediaUrl(pet.image) }
+                            : require('../../assets/images/onboarding.png')
+                        }
+                        style={styles.avatar}
+                      />
+                      <View style={styles.info}>
+                        <AppText variant="body" weight="700" color={HomeTheme.text}>
+                          {pet.name}
+                        </AppText>
+                        <AppText variant="caption" color={HomeTheme.textMuted}>
+                          {pet.breed || pet.species || 'Pet'}
+                        </AppText>
+                      </View>
+                      {busy ? (
+                        <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                      ) : active ? (
+                        <Ionicons name="checkmark-circle" size={22} color={HomeTheme.cardGreen} />
+                      ) : (
+                        <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {pets.map((pet) => {
-              const active = pet._id === activePetId;
-              const busy = switchingId === pet._id;
-              return (
-                <TouchableOpacity
-                  key={pet._id}
-                  style={[styles.row, active && styles.rowActive]}
-                  onPress={() => onSelectPet(pet._id)}
-                  disabled={busy || active}
-                >
-                  <Image
-                    source={
-                      pet.image
-                        ? { uri: resolveMediaUrl(pet.image) }
-                        : require('../../assets/images/onboarding.png')
-                    }
-                    style={styles.avatar}
-                  />
-                  <View style={styles.info}>
-                    <AppText variant="body" weight="700" color={HomeTheme.text}>
-                      {pet.name}
-                    </AppText>
-                    <AppText variant="caption" color={HomeTheme.textMuted}>
-                      {pet.breed || pet.species || 'Pet'}
-                    </AppText>
-                  </View>
-                  {busy ? (
-                    <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
-                  ) : active ? (
-                    <Ionicons name="checkmark-circle" size={22} color={HomeTheme.cardGreen} />
-                  ) : (
-                    <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
-                  )}
+              <TouchableOpacity
+                style={styles.manageBtn}
+                onPress={() => {
+                  onClose();
+                  if (activePetId) {
+                    router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: activePetId } } as Href);
+                  }
+                }}
+              >
+                <Ionicons name="create-outline" size={18} color={HomeTheme.cardGreen} />
+                <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
+                  Edit active pet
+                </AppText>
+              </TouchableOpacity>
+
+              {onAddPet ? (
+                <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>
+                  <Ionicons name="add-circle-outline" size={18} color={HomeTheme.text} />
+                  <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
+                    Add another pet
+                  </AppText>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-
-          <TouchableOpacity
-            style={styles.manageBtn}
-            onPress={() => {
-              onClose();
-              if (activePetId) {
-                router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: activePetId } } as Href);
-              }
-            }}
-          >
-            <Ionicons name="create-outline" size={18} color={HomeTheme.cardGreen} />
-            <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
-              Edit active pet
-            </AppText>
-          </TouchableOpacity>
-
-          {onAddPet ? (
-            <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>
-              <Ionicons name="add-circle-outline" size={18} color={HomeTheme.text} />
-              <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
-                Add another pet
-              </AppText>
-            </TouchableOpacity>
-          ) : null}
+              ) : null}
+            </>
+          )}
         </Pressable>
       </Pressable>
     </Modal>

@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -9,6 +8,7 @@ import {
   markNotificationRead,
 } from '@/services/notifications/notificationApi';
 import type { ApiNotification } from '@/types/notification';
+import { useStaleFocusLoader } from './useStaleFocusLoader';
 
 export function useNotifications(token: string | null) {
   const [items, setItems] = useState<ApiNotification[]>([]);
@@ -20,32 +20,32 @@ export function useNotifications(token: string | null) {
     [items],
   );
 
-  const reload = useCallback(async () => {
-    if (!token) {
-      setItems([]);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const rows = await fetchNotifications(token);
-      setItems(rows);
-    } catch (err) {
-      setItems([]);
-      setError(getErrorMessage(err));
-      log.fail('Notifications', 'Load failed', getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+  const load = useCallback(async () => {
+    if (!token) return [];
+    return fetchNotifications(token);
   }, [token]);
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload]),
-  );
+  const reload = useStaleFocusLoader({
+    scopeKey: token,
+    enabled: Boolean(token),
+    load,
+    onSuccess: (rows) => {
+      setItems(rows);
+      setError(null);
+    },
+    onClear: () => {
+      setItems([]);
+      setError(null);
+    },
+    onError: (err, isFirstLoad) => {
+      if (isFirstLoad) {
+        setItems([]);
+        setError(getErrorMessage(err));
+        log.fail('Notifications', 'Load failed', getErrorMessage(err));
+      }
+    },
+    setLoading,
+  });
 
   const markRead = useCallback(
     async (id: string) => {

@@ -7,10 +7,10 @@ import {
   Pressable,
   FlatList,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
+import { Skeleton } from '@/components/ui/skeletons';
 import { LoginTheme, Radius, Spacing } from '../../constants/theme';
 
 interface BreedSelectorProps {
@@ -51,11 +51,14 @@ export function BreedSelector({
         Breed
       </AppText>
 
+      {loading ? (
+        <Skeleton width="100%" height={48} borderRadius={Radius.md} />
+      ) : (
       <TouchableOpacity
         style={[styles.field, error ? styles.fieldError : null, disabled ? styles.fieldDisabled : null]}
-        onPress={() => !disabled && !loading && breeds.length > 0 && setVisible(true)}
+        onPress={() => !disabled && breeds.length > 0 && setVisible(true)}
         activeOpacity={0.8}
-        disabled={disabled || loading || breeds.length === 0}
+        disabled={disabled || breeds.length === 0}
       >
         <AppText
           variant="body"
@@ -66,12 +69,9 @@ export function BreedSelector({
         >
           {displayValue}
         </AppText>
-        {loading ? (
-          <ActivityIndicator size="small" color={LoginTheme.green} />
-        ) : (
-          <Ionicons name="chevron-down" size={20} color={LoginTheme.green} />
-        )}
+        <Ionicons name="chevron-down" size={20} color={LoginTheme.green} />
       </TouchableOpacity>
+      )}
 
       {error ? (
         <AppText variant="caption" color="#C62828" style={styles.errorText}>

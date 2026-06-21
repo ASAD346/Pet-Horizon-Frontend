@@ -2,13 +2,17 @@ import {
   addMinutesToTimeHHmm,
   dateToTimeHHmm,
 } from '@/lib/feeding/feedingForm';
-import { dateToApiDateString } from '@/lib/grooming/groomingForm';
 import {
   buildDoseString,
-  isStartBeforeOrEqualEnd,
   parseTotalPills,
 } from '@/lib/medicine/medicineForm';
 import type { ScheduleSectionsState } from '@/lib/schedule/types';
+import {
+  buildGroomingDatePayload,
+  buildScheduleDatePayload,
+  buildVaccinationDatePayload,
+  validateScheduleDate,
+} from '@/lib/schedule/scheduleDate';
 import { createGroomingRecord } from '@/services/grooming/groomingApi';
 import { createFeedingSchedule } from '@/services/schedules/feedingApi';
 import { createMedicineSchedule } from '@/services/schedules/medicineApi';
@@ -52,6 +56,11 @@ export async function saveAllSchedules(
       }
       const timeHHmm = dateToTimeHHmm(entry.feedingTime);
       const noteText = entry.notes.trim();
+      const dateError = validateScheduleDate(entry.scheduleDate);
+      if (dateError) {
+        pushError(errors, label, dateError);
+        continue;
+      }
       try {
         await createFeedingSchedule(token, {
           petId,
@@ -65,6 +74,7 @@ export async function saveAllSchedules(
           reminderTime: entry.notificationsOn
             ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
             : undefined,
+          ...buildScheduleDatePayload(entry.scheduleDate),
         });
         savedCount += 1;
       } catch (e) {
@@ -84,6 +94,11 @@ export async function saveAllSchedules(
       }
       const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
       const noteText = entry.notes.trim();
+      const dateError = validateScheduleDate(entry.scheduleDate);
+      if (dateError) {
+        pushError(errors, label, dateError);
+        continue;
+      }
       try {
         await createWalkSchedule(token, {
           petId,
@@ -96,6 +111,7 @@ export async function saveAllSchedules(
           reminderTime: entry.notificationsOn
             ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
             : undefined,
+          ...buildScheduleDatePayload(entry.scheduleDate),
         });
         savedCount += 1;
       } catch (e) {
@@ -122,8 +138,9 @@ export async function saveAllSchedules(
         pushError(errors, label, 'Select at least one day for a weekly schedule.');
         continue;
       }
-      if (entry.startDate && entry.endDate && !isStartBeforeOrEqualEnd(entry.startDate, entry.endDate)) {
-        pushError(errors, label, 'Start date must be before or equal to end date.');
+      const dateError = validateScheduleDate(entry.scheduleDate);
+      if (dateError) {
+        pushError(errors, label, dateError);
         continue;
       }
       const pills = parseTotalPills(entry.totalPills);
@@ -145,8 +162,7 @@ export async function saveAllSchedules(
           totalPills: pills,
           remainingPills: pills,
           notes: noteText || undefined,
-          startDate: entry.startDate ? dateToApiDateString(entry.startDate) : undefined,
-          endDate: entry.endDate ? dateToApiDateString(entry.endDate) : undefined,
+          ...buildScheduleDatePayload(entry.scheduleDate),
           reminder: entry.reminderOn,
           reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
           reminderTime: entry.reminderOn
@@ -168,16 +184,19 @@ export async function saveAllSchedules(
         pushError(errors, label, 'Enter a vaccine name.');
         continue;
       }
-      if (!entry.dueDate) {
-        pushError(errors, label, 'Select a due date.');
+      const dateError = validateScheduleDate(entry.scheduleDate);
+      if (dateError) {
+        pushError(errors, label, dateError);
         continue;
       }
       const noteText = entry.notes.trim();
+      const datePayload = buildVaccinationDatePayload(entry.scheduleDate);
       try {
         await createVaccinationSchedule(token, {
           petId,
           vaccineName: entry.vaccineName.trim(),
-          dueDate: dateToApiDateString(entry.dueDate),
+          dueDate: datePayload.dueDate ?? datePayload.date ?? datePayload.startDate ?? '',
+          ...datePayload,
           reminder: entry.reminderOn,
           frequency: entry.frequency,
           reminderTime: dateToTimeHHmm(entry.reminderTime),
@@ -203,12 +222,17 @@ export async function saveAllSchedules(
           pushError(errors, label, 'Select a grooming type.');
           continue;
         }
+        const dateError = validateScheduleDate(entry.scheduleDate);
+        if (dateError) {
+          pushError(errors, label, dateError);
+          continue;
+        }
         const noteText = entry.notes.trim();
         try {
           await createGroomingRecord(token, {
             petId,
             type: entry.groomingType,
-            scheduledDate: entry.scheduledDate ? dateToApiDateString(entry.scheduledDate) : undefined,
+            ...buildGroomingDatePayload(entry.scheduleDate),
             reminder: entry.reminderOn,
             notes: noteText || undefined,
           });

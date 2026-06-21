@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useAuth, getAuthGoogleErrorMessage } from '@/contexts/AuthContext';
+import { getAuthGoogleErrorMessage } from '@/lib/auth/authErrors';
+import { useAuth } from '@/hooks/useAuth';
 import { ApiError } from '@/lib/api/errors';
 import {
   isGoogleSignInSupported,

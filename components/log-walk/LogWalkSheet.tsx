@@ -31,6 +31,13 @@ import {
   WALK_TIME_OPTIONS,
 } from '@/lib/walk/walkForm';
 import { createWalkSchedule } from '@/services/schedules/walkApi';
+import {
+  buildScheduleDatePayload,
+  createDefaultScheduleDate,
+  validateScheduleDate,
+  type ScheduleDateState,
+} from '@/lib/schedule/scheduleDate';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 
 const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
   value: String(option.value),
@@ -57,6 +64,7 @@ export function LogWalkSheet({
   const [walkTime, setWalkTime] = useState<string>(WALK_TIME_OPTIONS[0].value);
   const [duration, setDuration] = useState('45');
   const [walkClockTime, setWalkClockTime] = useState(defaultWalkTimeDate);
+  const [scheduleDate, setScheduleDate] = useState<ScheduleDateState>(createDefaultScheduleDate('ongoing'));
   const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [notes, setNotes] = useState('');
@@ -69,6 +77,7 @@ export function LogWalkSheet({
     setWalkTime(WALK_TIME_OPTIONS[0].value);
     setDuration('45');
     setWalkClockTime(defaultWalkTimeDate());
+    setScheduleDate(createDefaultScheduleDate('ongoing'));
     setReminderMinutes(DEFAULT_REMINDER_MINUTES);
     setNotificationsOn(true);
     setNotes('');
@@ -92,6 +101,11 @@ export function LogWalkSheet({
       setError('Enter a valid duration in minutes.');
       return;
     }
+    const dateError = validateScheduleDate(scheduleDate);
+    if (dateError) {
+      setError(dateError);
+      return;
+    }
 
     const timeHHmm = dateToTimeHHmm(walkClockTime);
     const noteText = notes.trim();
@@ -108,6 +122,7 @@ export function LogWalkSheet({
         reminder: notificationsOn,
         reminderMinutes: notificationsOn ? reminderMinutes : undefined,
         reminderTime: notificationsOn ? addMinutesToTimeHHmm(timeHHmm, reminderMinutes) : undefined,
+        ...buildScheduleDatePayload(scheduleDate),
       });
       log.ok('LogWalk', 'Walk schedule saved', { walkTime, time: timeHHmm, duration: durationMinutes });
       onSaved?.();
@@ -125,7 +140,6 @@ export function LogWalkSheet({
         visible={visible}
         onClose={onClose}
         title="Log Walk"
-        subtitle="Set a daily walk time and optional reminders."
         icon={WALK_THEME.icon}
         accentColor={WALK_THEME.color}
         accentBg={WALK_THEME.bg}
@@ -133,6 +147,7 @@ export function LogWalkSheet({
         onSave={handleSave}
         saving={saving}
         error={error}
+        compact
       >
         <FormSection
           title="Walk details"
@@ -168,6 +183,19 @@ export function LogWalkSheet({
               />
             </View>
           </View>
+        </FormSection>
+
+        <FormSection
+          title="Schedule dates"
+          icon="calendar-clock"
+          accentColor={WALK_THEME.color}
+          accentBg={WALK_THEME.bg}
+        >
+          <ScheduleDateFields
+            value={scheduleDate}
+            onChange={setScheduleDate}
+            accentColor={WALK_THEME.color}
+          />
         </FormSection>
 
         <FormSection

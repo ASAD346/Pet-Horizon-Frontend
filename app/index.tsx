@@ -6,7 +6,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp } from 'react-native-reanimated';
 import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
 import { AuthLogoMark } from '@/components/auth/AuthLogoMark';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { AppButton } from '../components/ui/AppButton';
 import { AppText } from '../components/ui/AppText';
 import { HomeTheme, Palette, Spacing } from '../constants/theme';

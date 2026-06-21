@@ -11,7 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useBudget } from '@/hooks/useBudget';
 import { useExpenses } from '@/hooks/useExpenses';

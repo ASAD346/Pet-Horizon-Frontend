@@ -12,7 +12,20 @@
           "package_name": "com.anonymous.PetHorizon"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "162625002184-j28egm3lo9ugaeem48pp0enuc32snv82.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anonymous.PetHorizon",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAL14FjYelDKZYQ6cmx0CVjB166AUKIUU4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

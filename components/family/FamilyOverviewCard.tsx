@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { AppButton } from '@/components/ui/AppButton';
+import { SkeletonCodeBlock } from '@/components/ui/skeletons';
 import { HomeTheme, LoginTheme, Radius, Spacing } from '@/constants/theme';
 
 interface FamilyOverviewCardProps {
@@ -57,7 +58,7 @@ export function FamilyOverviewCard({
                 JOIN CODE
               </AppText>
               {loadingInvite ? (
-                <ActivityIndicator color={HomeTheme.white} style={styles.codeLoader} />
+                <SkeletonCodeBlock />
               ) : (
                 <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.codeValue}>
                   {joinCode ?? '--------'}

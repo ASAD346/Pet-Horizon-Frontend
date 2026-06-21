@@ -22,12 +22,12 @@ type EditorEntry =
   | VaccinationEntryState
   | GroomingEntryState;
 
-const SECTION_SUBTITLES: Record<ScheduleSectionTheme['key'], string> = {
-  feeding: 'Set meal type, portion size, time, and optional reminders.',
-  walk: 'Plan walk time, duration, and reminder preferences.',
-  medicine: 'Add dose, frequency, and reminder settings.',
-  vaccination: 'Set vaccine due date and reminder schedule.',
-  grooming: 'Choose grooming task, date, and reminders.',
+const SECTION_SUBTITLES: Record<ScheduleSectionTheme['key'], string | undefined> = {
+  feeding: undefined,
+  walk: undefined,
+  medicine: undefined,
+  vaccination: undefined,
+  grooming: undefined,
 };
 
 export interface ScheduleEntryEditorSheetProps {
@@ -86,6 +86,7 @@ export function ScheduleEntryEditorSheet({
       saving={saving}
       saveDisabled={!draft}
       error={error}
+      compact
     >
       {draft && section.key === 'feeding' ? (
         <FeedingEntryCard

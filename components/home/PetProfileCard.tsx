@@ -1,14 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withTiming,
-} from 'react-native-reanimated';
 import { AppText } from '../ui/AppText';
+import { SkeletonPetProfileCard } from '@/components/ui/skeletons';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 interface PetProfileCardProps {
@@ -25,24 +19,6 @@ interface PetProfileCardProps {
   loading?: boolean;
   isBirthdayToday?: boolean;
   onPress?: () => void;
-}
-
-function AvatarPlaceholder() {
-  const pulse = useSharedValue(0.35);
-
-  useEffect(() => {
-    pulse.value = withRepeat(withTiming(1, { duration: 900 }), -1, true);
-  }, [pulse]);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: pulse.value,
-  }));
-
-  return (
-    <Animated.View style={[styles.avatar, styles.avatarPlaceholder, animatedStyle]}>
-      <Ionicons name="paw" size={28} color="rgba(255,255,255,0.85)" />
-    </Animated.View>
-  );
 }
 
 export function PetProfileCard({
@@ -64,20 +40,20 @@ export function PetProfileCard({
   const CardWrapper = onPress ? TouchableOpacity : View;
   const cardProps = onPress ? { onPress, activeOpacity: 0.92 } : {};
 
+  if (loading) {
+    return <SkeletonPetProfileCard />;
+  }
+
   return (
     <CardWrapper style={styles.card} {...cardProps}>
       <View style={styles.top}>
-        {loading ? (
-          <AvatarPlaceholder />
-        ) : (
-          <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
-        )}
+        <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
         <View style={styles.info}>
           <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name}>
-            {loading ? 'Loading…' : name}
+            {name}
           </AppText>
           <AppText variant="bodySmall" color={HomeTheme.white} style={styles.meta}>
-            {loading ? '—' : isBirthdayToday ? `🎂 Birthday today · ${breed}` : `${breed} · ${age}`}
+            {isBirthdayToday ? `🎂 Birthday today · ${breed}` : `${breed} · ${age}`}
           </AppText>
           <View style={styles.tags}>
             <View style={styles.tag}>

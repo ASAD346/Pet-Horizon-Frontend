@@ -1,10 +1,11 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from '../home/ColorIconBadge';
 import { SectionHeader } from '../home/SectionHeader';
 import { homePillCard } from '../home/homeStyles';
 import { HomeTheme, Spacing } from '../../constants/theme';
+import { SkeletonList } from '@/components/ui/skeletons';
 import type { ExpenseTrackerCategory, ExpenseTransaction } from './expenseTrackerData';
 
 interface RecentTransactionsSectionProps {
@@ -35,7 +36,7 @@ export function RecentTransactionsSection({
     <View style={styles.section}>
       <SectionHeader title="Recent Transactions" />
       {loading ? (
-        <ActivityIndicator color={HomeTheme.cardGreen} style={styles.loader} />
+        <SkeletonList count={3} cardStyle={homePillCard.card} />
       ) : filtered.length === 0 ? (
         <View style={[homePillCard.card, styles.emptyCard]}>
           <AppText variant="bodySmall" color={HomeTheme.textMuted}>

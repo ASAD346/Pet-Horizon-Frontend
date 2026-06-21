@@ -1,19 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, TouchableOpacity, TextInput, Switch } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
   FormChipRow,
-  FormPickerField,
   FormSection,
   FormSectionLabel,
   FormSwitchRow,
   FormTextField,
   SectionLabel,
 } from '@/components/sheets';
-import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { HomeTheme } from '@/constants/theme';
-import { formatDateLabel, defaultScheduledDate } from '@/lib/grooming/groomingForm';
 import type { GroomingEntryState } from '@/lib/schedule/types';
 import type { GroomingTypeOption } from '@/types/grooming';
 import { ScheduleColors, scheduleFieldStyles } from '../scheduleStyles';
@@ -41,21 +39,6 @@ export function GroomingEntryCard({
   onChange,
   onRemove,
 }: GroomingEntryCardProps) {
-  const [datePickerVisible, setDatePickerVisible] = useState(false);
-
-  const datePicker = (
-    <ThemedDatePicker
-      visible={datePickerVisible}
-      title="Scheduled date"
-      value={entry.scheduledDate ?? defaultScheduledDate()}
-      onClose={() => setDatePickerVisible(false)}
-      onConfirm={(date) => {
-        onChange({ ...entry, scheduledDate: date });
-        setDatePickerVisible(false);
-      }}
-    />
-  );
-
   if (embeddedInSheet) {
     return (
       <>
@@ -67,33 +50,25 @@ export function GroomingEntryCard({
             onSelect={(groomingType) => onChange({ ...entry, groomingType })}
             accentColor={accentColor}
           />
-          <FormSectionLabel text="SCHEDULED DATE" />
-          <FormPickerField
-            label={entry.scheduledDate ? formatDateLabel(entry.scheduledDate) : 'Select date'}
-            icon="calendar-outline"
-            onPress={() => setDatePickerVisible(true)}
+          <ScheduleDateFields
+            value={entry.scheduleDate}
+            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+            accentColor={accentColor}
           />
-        </FormSection>
-
-        <FormSection title="Reminders" icon="bell-outline" accentColor={accentColor} accentBg={accentBg}>
           <FormSwitchRow
             label="Remind me before grooming"
             value={entry.reminderOn}
             onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
             accentColor={accentColor}
           />
-        </FormSection>
-
-        <FormSection title="Notes" icon="text-box-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
             onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Salon name, special instructions..."
+            placeholder="Optional details..."
             multiline
           />
         </FormSection>
-
-        {datePicker}
       </>
     );
   }
@@ -121,7 +96,7 @@ export function GroomingEntryCard({
               style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor, borderColor: accentColor }]}
               onPress={() => onChange({ ...entry, groomingType: option.value })}
             >
-              <AppText variant="caption" weight="600" color={selected ? HomeTheme.white : HomeTheme.text}>
+              <AppText variant="bodySmall" weight="600" color={selected ? HomeTheme.white : HomeTheme.text}>
                 {option.label}
               </AppText>
             </TouchableOpacity>
@@ -129,13 +104,11 @@ export function GroomingEntryCard({
         })}
       </View>
 
-      <SectionLabel text="SCHEDULED DATE" />
-      <TouchableOpacity style={scheduleFieldStyles.pickerField} onPress={() => setDatePickerVisible(true)}>
-        <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-          {entry.scheduledDate ? formatDateLabel(entry.scheduledDate) : 'Select date'}
-        </AppText>
-        <Ionicons name="calendar-outline" size={18} color={ScheduleColors.label} />
-      </TouchableOpacity>
+      <ScheduleDateFields
+        value={entry.scheduleDate}
+        onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+        accentColor={accentColor}
+      />
 
       <SectionLabel text="NOTIFICATIONS" />
       <View style={scheduleFieldStyles.switchRow}>
@@ -160,8 +133,6 @@ export function GroomingEntryCard({
         style={[scheduleFieldStyles.textInput, scheduleFieldStyles.notesInput]}
         multiline
       />
-
-      {datePicker}
     </View>
   );
 }

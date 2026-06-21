@@ -13,9 +13,17 @@ import {
 } from '@/lib/feeding/feedingForm';
 import { log } from '@/lib/log';
 import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
+import {
+  buildScheduleDatePayload,
+  createDefaultScheduleDate,
+  validateScheduleDate,
+  type ScheduleDateState,
+} from '@/lib/schedule/scheduleDate';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
+import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import {
   FormChipRow,
   FormPickerField,
@@ -60,6 +68,7 @@ export function LogFoodSheet({
   const [amount, setAmount] = useState('2');
   const [unit, setUnit] = useState('');
   const [feedingTime, setFeedingTime] = useState(defaultFeedingTimeDate);
+  const [scheduleDate, setScheduleDate] = useState<ScheduleDateState>(createDefaultScheduleDate('ongoing'));
   const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [notes, setNotes] = useState('');
@@ -72,6 +81,7 @@ export function LogFoodSheet({
   const resetForm = useCallback(() => {
     setAmount('2');
     setFeedingTime(defaultFeedingTimeDate());
+    setScheduleDate(createDefaultScheduleDate('ongoing'));
     setReminderMinutes(DEFAULT_REMINDER_MINUTES);
     setMealType('');
     setUnit('');
@@ -155,6 +165,11 @@ export function LogFoodSheet({
       setError('Enter an amount.');
       return;
     }
+    const dateError = validateScheduleDate(scheduleDate);
+    if (dateError) {
+      setError(dateError);
+      return;
+    }
 
     const timeHHmm = dateToTimeHHmm(feedingTime);
     const noteText = notes.trim();
@@ -174,6 +189,7 @@ export function LogFoodSheet({
         reminderTime: notificationsOn
           ? addMinutesToTimeHHmm(timeHHmm, reminderMinutes)
           : undefined,
+        ...buildScheduleDatePayload(scheduleDate),
       });
       log.ok('LogFood', 'Feeding schedule saved', { mealType, time: timeHHmm, unit });
       onSaved?.();
@@ -191,7 +207,6 @@ export function LogFoodSheet({
         visible={visible}
         onClose={onClose}
         title="Log Food"
-        subtitle="Record a meal and set optional feeding reminders."
         icon={FOOD_THEME.icon}
         accentColor={FOOD_THEME.color}
         accentBg={FOOD_THEME.bg}
@@ -200,6 +215,7 @@ export function LogFoodSheet({
         saving={saving}
         saveDisabled={featuresLoading || !mealType || !unit}
         error={error}
+        compact
       >
         <FormSection
           title="Meal details"
@@ -209,7 +225,7 @@ export function LogFoodSheet({
         >
           <FormSectionLabel text="MEAL TYPE" />
           {featuresLoading ? (
-            <ActivityIndicator color={FOOD_THEME.color} style={{ marginBottom: 12 }} />
+            <SkeletonChipGrid count={4} />
           ) : mealTypeOptions.length === 0 ? (
             <AppText variant="bodySmall" color={HomeTheme.textMuted} style={{ marginBottom: 12 }}>
               No meal types available for this pet.
@@ -223,29 +239,34 @@ export function LogFoodSheet({
             />
           )}
 
-          <FormSectionLabel text="AMOUNT" />
-          <FormTextField
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="decimal-pad"
-            placeholder="Enter portion amount"
-          />
-
-          <FormSectionLabel text="UNIT" />
-          {featuresLoading ? (
-            <ActivityIndicator color={FOOD_THEME.color} style={{ marginBottom: 12 }} />
-          ) : unitOptions.length === 0 ? (
-            <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-              No units available for this pet.
-            </AppText>
-          ) : (
-            <FormChipRow
-              options={unitOptions}
-              selected={unit}
-              onSelect={setUnit}
-              accentColor={FOOD_THEME.color}
-            />
-          )}
+          <View style={formSheetStyles.twoColRow}>
+            <View style={[formSheetStyles.halfCol, { flex: 1.15 }]}>
+              <FormSectionLabel text="AMOUNT" />
+              <FormTextField
+                value={amount}
+                onChangeText={setAmount}
+                keyboardType="decimal-pad"
+                placeholder="0"
+              />
+            </View>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="UNIT" />
+              {featuresLoading ? (
+                <SkeletonChipGrid count={3} />
+              ) : unitOptions.length === 0 ? (
+                <AppText variant="bodySmall" color={HomeTheme.textMuted}>
+                  No units available for this pet.
+                </AppText>
+              ) : (
+                <FormChipRow
+                  options={unitOptions}
+                  selected={unit}
+                  onSelect={setUnit}
+                  accentColor={FOOD_THEME.color}
+                />
+              )}
+            </View>
+          </View>
         </FormSection>
 
         <FormSection
@@ -254,6 +275,11 @@ export function LogFoodSheet({
           accentColor={FOOD_THEME.color}
           accentBg={FOOD_THEME.bg}
         >
+          <ScheduleDateFields
+            value={scheduleDate}
+            onChange={setScheduleDate}
+            accentColor={FOOD_THEME.color}
+          />
           <View style={formSheetStyles.twoColRow}>
             <View style={formSheetStyles.halfCol}>
               <FormSectionLabel text="TIME" />
@@ -263,33 +289,28 @@ export function LogFoodSheet({
                 onPress={() => setFeedingTimePickerVisible(true)}
               />
             </View>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="NOTIFY" />
-              <FormSwitchRow
-                label="Remind me"
-                value={notificationsOn}
-                onValueChange={setNotificationsOn}
-                accentColor={FOOD_THEME.color}
-              />
-            </View>
+            {notificationsOn ? (
+              <View style={formSheetStyles.halfCol}>
+                <FormSectionLabel text="REMINDER" />
+                <FormPickerField
+                  label={getReminderMinutesLabel(reminderMinutes)}
+                  icon="chevron-down"
+                  onPress={() => setReminderPickerVisible(true)}
+                />
+              </View>
+            ) : null}
           </View>
-          {notificationsOn ? (
-            <>
-              <FormSectionLabel text="REMINDER" />
-              <FormPickerField
-                label={getReminderMinutesLabel(reminderMinutes)}
-                icon="chevron-down"
-                onPress={() => setReminderPickerVisible(true)}
-              />
-            </>
-          ) : null}
-        </FormSection>
-
-        <FormSection title="Notes" icon="text-box-outline" accentColor={FOOD_THEME.color} accentBg={FOOD_THEME.bg}>
+          <FormSwitchRow
+            label="Remind me"
+            value={notificationsOn}
+            onValueChange={setNotificationsOn}
+            accentColor={FOOD_THEME.color}
+          />
+          <FormSectionLabel text="NOTES" />
           <FormTextField
             value={notes}
             onChangeText={setNotes}
-            placeholder="Extra details about this meal..."
+            placeholder="Optional details..."
             multiline
           />
         </FormSection>

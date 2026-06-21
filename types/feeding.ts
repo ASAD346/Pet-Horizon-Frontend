@@ -9,6 +9,10 @@ export interface CreateFeedingScheduleRequest {
   reminder?: boolean;
   reminderTime?: string;
   reminderMinutes?: number;
+  date?: string;
+  scheduleDate?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export type FeedingScheduleStatus = 'pending' | 'done' | 'skipped';
@@ -35,6 +39,9 @@ export interface FeedingScheduleItem {
     reminderTime?: string;
     reminderMinutes?: number;
   };
+  date?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface CompleteFeedingRequest {

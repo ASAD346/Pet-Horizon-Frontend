@@ -18,8 +18,9 @@ import {
   SocialLoginButtons,
 } from '@/components/auth/login';
 import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
-import { useToast } from '@/contexts/ToastContext';
-import { useAuth, getAuthLoginErrorMessage } from '@/contexts/AuthContext';
+import { getAuthLoginErrorMessage } from '@/lib/auth/authErrors';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { LoginTheme, Spacing } from '@/constants/theme';

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
+import { Skeleton } from '@/components/ui/skeletons';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 const cardShadow = Platform.select({
@@ -86,7 +87,14 @@ export function WeeklySpendingCard({
       ) : null}
 
       {loading ? (
-        <ActivityIndicator color={HomeTheme.white} style={styles.loader} />
+        <View style={styles.skeletonBody}>
+          <Skeleton width="55%" height={36} tone="dark" />
+          <Skeleton width="100%" height={8} borderRadius={4} tone="dark" style={styles.skeletonGap} />
+          <View style={styles.bottomRow}>
+            <Skeleton width="45%" height={12} tone="dark" />
+            <Skeleton width={88} height={28} borderRadius={Radius.full} tone="dark" />
+          </View>
+        </View>
       ) : (
         <>
           <AppText variant="h1" weight="800" color={HomeTheme.white} style={styles.limitAmount}>
@@ -159,8 +167,11 @@ const styles = StyleSheet.create({
   statusOver: {
     backgroundColor: 'rgba(198,40,40,0.25)',
   },
-  loader: {
-    marginVertical: Spacing.lg,
+  skeletonBody: {
+    marginTop: Spacing.sm,
+  },
+  skeletonGap: {
+    marginVertical: Spacing.md,
   },
   limitAmount: {
     fontSize: 36,

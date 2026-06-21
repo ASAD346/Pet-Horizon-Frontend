@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { AddExpenseView } from '@/components/expense';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 
 export default function AddExpenseScreen() {

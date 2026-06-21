@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Image,
   Modal,
   Platform,
@@ -18,6 +17,7 @@ import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { SectionLabel, SheetColors } from '@/components/sheets';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { SkeletonQRBox } from '@/components/ui/skeletons';
 import { getErrorMessage } from '@/lib/api/errors';
 import { generatePetInvite } from '@/services/family/familyApi';
 import type { GenerateInviteResponse } from '@/types/family';
@@ -164,7 +164,7 @@ export function InviteFamilySheet({
           <SectionLabel text="OR SCAN QR CODE" />
           <View style={styles.qrWrap}>
             {loading ? (
-              <ActivityIndicator color={HomeTheme.cardGreen} style={styles.qrLoader} />
+              <SkeletonQRBox />
             ) : invite?.qrCodeDataUrl ? (
               <Image source={{ uri: invite.qrCodeDataUrl }} style={styles.qrImage} accessibilityLabel="Invitation QR code" />
             ) : (

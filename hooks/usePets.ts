@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { fetchPets, setActivePet } from '@/services/pets/petApi';
 import type { ApiPet } from '@/types/pet';
+import { useStaleFocusLoader } from './useStaleFocusLoader';
 
 export function usePets(token: string | null, activePetId?: string | null) {
   const [pets, setPets] = useState<ApiPet[]>([]);
@@ -11,32 +11,32 @@ export function usePets(token: string | null, activePetId?: string | null) {
   const [error, setError] = useState<string | null>(null);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
-  const reload = useCallback(async () => {
-    if (!token) {
-      setPets([]);
-      setError(null);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const rows = await fetchPets(token);
-      setPets(rows);
-    } catch (err) {
-      setPets([]);
-      setError(getErrorMessage(err));
-      log.fail('Pets', 'List failed', getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+  const load = useCallback(async () => {
+    if (!token) return [];
+    return fetchPets(token);
   }, [token]);
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload]),
-  );
+  const reload = useStaleFocusLoader({
+    scopeKey: token,
+    enabled: Boolean(token),
+    load,
+    onSuccess: (rows) => {
+      setPets(rows);
+      setError(null);
+    },
+    onClear: () => {
+      setPets([]);
+      setError(null);
+    },
+    onError: (err, isFirstLoad) => {
+      if (isFirstLoad) {
+        setPets([]);
+        setError(getErrorMessage(err));
+        log.fail('Pets', 'List failed', getErrorMessage(err));
+      }
+    },
+    setLoading,
+  });
 
   const switchPet = useCallback(
     async (petId: string) => {

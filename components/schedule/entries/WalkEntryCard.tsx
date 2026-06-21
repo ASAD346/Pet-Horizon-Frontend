@@ -23,6 +23,7 @@ import {
   REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
 import type { WalkEntryState } from '@/lib/schedule/types';
+import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { WALK_TIME_OPTIONS } from '@/lib/walk/walkForm';
 import { ScheduleColors, scheduleFieldStyles } from '../scheduleStyles';
 
@@ -107,9 +108,11 @@ export function WalkEntryCard({
               />
             </View>
           </View>
-        </FormSection>
-
-        <FormSection title="Reminders" icon="bell-outline" accentColor={accentColor} accentBg={accentBg}>
+          <ScheduleDateFields
+            value={entry.scheduleDate}
+            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+            accentColor={accentColor}
+          />
           <FormSwitchRow
             label="Remind me before walk"
             value={entry.notificationsOn}
@@ -126,13 +129,11 @@ export function WalkEntryCard({
               />
             </>
           ) : null}
-        </FormSection>
-
-        <FormSection title="Notes" icon="text-box-outline" accentColor={accentColor} accentBg={accentBg}>
+          <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
             onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Park route, leash preference..."
+            placeholder="Optional details..."
             multiline
           />
         </FormSection>

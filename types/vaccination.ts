@@ -11,7 +11,7 @@ export type VaccinationRecurrenceInterval = 'yearly' | 'monthly' | 'weekly';
 export interface CreateVaccinationScheduleRequest {
   petId: string;
   vaccineName: string;
-  dueDate: string;
+  dueDate?: string;
   reminder?: boolean;
   frequency?: VaccinationReminderFrequency;
   reminderDays?: number;
@@ -20,6 +20,10 @@ export interface CreateVaccinationScheduleRequest {
   recurrenceInterval?: VaccinationRecurrenceInterval;
   notes?: string;
   note?: string;
+  date?: string;
+  scheduleDate?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface UpdateVaccinationScheduleRequest {
@@ -30,6 +34,10 @@ export interface UpdateVaccinationScheduleRequest {
   reminderTime?: string;
   notes?: string;
   note?: string;
+  date?: string;
+  scheduleDate?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface VaccinationScheduleItem {
@@ -40,6 +48,7 @@ export interface VaccinationScheduleItem {
   description?: string;
   notes?: string;
   startDate?: string;
+  endDate?: string;
   remainingDays?: number | null;
   reminderTime?: string;
   isActive?: boolean;
