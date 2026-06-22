@@ -19,6 +19,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
+import { usePetPermissions } from '@/hooks/usePetPermissions';
 import {
   featureOptionsFromRemote,
   hydrateScheduleFeaturesFromSpecies,
@@ -96,9 +97,16 @@ export function ScheduleSetupView({
   onNotificationsPress,
 }: ScheduleSetupViewProps) {
   const { clearance: tabBarClearance } = useTabBarLayout();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
   const { unreadCount } = useNotifications(token);
+  const {
+    canViewSchedule,
+    canEditSchedule,
+    canViewJournal,
+    canViewAnySchedule,
+    accessBannerMessage,
+  } = usePetPermissions(token, pet, user?._id);
 
   const [sections, setSections] = useState<ScheduleSectionsState>(() => createInitialScheduleState());
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
@@ -337,7 +345,8 @@ export function ScheduleSetupView({
   };
 
   const visibleSections = SCHEDULE_SECTIONS.filter(
-    (section) => section.key !== 'grooming' || groomingVisible,
+    (section) =>
+      (section.key !== 'grooming' || groomingVisible) && canViewSchedule(section.key),
   );
 
   const awaitingPet = petLoading && !pet;
@@ -357,12 +366,15 @@ export function ScheduleSetupView({
           <ScreenHeader
             title="Care Schedules"
             notificationCount={unreadCount}
-            onJournalPress={onJournalPress}
+            onJournalPress={canViewJournal ? onJournalPress : undefined}
             onNotificationsPress={onNotificationsPress}
+            showJournal={canViewJournal}
           />
           <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
             Set up feeding, walks, medicine, vaccines, and grooming for your pet.
           </AppText>
+
+          {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
           {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
           {formError ? <AuthErrorBanner message={formError} /> : null}
@@ -377,15 +389,23 @@ export function ScheduleSetupView({
                 Add a pet from Home to set up care schedules.
               </AppText>
             </View>
+          ) : !canViewAnySchedule ? (
+            <View style={styles.emptyBox}>
+              <AppText variant="bodySmall" color={HomeTheme.textMuted}>
+                Schedule access was not shared for this pet. Switch pets or ask the owner to update your permissions.
+              </AppText>
+            </View>
           ) : (
             visibleSections.map((sectionMeta) => {
               const sectionState = sections[sectionMeta.key];
+              const canEdit = canEditSchedule(sectionMeta.key);
               return (
                 <ScheduleSectionCard
                   key={sectionMeta.key}
                   section={sectionMeta}
                   enabled={sectionState.enabled}
                   onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
+                  canEdit={canEdit}
                 >
                   {schedulesLoading && sectionState.entries.length === 0 ? (
                     <ScheduleEntriesSkeleton />
@@ -414,21 +434,24 @@ export function ScheduleSetupView({
                           onEdit={() => openEditEditor(sectionMeta, entry)}
                           onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
                           deleting={!!remoteId && deletingId === remoteId}
+                          readOnly={!canEdit}
                         />
                       );
                     })
                   )}
 
-                  <TouchableOpacity
-                    style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color }]}
-                    onPress={() => openAddEditor(sectionMeta)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
-                    <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
-                      {sectionMeta.addLabel}
-                    </AppText>
-                  </TouchableOpacity>
+                  {canEdit ? (
+                    <TouchableOpacity
+                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color }]}
+                      onPress={() => openAddEditor(sectionMeta)}
+                      activeOpacity={0.85}
+                    >
+                      <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
+                      <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
+                        {sectionMeta.addLabel}
+                      </AppText>
+                    </TouchableOpacity>
+                  ) : null}
                 </ScheduleSectionCard>
               );
             })

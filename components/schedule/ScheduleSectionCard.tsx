@@ -10,6 +10,7 @@ interface ScheduleSectionCardProps {
   section: ScheduleSectionTheme;
   enabled: boolean;
   onToggle: (value: boolean) => void;
+  canEdit?: boolean;
   children?: React.ReactNode;
 }
 
@@ -17,6 +18,7 @@ export function ScheduleSectionCard({
   section,
   enabled,
   onToggle,
+  canEdit = true,
   children,
 }: ScheduleSectionCardProps) {
   return (
@@ -35,6 +37,7 @@ export function ScheduleSectionCard({
         <Switch
           value={enabled}
           onValueChange={onToggle}
+          disabled={!canEdit}
           trackColor={{ false: '#E0E0E0', true: section.color }}
           thumbColor={HomeTheme.white}
           ios_backgroundColor="#E0E0E0"

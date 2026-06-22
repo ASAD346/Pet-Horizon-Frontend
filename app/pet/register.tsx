@@ -31,6 +31,7 @@ import { log } from '@/lib/log';
 import { dateToApiDateString } from '@/lib/grooming/groomingForm';
 import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, fetchSpecies, updatePet } from '@/services/pets/petApi';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
+import { isPetOwner } from '@/lib/family/formatters';
 import { uploadPetImage } from '@/services/pets/uploadPetImage';
 import {
   hasRegisterPetFieldErrors,
@@ -149,6 +150,10 @@ export default function RegisterPetScreen() {
       try {
         const existing = await fetchPetById(token, editPetId);
         if (!mounted) return;
+        if (!isPetOwner(existing.ownerUserId, user?._id)) {
+          setFormError('Only the pet owner can edit this profile.');
+          return;
+        }
         setPetName(existing.name ?? '');
         setSpecies(existing.species ?? '');
         setBreed(existing.breed ?? '');
@@ -166,7 +171,7 @@ export default function RegisterPetScreen() {
     return () => {
       mounted = false;
     };
-  }, [token, isEditMode, editPetId]);
+  }, [token, isEditMode, editPetId, user?._id]);
 
   const handleSpeciesChange = useCallback(
     (next: string) => {

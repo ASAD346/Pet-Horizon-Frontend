@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
+import { HeaderActionButtons } from '../ui/HeaderActionButtons';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 interface HomeHeaderProps {
@@ -10,6 +10,7 @@ interface HomeHeaderProps {
   notificationCount?: number;
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
+  showJournal?: boolean;
 }
 
 export function HomeHeader({
@@ -18,6 +19,7 @@ export function HomeHeader({
   notificationCount = 0,
   onJournalPress,
   onNotificationsPress,
+  showJournal = true,
 }: HomeHeaderProps) {
   return (
     <View style={styles.container}>
@@ -30,43 +32,15 @@ export function HomeHeader({
         </AppText>
       </View>
 
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          activeOpacity={0.8}
-          onPress={onJournalPress}
-          accessibilityLabel="Open pet journal"
-        >
-          <MaterialCommunityIcons name="notebook-outline" size={22} color={HomeTheme.text} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          activeOpacity={0.8}
-          onPress={onNotificationsPress}
-        >
-          <Ionicons name="notifications-outline" size={20} color={HomeTheme.text} />
-          {notificationCount > 0 && (
-            <View style={styles.badge}>
-              <AppText variant="caption" weight="700" color={HomeTheme.white} style={styles.badgeText}>
-                {notificationCount}
-              </AppText>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
+      <HeaderActionButtons
+        notificationCount={notificationCount}
+        onJournalPress={onJournalPress}
+        onNotificationsPress={onNotificationsPress}
+        showJournal={showJournal}
+      />
     </View>
   );
 }
-
-const iconShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  android: { elevation: 3 },
-});
 
 const styles = StyleSheet.create({
   container: {
@@ -83,34 +57,5 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 28,
     marginBottom: 2,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-  },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    backgroundColor: HomeTheme.surfaceMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...iconShadow,
-  },
-  badge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: HomeTheme.badgeRed,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    fontSize: 10,
-    lineHeight: 12,
   },
 });

@@ -12,6 +12,7 @@ import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
+import { usePetPermissions } from '@/hooks/usePetPermissions';
 import {
   buildDateStrip,
   extractPhotoUrls,
@@ -44,8 +45,13 @@ interface JournalContentProps {
 }
 
 export function JournalContent({ active = true }: JournalContentProps) {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
+  const { canViewJournal, canEditJournal, accessBannerMessage } = usePetPermissions(
+    token,
+    pet,
+    user?._id,
+  );
   const { entries, loading, error, reload } = useJournalEntries(
     token,
     pet?._id ?? null,
@@ -84,7 +90,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   );
 
   const isSelectedToday = isSameCalendarDay(selectedDate, new Date());
-  const canAddPhoto = isSelectedToday;
+  const canAddPhoto = isSelectedToday && canEditJournal;
 
   useEffect(() => {
     if (!dateStrip.some((item) => item.id === selectedDateId)) {
@@ -158,6 +164,14 @@ export function JournalContent({ active = true }: JournalContentProps) {
     );
   }
 
+  if (!petLoading && pet && !canViewJournal) {
+    return (
+      <View style={styles.messageWrap}>
+        <AuthInfoBanner message="Journal access was not shared for this pet." />
+      </View>
+    );
+  }
+
   if (loading && entries.length === 0) {
     return <SkeletonJournalScreen />;
   }
@@ -174,6 +188,12 @@ export function JournalContent({ active = true }: JournalContentProps) {
       {error ? (
         <View style={styles.messageWrap}>
           <AuthErrorBanner message={error} />
+        </View>
+      ) : null}
+
+      {accessBannerMessage ? (
+        <View style={styles.messageWrap}>
+          <AuthInfoBanner message={accessBannerMessage} />
         </View>
       ) : null}
 
@@ -195,7 +215,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
       <ActivityTimelineSection
         events={timelineEvents}
         categoryFilter={category}
-        onEventPress={setEditEntryId}
+        onEventPress={canEditJournal ? setEditEntryId : undefined}
       />
       <TodaysPhotosSection
         title={isSelectedToday ? "Today's Photos" : 'Photos'}

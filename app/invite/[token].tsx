@@ -17,14 +17,16 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonInviteCard } from '@/components/ui/skeletons';
 import { getErrorMessage } from '@/lib/api/errors';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { activatePetSession } from '@/lib/pet/activatePetSession';
 import { formatInviteModules } from '@/lib/family/invitePermissions';
+import { rememberSharedPetId } from '@/lib/pet/sharedPetIdsStorage';
 import { acceptPetInvite, fetchInviteInfo } from '@/services/family/familyApi';
 import type { InviteInfoResponse } from '@/types/family';
 
 export default function InviteAcceptScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ token?: string | string[] }>();
-  const { token: authToken, isAuthenticated } = useAuth();
+  const { token: authToken, user, setSession, isAuthenticated } = useAuth();
   const inviteToken = Array.isArray(params.token) ? params.token[0] : params.token;
 
   const [info, setInfo] = useState<InviteInfoResponse | null>(null);
@@ -72,8 +74,20 @@ export default function InviteAcceptScreen() {
     setError(null);
     try {
       const result = await acceptPetInvite(authToken, inviteToken);
+      const joinedPetId = result.petId ?? info?.pet?.petId;
+
+      if (joinedPetId && user?._id) {
+        await rememberSharedPetId(user._id, joinedPetId);
+        await activatePetSession({
+          token: authToken,
+          petId: joinedPetId,
+          user: user ?? null,
+          setSession,
+        });
+      }
+
       Alert.alert('Welcome!', result.message || 'You joined the pet care team.', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)/community') },
+        { text: 'OK', onPress: () => router.replace('/(tabs)') },
       ]);
     } catch (err) {
       setError(getErrorMessage(err));

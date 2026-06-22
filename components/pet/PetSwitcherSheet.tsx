@@ -23,22 +23,26 @@ interface PetSwitcherSheetProps {
   visible: boolean;
   pets: ApiPet[];
   activePetId?: string | null;
+  currentUserId?: string | null;
   loading?: boolean;
   switchingId?: string | null;
   onClose: () => void;
   onSelectPet: (petId: string) => void;
   onAddPet?: () => void;
+  canEditActivePet?: boolean;
 }
 
 export function PetSwitcherSheet({
   visible,
   pets,
   activePetId,
+  currentUserId,
   loading,
   switchingId,
   onClose,
   onSelectPet,
   onAddPet,
+  canEditActivePet = true,
 }: PetSwitcherSheetProps) {
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -88,7 +92,9 @@ export function PetSwitcherSheet({
                           {pet.name}
                         </AppText>
                         <AppText variant="caption" color={HomeTheme.textMuted}>
-                          {pet.breed || pet.species || 'Pet'}
+                          {pet.ownerUserId && currentUserId && pet.ownerUserId !== currentUserId
+                            ? 'Shared with you'
+                            : pet.breed || pet.species || 'Pet'}
                         </AppText>
                       </View>
                       {busy ? (
@@ -103,20 +109,22 @@ export function PetSwitcherSheet({
                 })}
               </ScrollView>
 
-              <TouchableOpacity
-                style={styles.manageBtn}
-                onPress={() => {
-                  onClose();
-                  if (activePetId) {
-                    router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: activePetId } } as Href);
-                  }
-                }}
-              >
-                <Ionicons name="create-outline" size={18} color={HomeTheme.cardGreen} />
-                <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
-                  Edit active pet
-                </AppText>
-              </TouchableOpacity>
+              {canEditActivePet ? (
+                <TouchableOpacity
+                  style={styles.manageBtn}
+                  onPress={() => {
+                    onClose();
+                    if (activePetId) {
+                      router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: activePetId } } as Href);
+                    }
+                  }}
+                >
+                  <Ionicons name="create-outline" size={18} color={HomeTheme.cardGreen} />
+                  <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
+                    Edit active pet
+                  </AppText>
+                </TouchableOpacity>
+              ) : null}
 
               {onAddPet ? (
                 <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>

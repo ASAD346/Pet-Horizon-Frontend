@@ -1,85 +1,52 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { HeaderActionButtons } from '@/components/ui/HeaderActionButtons';
+import { HomeTheme, Spacing } from '@/constants/theme';
 
 interface FamilyHubHeaderProps {
   notificationCount?: number;
+  onNotificationsPress?: () => void;
 }
 
-export function FamilyHubHeader({ notificationCount = 0 }: FamilyHubHeaderProps) {
+export function FamilyHubHeader({
+  notificationCount = 0,
+  onNotificationsPress,
+}: FamilyHubHeaderProps) {
   return (
     <View style={styles.container}>
-      <AppText variant="h3" weight="800" color={HomeTheme.text}>
-        Family Hub
-      </AppText>
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8} accessibilityLabel="Search">
-          <Ionicons name="search-outline" size={20} color={HomeTheme.text} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn} activeOpacity={0.8} accessibilityLabel="Notifications">
-          <Ionicons name="notifications-outline" size={20} color={HomeTheme.text} />
-          {notificationCount > 0 ? (
-            <View style={styles.badge}>
-              <AppText variant="caption" weight="700" color={HomeTheme.white} style={styles.badgeText}>
-                {notificationCount}
-              </AppText>
-            </View>
-          ) : null}
-        </TouchableOpacity>
+      <View style={styles.titleBlock}>
+        <AppText variant="caption" weight="700" color={HomeTheme.textMuted} style={styles.eyebrow}>
+          COLLABORATE
+        </AppText>
+        <AppText variant="h3" weight="800" color={HomeTheme.text}>
+          Family Hub
+        </AppText>
       </View>
+      <HeaderActionButtons
+        notificationCount={notificationCount}
+        onNotificationsPress={onNotificationsPress}
+        showJournal={false}
+      />
     </View>
   );
 }
 
-const iconShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  android: { elevation: 2 },
-});
-
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.md,
   },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
+  titleBlock: {
+    flex: 1,
+    paddingRight: Spacing.sm,
   },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    backgroundColor: HomeTheme.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...iconShadow,
-  },
-  badge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: HomeTheme.badgeRed,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    fontSize: 10,
-    lineHeight: 12,
+  eyebrow: {
+    letterSpacing: 1,
+    marginBottom: 2,
   },
 });

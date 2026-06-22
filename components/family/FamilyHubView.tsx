@@ -34,10 +34,12 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
 import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
 
 export function FamilyHubView() {
   const { clearance: tabBarClearance } = useTabBarLayout();
+  const { notificationCount, onNotificationsPress } = useTabHeaderActions();
   const { token, user } = useAuth();
   const { pet, loading: petLoading, reload: reloadPet } = useActivePet(token);
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
@@ -125,7 +127,10 @@ export function FamilyHubView() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <FamilyHubHeader notificationCount={3} />
+      <FamilyHubHeader
+        notificationCount={notificationCount}
+        onNotificationsPress={onNotificationsPress}
+      />
 
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarClearance }]}

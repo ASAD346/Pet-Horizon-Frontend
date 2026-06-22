@@ -43,7 +43,7 @@ export function useActivePet(token: string | null) {
       setPet(active);
       setActivePetCache(token, active);
     } catch (error) {
-      if (!activePetCacheLoaded(token)) {
+      if (!cached) {
         setPet(null);
       }
       log.fail('Home', 'Load active pet failed', getErrorMessage(error));

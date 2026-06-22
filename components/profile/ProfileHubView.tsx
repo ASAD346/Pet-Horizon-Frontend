@@ -23,6 +23,8 @@ import { PremiumUpgradeBanner } from './PremiumUpgradeBanner';
 import { ProfileMenuRow, ProfileMenuSection } from './ProfileMenuRow';
 import { ProfileUserCard } from './ProfileUserCard';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
+import { HeaderActionButtons } from '@/components/ui/HeaderActionButtons';
 import { ProfileTheme } from './profileTheme';
 import { SkeletonProfileUserCard } from '@/components/ui/skeletons';
 import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
@@ -30,6 +32,7 @@ import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 export function ProfileHubView() {
   const router = useRouter();
   const { clearance: tabBarClearance } = useTabBarLayout();
+  const { notificationCount, onNotificationsPress } = useTabHeaderActions();
   const { token, user, logout, setSession } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -95,9 +98,14 @@ export function ProfileHubView() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.pageHeader}>
-        <AppText variant="h3" weight="800" color={ProfileTheme.text}>
+        <AppText variant="h3" weight="800" color={ProfileTheme.text} style={styles.pageTitle}>
           My Hub
         </AppText>
+        <HeaderActionButtons
+          notificationCount={notificationCount}
+          onNotificationsPress={onNotificationsPress}
+          showJournal={false}
+        />
       </View>
 
       <ScrollView
@@ -190,6 +198,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: 8,
     paddingBottom: 12,
+  },
+  pageTitle: {
+    flex: 1,
+    fontSize: 24,
+    lineHeight: 30,
   },
   scroll: {},
   premiumActiveWrap: {
