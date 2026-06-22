@@ -12,6 +12,7 @@ interface ScheduleEntrySummaryCardProps {
   onEdit: () => void;
   onDelete: () => void;
   deleting?: boolean;
+  readOnly?: boolean;
 }
 
 export function ScheduleEntrySummaryCard({
@@ -22,6 +23,7 @@ export function ScheduleEntrySummaryCard({
   onEdit,
   onDelete,
   deleting,
+  readOnly = false,
 }: ScheduleEntrySummaryCardProps) {
   return (
     <View style={styles.card}>
@@ -36,26 +38,28 @@ export function ScheduleEntrySummaryCard({
           {subtitle}
         </AppText>
       </View>
-      <View style={styles.actions}>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.editBtn]}
-          onPress={onEdit}
-          disabled={deleting}
-          activeOpacity={0.85}
-          accessibilityLabel="Edit schedule"
-        >
-          <Ionicons name="create-outline" size={18} color={accentColor} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.actionBtn, styles.deleteBtn]}
-          onPress={onDelete}
-          disabled={deleting}
-          activeOpacity={0.85}
-          accessibilityLabel="Delete schedule"
-        >
-          <Ionicons name="trash-outline" size={18} color="#E53935" />
-        </TouchableOpacity>
-      </View>
+      {readOnly ? null : (
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.editBtn]}
+            onPress={onEdit}
+            disabled={deleting}
+            activeOpacity={0.85}
+            accessibilityLabel="Edit schedule"
+          >
+            <Ionicons name="create-outline" size={18} color={accentColor} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.deleteBtn]}
+            onPress={onDelete}
+            disabled={deleting}
+            activeOpacity={0.85}
+            accessibilityLabel="Delete schedule"
+          >
+            <Ionicons name="trash-outline" size={18} color="#E53935" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

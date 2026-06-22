@@ -32,6 +32,8 @@ import { useDashboardStatus } from '@/hooks/useDashboardStatus';
 
 import { useNotifications } from '@/hooks/useNotifications';
 
+import { usePetPermissions } from '@/hooks/usePetPermissions';
+
 import { usePets } from '@/hooks/usePets';
 
 import { useUpcomingTasks } from '@/hooks/useUpcomingTasks';
@@ -50,9 +52,13 @@ import { useVaccinationSchedules } from '@/hooks/useVaccinationSchedules';
 
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
+import { activatePetSession } from '@/lib/pet/activatePetSession';
 import { isBirthdayToday } from '@/lib/pet/birthdayUtils';
+import { dashboardTaskModule } from '@/lib/pet/petPermissionAccess';
 
 import { petToProfileProps } from '@/services/pets/petDisplay';
+
+import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 
 import { LogFoodSheet } from '@/components/log-food';
 
@@ -101,13 +107,25 @@ export default function HomeScreen() {
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
 
+  const {
+    canView,
+    canEdit,
+    canViewJournal,
+    isOwner,
+    accessBannerMessage,
+  } = usePetPermissions(token, pet, user?._id);
+
   const { profileStats, status: dashboardStatus } = useDashboardStatus(token);
 
   const { tasks: dashboardTasks, loading: tasksLoading } = useUpcomingTasks(token);
 
   const { unreadCount } = useNotifications(token);
 
-  const { pets, switchingId, switchPet, reload: reloadPets } = usePets(token, pet?._id ?? user?.activePetId);
+  const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
+    token,
+    pet?._id ?? user?.activePetId,
+    user?._id,
+  );
 
 
 
@@ -197,18 +215,38 @@ export default function HomeScreen() {
 
   const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading || tasksLoading;
 
+  const visibleFeedingSchedules = canView('feeding') ? feedingSchedules : [];
+  const visibleWalkSchedules = canView('walks') ? walkSchedules : [];
+  const visibleMedicineSchedules = canView('medicine') ? medicineSchedules : [];
+  const visibleGroomingRecords = canView('grooming') ? groomingRecords : [];
+  const visibleVaccinationSchedules = canView('vaccination') ? vaccinationSchedules : [];
+
+  const visibleDashboardTasks = useMemo(
+    () =>
+      dashboardTasks.filter((task) => {
+        const moduleId = dashboardTaskModule(task);
+        return moduleId ? canView(moduleId) : false;
+      }),
+    [dashboardTasks, canView],
+  );
+
 
 
   const profile = useMemo(() => {
-    if (profileStats) return profileStats;
+    if (profileStats && dashboardStatus?.petId === pet?._id) return profileStats;
     if (pet) return petToProfileProps(pet);
+    if (profileStats) return profileStats;
     return null;
-  }, [pet, profileStats]);
+  }, [pet, profileStats, dashboardStatus?.petId]);
 
-  const petImageUrl = resolveMediaUrl(profileStats?.photoUrl ?? pet?.image);
+  const petImageUrl = resolveMediaUrl(
+    dashboardStatus?.petId === pet?._id ? profileStats?.photoUrl ?? pet?.image : pet?.image,
+  );
 
   const petBirthday = dashboardStatus?.birthday ?? pet?.birthday ?? null;
-  const showBirthdayBanner = !loading && Boolean(pet?.name) && isBirthdayToday(petBirthday);
+  const showBirthdayBanner =
+    !loading && Boolean(pet?.name) && isBirthdayToday(petBirthday);
+  const petCardLoading = loading && !pet;
 
 
 
@@ -248,9 +286,15 @@ export default function HomeScreen() {
     if (!token) return;
     await switchPet(petId);
     if (user) {
-      await setSession({ token, user: { ...user, activePetId: petId } });
+      await activatePetSession({
+        token,
+        petId,
+        user,
+        setSession,
+      });
     }
     await reloadPet();
+    await reloadPets();
     setPetSwitcherVisible(false);
   };
 
@@ -296,11 +340,15 @@ export default function HomeScreen() {
 
           notificationCount={unreadCount}
 
-          onJournalPress={() => setJournalVisible(true)}
+          onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
 
           onNotificationsPress={() => router.push('/notifications' as Href)}
 
+          showJournal={canViewJournal}
+
         />
+
+        {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
         {showBirthdayBanner ? (
           <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
@@ -312,7 +360,7 @@ export default function HomeScreen() {
 
           imageUrl={petImageUrl}
 
-          loading={loading}
+          loading={petCardLoading}
 
           isBirthdayToday={showBirthdayBanner}
 
@@ -320,21 +368,24 @@ export default function HomeScreen() {
 
         />
 
+        {canView('grooming') ? (
         <GroomingAlertsRow
 
           token={token}
 
           petId={pet?._id}
 
-          onAlertPress={(record) => {
-
-            setGroomingManageRecord(record);
-
-            setGroomingManageVisible(true);
-
-          }}
+          onAlertPress={
+            canEdit('grooming')
+              ? (record) => {
+                  setGroomingManageRecord(record);
+                  setGroomingManageVisible(true);
+                }
+              : undefined
+          }
 
         />
+        ) : null}
 
         <QuickActionsSection
 
@@ -350,19 +401,23 @@ export default function HomeScreen() {
 
           groomingVisible={groomingVisible}
 
+          canView={canView}
+
+          canEdit={canEdit}
+
         />
 
         <UpNextSection
 
-          feedingSchedules={feedingSchedules}
+          feedingSchedules={visibleFeedingSchedules}
 
-          walkSchedules={walkSchedules}
+          walkSchedules={visibleWalkSchedules}
 
-          medicineSchedules={medicineSchedules}
+          medicineSchedules={visibleMedicineSchedules}
 
-          groomingRecords={groomingRecords}
+          groomingRecords={visibleGroomingRecords}
 
-          vaccinationSchedules={vaccinationSchedules}
+          vaccinationSchedules={visibleVaccinationSchedules}
 
           loading={scheduleLoading}
 
@@ -376,31 +431,31 @@ export default function HomeScreen() {
 
           vaccinationActionId={vaccinationActionId}
 
-          onLogFeeding={completeFeeding}
+          onLogFeeding={canEdit('feeding') ? completeFeeding : undefined}
 
-          onLogWalk={completeWalk}
+          onLogWalk={canEdit('walks') ? completeWalk : undefined}
 
-          onLogMedicine={completeMedicine}
+          onLogMedicine={canEdit('medicine') ? completeMedicine : undefined}
 
-          onLogGrooming={completeGrooming}
+          onLogGrooming={canEdit('grooming') ? completeGrooming : undefined}
 
-          onLogVaccination={completeVaccination}
+          onLogVaccination={canEdit('vaccination') ? completeVaccination : undefined}
 
-          dashboardTasks={dashboardTasks}
+          dashboardTasks={visibleDashboardTasks}
 
         />
 
         <TodaysScheduleSection
 
-          feedingSchedules={feedingSchedules}
+          feedingSchedules={visibleFeedingSchedules}
 
-          walkSchedules={walkSchedules}
+          walkSchedules={visibleWalkSchedules}
 
-          medicineSchedules={medicineSchedules}
+          medicineSchedules={visibleMedicineSchedules}
 
-          groomingRecords={groomingRecords}
+          groomingRecords={visibleGroomingRecords}
 
-          vaccinationSchedules={vaccinationSchedules}
+          vaccinationSchedules={visibleVaccinationSchedules}
 
           loading={scheduleLoading}
 
@@ -414,19 +469,19 @@ export default function HomeScreen() {
 
           vaccinationActionId={vaccinationActionId}
 
-          onCompleteFeeding={completeFeeding}
+          onCompleteFeeding={canEdit('feeding') ? completeFeeding : undefined}
 
-          onSkipFeeding={skipFeeding}
+          onSkipFeeding={canEdit('feeding') ? skipFeeding : undefined}
 
-          onCompleteWalk={completeWalk}
+          onCompleteWalk={canEdit('walks') ? completeWalk : undefined}
 
-          onCompleteMedicine={completeMedicine}
+          onCompleteMedicine={canEdit('medicine') ? completeMedicine : undefined}
 
-          onCompleteGrooming={completeGrooming}
+          onCompleteGrooming={canEdit('grooming') ? completeGrooming : undefined}
 
-          onManageGrooming={openGroomingManage}
+          onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
 
-          onCompleteVaccination={completeVaccination}
+          onCompleteVaccination={canEdit('vaccination') ? completeVaccination : undefined}
 
         />
 
@@ -506,7 +561,10 @@ export default function HomeScreen() {
 
       />
 
-      <LogJournalSheet visible={journalVisible} onClose={() => setJournalVisible(false)} />
+      <LogJournalSheet
+        visible={journalVisible && canViewJournal}
+        onClose={() => setJournalVisible(false)}
+      />
 
       <GroomingManageSheet
 
@@ -536,6 +594,8 @@ export default function HomeScreen() {
 
         activePetId={pet?._id}
 
+        currentUserId={user?._id}
+
         switchingId={switchingId}
 
         onClose={() => setPetSwitcherVisible(false)}
@@ -543,6 +603,8 @@ export default function HomeScreen() {
         onSelectPet={handleSwitchPet}
 
         onAddPet={handleAddPet}
+
+        canEditActivePet={isOwner}
 
       />
 

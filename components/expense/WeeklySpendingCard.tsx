@@ -116,11 +116,13 @@ export function WeeklySpendingCard({
                 {remainingLabel}
               </AppText>
             </View>
-            <TouchableOpacity style={styles.editBtn} activeOpacity={0.85} onPress={onEditPress}>
-              <AppText variant="caption" weight="700" color={HomeTheme.white}>
-                Edit Budget
-              </AppText>
-            </TouchableOpacity>
+            {onEditPress ? (
+              <TouchableOpacity style={styles.editBtn} activeOpacity={0.85} onPress={onEditPress}>
+                <AppText variant="caption" weight="700" color={HomeTheme.white}>
+                  Edit Budget
+                </AppText>
+              </TouchableOpacity>
+            ) : null}
           </View>
         </>
       )}

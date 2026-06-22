@@ -16,6 +16,7 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { useBudget } from '@/hooks/useBudget';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useNotifications } from '@/hooks/useNotifications';
+import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
 import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
 import { EditBudgetSheet } from './EditBudgetSheet';
@@ -36,8 +37,14 @@ export function ExpenseTrackerView({
 }: ExpenseTrackerViewProps) {
   const router = useRouter();
   const { clearance: tabBarClearance } = useTabBarLayout();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
+  const {
+    canViewExpenses,
+    canEditExpenses,
+    canViewJournal,
+    accessBannerMessage,
+  } = usePetPermissions(token, pet, user?._id);
   const { expenses, loading: expensesLoading, error, reload: reloadExpenses } = useExpenses(
     token,
     pet?._id,
@@ -70,39 +77,52 @@ export function ExpenseTrackerView({
       >
         <ExpenseTrackerHeader
           notificationCount={unreadCount}
-          onJournalPress={onJournalPress}
+          onJournalPress={canViewJournal ? onJournalPress : undefined}
           onNotificationsPress={onNotificationsPress}
+          showJournal={canViewJournal}
         />
 
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from Home to track expenses." />
         ) : null}
 
+        {pet && !canViewExpenses ? (
+          <AuthInfoBanner message="Expense access was not shared for this pet." />
+        ) : null}
+
+        {accessBannerMessage && canViewExpenses ? (
+          <AuthInfoBanner message={accessBannerMessage} />
+        ) : null}
+
         {error ? <AuthErrorBanner message={error} /> : null}
 
-        <WeeklySpendingCard
-          periodLabel={budget.periodLabel}
-          periodType={budget.periodType}
-          limitLabel={budget.limitLabel}
-          spentPercent={budget.spentPercent}
-          remainingLabel={budget.remainingLabel}
-          status={budget.status}
-          hasBudget={budget.hasBudget}
-          loading={budgetLoading || petLoading}
-          onPeriodChange={setPeriodType}
-          onEditPress={() => setBudgetSheetVisible(true)}
-        />
+        {canViewExpenses ? (
+          <>
+            <WeeklySpendingCard
+              periodLabel={budget.periodLabel}
+              periodType={budget.periodType}
+              limitLabel={budget.limitLabel}
+              spentPercent={budget.spentPercent}
+              remainingLabel={budget.remainingLabel}
+              status={budget.status}
+              hasBudget={budget.hasBudget}
+              loading={budgetLoading || petLoading}
+              onPeriodChange={setPeriodType}
+              onEditPress={canEditExpenses ? () => setBudgetSheetVisible(true) : undefined}
+            />
 
-        <ExpenseCategoryTiles selected={category} onSelect={setCategory} />
-        <RecentTransactionsSection
-          categoryFilter={category}
-          transactions={expenses}
-          loading={expensesLoading || petLoading}
-        />
+            <ExpenseCategoryTiles selected={category} onSelect={setCategory} />
+            <RecentTransactionsSection
+              categoryFilter={category}
+              transactions={expenses}
+              loading={expensesLoading || petLoading}
+            />
+          </>
+        ) : null}
 
       </ScrollView>
 
-      {pet ? (
+      {pet && canEditExpenses ? (
         <TouchableOpacity
           style={[styles.fab, { bottom: tabBarClearance + Spacing.sm }]}
           activeOpacity={0.9}
@@ -112,7 +132,8 @@ export function ExpenseTrackerView({
         </TouchableOpacity>
       ) : null}
 
-      <EditBudgetSheet
+      {pet && canEditExpenses ? (
+        <EditBudgetSheet
         visible={budgetSheetVisible}
         petId={pet?._id ?? null}
         token={token}
@@ -125,6 +146,7 @@ export function ExpenseTrackerView({
           reloadExpenses();
         }}
       />
+      ) : null}
     </SafeAreaView>
   );
 }

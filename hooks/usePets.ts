@@ -1,27 +1,40 @@
 import { useCallback, useState } from 'react';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
-import { fetchPets, setActivePet } from '@/services/pets/petApi';
+import { fetchAccessiblePets } from '@/lib/pet/fetchAccessiblePets';
+import {
+  getPetListCache,
+  petListCacheLoaded,
+  setPetListCache,
+} from '@/lib/pet/petListCache';
+import { setActivePet } from '@/services/pets/petApi';
 import type { ApiPet } from '@/types/pet';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 
-export function usePets(token: string | null, activePetId?: string | null) {
-  const [pets, setPets] = useState<ApiPet[]>([]);
-  const [loading, setLoading] = useState(false);
+export function usePets(
+  token: string | null,
+  activePetId?: string | null,
+  userId?: string,
+) {
+  const scopeKey = token && userId ? `${token}:${userId}` : token;
+  const cached = getPetListCache(scopeKey);
+  const [pets, setPets] = useState<ApiPet[]>(() => cached ?? []);
+  const [loading, setLoading] = useState(() => Boolean(scopeKey && !petListCacheLoaded(scopeKey)));
   const [error, setError] = useState<string | null>(null);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!token) return [];
-    return fetchPets(token);
-  }, [token]);
+    return fetchAccessiblePets(token, userId);
+  }, [token, userId]);
 
   const reload = useStaleFocusLoader({
-    scopeKey: token,
+    scopeKey,
     enabled: Boolean(token),
     load,
     onSuccess: (rows) => {
       setPets(rows);
+      if (scopeKey) setPetListCache(scopeKey, rows);
       setError(null);
     },
     onClear: () => {

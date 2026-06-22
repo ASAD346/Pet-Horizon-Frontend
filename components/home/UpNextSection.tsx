@@ -301,16 +301,17 @@ export function UpNextSection({
                       {dashboardTaskCaption(task)}
                     </AppText>
                   </View>
-                  <TouchableOpacity
-                    style={styles.logBtn}
-                    activeOpacity={0.85}
-                    disabled={!onLog}
-                    onPress={() => onLog?.(task.id)}
-                  >
-                    <AppText variant="caption" weight="800" color={HomeTheme.white}>
-                      LOG
-                    </AppText>
-                  </TouchableOpacity>
+                  {onLog ? (
+                    <TouchableOpacity
+                      style={styles.logBtn}
+                      activeOpacity={0.85}
+                      onPress={() => onLog(task.id)}
+                    >
+                      <AppText variant="caption" weight="800" color={HomeTheme.white}>
+                        LOG
+                      </AppText>
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
               );
             })
@@ -350,20 +351,22 @@ export function UpNextSection({
                   {rowCaption(row)}
                 </AppText>
               </View>
-              <TouchableOpacity
-                style={rowLogBtnStyle(row)}
-                activeOpacity={0.85}
-                disabled={busy || !onLog}
-                onPress={() => onLog?.(row.item._id)}
-              >
-                {busy ? (
-                  <ActivityIndicator size="small" color={HomeTheme.white} />
-                ) : (
-                  <AppText variant="caption" weight="800" color={HomeTheme.white}>
-                    LOG
-                  </AppText>
-                )}
-              </TouchableOpacity>
+              {onLog ? (
+                <TouchableOpacity
+                  style={rowLogBtnStyle(row)}
+                  activeOpacity={0.85}
+                  disabled={busy}
+                  onPress={() => onLog(row.item._id)}
+                >
+                  {busy ? (
+                    <ActivityIndicator size="small" color={HomeTheme.white} />
+                  ) : (
+                    <AppText variant="caption" weight="800" color={HomeTheme.white}>
+                      LOG
+                    </AppText>
+                  )}
+                </TouchableOpacity>
+              ) : null}
             </View>
           );
         })}

@@ -3,6 +3,8 @@ import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { SectionHeader } from './SectionHeader';
+import { QUICK_ACTION_MODULES } from '@/lib/pet/petPermissionAccess';
+import type { AppModuleId } from '@/lib/pet/petPermissionAccess';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 type ActionIcon = 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle';
@@ -22,6 +24,8 @@ interface QuickActionsSectionProps {
   onGroomingPress?: () => void;
   onVaccinationPress?: () => void;
   groomingVisible?: boolean;
+  canView?: (moduleId: AppModuleId) => boolean;
+  canEdit?: (moduleId: AppModuleId) => boolean;
 }
 
 const ACTION_HANDLERS: Record<
@@ -42,6 +46,8 @@ export function QuickActionsSection({
   onGroomingPress,
   onVaccinationPress,
   groomingVisible = true,
+  canView,
+  canEdit,
 }: QuickActionsSectionProps) {
   const handlers = {
     onLogFoodPress,
@@ -50,9 +56,20 @@ export function QuickActionsSection({
     onGroomingPress,
     onVaccinationPress,
   };
-  const visibleActions = groomingVisible
-    ? ACTIONS
-    : ACTIONS.filter((action) => action.label !== 'Grooming');
+
+  const visibleActions = ACTIONS.filter((action) => {
+    if (action.label === 'Grooming' && !groomingVisible) return false;
+    const moduleId = QUICK_ACTION_MODULES[action.label];
+    if (!moduleId) return true;
+    if (canEdit) return canEdit(moduleId);
+    if (canView) return canView(moduleId);
+    return true;
+  });
+
+  if (visibleActions.length === 0) {
+    return null;
+  }
+
   return (
     <View style={styles.section}>
       <SectionHeader title="Quick Actions" />
@@ -60,20 +77,21 @@ export function QuickActionsSection({
         {visibleActions.map((action) => {
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
+
           return (
-          <TouchableOpacity
-            key={action.label}
-            style={styles.tile}
-            activeOpacity={0.85}
-            onPress={onPress}
-          >
-            <View style={[styles.iconBox, { backgroundColor: action.bg }]}>
-              <MaterialCommunityIcons name={action.icon} size={24} color={action.color} />
-            </View>
-            <AppText variant="caption" weight="600" color={HomeTheme.text} style={styles.label}>
-              {action.label}
-            </AppText>
-          </TouchableOpacity>
+            <TouchableOpacity
+              key={action.label}
+              style={styles.tile}
+              activeOpacity={0.85}
+              onPress={onPress}
+            >
+              <View style={[styles.iconBox, { backgroundColor: action.bg }]}>
+                <MaterialCommunityIcons name={action.icon} size={24} color={action.color} />
+              </View>
+              <AppText variant="caption" weight="600" color={HomeTheme.text} style={styles.label}>
+                {action.label}
+              </AppText>
+            </TouchableOpacity>
           );
         })}
       </View>
