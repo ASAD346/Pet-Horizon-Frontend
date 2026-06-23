@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
@@ -27,7 +27,7 @@ import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
 import { HeaderActionButtons } from '@/components/ui/HeaderActionButtons';
 import { ProfileTheme } from './profileTheme';
 import { SkeletonProfileUserCard } from '@/components/ui/skeletons';
-import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
+import { useFocusReload, useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 
 export function ProfileHubView() {
   const router = useRouter();
@@ -66,11 +66,7 @@ export function ProfileHubView() {
     }
   }, [token, user?._id, setSession, shouldBlockUI, markLoaded, reset]);
 
-  useFocusEffect(
-    useCallback(() => {
-      reload();
-    }, [reload]),
-  );
+  useFocusReload(reload, Boolean(token && user?._id));
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);

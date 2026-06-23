@@ -27,12 +27,16 @@ export function useStaleLoadScope(scopeKey: string | null | undefined) {
   return { shouldBlockUI, markLoaded, reset };
 }
 
-export function useFocusReload(reload: () => void | Promise<void>, enabled = true) {
+export function useFocusReload(reload: (force?: boolean) => void | Promise<void>, enabled = true) {
+  const reloadRef = useRef(reload);
+  reloadRef.current = reload;
+
   useFocusEffect(
     useCallback(() => {
       if (enabled) {
-        void reload();
+        // Pass false so focus triggers do not reload if data is already cached
+        void reloadRef.current(false);
       }
-    }, [reload, enabled]),
+    }, [enabled]),
   );
 }

@@ -15,11 +15,16 @@ export function useActivePet(token: string | null) {
   const [pet, setPet] = useState<ApiPet | null>(() => getActivePetCache(token));
   const [loading, setLoading] = useState(() => Boolean(token && !activePetCacheLoaded(token)));
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (force = false) => {
     if (!token) {
       setPet(null);
       clearActivePetCache();
       setLoading(false);
+      return;
+    }
+
+    const cacheLoaded = activePetCacheLoaded(token);
+    if (cacheLoaded && !force) {
       return;
     }
 
@@ -28,7 +33,7 @@ export function useActivePet(token: string | null) {
       setPet(cached);
     }
 
-    const block = !activePetCacheLoaded(token);
+    const block = !cacheLoaded;
     if (block) setLoading(true);
 
     try {

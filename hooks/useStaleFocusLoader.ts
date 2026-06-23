@@ -23,7 +23,7 @@ export function useStaleFocusLoader<T>({
 }: StaleFocusLoaderOptions<T>) {
   const { shouldBlockUI, markLoaded, reset } = useStaleLoadScope(scopeKey);
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (force = false) => {
     if (!enabled) {
       reset();
       onClear();
@@ -32,6 +32,12 @@ export function useStaleFocusLoader<T>({
     }
 
     const block = shouldBlockUI();
+    
+    // Skip loading if already loaded and not forced (e.g. background focus refresh)
+    if (!block && !force) {
+      return;
+    }
+
     if (block) setLoading(true);
 
     try {
