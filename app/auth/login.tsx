@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   LoginBranding,
   LoginFooterBar,
@@ -23,13 +22,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
-import { LoginTheme, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import {
-  hasFieldErrors,
-  validateLoginForm,
-  type LoginFieldErrors,
-} from '@/services/auth/validation';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -43,8 +37,6 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
   const [showVerifyAction, setShowVerifyAction] = useState(false);
   const loginInFlightRef = useRef(false);
 
@@ -57,29 +49,23 @@ export default function LoginScreen() {
   }, [params.message, params.verified, showToast]);
 
   const clearErrors = useCallback(() => {
-    setFormError(null);
-    setFieldErrors({});
     setShowVerifyAction(false);
   }, []);
 
   const handleEmailChange = useCallback(
     (text: string) => {
       setEmail(text);
-      if (formError || fieldErrors.email) {
-        clearErrors();
-      }
+      clearErrors();
     },
-    [clearErrors, fieldErrors.email, formError],
+    [clearErrors],
   );
 
   const handlePasswordChange = useCallback(
     (text: string) => {
       setPassword(text);
-      if (formError || fieldErrors.password) {
-        clearErrors();
-      }
+      clearErrors();
     },
-    [clearErrors, fieldErrors.password, formError],
+    [clearErrors],
   );
 
   const redirectPath = Array.isArray(params.redirect) ? params.redirect[0] : params.redirect;
@@ -105,12 +91,6 @@ export default function LoginScreen() {
     Keyboard.dismiss();
     clearErrors();
 
-    const validation = validateLoginForm(email, password);
-    if (hasFieldErrors(validation)) {
-      setFieldErrors(validation);
-      return;
-    }
-
     loginInFlightRef.current = true;
     setLoading(true);
 
@@ -123,7 +103,7 @@ export default function LoginScreen() {
     } catch (error) {
       const message = getAuthLoginErrorMessage(error);
       log.fail('Login', 'UI error', message);
-      setFormError(message);
+      showToast(message);
 
       if (error instanceof ApiError && error.isForbidden) {
         setShowVerifyAction(true);
@@ -132,7 +112,7 @@ export default function LoginScreen() {
       loginInFlightRef.current = false;
       setLoading(false);
     }
-  }, [clearErrors, email, login, navigateAfterLogin, password]);
+  }, [clearErrors, email, login, navigateAfterLogin, password, showToast]);
 
   const handleVerifyEmail = useCallback(() => {
     router.push({
@@ -159,41 +139,44 @@ export default function LoginScreen() {
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            bounces={false}
           >
-            <Animated.View entering={FadeIn.duration(700)}>
-              <LoginBranding />
-            </Animated.View>
+            <View style={styles.contentWrapper}>
+              <View>
+                <LoginBranding compact={true} />
+              </View>
 
-            <Animated.View entering={FadeInDown.delay(150).duration(700)} style={styles.formBlock}>
-              <LoginFormSection
-                email={email}
-                password={password}
-                loading={loading}
-                formError={formError}
-                fieldErrors={fieldErrors}
-                onEmailChange={handleEmailChange}
-                onPasswordChange={handlePasswordChange}
-                onLogin={handleLogin}
-                onForgotPassword={() =>
-                  router.push({
-                    pathname: '/auth/forgot-password',
-                    params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
-                  })
-                }
-                onSignup={() => router.push('/auth/signup')}
-                onVerifyEmail={handleVerifyEmail}
-                showVerifyAction={showVerifyAction}
-              />
+              <View style={styles.formWrapper}>
+                <LoginFormSection
+                  email={email}
+                  password={password}
+                  loading={loading}
+                  fieldErrors={{}}
+                  onEmailChange={handleEmailChange}
+                  onPasswordChange={handlePasswordChange}
+                  onLogin={handleLogin}
+                  onForgotPassword={() =>
+                    router.push({
+                      pathname: '/auth/forgot-password',
+                      params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
+                    })
+                  }
+                  onSignup={() => router.push('/auth/signup')}
+                  onVerifyEmail={handleVerifyEmail}
+                  showVerifyAction={showVerifyAction}
+                />
 
-              <SocialLoginButtons
-                googleLoading={googleLoading}
-                onGooglePress={() => {
-                  clearErrors();
-                  void handleGoogleSignIn(setFormError);
-                }}
-                onApplePress={() => {}}
-              />
-            </Animated.View>
+                <SocialLoginButtons
+                  compact={false}
+                  googleLoading={googleLoading}
+                  onGooglePress={() => {
+                    clearErrors();
+                    void handleGoogleSignIn(showToast);
+                  }}
+                  onApplePress={() => {}}
+                />
+              </View>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -206,7 +189,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: LoginTheme.screenBg,
+    backgroundColor: '#FFF9F5',
   },
   safeArea: {
     flex: 1,
@@ -216,14 +199,20 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xl,
-    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    paddingBottom: Spacing.lg,
+    justifyContent: 'center',
   },
-  formBlock: {
-    flexGrow: 1,
-    justifyContent: 'flex-start',
-    paddingTop: Spacing.md,
+  contentWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  formWrapper: {
+    width: '100%',
+    maxWidth: 340, // Standard elegant phone input width bounds
+    alignSelf: 'center',
+    marginTop: Spacing.xs,
   },
 });

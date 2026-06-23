@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AppButton } from '../../ui/AppButton';
-import { AuthErrorBanner } from '../AuthErrorBanner';
 import { AuthTextField } from '../AuthTextField';
-import { LoginTheme, Spacing } from '../../../constants/theme';
+import { Palette, Spacing } from '../../../constants/theme';
 import type { VerifyEmailFieldErrors } from '../../../services/auth/validation';
 
 interface VerifyEmailFormSectionProps {
@@ -19,23 +18,10 @@ interface VerifyEmailFormSectionProps {
   onLogin: () => void;
 }
 
-const buttonShadow = Platform.select({
-  ios: {
-    shadowColor: LoginTheme.buttonShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  android: {
-    elevation: 6,
-  },
-});
-
 export function VerifyEmailFormSection({
   otp,
   loading,
   resendLoading = false,
-  formError,
   fieldErrors,
   onOtpChange,
   onVerify,
@@ -46,14 +32,12 @@ export function VerifyEmailFormSection({
 
   return (
     <View style={styles.container}>
-      <AppText variant="h3" color={LoginTheme.charcoal} weight="700" style={styles.title}>
+      <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.title}>
         Verify your email
       </AppText>
-      <AppText variant="bodySmall" color={LoginTheme.tagline} style={styles.subtitle}>
+      <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle} weight="600">
         Enter the 6-digit code we sent to your email.
       </AppText>
-
-      {formError ? <AuthErrorBanner message={formError} /> : null}
 
       <AuthTextField
         placeholder="Verification code"
@@ -61,7 +45,7 @@ export function VerifyEmailFormSection({
         value={otp}
         onChangeText={onOtpChange}
         keyboardType="number-pad"
-        compact
+        compact={false}
         error={fieldErrors?.otp}
         maxLength={6}
       />
@@ -71,7 +55,7 @@ export function VerifyEmailFormSection({
         onPress={onResendCode}
         disabled={busy}
       >
-        <AppText variant="bodySmall" color={LoginTheme.green} weight="600">
+        <AppText variant="bodySmall" color="#5CB35D" weight="700">
           {resendLoading ? 'Sending code…' : 'Resend code'}
         </AppText>
       </TouchableOpacity>
@@ -81,18 +65,16 @@ export function VerifyEmailFormSection({
         onPress={onVerify}
         loading={loading}
         disabled={busy}
-        variant="success"
-        size="sm"
         style={styles.verifyButton}
         textStyle={styles.verifyButtonText}
       />
 
       <View style={styles.loginRow}>
-        <AppText variant="bodySmall" color={LoginTheme.tagline}>
+        <AppText variant="bodySmall" color={Palette.gray[500]} weight="600">
           Already verified?{' '}
         </AppText>
         <TouchableOpacity onPress={onLogin} disabled={busy}>
-          <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
+          <AppText variant="bodySmall" color="#5CB35D" weight="800">
             Login
           </AppText>
         </TouchableOpacity>
@@ -119,20 +101,26 @@ const styles = StyleSheet.create({
   },
   verifyButton: {
     width: '100%',
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: LoginTheme.green,
-    paddingVertical: 12,
+    height: 52,
+    borderRadius: 14, // Consistent modern rounded corners
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 0,
     marginTop: Spacing.xs,
-    ...buttonShadow,
   },
   verifyButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
+    color: Palette.white,
+    letterSpacing: 0.5,
   },
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.lg,
   },
 });

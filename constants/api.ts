@@ -17,7 +17,7 @@ function getDevApiBaseUrl(): string {
 /** Root API URL including `/v1` — no trailing slash */
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '') ??
-  (__DEV__ ? getDevApiBaseUrl() : 'https://pet-horizon-backend.onrender.com/v1');
+  (__DEV__ ? getDevApiBaseUrl() : 'http://16.171.154.65/v1');
 
 /**
  * Relative paths (appended to API_BASE_URL).

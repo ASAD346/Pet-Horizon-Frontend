@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   LoginBranding,
   LoginFooterBar,
@@ -17,14 +16,15 @@ import {
   getAuthResetPasswordErrorMessage,
 } from '@/lib/auth/authErrors';
 import { log } from '@/lib/log';
-import { LoginTheme, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { requestPasswordReset, resetPassword } from '@/services/auth/authApi';
+import { useToast } from '@/hooks/useToast';
 import {
   hasForgotPasswordFieldErrors,
   hasResetPasswordFieldErrors,
-  validateEmailOnly,
   validateForgotPasswordForm,
   validateResetPasswordForm,
+  validateEmailOnly,
   type ForgotPasswordFieldErrors,
   type ResetPasswordFieldErrors,
 } from '@/services/auth/validation';
@@ -56,6 +56,7 @@ function buildResetInfoMessage(
 export default function ForgotPasswordScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ email?: string }>();
+  const { showToast } = useToast();
 
   const [step, setStep] = useState<ForgotPasswordStep>('request');
   const [email, setEmail] = useState('');
@@ -64,8 +65,6 @@ export default function ForgotPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [formInfo, setFormInfo] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<
     ForgotPasswordFieldErrors | ResetPasswordFieldErrors
   >({});
@@ -78,7 +77,6 @@ export default function ForgotPasswordScreen() {
   }, [params.email]);
 
   const clearErrors = useCallback(() => {
-    setFormError(null);
     setFieldErrors({});
   }, []);
 
@@ -88,17 +86,16 @@ export default function ForgotPasswordScreen() {
       setOtp('');
       setNewPassword('');
       setConfirmPassword('');
-      setFormInfo(buildResetInfoMessage(message, options));
-      setFormError(null);
+      const info = buildResetInfoMessage(message, options);
+      showToast(info);
       setFieldErrors({});
     },
-    [],
+    [showToast],
   );
 
   const handleSendCode = useCallback(async () => {
     Keyboard.dismiss();
     clearErrors();
-    setFormInfo(null);
 
     const validation = validateForgotPasswordForm(email);
     if (hasForgotPasswordFieldErrors(validation)) {
@@ -116,9 +113,8 @@ export default function ForgotPasswordScreen() {
         const deliveryError =
           result.emailError ||
           result.hint ||
-          'We could not send the reset email. Check the address or try again in a few minutes.';
-        setFormError(deliveryError);
-        setFormInfo(null);
+          'We could not send the reset email. Check the address or try again.';
+        showToast(deliveryError);
         return;
       }
 
@@ -129,11 +125,11 @@ export default function ForgotPasswordScreen() {
       });
     } catch (error) {
       log.fail('ForgotPassword', 'Request code failed', getAuthForgotPasswordErrorMessage(error));
-      setFormError(getAuthForgotPasswordErrorMessage(error));
+      showToast(getAuthForgotPasswordErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [clearErrors, email, goToResetStep]);
+  }, [clearErrors, email, goToResetStep, showToast]);
 
   const handleResetPassword = useCallback(async () => {
     Keyboard.dismiss();
@@ -156,11 +152,11 @@ export default function ForgotPasswordScreen() {
       });
     } catch (error) {
       log.fail('ForgotPassword', 'Reset failed', getAuthResetPasswordErrorMessage(error));
-      setFormError(getAuthResetPasswordErrorMessage(error));
+      showToast(getAuthResetPasswordErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [clearErrors, confirmPassword, email, newPassword, otp, router]);
+  }, [clearErrors, confirmPassword, email, newPassword, otp, router, showToast]);
 
   const handleResendCode = useCallback(async () => {
     Keyboard.dismiss();
@@ -178,27 +174,26 @@ export default function ForgotPasswordScreen() {
       const result = await requestPasswordReset({ email });
 
       if (result.emailConfigured && result.emailSent === false) {
-        setFormError(
+        showToast(
           result.emailError ||
             result.hint ||
-            'We could not send the reset email. Check the address or try again in a few minutes.',
+            'We could not send the reset email. Check the address or try again.',
         );
         return;
       }
 
-      setFormInfo(
-        buildResetInfoMessage(result.message, {
-          devOtp: result.devOtp,
-          expiresInMinutes: result.expiresInMinutes,
-          hint: result.hint,
-        }),
-      );
+      const info = buildResetInfoMessage(result.message, {
+        devOtp: result.devOtp,
+        expiresInMinutes: result.expiresInMinutes,
+        hint: result.hint,
+      });
+      showToast(info);
     } catch (error) {
-      setFormError(getAuthForgotPasswordErrorMessage(error));
+      showToast(getAuthForgotPasswordErrorMessage(error));
     } finally {
       setResendLoading(false);
     }
-  }, [clearErrors, email]);
+  }, [clearErrors, email, showToast]);
 
   const handleLogin = useCallback(() => {
     router.back();
@@ -213,61 +208,63 @@ export default function ForgotPasswordScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
         >
-          <View style={styles.content}>
-            <Animated.View entering={FadeIn.duration(700)}>
-              <LoginBranding compact />
-            </Animated.View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.contentWrapper}>
+              <View>
+                <LoginBranding compact={true} />
+              </View>
 
-            <Animated.View entering={FadeInDown.delay(150).duration(700)} style={styles.formBlock}>
-              {step === 'request' ? (
-                <ForgotPasswordFormSection
-                  email={email}
-                  loading={loading}
-                  formError={formError}
-                  fieldErrors={fieldErrors as ForgotPasswordFieldErrors}
-                  onEmailChange={(text) => {
-                    setEmail(text);
-                    if (formError || (fieldErrors as ForgotPasswordFieldErrors).email) clearErrors();
-                  }}
-                  onSendCode={handleSendCode}
-                  onLogin={handleLogin}
-                />
-              ) : (
-                <ResetPasswordFormSection
-                  email={email}
-                  otp={otp}
-                  newPassword={newPassword}
-                  confirmPassword={confirmPassword}
-                  loading={loading}
-                  resendLoading={resendLoading}
-                  formError={formError}
-                  formInfo={formInfo}
-                  fieldErrors={fieldErrors as ResetPasswordFieldErrors}
-                  onEmailChange={(text) => {
-                    setEmail(text);
-                    if (formError || (fieldErrors as ResetPasswordFieldErrors).email) clearErrors();
-                  }}
-                  onOtpChange={(text) => {
-                    setOtp(text.replace(/\D/g, '').slice(0, 6));
-                    if (formError || (fieldErrors as ResetPasswordFieldErrors).otp) clearErrors();
-                  }}
-                  onNewPasswordChange={(text) => {
-                    setNewPassword(text);
-                    if (formError || (fieldErrors as ResetPasswordFieldErrors).newPassword) clearErrors();
-                  }}
-                  onConfirmPasswordChange={(text) => {
-                    setConfirmPassword(text);
-                    if (formError || (fieldErrors as ResetPasswordFieldErrors).confirmPassword) {
+              <View style={styles.formWrapper}>
+                {step === 'request' ? (
+                  <ForgotPasswordFormSection
+                    email={email}
+                    loading={loading}
+                    fieldErrors={fieldErrors as ForgotPasswordFieldErrors}
+                    onEmailChange={(text) => {
+                      setEmail(text);
                       clearErrors();
-                    }
-                  }}
-                  onResetPassword={handleResetPassword}
-                  onResendCode={handleResendCode}
-                  onLogin={handleLogin}
-                />
-              )}
-            </Animated.View>
-          </View>
+                    }}
+                    onSendCode={handleSendCode}
+                    onLogin={handleLogin}
+                  />
+                ) : (
+                  <ResetPasswordFormSection
+                    email={email}
+                    otp={otp}
+                    newPassword={newPassword}
+                    confirmPassword={confirmPassword}
+                    loading={loading}
+                    resendLoading={resendLoading}
+                    fieldErrors={fieldErrors as ResetPasswordFieldErrors}
+                    onEmailChange={(text) => {
+                      setEmail(text);
+                      clearErrors();
+                    }}
+                    onOtpChange={(text) => {
+                      setOtp(text.replace(/\D/g, '').slice(0, 6));
+                      clearErrors();
+                    }}
+                    onNewPasswordChange={(text) => {
+                      setNewPassword(text);
+                      clearErrors();
+                    }}
+                    onConfirmPasswordChange={(text) => {
+                      setConfirmPassword(text);
+                      clearErrors();
+                    }}
+                    onResetPassword={handleResetPassword}
+                    onResendCode={handleResendCode}
+                    onLogin={handleLogin}
+                  />
+                )}
+              </View>
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
@@ -279,7 +276,7 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: LoginTheme.screenBg,
+    backgroundColor: '#FFF9F5',
   },
   safeArea: {
     flex: 1,
@@ -287,15 +284,22 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.xs,
-    justifyContent: 'space-between',
+    paddingBottom: Spacing.lg,
+    justifyContent: 'center',
   },
-  formBlock: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    paddingTop: Spacing.sm,
+  contentWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  formWrapper: {
+    width: '100%',
+    maxWidth: 340,
+    alignSelf: 'center',
+    marginTop: Spacing.xs,
   },
 });

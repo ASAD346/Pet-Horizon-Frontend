@@ -65,19 +65,11 @@ export default function GetStartedScreen() {
 
   useAuthEntryRedirect();
 
-  if (isBootstrapping || isAuthenticated) {
-    return <AuthEntryLoader />;
-  }
-
-  const updateActiveIndex = (index: number) => {
-    setActiveIndex(index);
-  };
-
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
       scrollX.value = event.contentOffset.x;
       const index = Math.round(event.contentOffset.x / width);
-      runOnJS(updateActiveIndex)(index);
+      runOnJS(setActiveIndex)(index);
     },
   });
 
@@ -124,6 +116,10 @@ export default function GetStartedScreen() {
 
   const activeColors = SLIDES.map((slide) => slide.accentColor);
   const currentSlide = SLIDES[activeIndex] || SLIDES[0];
+
+  if (isBootstrapping || isAuthenticated) {
+    return <AuthEntryLoader />;
+  }
 
   return (
     <Animated.View style={[styles.outerContainer, animatedContainerStyle]}>

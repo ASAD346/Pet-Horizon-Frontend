@@ -5,8 +5,10 @@ import {
   ScrollView,
   StyleSheet,
   TextInput,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
@@ -29,6 +31,10 @@ export default function ChangePasswordScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
+  const [newPasswordVisible, setNewPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
   const handleSave = useCallback(async () => {
     if (!token) {
@@ -77,34 +83,70 @@ export default function ChangePasswordScreen() {
           {success ? <AuthInfoBanner message={success} /> : null}
 
           <SectionLabel text="CURRENT PASSWORD" />
-          <TextInput
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            placeholder="Current password"
-            placeholderTextColor={SheetColors.placeholder}
-            style={styles.input}
-            secureTextEntry
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={currentPassword}
+              onChangeText={setCurrentPassword}
+              placeholder="Current password"
+              placeholderTextColor={SheetColors.placeholder}
+              style={styles.input}
+              secureTextEntry={!currentPasswordVisible}
+            />
+            <TouchableOpacity
+              onPress={() => setCurrentPasswordVisible((prev) => !prev)}
+              style={styles.toggleButton}
+            >
+              <Ionicons
+                name={currentPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={SheetColors.placeholder}
+              />
+            </TouchableOpacity>
+          </View>
 
           <SectionLabel text="NEW PASSWORD" />
-          <TextInput
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="At least 8 characters"
-            placeholderTextColor={SheetColors.placeholder}
-            style={styles.input}
-            secureTextEntry
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholder="At least 8 characters"
+              placeholderTextColor={SheetColors.placeholder}
+              style={styles.input}
+              secureTextEntry={!newPasswordVisible}
+            />
+            <TouchableOpacity
+              onPress={() => setNewPasswordVisible((prev) => !prev)}
+              style={styles.toggleButton}
+            >
+              <Ionicons
+                name={newPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={SheetColors.placeholder}
+              />
+            </TouchableOpacity>
+          </View>
 
           <SectionLabel text="CONFIRM NEW PASSWORD" />
-          <TextInput
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="Repeat new password"
-            placeholderTextColor={SheetColors.placeholder}
-            style={styles.input}
-            secureTextEntry
-          />
+          <View style={styles.inputContainer}>
+            <TextInput
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder="Repeat new password"
+              placeholderTextColor={SheetColors.placeholder}
+              style={styles.input}
+              secureTextEntry={!confirmPasswordVisible}
+            />
+            <TouchableOpacity
+              onPress={() => setConfirmPasswordVisible((prev) => !prev)}
+              style={styles.toggleButton}
+            >
+              <Ionicons
+                name={confirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={SheetColors.placeholder}
+              />
+            </TouchableOpacity>
+          </View>
 
           <AppButton
             title="Update Password"
@@ -133,14 +175,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
-  input: {
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: SheetColors.inputBg,
     borderRadius: Radius.md,
+    marginBottom: Spacing.md,
     paddingHorizontal: Spacing.md,
+  },
+  input: {
+    flex: 1,
     paddingVertical: Platform.OS === 'ios' ? 14 : 12,
     fontSize: 14,
     color: SheetColors.inputText,
-    marginBottom: Spacing.md,
+  },
+  toggleButton: {
+    paddingLeft: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
   submitBtn: {
     width: '100%',

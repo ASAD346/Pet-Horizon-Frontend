@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AppButton } from '../../ui/AppButton';
-import { AuthErrorBanner } from '../AuthErrorBanner';
 import { AuthTextField } from '../AuthTextField';
-import { LoginTheme, Spacing } from '../../../constants/theme';
+import { Palette, Spacing } from '../../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 
 interface LoginFormSectionProps {
   email: string;
@@ -25,7 +25,6 @@ export function LoginFormSection({
   email,
   password,
   loading,
-  formError,
   fieldErrors,
   onEmailChange,
   onPasswordChange,
@@ -37,7 +36,19 @@ export function LoginFormSection({
 }: LoginFormSectionProps) {
   return (
     <View style={styles.container}>
-      {formError ? <AuthErrorBanner message={formError} /> : null}
+      {/* Form Section Header */}
+      <View style={styles.headerBlock}>
+        <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.welcomeTitle}>
+          Welcome Back <Ionicons name="sparkles" size={18} color="#F48024" />
+        </AppText>
+        
+        {/* Soft rounded accent line */}
+        <View style={styles.accentLine} />
+
+        <AppText variant="bodySmall" color={Palette.gray[500]} weight="700" style={styles.headerDescription}>
+          Enter your credentials to continue
+        </AppText>
+      </View>
 
       <AuthTextField
         placeholder="Email Address"
@@ -47,6 +58,7 @@ export function LoginFormSection({
         keyboardType="email-address"
         error={fieldErrors?.email}
         autoCapitalize="none"
+        compact={false}
       />
 
       <AuthTextField
@@ -57,18 +69,19 @@ export function LoginFormSection({
         secureTextEntry
         showPasswordToggle
         error={fieldErrors?.password}
+        compact={false}
       />
 
       {showVerifyAction && onVerifyEmail ? (
         <TouchableOpacity style={styles.verifyRow} onPress={onVerifyEmail}>
-          <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
+          <AppText variant="bodySmall" color="#5CB35D" weight="700">
             Verify your email to continue
           </AppText>
         </TouchableOpacity>
       ) : null}
 
       <TouchableOpacity style={styles.forgotPassword} onPress={onForgotPassword}>
-        <AppText variant="bodySmall" color={LoginTheme.green} weight="600">
+        <AppText variant="bodySmall" color="#5CB35D" weight="700">
           Forgot Password?
         </AppText>
       </TouchableOpacity>
@@ -78,19 +91,17 @@ export function LoginFormSection({
         onPress={onLogin}
         loading={loading}
         disabled={loading}
-        variant="success"
-        size="sm"
         style={styles.loginButton}
         textStyle={styles.loginButtonText}
       />
 
       <View style={styles.signupRow}>
-        <AppText variant="bodySmall" color={LoginTheme.tagline}>
-          Didn&apos;t Have an Account?{' '}
+        <AppText variant="bodySmall" color={Palette.gray[500]} weight="600">
+          Don&apos;t have an account?{' '}
         </AppText>
         <TouchableOpacity onPress={onSignup} disabled={loading}>
-          <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
-            Signup
+          <AppText variant="bodySmall" color="#5CB35D" weight="800">
+            Sign Up
           </AppText>
         </TouchableOpacity>
       </View>
@@ -98,46 +109,62 @@ export function LoginFormSection({
   );
 }
 
-const buttonShadow = Platform.select({
-  ios: {
-    shadowColor: LoginTheme.buttonShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  android: {
-    elevation: 6,
-  },
-});
-
 const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
+  headerBlock: {
+    marginBottom: Spacing.lg,
+    alignItems: 'flex-start',
+  },
+  welcomeTitle: {
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#1A2B4E',
+  },
+  accentLine: {
+    width: 32,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#5CB35D',
+    marginTop: 6,
+    marginBottom: Spacing.sm,
+  },
+  headerDescription: {
+    fontSize: 13,
+    color: Palette.gray[500],
+  },
   verifyRow: {
     marginBottom: Spacing.sm,
     marginTop: -Spacing.xs,
+    alignSelf: 'flex-start',
   },
   forgotPassword: {
     alignSelf: 'flex-end',
     marginBottom: Spacing.md,
-    marginTop: Spacing.xs,
+    marginTop: -Spacing.xs,
   },
   loginButton: {
     width: '100%',
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: LoginTheme.green,
-    paddingVertical: 12,
-    ...buttonShadow,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 4,
+    borderWidth: 0,
   },
   loginButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
+    color: Palette.white,
+    letterSpacing: 0.5,
   },
   signupRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: Spacing.md,
+    marginTop: Spacing.lg,
   },
 });

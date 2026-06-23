@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import {
   LoginBranding,
   LoginFooterBar,
@@ -16,7 +15,7 @@ import {
 } from '@/lib/auth/authErrors';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
-import { LoginTheme, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import { useToast } from '@/hooks/useToast';
 import {
@@ -25,8 +24,6 @@ import {
   verifyEmail,
 } from '@/services/auth/authApi';
 import {
-  hasSignupFieldErrors,
-  hasVerifyEmailFieldErrors,
   validateEmailOnly,
   validateSignupForm,
   validateVerifyEmailForm,
@@ -60,7 +57,6 @@ export default function SignupScreen() {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors | VerifyEmailFieldErrors>({});
 
   useEffect(() => {
@@ -74,7 +70,6 @@ export default function SignupScreen() {
   }, [params.email, params.verify]);
 
   const clearErrors = useCallback(() => {
-    setFormError(null);
     setFieldErrors({});
   }, []);
 
@@ -88,7 +83,6 @@ export default function SignupScreen() {
       setPassword('');
       setConfirmPassword('');
       setOtp('');
-      setFormError(null);
       setFieldErrors({});
     },
     [showToast],
@@ -98,12 +92,6 @@ export default function SignupScreen() {
     Keyboard.dismiss();
     clearErrors();
 
-    const validation = validateSignupForm(fullName, email, password, confirmPassword);
-    if (hasSignupFieldErrors(validation)) {
-      setFieldErrors(validation);
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -112,21 +100,15 @@ export default function SignupScreen() {
       goToVerifyStep(result.message, result.devOtp);
     } catch (error) {
       log.fail('Signup', 'Sign up failed', getAuthSignupErrorMessage(error));
-      setFormError(getAuthSignupErrorMessage(error));
+      showToast(getAuthSignupErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [clearErrors, confirmPassword, email, fullName, goToVerifyStep, password]);
+  }, [clearErrors, confirmPassword, email, fullName, goToVerifyStep, password, showToast]);
 
   const handleVerify = useCallback(async () => {
     Keyboard.dismiss();
     clearErrors();
-
-    const validation = validateVerifyEmailForm(email, otp);
-    if (hasVerifyEmailFieldErrors(validation)) {
-      setFieldErrors(validation);
-      return;
-    }
 
     setLoading(true);
 
@@ -139,21 +121,15 @@ export default function SignupScreen() {
       });
     } catch (error) {
       log.fail('Signup', 'Verify failed', getAuthVerifyEmailErrorMessage(error));
-      setFormError(getAuthVerifyEmailErrorMessage(error));
+      showToast(getAuthVerifyEmailErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [clearErrors, email, otp, router]);
+  }, [clearErrors, email, otp, router, showToast]);
 
   const handleResendCode = useCallback(async () => {
     Keyboard.dismiss();
     clearErrors();
-
-    const emailError = validateEmailOnly(email);
-    if (emailError) {
-      setFieldErrors({ email: emailError });
-      return;
-    }
 
     setResendLoading(true);
 
@@ -164,7 +140,7 @@ export default function SignupScreen() {
         showToast(`Dev code: ${result.devOtp}`);
       }
     } catch (error) {
-      setFormError(getErrorMessage(error, 'Unable to resend the code. Please try again.'));
+      showToast(getErrorMessage(error, 'Unable to resend the code. Please try again.'));
     } finally {
       setResendLoading(false);
     }
@@ -183,70 +159,75 @@ export default function SignupScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
         >
-          <View style={styles.content}>
-            <Animated.View entering={FadeIn.duration(700)}>
-              <LoginBranding compact />
-            </Animated.View>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.contentWrapper}>
+              <View>
+                <LoginBranding compact={true} />
+              </View>
 
-            <Animated.View entering={FadeInDown.delay(150).duration(700)} style={styles.formBlock}>
-              {step === 'signup' ? (
-                <SignupFormSection
-                  fullName={fullName}
-                  email={email}
-                  password={password}
-                  confirmPassword={confirmPassword}
-                  loading={loading}
-                  formError={formError}
-                  fieldErrors={fieldErrors as SignupFieldErrors}
-                  onFullNameChange={(text) => {
-                    setFullName(text);
-                    if (formError || (fieldErrors as SignupFieldErrors).fullName) clearErrors();
-                  }}
-                  onEmailChange={(text) => {
-                    setEmail(text);
-                    if (formError || (fieldErrors as SignupFieldErrors).email) clearErrors();
-                  }}
-                  onPasswordChange={(text) => {
-                    setPassword(text);
-                    if (formError || (fieldErrors as SignupFieldErrors).password) clearErrors();
-                  }}
-                  onConfirmPasswordChange={(text) => {
-                    setConfirmPassword(text);
-                    if (formError || (fieldErrors as SignupFieldErrors).confirmPassword) clearErrors();
-                  }}
-                  onSignUp={handleSignUp}
-                  onLogin={handleLogin}
-                />
-              ) : (
-                <VerifyEmailFormSection
-                  otp={otp}
-                  loading={loading}
-                  resendLoading={resendLoading}
-                  formError={formError}
-                  fieldErrors={fieldErrors as VerifyEmailFieldErrors}
-                  onOtpChange={(text) => {
-                    setOtp(text.replace(/\D/g, '').slice(0, 6));
-                    if (formError || (fieldErrors as VerifyEmailFieldErrors).otp) clearErrors();
-                  }}
-                  onVerify={handleVerify}
-                  onResendCode={handleResendCode}
-                  onLogin={handleLogin}
-                />
-              )}
+              <View style={styles.formWrapper}>
+                {step === 'signup' ? (
+                  <SignupFormSection
+                    fullName={fullName}
+                    email={email}
+                    password={password}
+                    confirmPassword={confirmPassword}
+                    loading={loading}
+                    fieldErrors={fieldErrors as SignupFieldErrors}
+                    onFullNameChange={(text) => {
+                      setFullName(text);
+                      clearErrors();
+                    }}
+                    onEmailChange={(text) => {
+                      setEmail(text);
+                      clearErrors();
+                    }}
+                    onPasswordChange={(text) => {
+                      setPassword(text);
+                      clearErrors();
+                    }}
+                    onConfirmPasswordChange={(text) => {
+                      setConfirmPassword(text);
+                      clearErrors();
+                    }}
+                    onSignUp={handleSignUp}
+                    onLogin={handleLogin}
+                  />
+                ) : (
+                  <VerifyEmailFormSection
+                    otp={otp}
+                    loading={loading}
+                    resendLoading={resendLoading}
+                    fieldErrors={fieldErrors as VerifyEmailFieldErrors}
+                    onOtpChange={(text) => {
+                      setOtp(text.replace(/\D/g, '').slice(0, 6));
+                      clearErrors();
+                    }}
+                    onVerify={handleVerify}
+                    onResendCode={handleResendCode}
+                    onLogin={handleLogin}
+                  />
+                )}
 
-              {step === 'signup' ? (
-                <SocialLoginButtons
-                  compact
-                  googleLoading={googleLoading}
-                  onGooglePress={() => {
-                    clearErrors();
-                    void handleGoogleSignIn(setFormError);
-                  }}
-                  onApplePress={() => {}}
-                />
-              ) : null}
-            </Animated.View>
-          </View>
+                {step === 'signup' ? (
+                  <SocialLoginButtons
+                    compact={false}
+                    googleLoading={googleLoading}
+                    onGooglePress={() => {
+                      clearErrors();
+                      void handleGoogleSignIn(showToast);
+                    }}
+                    onApplePress={() => {}}
+                  />
+                ) : null}
+              </View>
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
 
@@ -258,7 +239,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: LoginTheme.screenBg,
+    backgroundColor: '#FFF9F5',
   },
   safeArea: {
     flex: 1,
@@ -266,15 +247,22 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: Spacing.xl,
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.xs,
-    justifyContent: 'space-between',
+    paddingBottom: Spacing.lg,
+    justifyContent: 'center',
   },
-  formBlock: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    paddingTop: Spacing.sm,
+  contentWrapper: {
+    width: '100%',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  formWrapper: {
+    width: '100%',
+    maxWidth: 340, // Standard elegant phone input width bounds
+    alignSelf: 'center',
+    marginTop: Spacing.xs,
   },
 });

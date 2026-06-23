@@ -1,22 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, StyleSheet } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AuthLogoMark } from '../AuthLogoMark';
-import { LoginTheme, Spacing } from '../../../constants/theme';
-
-const PETS = [
-  { icon: 'dog' as const, label: 'DOG' },
-  { icon: 'cat' as const, label: 'CAT' },
-  { icon: 'rabbit' as const, label: 'RABBIT' },
-  { icon: 'bird' as const, label: 'BIRD' },
-];
-
-const serifFont = Platform.select({
-  ios: 'Georgia',
-  android: 'serif',
-  default: 'serif',
-});
+import { Palette, Spacing } from '../../../constants/theme';
 
 interface LoginBrandingProps {
   compact?: boolean;
@@ -25,42 +11,29 @@ interface LoginBrandingProps {
 export function LoginBranding({ compact = false }: LoginBrandingProps) {
   return (
     <View style={[styles.container, compact && styles.containerCompact]}>
+      {/* Centered logo icon */}
       <AuthLogoMark size={compact ? 'compact' : 'default'} style={styles.logoMark} />
 
+      {/* Modern High-Contrast Geometric Wordmark */}
       <View style={styles.titleRow}>
-        <AppText style={[styles.brandPet, compact && styles.brandPetCompact, { fontFamily: serifFont }]}>
-          Pet{' '}
+        <AppText style={[styles.brandPet, compact && styles.brandPetCompact]}>
+          Pet
         </AppText>
-        <AppText style={[styles.brandHorizon, compact && styles.brandHorizonCompact, { fontFamily: serifFont }]}>
+        <AppText style={[styles.brandHorizon, compact && styles.brandHorizonCompact]}>
           Horizon
         </AppText>
       </View>
 
+      {/* New Slogan */}
       <AppText
-        variant="bodySmall"
-        color={LoginTheme.tagline}
+        variant="caption"
+        color={Palette.gray[600]}
         align="center"
-        style={[styles.tagline, compact && styles.taglineCompact]}
+        style={styles.tagline}
+        weight="700"
       >
-        Your Pet&apos;s World, All in One Place
+        Where every paw finds its path.
       </AppText>
-
-      <View style={[styles.pawRow, compact && styles.pawRowCompact]}>
-        <MaterialCommunityIcons name="paw" size={compact ? 12 : 14} color={LoginTheme.green} />
-      </View>
-
-      <View style={[styles.petIconsRow, compact && styles.petIconsRowCompact]}>
-        {PETS.map((pet) => (
-          <View key={pet.label} style={styles.petItem}>
-            <View style={[styles.petIconCircle, compact && styles.petIconCircleCompact]}>
-              <MaterialCommunityIcons name={pet.icon} size={compact ? 14 : 16} color={LoginTheme.charcoal} />
-            </View>
-            <AppText variant="caption" color={LoginTheme.petLabel} style={styles.petLabel}>
-              {pet.label}
-            </AppText>
-          </View>
-        ))}
-      </View>
     </View>
   );
 }
@@ -68,79 +41,46 @@ export function LoginBranding({ compact = false }: LoginBrandingProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    paddingTop: Spacing.sm,
-    marginBottom: Spacing.md,
+    paddingTop: Spacing.md,
+    marginBottom: Spacing.sm,
+    width: '100%',
   },
   containerCompact: {
     paddingTop: Spacing.xs,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   logoMark: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+    transform: [{ scale: 0.85 }],
   },
   titleRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: Spacing.xs,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   brandPet: {
-    fontSize: 22,
-    fontWeight: '400',
-    color: LoginTheme.brandPet,
+    fontSize: 28,
+    fontWeight: '300',
+    color: '#5CB35D',  // Brand Green
+    letterSpacing: -0.5,
   },
   brandHorizon: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: LoginTheme.brandHorizon,
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#1A2B4E',  // Deep Navy
+    letterSpacing: -0.5,
   },
   brandPetCompact: {
-    fontSize: 20,
+    fontSize: 24,
   },
   brandHorizonCompact: {
-    fontSize: 20,
+    fontSize: 24,
   },
   tagline: {
-    marginBottom: Spacing.sm,
     fontSize: 13,
-  },
-  taglineCompact: {
-    marginBottom: Spacing.xs,
-    fontSize: 12,
-  },
-  pawRow: {
-    marginBottom: Spacing.sm,
-  },
-  pawRowCompact: {
-    marginBottom: Spacing.xs,
-  },
-  petIconsRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.md,
-  },
-  petIconsRowCompact: {
-    gap: Spacing.sm,
-  },
-  petItem: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  petIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#EFEFEF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  petIconCircleCompact: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-  },
-  petLabel: {
-    fontSize: 9,
-    letterSpacing: 0.5,
-    fontWeight: '600',
+    marginTop: 6,
+    color: '#0B3B29', // Matching the dark logo brand text tone
+    fontStyle: 'italic',
+    letterSpacing: 0.2,
   },
 });

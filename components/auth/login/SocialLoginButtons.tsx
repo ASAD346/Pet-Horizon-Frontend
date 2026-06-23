@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { AppButton } from '../../ui/AppButton';
 import { OrDivider } from '../OrDivider';
-import { LoginTheme, Spacing } from '../../../constants/theme';
+import { Spacing, Palette } from '../../../constants/theme';
 
 interface SocialLoginButtonsProps {
   onGooglePress: () => void;
@@ -14,19 +14,6 @@ interface SocialLoginButtonsProps {
   googleDisabled?: boolean;
 }
 
-const buttonShadow = Platform.select({
-  ios: {
-    shadowColor: LoginTheme.buttonShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  android: {
-    elevation: 6,
-  },
-  default: {},
-});
-
 export function SocialLoginButtons({
   onGooglePress,
   onApplePress,
@@ -36,29 +23,25 @@ export function SocialLoginButtons({
   googleDisabled = false,
 }: SocialLoginButtonsProps) {
   return (
-    <View style={[styles.container, compact && styles.containerCompact]}>
+    <View style={styles.container}>
       <OrDivider compact={compact} />
 
       <AppButton
         title={googleLabel}
         onPress={onGooglePress}
-        variant="success"
-        size="sm"
         loading={googleLoading}
         disabled={googleLoading || googleDisabled}
-        style={[styles.socialButton, compact && styles.socialButtonCompact]}
-        textStyle={styles.socialButtonText}
-        icon={<AntDesign name="google" size={18} color="#FFFFFF" />}
+        style={styles.googleButton}
+        textStyle={styles.googleButtonText}
+        icon={<AntDesign name="google" size={18} color="#EA4335" />}
       />
 
       <AppButton
-        title="Login With Apple"
+        title="Continue with Apple"
         onPress={onApplePress}
-        variant="success"
-        size="sm"
-        style={[styles.appleButton, compact && styles.socialButtonCompact]}
-        textStyle={styles.socialButtonText}
-        icon={<AntDesign name="apple" size={18} color="#121212" />}
+        style={styles.appleButton}
+        textStyle={styles.appleButtonText}
+        icon={<AntDesign name="apple" size={18} color={Palette.white} />}
       />
     </View>
   );
@@ -69,34 +52,41 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: Spacing.sm,
   },
-  containerCompact: {
-    marginBottom: Spacing.xs,
-  },
-  socialButtonCompact: {
-    minHeight: 42,
-    paddingVertical: 10,
-    marginBottom: Spacing.sm,
-  },
-  socialButton: {
+  googleButton: {
     width: '100%',
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: LoginTheme.green,
+    height: 52,
+    borderRadius: 14, // Consistent modern rounded corners
+    backgroundColor: Palette.white,
+    borderWidth: 1.5,
+    borderColor: '#EAEAEA',
     marginBottom: Spacing.md,
-    paddingVertical: 12,
-    ...buttonShadow,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  googleButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#262626',
   },
   appleButton: {
     width: '100%',
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: LoginTheme.green,
+    height: 52,
+    borderRadius: 14, // Consistent modern rounded corners
+    backgroundColor: '#1E1E1E',
     marginBottom: 0,
-    paddingVertical: 12,
-    ...buttonShadow,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 0,
   },
-  socialButtonText: {
-    fontSize: 14,
+  appleButtonText: {
+    fontSize: 15,
     fontWeight: '700',
+    color: Palette.white,
   },
 });

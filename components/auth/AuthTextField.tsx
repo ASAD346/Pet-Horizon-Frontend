@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Spacing } from '../../constants/theme';
 
 type AuthFieldIcon =
   | 'person-outline'
@@ -47,6 +47,8 @@ export function AuthTextField({
   showPasswordToggle = false,
 }: AuthTextFieldProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  
   const isPassword = Boolean(secureTextEntry);
   const masked = isPassword && !passwordVisible;
 
@@ -56,20 +58,28 @@ export function AuthTextField({
         style={[
           styles.container,
           compact && styles.containerCompact,
+          isFocused ? styles.containerFocused : null,
           error ? styles.containerError : null,
         ]}
       >
-        <Ionicons name={icon} size={18} color={LoginTheme.inputPlaceholder} style={styles.icon} />
+        <Ionicons 
+          name={icon} 
+          size={18} 
+          color={error ? '#C62828' : isFocused ? '#5CB35D' : Palette.gray[400]} 
+          style={styles.icon} 
+        />
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={LoginTheme.inputPlaceholder}
+          placeholderTextColor={Palette.gray[400]}
           keyboardType={keyboardType}
           secureTextEntry={masked}
           autoCapitalize={autoCapitalize}
           maxLength={maxLength}
           editable={editable}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           style={styles.input}
         />
         {isPassword && showPasswordToggle ? (
@@ -81,7 +91,7 @@ export function AuthTextField({
             <Ionicons
               name={passwordVisible ? 'eye-off-outline' : 'eye-outline'}
               size={20}
-              color={LoginTheme.inputPlaceholder}
+              color={Palette.gray[400]}
             />
           </TouchableOpacity>
         ) : null}
@@ -105,42 +115,47 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 46,
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
+    height: 52,
+    backgroundColor: '#FCFCFD', // Sleek off-white tone
+    borderRadius: 14,
     paddingHorizontal: Spacing.md,
-    marginBottom: 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.06,
-        shadowRadius: 3,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.01,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  containerCompact: {
+    height: 48,
+    borderRadius: 12,
+  },
+  containerFocused: {
+    borderColor: '#5CB35D',
+    backgroundColor: Palette.white,
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08, // Glowing green shadow on focus
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  containerError: {
+    borderColor: '#EF9A9A',
   },
   icon: {
     marginRight: Spacing.sm,
   },
-  containerCompact: {
-    height: 42,
-  },
-  containerError: {
-    borderWidth: 1,
-    borderColor: '#EF9A9A',
-  },
   errorText: {
     marginTop: Spacing.xs,
-    marginLeft: Spacing.xs,
+    marginLeft: Spacing.sm,
+    fontWeight: '600',
   },
   input: {
     flex: 1,
     fontSize: 14,
-    color: LoginTheme.charcoal,
-    fontWeight: '500',
+    color: Palette.gray[800],
+    fontWeight: '600',
     paddingVertical: 0,
   },
 });

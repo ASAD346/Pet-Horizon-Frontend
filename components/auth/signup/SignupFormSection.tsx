@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { AppButton } from '../../ui/AppButton';
-import { AuthErrorBanner } from '../AuthErrorBanner';
 import { AuthTextField } from '../AuthTextField';
-import { LoginTheme, Spacing } from '../../../constants/theme';
+import { Palette, Spacing } from '../../../constants/theme';
 import type { SignupFieldErrors } from '../../../services/auth/validation';
+import { Ionicons } from '@expo/vector-icons';
 
 interface SignupFormSectionProps {
   fullName: string;
@@ -23,25 +23,12 @@ interface SignupFormSectionProps {
   onLogin: () => void;
 }
 
-const buttonShadow = Platform.select({
-  ios: {
-    shadowColor: LoginTheme.buttonShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  android: {
-    elevation: 6,
-  },
-});
-
 export function SignupFormSection({
   fullName,
   email,
   password,
   confirmPassword,
   loading,
-  formError,
   fieldErrors,
   onFullNameChange,
   onEmailChange,
@@ -52,7 +39,19 @@ export function SignupFormSection({
 }: SignupFormSectionProps) {
   return (
     <View style={styles.container}>
-      {formError ? <AuthErrorBanner message={formError} /> : null}
+      {/* Form Section Header */}
+      <View style={styles.headerBlock}>
+        <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.formTitle}>
+          Create Account <Ionicons name="paw" size={18} color="#5CB35D" />
+        </AppText>
+
+        {/* Soft rounded accent line */}
+        <View style={styles.accentLine} />
+
+        <AppText variant="bodySmall" color={Palette.gray[500]} weight="700" style={styles.headerDescription}>
+          Enter your details to register a profile
+        </AppText>
+      </View>
 
       <AuthTextField
         placeholder="Full Name"
@@ -60,7 +59,7 @@ export function SignupFormSection({
         value={fullName}
         onChangeText={onFullNameChange}
         autoCapitalize="words"
-        compact
+        compact={false}
         error={fieldErrors?.fullName}
       />
 
@@ -70,7 +69,7 @@ export function SignupFormSection({
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"
-        compact
+        compact={false}
         error={fieldErrors?.email}
         autoCapitalize="none"
       />
@@ -82,7 +81,7 @@ export function SignupFormSection({
         onChangeText={onPasswordChange}
         secureTextEntry
         showPasswordToggle
-        compact
+        compact={false}
         error={fieldErrors?.password}
       />
 
@@ -93,7 +92,7 @@ export function SignupFormSection({
         onChangeText={onConfirmPasswordChange}
         secureTextEntry
         showPasswordToggle
-        compact
+        compact={false}
         error={fieldErrors?.confirmPassword}
       />
 
@@ -102,18 +101,16 @@ export function SignupFormSection({
         onPress={onSignUp}
         loading={loading}
         disabled={loading}
-        variant="success"
-        size="sm"
         style={styles.signUpButton}
         textStyle={styles.signUpButtonText}
       />
 
       <View style={styles.loginRow}>
-        <AppText variant="bodySmall" color={LoginTheme.tagline}>
-          Already Have an account?{' '}
+        <AppText variant="bodySmall" color={Palette.gray[500]} weight="600">
+          Already have an account?{' '}
         </AppText>
         <TouchableOpacity onPress={onLogin} disabled={loading}>
-          <AppText variant="bodySmall" color={LoginTheme.green} weight="700">
+          <AppText variant="bodySmall" color="#5CB35D" weight="800">
             Login
           </AppText>
         </TouchableOpacity>
@@ -126,22 +123,49 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
+  headerBlock: {
+    marginBottom: Spacing.lg,
+    alignItems: 'flex-start',
+  },
+  formTitle: {
+    fontSize: 24,
+    lineHeight: 30,
+    color: '#1A2B4E',
+  },
+  accentLine: {
+    width: 32,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#F48024',
+    marginTop: 6,
+    marginBottom: Spacing.sm,
+  },
+  headerDescription: {
+    fontSize: 13,
+    color: Palette.gray[500],
+  },
   signUpButton: {
     width: '100%',
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: LoginTheme.green,
-    paddingVertical: 12,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 0,
     marginTop: Spacing.xs,
-    ...buttonShadow,
   },
   signUpButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '800',
+    color: Palette.white,
+    letterSpacing: 0.5,
   },
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.md,
   },
 });
