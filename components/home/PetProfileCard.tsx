@@ -11,7 +11,7 @@ interface PetProfileCardProps {
   name?: string;
   breed?: string;
   age?: string;
-  gender?: string;
+  gender?: string | null;
   weight?: string;
   activity?: string;
   health?: string;
@@ -56,9 +56,11 @@ export function PetProfileCard({
   const shadowColor = isPremium ? '#12254F' : '#266B2A';
   const borderColor = isPremium ? 'rgba(255, 255, 255, 0.32)' : 'rgba(255, 255, 255, 0.16)';
 
-  const genderIconName = gender.toLowerCase() === 'male' 
+  // Ensure gender is a safe string before processing
+  const safeGender = gender || '—';
+  const genderIconName = safeGender.toLowerCase() === 'male' 
     ? 'gender-male' 
-    : gender.toLowerCase() === 'female' 
+    : safeGender.toLowerCase() === 'female' 
       ? 'gender-female' 
       : 'gender-male-female';
 
@@ -124,7 +126,7 @@ export function PetProfileCard({
               <View style={styles.tag}>
                 <MaterialCommunityIcons name={genderIconName} size={11} color="#FFFFFF" style={{ marginRight: 3 }} />
                 <AppText variant="caption" weight="800" color={HomeTheme.white}>
-                  {gender}
+                  {safeGender}
                 </AppText>
               </View>
             </View>

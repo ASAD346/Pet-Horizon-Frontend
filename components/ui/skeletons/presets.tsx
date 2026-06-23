@@ -35,22 +35,21 @@ export function SkeletonPetProfileCard() {
   return (
     <View style={styles.profileCard}>
       <View style={styles.profileTop}>
-        <SkeletonCircle size={64} tone="dark" />
+        <SkeletonCircle size={64} />
         <View style={styles.profileInfo}>
-          <Skeleton width="65%" height={20} tone="dark" />
-          <Skeleton width="80%" height={12} tone="dark" style={styles.gapSm} />
+          <Skeleton width="65%" height={20} />
+          <Skeleton width="80%" height={12} style={styles.gapSm} />
           <View style={styles.tagRow}>
-            <Skeleton width={52} height={22} borderRadius={Radius.full} tone="dark" />
-            <Skeleton width={52} height={22} borderRadius={Radius.full} tone="dark" />
+            <Skeleton width={52} height={22} borderRadius={Radius.full} />
           </View>
         </View>
       </View>
-      <Skeleton width="100%" height={1} tone="dark" style={styles.divider} />
+      <Skeleton width="100%" height={1} style={styles.divider} />
       <View style={styles.statsRow}>
         {[0, 1, 2].map((key) => (
           <View key={key} style={styles.statCol}>
-            <Skeleton width={48} height={10} tone="dark" />
-            <Skeleton width={36} height={14} tone="dark" style={styles.gapSm} />
+            <Skeleton width={48} height={10} style={styles.gapSm} />
+            <Skeleton width={36} height={14} style={styles.gapSm} />
           </View>
         ))}
       </View>
@@ -254,7 +253,7 @@ const styles = StyleSheet.create({
     borderColor: HomeTheme.surfaceMuted,
   },
   profileCard: {
-    backgroundColor: HomeTheme.cardGreen,
+    backgroundColor: '#F5F5F7',
     borderRadius: Radius.xl,
     padding: Spacing.lg,
   },

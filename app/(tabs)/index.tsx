@@ -337,7 +337,7 @@ export default function HomeScreen() {
             showJournal={canViewJournal}
           />
 
-          {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
+          {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
           {showBirthdayBanner ? (
             <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />

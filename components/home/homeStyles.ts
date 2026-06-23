@@ -2,12 +2,12 @@ import { Platform, StyleSheet } from 'react-native';
 
 export const homeCardShadow = Platform.select({
   ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 6,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
   },
-  android: { elevation: 3 },
+  android: { elevation: 2 },
 });
 
 export const homePillCard = StyleSheet.create({
@@ -15,13 +15,13 @@ export const homePillCard = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: '#EFEFEF',
-    paddingHorizontal: 14,
-    paddingVertical: 16,
-    marginBottom: 10,
-    minHeight: 92,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F2ECE9',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+    minHeight: 74,
     ...homeCardShadow,
   },
 });

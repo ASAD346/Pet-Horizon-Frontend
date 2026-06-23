@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
@@ -63,13 +63,13 @@ interface TodaysScheduleSectionProps {
   medicineActionId?: string | null;
   groomingActionId?: string | null;
   vaccinationActionId?: string | null;
-  onCompleteFeeding?: (scheduleId: string) => void;
-  onSkipFeeding?: (scheduleId: string) => void;
-  onCompleteWalk?: (scheduleId: string) => void;
-  onCompleteMedicine?: (scheduleId: string) => void;
-  onCompleteGrooming?: (recordId: string) => void;
-  onManageGrooming?: (recordId: string) => void;
-  onCompleteVaccination?: (scheduleId: string) => void;
+  onCompleteFeeding?: (scheduleId: string) => void | Promise<void>;
+  onSkipFeeding?: (scheduleId: string) => void | Promise<void>;
+  onCompleteWalk?: (scheduleId: string) => void | Promise<void>;
+  onCompleteMedicine?: (scheduleId: string) => void | Promise<void>;
+  onCompleteGrooming?: (recordId: string) => void | Promise<void>;
+  onManageGrooming?: (recordId: string) => void | Promise<void>;
+  onCompleteVaccination?: (scheduleId: string) => void | Promise<void>;
 }
 
 function rowSortKey(row: ScheduleRow): number {
@@ -150,35 +150,196 @@ function rowId(row: ScheduleRow) {
   return row.item._id;
 }
 
-function rowActionId(
-  row: ScheduleRow,
-  feedingActionId: string | null,
-  walkActionId: string | null,
-  medicineActionId: string | null,
-  groomingActionId: string | null,
-  vaccinationActionId: string | null,
-) {
-  const id = rowId(row);
-  if (row.kind === 'feeding') return feedingActionId === id;
-  if (row.kind === 'walk') return walkActionId === id;
-  if (row.kind === 'medicine') return medicineActionId === id;
-  if (row.kind === 'vaccination') return vaccinationActionId === id;
-  return groomingActionId === id;
-}
-
 function rowOnComplete(
   row: ScheduleRow,
-  onCompleteFeeding?: (id: string) => void,
-  onCompleteWalk?: (id: string) => void,
-  onCompleteMedicine?: (id: string) => void,
-  onCompleteGrooming?: (id: string) => void,
-  onCompleteVaccination?: (id: string) => void,
+  onCompleteFeeding?: (id: string) => void | Promise<void>,
+  onCompleteWalk?: (id: string) => void | Promise<void>,
+  onCompleteMedicine?: (id: string) => void | Promise<void>,
+  onCompleteGrooming?: (id: string) => void | Promise<void>,
+  onCompleteVaccination?: (id: string) => void | Promise<void>,
 ) {
   if (row.kind === 'feeding') return onCompleteFeeding;
   if (row.kind === 'walk') return onCompleteWalk;
   if (row.kind === 'medicine') return onCompleteMedicine;
   if (row.kind === 'vaccination') return onCompleteVaccination;
   return onCompleteGrooming;
+}
+
+// Subcomponent for individual rows to handle independent Skip/Done busy indicators
+interface ScheduleRowCardProps {
+  row: ScheduleRow;
+  onCompleteFeeding?: (id: string) => void | Promise<void>;
+  onSkipFeeding?: (id: string) => void | Promise<void>;
+  onCompleteWalk?: (id: string) => void | Promise<void>;
+  onCompleteMedicine?: (id: string) => void | Promise<void>;
+  onCompleteGrooming?: (id: string) => void | Promise<void>;
+  onManageGrooming?: (id: string) => void | Promise<void>;
+  onCompleteVaccination?: (id: string) => void | Promise<void>;
+}
+
+function ScheduleRowCard({
+  row,
+  onCompleteFeeding,
+  onSkipFeeding,
+  onCompleteWalk,
+  onCompleteMedicine,
+  onCompleteGrooming,
+  onManageGrooming,
+  onCompleteVaccination,
+}: ScheduleRowCardProps) {
+  const [completeBusy, setCompleteBusy] = useState(false);
+  const [skipBusy, setSkipBusy] = useState(false);
+
+  const isDone = rowIsDone(row);
+  const isSkipped = rowIsSkipped(row);
+  const colors = rowColors(row);
+
+  const onComplete = rowOnComplete(
+    row,
+    onCompleteFeeding,
+    onCompleteWalk,
+    onCompleteMedicine,
+    onCompleteGrooming,
+    onCompleteVaccination,
+  );
+
+  const handleComplete = async () => {
+    if (!onComplete) return;
+    setCompleteBusy(true);
+    try {
+      await onComplete(rowId(row));
+    } catch (e) {
+      // error handled by hook
+    } finally {
+      setCompleteBusy(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    if (!onSkipFeeding) return;
+    setSkipBusy(true);
+    try {
+      await onSkipFeeding(rowId(row));
+    } catch (e) {
+      // error handled by hook
+    } finally {
+      setSkipBusy(false);
+    }
+  };
+
+  const busy = completeBusy || skipBusy;
+
+  return (
+    <View style={homePillCard.card}>
+      {isDone ? (
+        <ColorIconBadge color={colors.color} completed size={44} iconSize={24} shape="circle" />
+      ) : (
+        <ColorIconBadge
+          color={colors.color}
+          backgroundColor={colors.bg}
+          materialIcon={rowIcon(row)}
+          size={44}
+          iconSize={22}
+        />
+      )}
+      <View style={styles.textBlock}>
+        <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+          {rowTitle(row)}
+        </AppText>
+        <AppText variant="caption" color={HomeTheme.textMuted}>
+          {rowSubtitle(row)}
+        </AppText>
+      </View>
+      {isDone ? (
+        <View style={styles.checks}>
+          <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} />
+          <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} style={styles.checkOverlap} />
+        </View>
+      ) : isSkipped ? (
+        <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
+          Skipped
+        </AppText>
+      ) : row.kind === 'feeding' && (onComplete || onSkipFeeding) ? (
+        <View style={styles.actionRow}>
+          {onSkipFeeding ? (
+            <TouchableOpacity
+              style={styles.skipBtn}
+              activeOpacity={0.85}
+              disabled={busy}
+              onPress={handleSkip}
+            >
+              {skipBusy ? (
+                <ActivityIndicator size="small" color={HomeTheme.textMuted} />
+              ) : (
+                <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
+                  Skip
+                </AppText>
+              )}
+            </TouchableOpacity>
+          ) : null}
+          {onComplete ? (
+            <TouchableOpacity
+              style={styles.doneBtn}
+              activeOpacity={0.85}
+              disabled={busy}
+              onPress={handleComplete}
+            >
+              {completeBusy ? (
+                <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+              ) : (
+                <AppText variant="caption" weight="600" color="#8FAF8F">
+                  Done
+                </AppText>
+              )}
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : row.kind === 'grooming' && (onManageGrooming || onComplete) ? (
+        <View style={styles.actionRow}>
+          {onManageGrooming ? (
+            <TouchableOpacity
+              style={styles.skipBtn}
+              activeOpacity={0.85}
+              onPress={() => onManageGrooming(rowId(row))}
+            >
+              <Ionicons name="settings-outline" size={16} color={HomeTheme.textMuted} />
+            </TouchableOpacity>
+          ) : null}
+          {onComplete ? (
+            <TouchableOpacity
+              style={styles.doneBtn}
+              activeOpacity={0.85}
+              disabled={busy}
+              onPress={handleComplete}
+            >
+              {completeBusy ? (
+                <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+              ) : (
+                <AppText variant="caption" weight="600" color="#8FAF8F">
+                  Done
+                </AppText>
+              )}
+            </TouchableOpacity>
+          ) : null}
+        </View>
+      ) : onComplete ? (
+        <TouchableOpacity
+          style={styles.doneBtn}
+          activeOpacity={0.85}
+          disabled={busy}
+          onPress={handleComplete}
+        >
+          {completeBusy ? (
+            <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+          ) : (
+            <AppText variant="caption" weight="600" color="#8FAF8F">
+              Done
+            </AppText>
+          )}
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
 }
 
 export function TodaysScheduleSection({
@@ -188,11 +349,6 @@ export function TodaysScheduleSection({
   groomingRecords = [],
   vaccinationSchedules = [],
   loading = false,
-  feedingActionId = null,
-  walkActionId = null,
-  medicineActionId = null,
-  groomingActionId = null,
-  vaccinationActionId = null,
   onCompleteFeeding,
   onSkipFeeding,
   onCompleteWalk,
@@ -217,7 +373,7 @@ export function TodaysScheduleSection({
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
 
-      {loading ? (
+      {loading && items.length === 0 ? (
         <View style={[homePillCard.card, styles.emptyCard]}>
           <ActivityIndicator size="small" color="#5CB35D" style={{ marginRight: Spacing.sm }} />
           <AppText variant="bodySmall" color={HomeTheme.textMuted}>
@@ -231,135 +387,19 @@ export function TodaysScheduleSection({
           </AppText>
         </View>
       ) : (
-        items.map((row) => {
-          const isDone = rowIsDone(row);
-          const isSkipped = rowIsSkipped(row);
-          const colors = rowColors(row);
-          const busy = rowActionId(
-            row,
-            feedingActionId,
-            walkActionId,
-            medicineActionId,
-            groomingActionId,
-            vaccinationActionId,
-          );
-          const onComplete = rowOnComplete(
-            row,
-            onCompleteFeeding,
-            onCompleteWalk,
-            onCompleteMedicine,
-            onCompleteGrooming,
-            onCompleteVaccination,
-          );
-
-          return (
-            <View key={`${row.kind}-${rowId(row)}`} style={homePillCard.card}>
-              {isDone ? (
-                <ColorIconBadge color={colors.color} completed size={44} iconSize={24} shape="circle" />
-              ) : (
-                <ColorIconBadge
-                  color={colors.color}
-                  backgroundColor={colors.bg}
-                  materialIcon={rowIcon(row)}
-                  size={44}
-                  iconSize={22}
-                />
-              )}
-              <View style={styles.textBlock}>
-                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                  {rowTitle(row)}
-                </AppText>
-                <AppText variant="caption" color={HomeTheme.textMuted}>
-                  {rowSubtitle(row)}
-                </AppText>
-              </View>
-              {isDone ? (
-                <View style={styles.checks}>
-                  <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} />
-                  <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} style={styles.checkOverlap} />
-                </View>
-              ) : isSkipped ? (
-                <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
-                  Skipped
-                </AppText>
-              ) : row.kind === 'feeding' && (onComplete || onSkipFeeding) ? (
-                <View style={styles.actionRow}>
-                  {onSkipFeeding ? (
-                    <TouchableOpacity
-                      style={styles.skipBtn}
-                      activeOpacity={0.85}
-                      disabled={busy}
-                      onPress={() => onSkipFeeding(rowId(row))}
-                    >
-                      {busy ? (
-                        <ActivityIndicator size="small" color={HomeTheme.textMuted} />
-                      ) : (
-                        <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
-                          Skip
-                        </AppText>
-                      )}
-                    </TouchableOpacity>
-                  ) : null}
-                  {onComplete ? (
-                    <TouchableOpacity
-                      style={styles.doneBtn}
-                      activeOpacity={0.85}
-                      disabled={busy}
-                      onPress={() => onComplete(rowId(row))}
-                    >
-                      <AppText variant="caption" weight="600" color="#8FAF8F">
-                        Done
-                      </AppText>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              ) : row.kind === 'grooming' && (onManageGrooming || onComplete) ? (
-                <View style={styles.actionRow}>
-                  {onManageGrooming ? (
-                    <TouchableOpacity
-                      style={styles.skipBtn}
-                      activeOpacity={0.85}
-                      onPress={() => onManageGrooming(rowId(row))}
-                    >
-                      <Ionicons name="settings-outline" size={16} color={HomeTheme.textMuted} />
-                    </TouchableOpacity>
-                  ) : null}
-                  {onComplete ? (
-                    <TouchableOpacity
-                      style={styles.doneBtn}
-                      activeOpacity={0.85}
-                      disabled={busy}
-                      onPress={() => onComplete(rowId(row))}
-                    >
-                      {busy ? (
-                        <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
-                      ) : (
-                        <AppText variant="caption" weight="600" color="#8FAF8F">
-                          Done
-                        </AppText>
-                      )}
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
-              ) : onComplete ? (
-                <TouchableOpacity
-                  style={styles.doneBtn}
-                  activeOpacity={0.85}
-                  disabled={busy}
-                  onPress={() => onComplete(rowId(row))}
-                >
-                  {busy ? (
-                    <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
-                  ) : (
-                    <AppText variant="caption" weight="600" color="#8FAF8F">
-                      Done
-                    </AppText>
-                  )}
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          );
-        })
+        items.map((row) => (
+          <ScheduleRowCard
+            key={`${row.kind}-${rowId(row)}`}
+            row={row}
+            onCompleteFeeding={onCompleteFeeding}
+            onSkipFeeding={onSkipFeeding}
+            onCompleteWalk={onCompleteWalk}
+            onCompleteMedicine={onCompleteMedicine}
+            onCompleteGrooming={onCompleteGrooming}
+            onManageGrooming={onManageGrooming}
+            onCompleteVaccination={onCompleteVaccination}
+          />
+        ))
       )}
     </View>
   );

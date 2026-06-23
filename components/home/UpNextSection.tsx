@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from './ColorIconBadge';
@@ -61,11 +61,11 @@ interface UpNextSectionProps {
   medicineActionId?: string | null;
   groomingActionId?: string | null;
   vaccinationActionId?: string | null;
-  onLogFeeding?: (scheduleId: string) => void;
-  onLogWalk?: (scheduleId: string) => void;
-  onLogMedicine?: (scheduleId: string) => void;
-  onLogGrooming?: (recordId: string) => void;
-  onLogVaccination?: (scheduleId: string) => void;
+  onLogFeeding?: (scheduleId: string) => void | Promise<void>;
+  onLogWalk?: (scheduleId: string) => void | Promise<void>;
+  onLogMedicine?: (scheduleId: string) => void | Promise<void>;
+  onLogGrooming?: (recordId: string) => void | Promise<void>;
+  onLogVaccination?: (scheduleId: string) => void | Promise<void>;
   dashboardTasks?: DashboardTask[];
 }
 
@@ -116,7 +116,7 @@ function mergePendingRows(
   medicineSchedules: MedicineScheduleItem[],
   groomingRecords: GroomingRecord[],
   vaccinationSchedules: VaccinationScheduleItem[],
-): PendingRow[] {
+ ): PendingRow[] {
   const rows: PendingRow[] = [
     ...pendingFeedingSchedules(feedingSchedules).map((item) => ({ kind: 'feeding' as const, item })),
     ...pendingWalkSchedules(walkSchedules).map((item) => ({ kind: 'walk' as const, item })),
@@ -179,11 +179,11 @@ function rowLogBtnStyle(row: PendingRow) {
 
 function rowOnLog(
   row: PendingRow,
-  onLogFeeding?: (id: string) => void,
-  onLogWalk?: (id: string) => void,
-  onLogMedicine?: (id: string) => void,
-  onLogGrooming?: (id: string) => void,
-  onLogVaccination?: (id: string) => void,
+  onLogFeeding?: (id: string) => void | Promise<void>,
+  onLogWalk?: (id: string) => void | Promise<void>,
+  onLogMedicine?: (id: string) => void | Promise<void>,
+  onLogGrooming?: (id: string) => void | Promise<void>,
+  onLogVaccination?: (id: string) => void | Promise<void>,
 ) {
   if (row.kind === 'feeding') return onLogFeeding;
   if (row.kind === 'walk') return onLogWalk;
@@ -192,20 +192,146 @@ function rowOnLog(
   return onLogGrooming;
 }
 
-function rowBusy(
-  row: PendingRow,
-  feedingActionId: string | null,
-  walkActionId: string | null,
-  medicineActionId: string | null,
-  groomingActionId: string | null,
-  vaccinationActionId: string | null,
-) {
-  const id = row.item._id;
-  if (row.kind === 'feeding') return feedingActionId === id;
-  if (row.kind === 'walk') return walkActionId === id;
-  if (row.kind === 'medicine') return medicineActionId === id;
-  if (row.kind === 'vaccination') return vaccinationActionId === id;
-  return groomingActionId === id;
+// Subcomponent for Dashboard Task Cards with independent loading
+interface DashboardTaskCardProps {
+  task: DashboardTask;
+  onLog?: (id: string) => void | Promise<void>;
+}
+
+function DashboardTaskCard({ task, onLog }: DashboardTaskCardProps) {
+  const [busy, setBusy] = useState(false);
+  const colors =
+    task.source === 'grooming'
+      ? groomingRecordColors()
+      : task.category === 'walk'
+        ? walkScheduleColors({} as WalkScheduleItem)
+        : feedingScheduleColors({} as FeedingScheduleItem);
+
+  const handlePress = async () => {
+    if (!onLog) return;
+    setBusy(true);
+    try {
+      await onLog(task.id);
+    } catch (e) {
+      // error handled by parent
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={[homePillCard.card, styles.card]}>
+      <ColorIconBadge
+        color={colors.color}
+        backgroundColor={colors.bg}
+        materialIcon={dashboardTaskIcon(task)}
+        size={46}
+        iconSize={22}
+      />
+      <View style={styles.textBlock}>
+        <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+          {task.title}
+        </AppText>
+        <AppText variant="caption" color={HomeTheme.textMuted}>
+          {dashboardTaskCaption(task)}
+        </AppText>
+      </View>
+      {onLog ? (
+        <TouchableOpacity
+          style={styles.logBtn}
+          activeOpacity={0.85}
+          disabled={busy}
+          onPress={handlePress}
+        >
+          {busy ? (
+            <ActivityIndicator size="small" color={HomeTheme.white} />
+          ) : (
+            <AppText variant="caption" weight="800" color={HomeTheme.white}>
+              LOG
+            </AppText>
+          )}
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+}
+
+// Subcomponent for Pending Row Cards with independent loading
+interface PendingRowCardProps {
+  row: PendingRow;
+  onLogFeeding?: (id: string) => void | Promise<void>;
+  onLogWalk?: (id: string) => void | Promise<void>;
+  onLogMedicine?: (id: string) => void | Promise<void>;
+  onLogGrooming?: (id: string) => void | Promise<void>;
+  onLogVaccination?: (id: string) => void | Promise<void>;
+}
+
+function PendingRowCard({
+  row,
+  onLogFeeding,
+  onLogWalk,
+  onLogMedicine,
+  onLogGrooming,
+  onLogVaccination,
+}: PendingRowCardProps) {
+  const [busy, setBusy] = useState(false);
+  const colors = rowColors(row);
+  const onLog = rowOnLog(
+    row,
+    onLogFeeding,
+    onLogWalk,
+    onLogMedicine,
+    onLogGrooming,
+    onLogVaccination,
+  );
+
+  const handlePress = async () => {
+    if (!onLog) return;
+    setBusy(true);
+    try {
+      await onLog(row.item._id);
+    } catch (e) {
+      // error handled by parent
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={[homePillCard.card, styles.card]}>
+      <ColorIconBadge
+        color={colors.color}
+        backgroundColor={colors.bg}
+        materialIcon={rowIcon(row)}
+        size={46}
+        iconSize={22}
+      />
+      <View style={styles.textBlock}>
+        <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+          {rowTitle(row)}
+        </AppText>
+        <AppText variant="caption" color={HomeTheme.textMuted}>
+          {rowCaption(row)}
+        </AppText>
+      </View>
+      {onLog ? (
+        <TouchableOpacity
+          style={rowLogBtnStyle(row)}
+          activeOpacity={0.85}
+          disabled={busy}
+          onPress={handlePress}
+        >
+          {busy ? (
+            <ActivityIndicator size="small" color={HomeTheme.white} />
+          ) : (
+            <AppText variant="caption" weight="800" color={HomeTheme.white}>
+              LOG
+            </AppText>
+          )}
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
 }
 
 export function UpNextSection({
@@ -215,11 +341,6 @@ export function UpNextSection({
   groomingRecords = [],
   vaccinationSchedules = [],
   loading = false,
-  feedingActionId = null,
-  walkActionId = null,
-  medicineActionId = null,
-  groomingActionId = null,
-  vaccinationActionId = null,
   onLogFeeding,
   onLogWalk,
   onLogMedicine,
@@ -247,8 +368,9 @@ export function UpNextSection({
     vaccinationSchedules.length > 0;
 
   const useDashboard = !hasLocalSchedules && dashboardTasks.length > 0;
+  const showLoading = loading && pending.length === 0 && dashboardTasks.length === 0;
 
-  if (loading) {
+  if (showLoading) {
     return (
       <View style={styles.section}>
         <SectionHeader title="Up Next" />
@@ -287,99 +409,25 @@ export function UpNextSection({
                 onLogGrooming,
                 onLogVaccination,
               });
-              const colors =
-                task.source === 'grooming'
-                  ? groomingRecordColors()
-                  : task.category === 'walk'
-                    ? walkScheduleColors({} as WalkScheduleItem)
-                    : feedingScheduleColors({} as FeedingScheduleItem);
-
               return (
-                <View key={`${task.source}-${task.id}`} style={[homePillCard.card, styles.card]}>
-                  <ColorIconBadge
-                    color={colors.color}
-                    backgroundColor={colors.bg}
-                    materialIcon={dashboardTaskIcon(task)}
-                    size={46}
-                    iconSize={22}
-                  />
-                  <View style={styles.textBlock}>
-                    <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                      {task.title}
-                    </AppText>
-                    <AppText variant="caption" color={HomeTheme.textMuted}>
-                      {dashboardTaskCaption(task)}
-                    </AppText>
-                  </View>
-                  {onLog ? (
-                    <TouchableOpacity
-                      style={styles.logBtn}
-                      activeOpacity={0.85}
-                      onPress={() => onLog(task.id)}
-                    >
-                      <AppText variant="caption" weight="800" color={HomeTheme.white}>
-                        LOG
-                      </AppText>
-                    </TouchableOpacity>
-                  ) : null}
-                </View>
+                <DashboardTaskCard
+                  key={`${task.source}-${task.id}`}
+                  task={task}
+                  onLog={onLog}
+                />
               );
             })
-          : pending.map((row) => {
-          const colors = rowColors(row);
-          const busy = rowBusy(
-            row,
-            feedingActionId,
-            walkActionId,
-            medicineActionId,
-            groomingActionId,
-            vaccinationActionId,
-          );
-          const onLog = rowOnLog(
-            row,
-            onLogFeeding,
-            onLogWalk,
-            onLogMedicine,
-            onLogGrooming,
-            onLogVaccination,
-          );
-
-          return (
-            <View key={`${row.kind}-${row.item._id}`} style={[homePillCard.card, styles.card]}>
-              <ColorIconBadge
-                color={colors.color}
-                backgroundColor={colors.bg}
-                materialIcon={rowIcon(row)}
-                size={46}
-                iconSize={22}
+          : pending.map((row) => (
+              <PendingRowCard
+                key={`${row.kind}-${row.item._id}`}
+                row={row}
+                onLogFeeding={onLogFeeding}
+                onLogWalk={onLogWalk}
+                onLogMedicine={onLogMedicine}
+                onLogGrooming={onLogGrooming}
+                onLogVaccination={onLogVaccination}
               />
-              <View style={styles.textBlock}>
-                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                  {rowTitle(row)}
-                </AppText>
-                <AppText variant="caption" color={HomeTheme.textMuted}>
-                  {rowCaption(row)}
-                </AppText>
-              </View>
-              {onLog ? (
-                <TouchableOpacity
-                  style={rowLogBtnStyle(row)}
-                  activeOpacity={0.85}
-                  disabled={busy}
-                  onPress={() => onLog(row.item._id)}
-                >
-                  {busy ? (
-                    <ActivityIndicator size="small" color={HomeTheme.white} />
-                  ) : (
-                    <AppText variant="caption" weight="800" color={HomeTheme.white}>
-                      LOG
-                    </AppText>
-                  )}
-                </TouchableOpacity>
-              ) : null}
-            </View>
-          );
-        })}
+            ))}
       </ScrollView>
     </View>
   );

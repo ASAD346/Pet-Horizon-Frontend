@@ -16,7 +16,10 @@ export function useAuthEntryRedirect(enabled = true) {
     if (!enabled || isBootstrapping || !isAuthenticated) return;
 
     const target: Href = user?.activePetId ? '/(tabs)' : '/pet/register';
-    router.replace(target);
+    const timer = setTimeout(() => {
+      router.replace(target);
+    }, 0);
+    return () => clearTimeout(timer);
   }, [enabled, isAuthenticated, isBootstrapping, router, user?.activePetId]);
 }
 

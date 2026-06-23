@@ -4,6 +4,9 @@ import { log } from '@/lib/log';
 import { loginWithEmailPassword, loginWithGoogle as loginWithGoogleApi } from '@/services/auth/authApi';
 import { clearSession, loadSession, saveSession } from '@/services/auth/authStorage';
 import type { AuthSession } from '@/types/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { initializeActivePetCache } from '@/lib/pet/activePetCache';
+import { initializePetPermissionCache } from '@/lib/pet/petPermissionCache';
 import {
   AUTH_BOOTSTRAP_COMPLETE,
   AUTH_CLEAR_SESSION,
@@ -78,6 +81,34 @@ export function bootstrapAuth(): AppThunk {
       if (stored) {
         dispatch(setSessionAction(stored));
         log.ok('Auth', 'Session restored', { userId: stored.user._id });
+        
+        try {
+          const cachedPetJson = await AsyncStorage.getItem('pet_horizon_cached_active_pet');
+          if (cachedPetJson) {
+            const pet = JSON.parse(cachedPetJson);
+            initializeActivePetCache(stored.token, pet);
+            log.ok('Auth', 'Cached active pet restored', { petId: pet._id });
+          }
+        } catch (e) {
+          log.warn('Auth', 'Failed to load cached pet on bootstrap', {
+            message: e instanceof Error ? e.message : String(e),
+          });
+        }
+
+        try {
+          const cachedPermsJson = await AsyncStorage.getItem('pet_horizon_cached_pet_permissions');
+          if (cachedPermsJson) {
+            const { scopeKey, permissions } = JSON.parse(cachedPermsJson);
+            if (scopeKey && permissions) {
+              initializePetPermissionCache(scopeKey, permissions);
+              log.ok('Auth', 'Cached pet permissions restored');
+            }
+          }
+        } catch (e) {
+          log.warn('Auth', 'Failed to load cached permissions on bootstrap', {
+            message: e instanceof Error ? e.message : String(e),
+          });
+        }
       } else {
         log.info('Auth', 'No stored session');
       }
