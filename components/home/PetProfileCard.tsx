@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { SkeletonPetProfileCard } from '@/components/ui/skeletons';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { HomeTheme, Spacing } from '../../constants/theme';
 
 interface PetProfileCardProps {
   name?: string;
@@ -19,6 +21,7 @@ interface PetProfileCardProps {
   loading?: boolean;
   isBirthdayToday?: boolean;
   onPress?: () => void;
+  isPremium?: boolean;
 }
 
 export function PetProfileCard({
@@ -35,6 +38,7 @@ export function PetProfileCard({
   loading = false,
   isBirthdayToday = false,
   onPress,
+  isPremium = false,
 }: PetProfileCardProps) {
   const avatarSource = imageUrl ? { uri: imageUrl } : imageSource;
   const CardWrapper = onPress ? TouchableOpacity : View;
@@ -44,50 +48,117 @@ export function PetProfileCard({
     return <SkeletonPetProfileCard />;
   }
 
+  // Royal Sapphire & Platinum Silver for Premium vs Emerald Forest for Free
+  const gradientColors = isPremium 
+    ? (['#2E4E8C', '#12254F'] as const)
+    : (['#429B46', '#266B2A'] as const);
+
+  const shadowColor = isPremium ? '#12254F' : '#266B2A';
+  const borderColor = isPremium ? 'rgba(255, 255, 255, 0.32)' : 'rgba(255, 255, 255, 0.16)';
+
+  const genderIconName = gender.toLowerCase() === 'male' 
+    ? 'gender-male' 
+    : gender.toLowerCase() === 'female' 
+      ? 'gender-female' 
+      : 'gender-male-female';
+
+  const badgeIconColor = isPremium ? '#2E4E8C' : '#429B46';
+  const goldColor = '#FFE082';
+  const textAccentColor = isPremium ? '#BBE0FF' : '#FFFFFF';
+
   return (
-    <CardWrapper style={styles.card} {...cardProps}>
-      <View style={styles.top}>
-        <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
-        <View style={styles.info}>
-          <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name}>
-            {name}
-          </AppText>
-          <AppText variant="bodySmall" color={HomeTheme.white} style={styles.meta}>
-            {isBirthdayToday ? `🎂 Birthday today · ${breed}` : `${breed} · ${age}`}
-          </AppText>
-          <View style={styles.tags}>
-            <View style={styles.tag}>
-              <AppText variant="caption" weight="600" color={HomeTheme.white}>
-                {gender}
+    <CardWrapper style={[styles.card, { shadowColor }]} {...cardProps}>
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.gradient, { borderWidth: 1, borderColor }]}
+      >
+        {/* Soft Background Accent Circles */}
+        <View style={styles.bgCircle1} />
+        <View style={styles.bgCircle2} />
+
+        {/* Large Decorative Paw Watermark */}
+        <MaterialCommunityIcons name="paw" size={72} color="rgba(255, 255, 255, 0.07)" style={styles.watermark} />
+
+        {/* Top-Right Absolute Positioned Premium / Free Pill */}
+        <View style={styles.rightSection}>
+          {isPremium ? (
+            <View style={styles.premiumPill}>
+              <MaterialCommunityIcons name="crown" size={10} color={goldColor} style={{ marginRight: 3 }} />
+              <AppText variant="caption" weight="800" color={textAccentColor} style={styles.pillText}>
+                PREMIUM
               </AppText>
             </View>
-            <View style={styles.tag}>
-              <AppText variant="caption" weight="600" color={HomeTheme.white}>
-                {weight}
+          ) : (
+            <View style={styles.freePill}>
+              <AppText variant="caption" weight="800" color="rgba(255,255,255,0.9)" style={styles.pillText}>
+                FREE
               </AppText>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.top}>
+          <View style={styles.avatarContainer}>
+            <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
+            <View style={[styles.avatarBadge, { borderColor: isPremium ? '#2E4E8C' : '#429B46' }]}>
+              <MaterialCommunityIcons name="swap-horizontal" size={11} color={badgeIconColor} />
+            </View>
+          </View>
+          <View style={styles.info}>
+            <View style={styles.nameRow}>
+              <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name}>
+                {name}
+              </AppText>
+              {isPremium && (
+                <View style={styles.crownBadge}>
+                  <MaterialCommunityIcons name="crown" size={12} color={goldColor} />
+                </View>
+              )}
+            </View>
+            <AppText variant="bodySmall" color={HomeTheme.white} style={styles.meta} numberOfLines={1}>
+              {isBirthdayToday ? `🎂 Birthday today · ${breed}` : `${breed} · ${age}`}
+            </AppText>
+            <View style={styles.tags}>
+              <View style={styles.tag}>
+                <MaterialCommunityIcons name={genderIconName} size={11} color="#FFFFFF" style={{ marginRight: 3 }} />
+                <AppText variant="caption" weight="800" color={HomeTheme.white}>
+                  {gender}
+                </AppText>
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.divider} />
+        <View style={styles.divider} />
 
-      <View style={styles.stats}>
-        <StatColumn label="Plan" value={activity} />
-        <StatColumn label="Weight" value={health} />
-        <StatColumn label="Status" value={mood} />
-      </View>
+        <View style={styles.stats}>
+          <StatColumn label="Plan" value={activity} icon="star-circle-outline" />
+          <StatColumn label="Weight" value={health} icon="weight-kilogram" />
+          <StatColumn label="Status" value={mood} icon="heart-pulse" />
+        </View>
+      </LinearGradient>
     </CardWrapper>
   );
 }
 
-function StatColumn({ label, value }: { label: string; value: string }) {
+interface StatColumnProps {
+  label: string;
+  value: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+}
+
+function StatColumn({ label, value, icon }: StatColumnProps) {
   return (
     <View style={styles.statCol}>
-      <AppText variant="caption" weight="700" color={HomeTheme.white} style={styles.statLabel}>
-        {label}
-      </AppText>
-      <AppText variant="bodySmall" color={HomeTheme.white} weight="500">
+      <View style={styles.statLabelRow}>
+        <MaterialCommunityIcons name={icon} size={12} color="rgba(255,255,255,0.8)" style={styles.statIcon} />
+        <AppText variant="caption" weight="800" color="rgba(255,255,255,0.7)" style={styles.statLabel}>
+          {label}
+        </AppText>
+      </View>
+      <AppText variant="bodySmall" color={HomeTheme.white} weight="800">
         {value}
       </AppText>
     </View>
@@ -96,9 +167,8 @@ function StatColumn({ label, value }: { label: string; value: string }) {
 
 const cardShadow = Platform.select({
   ios: {
-    shadowColor: HomeTheme.cardGreenDark,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
     shadowRadius: 10,
   },
   android: { elevation: 6 },
@@ -106,67 +176,174 @@ const cardShadow = Platform.select({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: HomeTheme.cardGreen,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
+    borderRadius: 20,
     marginBottom: Spacing.sm,
     position: 'relative',
     ...cardShadow,
+    overflow: 'hidden',
+  },
+  gradient: {
+    borderRadius: 20,
+    padding: 16,
+    position: 'relative',
+  },
+  bgCircle1: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    top: -40,
+    right: -30,
+  },
+  bgCircle2: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    bottom: -30,
+    left: -20,
+  },
+  watermark: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+    zIndex: 1,
   },
   top: {
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 2,
   },
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.5)',
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  crownBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 6,
+    padding: 2,
+  },
+  avatarContainer: {
+    position: 'relative',
     marginRight: Spacing.md,
   },
-  avatarPlaceholder: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  avatar: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.95)',
+  },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: -1,
+    right: -1,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
+    elevation: 3,
+    borderWidth: 1.2,
   },
   info: {
     flex: 1,
+    paddingRight: 64, // Large padding to avoid overlay clash with top-right pill
+  },
+  rightSection: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    zIndex: 10,
+  },
+  premiumPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(187, 224, 255, 0.35)',
+  },
+  freePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  pillText: {
+    fontSize: 9,
+    letterSpacing: 0.5,
   },
   name: {
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 26,
+    letterSpacing: 0.2,
   },
   meta: {
     opacity: 0.95,
-    marginTop: 2,
-    marginBottom: Spacing.sm,
+    marginTop: 1,
+    marginBottom: Spacing.xs,
   },
   tags: {
     flexDirection: 'row',
     gap: Spacing.sm,
   },
   tag: {
-    backgroundColor: HomeTheme.tagOnGreen,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: HomeTheme.dividerOnGreen,
-    marginVertical: Spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginVertical: Spacing.sm,
+    zIndex: 2,
   },
   stats: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    zIndex: 2,
+    gap: 8,
   },
   statCol: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
+  statLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  statIcon: {
+    marginRight: 3,
   },
   statLabel: {
-    marginBottom: 4,
-    opacity: 0.9,
+    opacity: 0.85,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });

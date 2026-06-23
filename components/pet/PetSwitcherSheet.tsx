@@ -9,11 +9,9 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
-import { SheetColors } from '@/components/sheets';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Palette, Spacing } from '@/constants/theme';
 import { SkeletonPetSwitcherList } from '@/components/ui/skeletons';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import type { ApiPet } from '@/types/pet';
@@ -29,7 +27,6 @@ interface PetSwitcherSheetProps {
   onClose: () => void;
   onSelectPet: (petId: string) => void;
   onAddPet?: () => void;
-  canEditActivePet?: boolean;
 }
 
 export function PetSwitcherSheet({
@@ -42,10 +39,8 @@ export function PetSwitcherSheet({
   onClose,
   onSelectPet,
   onAddPet,
-  canEditActivePet = true,
 }: PetSwitcherSheetProps) {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -55,12 +50,18 @@ export function PetSwitcherSheet({
           onPress={() => {}}
         >
           <View style={styles.handle} />
+          
           <View style={styles.header}>
-            <AppText variant="h3" weight="800" color={SheetColors.title}>
-              Switch Pet
-            </AppText>
-            <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={22} color={HomeTheme.text} />
+            <View style={styles.headerTitleContainer}>
+              <AppText variant="h3" weight="800" color="#1A2B4E">
+                Switch Profile
+              </AppText>
+              <AppText variant="caption" color={Palette.gray[500]} style={styles.subtitle}>
+                Choose a pet to manage their schedule
+              </AppText>
+            </View>
+            <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.closeBtn}>
+              <Ionicons name="close" size={24} color="#1A2B4E" />
             </TouchableOpacity>
           </View>
 
@@ -68,7 +69,7 @@ export function PetSwitcherSheet({
             <SkeletonPetSwitcherList count={3} />
           ) : (
             <>
-              <ScrollView showsVerticalScrollIndicator={false}>
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.list}>
                 {pets.map((pet) => {
                   const active = pet._id === activePetId;
                   const busy = switchingId === pet._id;
@@ -88,52 +89,37 @@ export function PetSwitcherSheet({
                         style={styles.avatar}
                       />
                       <View style={styles.info}>
-                        <AppText variant="body" weight="700" color={HomeTheme.text}>
+                        <AppText variant="body" weight="700" color="#1A2B4E">
                           {pet.name}
                         </AppText>
-                        <AppText variant="caption" color={HomeTheme.textMuted}>
+                        <AppText variant="caption" color={Palette.gray[500]}>
                           {pet.ownerUserId && currentUserId && pet.ownerUserId !== currentUserId
                             ? 'Shared with you'
                             : pet.breed || pet.species || 'Pet'}
                         </AppText>
                       </View>
                       {busy ? (
-                        <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                        <ActivityIndicator size="small" color="#5CB35D" />
                       ) : active ? (
-                        <Ionicons name="checkmark-circle" size={22} color={HomeTheme.cardGreen} />
+                        <Ionicons name="checkmark-circle" size={24} color="#5CB35D" />
                       ) : (
-                        <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
+                        <Ionicons name="chevron-forward" size={18} color={Palette.gray[400]} />
                       )}
                     </TouchableOpacity>
                   );
                 })}
               </ScrollView>
 
-              {canEditActivePet ? (
-                <TouchableOpacity
-                  style={styles.manageBtn}
-                  onPress={() => {
-                    onClose();
-                    if (activePetId) {
-                      router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: activePetId } } as Href);
-                    }
-                  }}
-                >
-                  <Ionicons name="create-outline" size={18} color={HomeTheme.cardGreen} />
-                  <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
-                    Edit active pet
-                  </AppText>
-                </TouchableOpacity>
-              ) : null}
-
-              {onAddPet ? (
-                <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>
-                  <Ionicons name="add-circle-outline" size={18} color={HomeTheme.text} />
-                  <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
-                    Add another pet
-                  </AppText>
-                </TouchableOpacity>
-              ) : null}
+              <View style={styles.actionBlock}>
+                {onAddPet ? (
+                  <TouchableOpacity style={styles.addBtn} onPress={onAddPet}>
+                    <Ionicons name="add" size={22} color={Palette.white} />
+                    <AppText variant="body" weight="800" color={Palette.white}>
+                      Add Another Pet
+                    </AppText>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
             </>
           )}
         </Pressable>
@@ -145,68 +131,87 @@ export function PetSwitcherSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: SheetColors.overlay,
+    backgroundColor: 'rgba(26, 43, 78, 0.4)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: SheetColors.sheetBg,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    backgroundColor: '#FFF9F5',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     maxHeight: '80%',
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
   },
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D0D0D0',
+    backgroundColor: '#E5E5E5',
     marginBottom: Spacing.sm,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
+    marginTop: Spacing.xs,
   },
-  loader: {
-    marginBottom: Spacing.md,
+  headerTitleContainer: {
+    flex: 1,
+  },
+  subtitle: {
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  closeBtn: {
+    padding: 2,
+  },
+  list: {
+    maxHeight: 250,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
+    paddingVertical: 12,
     paddingHorizontal: Spacing.sm,
-    borderRadius: Radius.md,
-    marginBottom: Spacing.xs,
+    borderRadius: 14,
+    marginBottom: Spacing.sm,
+    backgroundColor: '#FCFCFD',
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
   },
   rowActive: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(92, 179, 93, 0.08)',
+    borderColor: '#5CB35D',
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     marginRight: Spacing.sm,
   },
   info: {
     flex: 1,
   },
-  manageBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.xs,
+  actionBlock: {
     marginTop: Spacing.md,
-    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    marginBottom: Spacing.sm,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });

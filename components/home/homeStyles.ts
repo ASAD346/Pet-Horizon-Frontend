@@ -16,6 +16,8 @@ export const homePillCard = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     paddingHorizontal: 14,
     paddingVertical: 16,
     marginBottom: 10,

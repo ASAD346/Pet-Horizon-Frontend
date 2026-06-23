@@ -13,6 +13,16 @@ interface HomeHeaderProps {
   showJournal?: boolean;
 }
 
+function getGreeting(userName: string): string {
+  // new Date().getHours() retrieves the local hour of the user's device,
+  // automatically adapting to their local timezone and country location.
+  const hours = new Date().getHours();
+  if (hours >= 5 && hours < 12) return `Good morning, ${userName}!`;
+  if (hours >= 12 && hours < 17) return `Good afternoon, ${userName}!`;
+  if (hours >= 17 && hours < 22) return `Good evening, ${userName}!`;
+  return `Good night, ${userName}!`;
+}
+
 export function HomeHeader({
   userName = 'Sarah',
   dateLabel = 'Monday, May 15th',
@@ -25,7 +35,7 @@ export function HomeHeader({
     <View style={styles.container}>
       <View style={styles.textBlock}>
         <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.greeting}>
-          Good morning, {userName}!
+          {getGreeting(userName)}
         </AppText>
         <AppText variant="bodySmall" color={HomeTheme.textMuted}>
           {dateLabel}

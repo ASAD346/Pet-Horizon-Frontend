@@ -320,327 +320,195 @@ export default function HomeScreen() {
 
 
   return (
+    <View style={styles.root}>
+      <LoginHeaderDecor />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <HomeHeader
+            userName={userName}
+            dateLabel={formatDateLabel(new Date())}
+            notificationCount={unreadCount}
+            onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
+            onNotificationsPress={() => router.push('/notifications' as Href)}
+            showJournal={canViewJournal}
+          />
 
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+          {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
-      <ScrollView
+          {showBirthdayBanner ? (
+            <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
+          ) : null}
 
-        style={styles.scroll}
+          <PetProfileCard
+            {...(profile ?? {})}
+            imageUrl={petImageUrl}
+            loading={petCardLoading}
+            isBirthdayToday={showBirthdayBanner}
+            isPremium={isPremium}
+            onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
+          />
 
-        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+          {canView('grooming') ? (
+          <GroomingAlertsRow
+            token={token}
+            petId={pet?._id}
+            onAlertPress={
+              canEdit('grooming')
+                ? (record) => {
+                    setGroomingManageRecord(record);
+                    setGroomingManageVisible(true);
+                  }
+                : undefined
+            }
+          />
+          ) : null}
 
-        showsVerticalScrollIndicator={false}
+          <QuickActionsSection
+            onLogFoodPress={() => setLogFoodVisible(true)}
+            onLogWalkPress={() => setLogWalkVisible(true)}
+            onMedicinePress={() => setLogMedicineVisible(true)}
+            onGroomingPress={() => setLogGroomingVisible(true)}
+            onVaccinationPress={() => setLogVaccinationVisible(true)}
+            groomingVisible={groomingVisible}
+            canView={canView}
+            canEdit={canEdit}
+          />
 
-      >
+          <UpNextSection
+            feedingSchedules={visibleFeedingSchedules}
+            walkSchedules={visibleWalkSchedules}
+            medicineSchedules={visibleMedicineSchedules}
+            groomingRecords={visibleGroomingRecords}
+            vaccinationSchedules={visibleVaccinationSchedules}
+            loading={scheduleLoading}
+            feedingActionId={feedingActionId}
+            walkActionId={walkActionId}
+            medicineActionId={medicineActionId}
+            groomingActionId={groomingActionId}
+            vaccinationActionId={vaccinationActionId}
+            onLogFeeding={canEdit('feeding') ? completeFeeding : undefined}
+            onLogWalk={canEdit('walks') ? completeWalk : undefined}
+            onLogMedicine={canEdit('medicine') ? completeMedicine : undefined}
+            onLogGrooming={canEdit('grooming') ? completeGrooming : undefined}
+            onLogVaccination={canEdit('vaccination') ? completeVaccination : undefined}
+            dashboardTasks={visibleDashboardTasks}
+          />
 
-        <HomeHeader
+          <TodaysScheduleSection
+            feedingSchedules={visibleFeedingSchedules}
+            walkSchedules={visibleWalkSchedules}
+            medicineSchedules={visibleMedicineSchedules}
+            groomingRecords={visibleGroomingRecords}
+            vaccinationSchedules={visibleVaccinationSchedules}
+            loading={scheduleLoading}
+            feedingActionId={feedingActionId}
+            walkActionId={walkActionId}
+            medicineActionId={medicineActionId}
+            groomingActionId={groomingActionId}
+            vaccinationActionId={vaccinationActionId}
+            onCompleteFeeding={canEdit('feeding') ? completeFeeding : undefined}
+            onSkipFeeding={canEdit('feeding') ? skipFeeding : undefined}
+            onCompleteWalk={canEdit('walks') ? completeWalk : undefined}
+            onCompleteMedicine={canEdit('medicine') ? completeMedicine : undefined}
+            onCompleteGrooming={canEdit('grooming') ? completeGrooming : undefined}
+            onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
+            onCompleteVaccination={canEdit('vaccination') ? completeVaccination : undefined}
+          />
 
-          userName={userName}
+          <RecentActivitySection />
+        </ScrollView>
 
-          dateLabel={formatDateLabel(new Date())}
-
-          notificationCount={unreadCount}
-
-          onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
-
-          onNotificationsPress={() => router.push('/notifications' as Href)}
-
-          showJournal={canViewJournal}
-
-        />
-
-        {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
-
-        {showBirthdayBanner ? (
-          <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
-        ) : null}
-
-        <PetProfileCard
-
-          {...(profile ?? {})}
-
-          imageUrl={petImageUrl}
-
-          loading={petCardLoading}
-
-          isBirthdayToday={showBirthdayBanner}
-
-          onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
-
-        />
-
-        {canView('grooming') ? (
-        <GroomingAlertsRow
-
+        <LogFoodSheet
+          visible={logFoodVisible}
+          onClose={() => setLogFoodVisible(false)}
+          petId={pet?._id ?? null}
           token={token}
-
-          petId={pet?._id}
-
-          onAlertPress={
-            canEdit('grooming')
-              ? (record) => {
-                  setGroomingManageRecord(record);
-                  setGroomingManageVisible(true);
-                }
-              : undefined
-          }
-
-        />
-        ) : null}
-
-        <QuickActionsSection
-
-          onLogFoodPress={() => setLogFoodVisible(true)}
-
-          onLogWalkPress={() => setLogWalkVisible(true)}
-
-          onMedicinePress={() => setLogMedicineVisible(true)}
-
-          onGroomingPress={() => setLogGroomingVisible(true)}
-
-          onVaccinationPress={() => setLogVaccinationVisible(true)}
-
-          groomingVisible={groomingVisible}
-
-          canView={canView}
-
-          canEdit={canEdit}
-
+          onSaved={reloadFeeding}
         />
 
-        <UpNextSection
-
-          feedingSchedules={visibleFeedingSchedules}
-
-          walkSchedules={visibleWalkSchedules}
-
-          medicineSchedules={visibleMedicineSchedules}
-
-          groomingRecords={visibleGroomingRecords}
-
-          vaccinationSchedules={visibleVaccinationSchedules}
-
-          loading={scheduleLoading}
-
-          feedingActionId={feedingActionId}
-
-          walkActionId={walkActionId}
-
-          medicineActionId={medicineActionId}
-
-          groomingActionId={groomingActionId}
-
-          vaccinationActionId={vaccinationActionId}
-
-          onLogFeeding={canEdit('feeding') ? completeFeeding : undefined}
-
-          onLogWalk={canEdit('walks') ? completeWalk : undefined}
-
-          onLogMedicine={canEdit('medicine') ? completeMedicine : undefined}
-
-          onLogGrooming={canEdit('grooming') ? completeGrooming : undefined}
-
-          onLogVaccination={canEdit('vaccination') ? completeVaccination : undefined}
-
-          dashboardTasks={visibleDashboardTasks}
-
+        <LogWalkSheet
+          visible={logWalkVisible}
+          onClose={() => setLogWalkVisible(false)}
+          petId={pet?._id ?? null}
+          token={token}
+          onSaved={reloadWalks}
         />
 
-        <TodaysScheduleSection
-
-          feedingSchedules={visibleFeedingSchedules}
-
-          walkSchedules={visibleWalkSchedules}
-
-          medicineSchedules={visibleMedicineSchedules}
-
-          groomingRecords={visibleGroomingRecords}
-
-          vaccinationSchedules={visibleVaccinationSchedules}
-
-          loading={scheduleLoading}
-
-          feedingActionId={feedingActionId}
-
-          walkActionId={walkActionId}
-
-          medicineActionId={medicineActionId}
-
-          groomingActionId={groomingActionId}
-
-          vaccinationActionId={vaccinationActionId}
-
-          onCompleteFeeding={canEdit('feeding') ? completeFeeding : undefined}
-
-          onSkipFeeding={canEdit('feeding') ? skipFeeding : undefined}
-
-          onCompleteWalk={canEdit('walks') ? completeWalk : undefined}
-
-          onCompleteMedicine={canEdit('medicine') ? completeMedicine : undefined}
-
-          onCompleteGrooming={canEdit('grooming') ? completeGrooming : undefined}
-
-          onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
-
-          onCompleteVaccination={canEdit('vaccination') ? completeVaccination : undefined}
-
+        <LogMedicineSheet
+          visible={logMedicineVisible}
+          onClose={() => setLogMedicineVisible(false)}
+          petId={pet?._id ?? null}
+          token={token}
+          onSaved={reloadMedicine}
         />
 
-        <RecentActivitySection />
+        <LogGroomingSheet
+          visible={logGroomingVisible}
+          onClose={() => setLogGroomingVisible(false)}
+          petId={pet?._id ?? null}
+          token={token}
+          onSaved={reloadGrooming}
+        />
 
-      </ScrollView>
+        <LogVaccinationSheet
+          visible={logVaccinationVisible}
+          onClose={() => setLogVaccinationVisible(false)}
+          petId={pet?._id ?? null}
+          token={token}
+          onSaved={reloadVaccination}
+        />
 
+        <LogJournalSheet
+          visible={journalVisible && canViewJournal}
+          onClose={() => setJournalVisible(false)}
+        />
 
+        <GroomingManageSheet
+          visible={groomingManageVisible}
+          record={groomingManageRecord}
+          token={token}
+          onClose={() => {
+            setGroomingManageVisible(false);
+            setGroomingManageRecord(null);
+          }}
+          onUpdated={reloadGrooming}
+        />
 
-      <LogFoodSheet
-
-        visible={logFoodVisible}
-
-        onClose={() => setLogFoodVisible(false)}
-
-        petId={pet?._id ?? null}
-
-        token={token}
-
-        onSaved={reloadFeeding}
-
-      />
-
-      <LogWalkSheet
-
-        visible={logWalkVisible}
-
-        onClose={() => setLogWalkVisible(false)}
-
-        petId={pet?._id ?? null}
-
-        token={token}
-
-        onSaved={reloadWalks}
-
-      />
-
-      <LogMedicineSheet
-
-        visible={logMedicineVisible}
-
-        onClose={() => setLogMedicineVisible(false)}
-
-        petId={pet?._id ?? null}
-
-        token={token}
-
-        onSaved={reloadMedicine}
-
-      />
-
-      <LogGroomingSheet
-
-        visible={logGroomingVisible}
-
-        onClose={() => setLogGroomingVisible(false)}
-
-        petId={pet?._id ?? null}
-
-        token={token}
-
-        onSaved={reloadGrooming}
-
-      />
-
-      <LogVaccinationSheet
-
-        visible={logVaccinationVisible}
-
-        onClose={() => setLogVaccinationVisible(false)}
-
-        petId={pet?._id ?? null}
-
-        token={token}
-
-        onSaved={reloadVaccination}
-
-      />
-
-      <LogJournalSheet
-        visible={journalVisible && canViewJournal}
-        onClose={() => setJournalVisible(false)}
-      />
-
-      <GroomingManageSheet
-
-        visible={groomingManageVisible}
-
-        record={groomingManageRecord}
-
-        token={token}
-
-        onClose={() => {
-
-          setGroomingManageVisible(false);
-
-          setGroomingManageRecord(null);
-
-        }}
-
-        onUpdated={reloadGrooming}
-
-      />
-
-      <PetSwitcherSheet
-
-        visible={petSwitcherVisible}
-
-        pets={pets}
-
-        activePetId={pet?._id}
-
-        currentUserId={user?._id}
-
-        switchingId={switchingId}
-
-        onClose={() => setPetSwitcherVisible(false)}
-
-        onSelectPet={handleSwitchPet}
-
-        onAddPet={handleAddPet}
-
-        canEditActivePet={isOwner}
-
-      />
-
-    </SafeAreaView>
-
+        <PetSwitcherSheet
+          visible={petSwitcherVisible}
+          pets={pets}
+          activePetId={pet?._id}
+          currentUserId={user?._id}
+          switchingId={switchingId}
+          onClose={() => setPetSwitcherVisible(false)}
+          onSelectPet={handleSwitchPet}
+          onAddPet={handleAddPet}
+        />
+      </SafeAreaView>
+    </View>
   );
-
 }
 
-
-
 const styles = StyleSheet.create({
-
+  root: {
+    flex: 1,
+    backgroundColor: '#FFF9F5',
+  },
   safeArea: {
-
     flex: 1,
-
-    backgroundColor: HomeTheme.background,
-
+    backgroundColor: 'transparent',
   },
-
   scroll: {
-
     flex: 1,
-
   },
-
   content: {
-
     paddingHorizontal: Spacing.lg,
-
     paddingTop: Spacing.sm,
-
   },
-
 });
 
 

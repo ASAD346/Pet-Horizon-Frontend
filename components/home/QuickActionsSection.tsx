@@ -10,11 +10,11 @@ import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 type ActionIcon = 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle';
 
 const ACTIONS: { label: string; icon: ActionIcon; color: string; bg: string }[] = [
-  { label: 'Log Food', icon: 'silverware-fork-knife', color: '#F5A623', bg: '#FFF4E0' },
-  { label: 'Log Walk', icon: 'walk', color: '#5CB35D', bg: '#E8F5E9' },
-  { label: 'Medicine', icon: 'pill', color: '#5B9BD5', bg: '#E3F2FD' },
-  { label: 'Grooming', icon: 'content-cut', color: '#E91E8C', bg: '#FCE4F0' },
-  { label: 'Vaccination', icon: 'needle', color: '#673AB7', bg: '#EDE7F6' },
+  { label: 'Log Food', icon: 'silverware-fork-knife', color: '#F5A623', bg: 'rgba(245, 166, 35, 0.08)' },
+  { label: 'Log Walk', icon: 'walk', color: '#5CB35D', bg: 'rgba(92, 179, 93, 0.08)' },
+  { label: 'Medicine', icon: 'pill', color: '#5B9BD5', bg: 'rgba(91, 155, 213, 0.08)' },
+  { label: 'Grooming', icon: 'content-cut', color: '#E91E8C', bg: 'rgba(233, 30, 140, 0.08)' },
+  { label: 'Vaccination', icon: 'needle', color: '#673AB7', bg: 'rgba(103, 58, 183, 0.08)' },
 ];
 
 interface QuickActionsSectionProps {
@@ -73,7 +73,7 @@ export function QuickActionsSection({
   return (
     <View style={styles.section}>
       <SectionHeader title="Quick Actions" />
-      <View style={styles.row}>
+      <View style={styles.panelCard}>
         {visibleActions.map((action) => {
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
@@ -82,14 +82,14 @@ export function QuickActionsSection({
             <TouchableOpacity
               key={action.label}
               style={styles.tile}
-              activeOpacity={0.85}
+              activeOpacity={0.7}
               onPress={onPress}
             >
-              <View style={[styles.iconBox, { backgroundColor: action.bg }]}>
-                <MaterialCommunityIcons name={action.icon} size={24} color={action.color} />
+              <View style={[styles.innerBadge, { backgroundColor: action.bg }]}>
+                <MaterialCommunityIcons name={action.icon} size={22} color={action.color} />
               </View>
-              <AppText variant="caption" weight="600" color={HomeTheme.text} style={styles.label}>
-                {action.label}
+              <AppText variant="caption" weight="800" color="#1A2B4E" style={styles.label}>
+                {action.label.replace('Log ', '')}
               </AppText>
             </TouchableOpacity>
           );
@@ -99,39 +99,46 @@ export function QuickActionsSection({
   );
 }
 
-const tileShadow = Platform.select({
+const cardShadow = Platform.select({
   ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
   },
-  android: { elevation: 2 },
+  android: { elevation: 3 },
 });
 
 const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing.lg,
   },
-  row: {
+  panelCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    ...cardShadow,
   },
   tile: {
     alignItems: 'center',
-    width: '18%',
+    flex: 1,
   },
-  iconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: Radius.md,
+  innerBadge: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xs,
-    ...tileShadow,
+    marginBottom: 6,
   },
   label: {
     fontSize: 10,
     textAlign: 'center',
+    lineHeight: 12,
   },
 });
