@@ -1,27 +1,67 @@
-import React from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Dimensions, StyleSheet, View } from 'react-native';
-import Animated, { FadeInUp } from 'react-native-reanimated';
+import { Dimensions, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
-import { AuthLogoMark } from '@/components/auth/AuthLogoMark';
 import { useAuth } from '@/hooks/useAuth';
-import { AppButton } from '../components/ui/AppButton';
 import { AppText } from '../components/ui/AppText';
-import { HomeTheme, Palette, Spacing } from '../constants/theme';
+import { Palette, Spacing, Radius } from '../constants/theme';
+import { OnboardingSlide, SlideData } from '../components/onboarding/OnboardingSlide';
+import { OnboardingProgress } from '../components/onboarding/OnboardingProgress';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedScrollHandler, 
+  useAnimatedStyle, 
+  interpolateColor,
+  runOnJS,
+  withSpring
+} from 'react-native-reanimated';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-const HIGHLIGHTS = [
-  { icon: 'calendar-outline' as const, label: 'Care schedules' },
-  { icon: 'people-outline' as const, label: 'Family sharing' },
-  { icon: 'heart-outline' as const, label: 'Happy pets' },
+const SLIDES: SlideData[] = [
+  {
+    id: '1',
+    title: 'Track Every Moment',
+    description: 'Log daily activities like meals, walks, medicines, vaccine logs, and grooming events in a neat timeline.',
+    image: require('../assets/images/onboarding_tracking.png'),
+    accentColor: '#5CB35D', // Green
+    bgColor: '#F0F8F0',
+    badgeText: 'Care Tracking',
+  },
+  {
+    id: '2',
+    title: 'Share with Family',
+    description: 'Invite sitters and family to co-manage pets together. Stay perfectly in sync and never miss a task.',
+    image: require('../assets/images/onboarding_family.png'),
+    accentColor: '#1A2B4E', // Navy
+    bgColor: '#E6EBF5',
+    badgeText: 'Co-Parenting',
+  },
+  {
+    id: '3',
+    title: 'Health & Reminders',
+    description: 'Keep track of clinical records, schedule auto-reminders, and ensure your pet gets the care they need.',
+    image: require('../assets/images/onboarding_health.png'),
+    accentColor: '#F48024', // Warm orange
+    bgColor: '#FFF4EB',
+    badgeText: 'Medical Log',
+  },
 ];
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function GetStartedScreen() {
   const router = useRouter();
   const { isAuthenticated, isBootstrapping } = useAuth();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<any>(null);
+  
+  // Reanimated values
+  const scrollX = useSharedValue(0);
+  const buttonScale = useSharedValue(1);
 
   useAuthEntryRedirect();
 
@@ -29,141 +69,211 @@ export default function GetStartedScreen() {
     return <AuthEntryLoader />;
   }
 
+  const updateActiveIndex = (index: number) => {
+    setActiveIndex(index);
+  };
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollX.value = event.contentOffset.x;
+      const index = Math.round(event.contentOffset.x / width);
+      runOnJS(updateActiveIndex)(index);
+    },
+  });
+
+  const handleNext = () => {
+    if (activeIndex < SLIDES.length - 1) {
+      flatListRef.current?.scrollToIndex({
+        index: activeIndex + 1,
+        animated: true,
+      });
+    } else {
+      handleGetStarted();
+    }
+  };
+
+  const handleGetStarted = () => {
+    router.push('/auth/login');
+  };
+
+  // Button micro-interactions
+  const handlePressIn = () => {
+    buttonScale.value = withSpring(0.96);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const handlePressOut = () => {
+    buttonScale.value = withSpring(1);
+  };
+
+  // Dynamically interpolate the overall screen background color
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    const bgColor = interpolateColor(
+      scrollX.value,
+      [0, width, width * 2],
+      ['#F0F8F0', '#E6EBF5', '#FFF4EB']
+    );
+    return {
+      backgroundColor: bgColor,
+    };
+  });
+
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: buttonScale.value }],
+  }));
+
+  const activeColors = SLIDES.map((slide) => slide.accentColor);
+  const currentSlide = SLIDES[activeIndex] || SLIDES[0];
+
   return (
-    <View style={styles.container}>
-      <View style={styles.imageSection}>
-        <Image
-          source={require('../assets/images/onboarding.png')}
-          style={styles.backgroundImage}
-          contentFit="cover"
-        />
-        <View style={styles.imageOverlay} />
-      </View>
-
-      <Animated.View entering={FadeInUp.duration(800).springify()} style={styles.card}>
-        <View style={styles.content}>
-          <AuthLogoMark style={styles.logoMark} />
-
-          <View style={styles.textSection}>
-            <AppText variant="h1" align="center" style={styles.title}>
-              Hey! Welcome
-            </AppText>
-            <AppText variant="body" color={Palette.gray[500]} align="center" style={styles.subtitle}>
-              Never miss a meal, walk, or cuddle
-            </AppText>
-          </View>
-
-          <View style={styles.highlightsRow}>
-            {HIGHLIGHTS.map((item) => (
-              <View key={item.label} style={styles.highlightChip}>
-                <Ionicons name={item.icon} size={16} color={HomeTheme.cardGreen} />
-                <AppText variant="caption" weight="600" color={HomeTheme.text} style={styles.chipLabel}>
-                  {item.label}
-                </AppText>
-              </View>
-            ))}
-          </View>
-
-          <AppButton
-            title="Get Started"
-            onPress={() => router.push('/auth/login')}
-            style={styles.startButton}
-            textStyle={styles.buttonText}
-            variant="secondary"
-          />
+    <Animated.View style={[styles.outerContainer, animatedContainerStyle]}>
+      <SafeAreaView style={styles.safeArea}>
+        {/* Top Header Section with Skip Option */}
+        <View style={styles.header}>
+          {activeIndex < SLIDES.length - 1 ? (
+            <TouchableOpacity onPress={handleGetStarted} style={styles.skipButton} activeOpacity={0.7}>
+              <AppText variant="bodySmall" weight="700" color={Palette.gray[700]}>
+                Skip
+              </AppText>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.skipPlaceholder} />
+          )}
         </View>
-      </Animated.View>
-    </View>
+
+        {/* Reanimated FlatList */}
+        <Animated.FlatList
+          ref={flatListRef}
+          data={SLIDES}
+          renderItem={({ item, index }) => (
+            <OnboardingSlide slide={item} index={index} scrollX={scrollX} />
+          )}
+          keyExtractor={(item) => item.id}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={scrollHandler}
+          scrollEventThrottle={16}
+          bounces={false}
+          style={styles.slider}
+        />
+
+        {/* Footer controls and indicators */}
+        <View style={styles.footer}>
+          <OnboardingProgress
+            total={SLIDES.length}
+            scrollX={scrollX}
+            activeColors={activeColors}
+          />
+
+          <View style={styles.buttonWrapper}>
+            <AnimatedTouchableOpacity
+              activeOpacity={0.9}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              onPress={activeIndex === SLIDES.length - 1 ? handleGetStarted : handleNext}
+              style={[
+                styles.actionButton,
+                { 
+                  backgroundColor: currentSlide.accentColor,
+                  shadowColor: currentSlide.accentColor,
+                },
+                animatedButtonStyle
+              ]}
+            >
+              {/* Spacer on the left to perfectly center the text label */}
+              <View style={styles.sideSpacer} />
+              
+              <AppText variant="body" weight="700" color={Palette.white} style={styles.actionButtonText}>
+                {activeIndex === SLIDES.length - 1 ? "Get Started" : "Next"}
+              </AppText>
+              
+              {/* Circular Icon Bubble on the right */}
+              <View style={styles.iconBubble}>
+                <Ionicons 
+                  name={activeIndex === SLIDES.length - 1 ? "checkmark-circle-outline" : "chevron-forward"} 
+                  size={20} 
+                  color={Palette.white} 
+                />
+              </View>
+            </AnimatedTouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  imageSection: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  backgroundImage: {
+  outerContainer: {
     flex: 1,
   },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.08)',
+  safeArea: {
+    flex: 1,
   },
-  card: {
-    position: 'absolute',
-    bottom: 0,
-    minHeight: height * 0.5,
-    width: '100%',
-    backgroundColor: Palette.white,
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 16,
-  },
-  content: {
-    width: '100%',
+  header: {
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
   },
-  logoMark: {
-    marginBottom: Spacing.xs,
-  },
-  textSection: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#262626',
-  },
-  subtitle: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: Palette.gray[500],
-    maxWidth: width * 0.82,
-  },
-  highlightsRow: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.sm,
-  },
-  highlightChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F0F8F0',
-    borderRadius: 999,
-    paddingHorizontal: 12,
+  skipButton: {
     paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.03)',
   },
-  chipLabel: {
-    fontSize: 11,
+  skipPlaceholder: {
+    width: 40,
+    height: 20,
   },
-  startButton: {
-    backgroundColor: HomeTheme.cardGreen,
+  slider: {
+    flex: 1,
+  },
+  footer: {
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
+    alignItems: 'center',
+    gap: Spacing.lg,
+  },
+  buttonWrapper: {
     width: '100%',
-    borderRadius: 14,
-    minHeight: 54,
+    alignItems: 'center',
+    minHeight: 56,
     justifyContent: 'center',
-    marginTop: Spacing.sm,
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: '700',
+  actionButton: {
+    width: '100%',
+    borderRadius: 28, // Premium pill design
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35, // Rich soft drop shadow matching slide color
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  sideSpacer: {
+    width: 36,
+    height: 36,
+  },
+  iconBubble: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    fontSize: 17,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    color: Palette.white,
   },
 });
