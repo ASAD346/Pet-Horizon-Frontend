@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { AppText } from '../ui/AppText';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Radius, Spacing } from '../../constants/theme';
 
 export type WeightUnit = 'kg' | 'lbs';
 
@@ -13,20 +13,31 @@ interface WeightInputProps {
 }
 
 export function WeightInput({ value, unit, onValueChange, onUnitChange }: WeightInputProps) {
+  const [isFocused, setIsFocused] = useState(false);
+
   return (
     <View style={styles.wrapper}>
-      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
+      <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Weight
       </AppText>
       <View style={styles.row}>
-        <TextInput
-          value={value}
-          onChangeText={onValueChange}
-          keyboardType="decimal-pad"
-          placeholder="0"
-          placeholderTextColor={LoginTheme.inputPlaceholder}
-          style={styles.valueInput}
-        />
+        <View
+          style={[
+            styles.valueInputContainer,
+            isFocused && styles.containerFocused,
+          ]}
+        >
+          <TextInput
+            value={value}
+            onChangeText={onValueChange}
+            keyboardType="decimal-pad"
+            placeholder="0"
+            placeholderTextColor={Palette.gray[400]}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            style={styles.valueInput}
+          />
+        </View>
         <View style={styles.unitToggle}>
           <TouchableOpacity
             style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}
@@ -36,7 +47,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange }: Weight
             <AppText
               variant="bodySmall"
               weight="700"
-              color={unit === 'kg' ? LoginTheme.footerText : LoginTheme.charcoal}
+              color={unit === 'kg' ? Palette.white : Palette.gray[500]}
             >
               KG
             </AppText>
@@ -49,7 +60,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange }: Weight
             <AppText
               variant="bodySmall"
               weight="700"
-              color={unit === 'lbs' ? LoginTheme.footerText : LoginTheme.charcoal}
+              color={unit === 'lbs' ? Palette.white : Palette.gray[500]}
             >
               LBS
             </AppText>
@@ -60,55 +71,75 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange }: Weight
   );
 }
 
-const fieldShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-  },
-  android: { elevation: 1 },
-});
-
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   label: {
     marginBottom: Spacing.xs,
-    marginLeft: 2,
+    marginLeft: 4,
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.md,
+  },
+  valueInputContainer: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    paddingHorizontal: Spacing.md,
+    justifyContent: 'center',
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.01,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  containerFocused: {
+    borderColor: '#5CB35D',
+    backgroundColor: Palette.white,
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
   },
   valueInput: {
     flex: 1,
-    height: 42,
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
     fontSize: 14,
-    color: LoginTheme.charcoal,
-    fontWeight: '500',
-    ...fieldShadow,
+    color: Palette.gray[800],
+    fontWeight: '600',
+    paddingVertical: 0,
   },
   unitToggle: {
     flexDirection: 'row',
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     padding: 3,
-    ...fieldShadow,
+    height: 52,
+    alignItems: 'center',
+    width: 120,
+    justifyContent: 'space-between',
   },
   unitBtn: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.sm,
-    minWidth: 48,
+    flex: 1,
+    height: '100%',
+    borderRadius: 11,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   unitBtnActive: {
-    backgroundColor: LoginTheme.green,
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

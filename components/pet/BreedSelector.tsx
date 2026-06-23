@@ -6,12 +6,11 @@ import {
   Modal,
   Pressable,
   FlatList,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Skeleton } from '@/components/ui/skeletons';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Radius, Spacing } from '../../constants/theme';
 
 interface BreedSelectorProps {
   value: string;
@@ -21,16 +20,6 @@ interface BreedSelectorProps {
   error?: string;
   onChange: (breed: string) => void;
 }
-
-const fieldShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-  },
-  android: { elevation: 1 },
-});
 
 export function BreedSelector({
   value,
@@ -47,29 +36,29 @@ export function BreedSelector({
 
   return (
     <View style={styles.wrapper}>
-      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
+      <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Breed
       </AppText>
 
       {loading ? (
-        <Skeleton width="100%" height={48} borderRadius={Radius.md} />
+        <Skeleton width="100%" height={52} borderRadius={14} />
       ) : (
       <TouchableOpacity
-        style={[styles.field, error ? styles.fieldError : null, disabled ? styles.fieldDisabled : null]}
+        style={[styles.field, error ? styles.fieldError : null, disabled ? styles.fieldDisabled : null, visible && styles.fieldActive]}
         onPress={() => !disabled && breeds.length > 0 && setVisible(true)}
         activeOpacity={0.8}
         disabled={disabled || breeds.length === 0}
       >
         <AppText
           variant="body"
-          color={value ? LoginTheme.charcoal : LoginTheme.inputPlaceholder}
-          weight="500"
+          color={value ? Palette.gray[800] : Palette.gray[400]}
+          weight="600"
           style={styles.fieldText}
           numberOfLines={1}
         >
           {displayValue}
         </AppText>
-        <Ionicons name="chevron-down" size={20} color={LoginTheme.green} />
+        <Ionicons name="chevron-down" size={20} color="#5CB35D" />
       </TouchableOpacity>
       )}
 
@@ -83,11 +72,11 @@ export function BreedSelector({
         <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
           <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
             <View style={styles.sheetHeader}>
-              <AppText variant="h3" weight="700" color={LoginTheme.charcoal}>
-                Select breed
+              <AppText variant="h3" weight="800" color="#1A2B4E">
+                Select Breed
               </AppText>
               <TouchableOpacity onPress={() => setVisible(false)} hitSlop={12}>
-                <Ionicons name="close" size={24} color={LoginTheme.charcoal} />
+                <Ionicons name="close" size={24} color="#1A2B4E" />
               </TouchableOpacity>
             </View>
 
@@ -96,6 +85,7 @@ export function BreedSelector({
               keyExtractor={(item) => item}
               style={styles.list}
               keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.listContent}
               renderItem={({ item }) => {
                 const selected = item === value;
                 return (
@@ -108,13 +98,13 @@ export function BreedSelector({
                   >
                     <AppText
                       variant="body"
-                      color={selected ? LoginTheme.footerText : LoginTheme.charcoal}
-                      weight={selected ? '700' : '500'}
+                      color={selected ? '#5CB35D' : Palette.gray[800]}
+                      weight={selected ? '700' : '600'}
                     >
                       {item}
                     </AppText>
                     {selected ? (
-                      <Ionicons name="checkmark" size={20} color={LoginTheme.footerText} />
+                      <Ionicons name="checkmark" size={20} color="#5CB35D" />
                     ) : null}
                   </TouchableOpacity>
                 );
@@ -129,24 +119,33 @@ export function BreedSelector({
 
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   label: {
     marginBottom: Spacing.xs,
-    marginLeft: 2,
+    marginLeft: 4,
   },
   field: {
-    height: 42,
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
+    height: 52,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     paddingHorizontal: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...fieldShadow,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.01,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  fieldActive: {
+    borderColor: '#5CB35D',
+    backgroundColor: Palette.white,
   },
   fieldError: {
-    borderWidth: 1,
     borderColor: '#EF9A9A',
   },
   fieldDisabled: {
@@ -158,19 +157,21 @@ const styles = StyleSheet.create({
   },
   errorText: {
     marginTop: Spacing.xs,
-    marginLeft: 2,
+    marginLeft: 4,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(26, 43, 78, 0.4)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: LoginTheme.screenBg,
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
+    backgroundColor: '#FFF9F5',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     maxHeight: '70%',
     paddingBottom: Spacing.lg,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
   },
   sheetHeader: {
     flexDirection: 'row',
@@ -178,21 +179,24 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E0E0E0',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EFEFEF',
   },
   list: {
     paddingHorizontal: Spacing.md,
+  },
+  listContent: {
+    paddingVertical: Spacing.sm,
   },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.sm,
-    borderRadius: Radius.md,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    borderRadius: 12,
   },
   optionSelected: {
-    backgroundColor: LoginTheme.green,
+    backgroundColor: 'rgba(92, 179, 93, 0.08)',
   },
 });

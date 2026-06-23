@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Spacing } from '../../constants/theme';
 import { ThemedDatePicker } from './ThemedDatePicker';
 
 interface BirthdayFieldProps {
-  value: Date;
+  value: Date | null;
   onChange: (date: Date) => void;
+  error?: string;
 }
 
 function formatDate(date: Date) {
@@ -18,28 +19,38 @@ function formatDate(date: Date) {
   });
 }
 
-export function BirthdayField({ value, onChange }: BirthdayFieldProps) {
+export function BirthdayField({ value, onChange, error }: BirthdayFieldProps) {
   const [showPicker, setShowPicker] = useState(false);
 
   return (
     <View style={styles.wrapper}>
-      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
+      <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Birthday
       </AppText>
       <TouchableOpacity
-        style={styles.field}
+        style={[styles.field, showPicker && styles.fieldActive, error ? styles.fieldError : null]}
         onPress={() => setShowPicker(true)}
         activeOpacity={0.8}
       >
-        <AppText variant="body" color={LoginTheme.charcoal} weight="500">
-          {formatDate(value)}
+        <AppText
+          variant="body"
+          color={value ? Palette.gray[800] : Palette.gray[400]}
+          weight="600"
+        >
+          {value ? formatDate(value) : 'Select Birthday'}
         </AppText>
-        <Ionicons name="calendar-outline" size={20} color={LoginTheme.green} />
+        <Ionicons name="calendar-outline" size={20} color="#5CB35D" />
       </TouchableOpacity>
+
+      {error ? (
+        <AppText variant="caption" color="#C62828" style={styles.errorText}>
+          {error}
+        </AppText>
+      ) : null}
 
       <ThemedDatePicker
         visible={showPicker}
-        value={value}
+        value={value ?? new Date()}
         maximumDate={new Date()}
         onClose={() => setShowPicker(false)}
         onConfirm={(date) => {
@@ -51,32 +62,39 @@ export function BirthdayField({ value, onChange }: BirthdayFieldProps) {
   );
 }
 
-const fieldShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-  },
-  android: { elevation: 1 },
-});
-
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   label: {
     marginBottom: Spacing.xs,
-    marginLeft: 2,
+    marginLeft: 4,
   },
   field: {
-    height: 42,
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
+    height: 52,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     paddingHorizontal: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...fieldShadow,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.01,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  fieldActive: {
+    borderColor: '#5CB35D',
+    backgroundColor: Palette.white,
+  },
+  fieldError: {
+    borderColor: '#EF9A9A',
+  },
+  errorText: {
+    marginTop: Spacing.xs,
+    marginLeft: 4,
   },
 });

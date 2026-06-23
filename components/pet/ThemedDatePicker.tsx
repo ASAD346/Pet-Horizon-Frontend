@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Radius, Spacing } from '../../constants/theme';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
@@ -77,7 +77,6 @@ interface ThemedDatePickerProps {
   value: Date;
   title?: string;
   minimumDate?: Date;
-  /** When omitted, future dates are allowed. */
   maximumDate?: Date;
   onClose: () => void;
   onConfirm: (date: Date) => void;
@@ -86,7 +85,7 @@ interface ThemedDatePickerProps {
 export function ThemedDatePicker({
   visible,
   value,
-  title = 'Select date',
+  title = 'Select Date',
   minimumDate,
   maximumDate,
   onClose,
@@ -156,8 +155,8 @@ export function ThemedDatePicker({
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHeader}>
-            <Ionicons name="calendar" size={22} color={LoginTheme.green} />
-            <AppText variant="h3" weight="700" color={LoginTheme.charcoal}>
+            <Ionicons name="calendar" size={20} color="#5CB35D" />
+            <AppText variant="h3" weight="800" color="#1A2B4E">
               {title}
             </AppText>
           </View>
@@ -168,16 +167,15 @@ export function ThemedDatePicker({
               onPress={() => canGoPrev && goMonth(-1)}
               disabled={!canGoPrev}
               hitSlop={12}
-              accessibilityLabel="Previous month"
             >
               <Ionicons
                 name="chevron-back"
-                size={22}
-                color={canGoPrev ? LoginTheme.charcoal : LoginTheme.inputBg}
+                size={20}
+                color={canGoPrev ? '#1A2B4E' : Palette.gray[300]}
               />
             </TouchableOpacity>
 
-            <AppText variant="body" weight="700" color={LoginTheme.charcoal}>
+            <AppText variant="body" weight="700" color="#1A2B4E">
               {MONTH_NAMES[viewMonth]} {viewYear}
             </AppText>
 
@@ -186,12 +184,11 @@ export function ThemedDatePicker({
               onPress={() => canGoNext && goMonth(1)}
               disabled={!canGoNext}
               hitSlop={12}
-              accessibilityLabel="Next month"
             >
               <Ionicons
                 name="chevron-forward"
-                size={22}
-                color={canGoNext ? LoginTheme.charcoal : LoginTheme.inputBg}
+                size={20}
+                color={canGoNext ? '#1A2B4E' : Palette.gray[300]}
               />
             </TouchableOpacity>
           </View>
@@ -220,8 +217,8 @@ export function ThemedDatePicker({
                 >
                   <AppText
                     variant="caption"
-                    weight={active ? '700' : '500'}
-                    color={active ? LoginTheme.footerText : LoginTheme.charcoal}
+                    weight={active ? '700' : '600'}
+                    color={active ? Palette.white : Palette.gray[700]}
                   >
                     {name.slice(0, 3)}
                   </AppText>
@@ -245,8 +242,8 @@ export function ThemedDatePicker({
                 >
                   <AppText
                     variant="caption"
-                    weight={active ? '700' : '500'}
-                    color={active ? LoginTheme.footerText : LoginTheme.charcoal}
+                    weight={active ? '700' : '600'}
+                    color={active ? Palette.white : Palette.gray[700]}
                   >
                     {year}
                   </AppText>
@@ -260,8 +257,8 @@ export function ThemedDatePicker({
               <AppText
                 key={label}
                 variant="caption"
-                weight="600"
-                color={LoginTheme.tagline}
+                weight="700"
+                color={Palette.gray[400]}
                 style={styles.weekLabel}
               >
                 {label}
@@ -292,15 +289,15 @@ export function ThemedDatePicker({
                   >
                     <AppText
                       variant="bodySmall"
-                      weight={isSelected ? '700' : '500'}
+                      weight={isSelected ? '700' : '600'}
                       color={
                         disabled
-                          ? LoginTheme.petLabel
+                          ? Palette.gray[300]
                           : isSelected
-                            ? LoginTheme.footerText
+                            ? Palette.white
                             : cell.inMonth
-                              ? LoginTheme.charcoal
-                              : LoginTheme.tagline
+                              ? '#1A2B4E'
+                              : Palette.gray[400]
                       }
                     >
                       {cell.day}
@@ -313,7 +310,7 @@ export function ThemedDatePicker({
 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
-              <AppText variant="body" weight="600" color={LoginTheme.charcoal}>
+              <AppText variant="bodySmall" weight="700" color="#1A2B4E">
                 Cancel
               </AppText>
             </TouchableOpacity>
@@ -322,7 +319,7 @@ export function ThemedDatePicker({
               onPress={() => onConfirm(selected)}
               activeOpacity={0.85}
             >
-              <AppText variant="body" weight="700" color={LoginTheme.footerText}>
+              <AppText variant="bodySmall" weight="800" color={Palette.white}>
                 Confirm
               </AppText>
             </TouchableOpacity>
@@ -333,71 +330,69 @@ export function ThemedDatePicker({
   );
 }
 
-const sheetShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-  },
-  android: { elevation: 12 },
-});
-
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: 'rgba(26, 43, 78, 0.4)',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
   },
   sheet: {
-    backgroundColor: LoginTheme.screenBg,
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
-    borderWidth: 1,
-    borderColor: '#E8EDE8',
-    ...sheetShadow,
+    backgroundColor: '#FFF9F5',
+    borderRadius: 24,
+    padding: Spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 8,
   },
   sheetHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   monthRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
+    marginBottom: Spacing.xs,
   },
   monthPickerRow: {
-    gap: Spacing.xs,
-    paddingBottom: Spacing.sm,
+    gap: 6,
+    paddingBottom: 6,
   },
   yearPickerRow: {
-    gap: Spacing.xs,
-    paddingBottom: Spacing.md,
+    gap: 6,
+    paddingBottom: Spacing.sm,
   },
   pickerChip: {
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radius.full,
-    backgroundColor: LoginTheme.inputBg,
-    minWidth: 44,
+    borderRadius: 10,
+    backgroundColor: '#FCFCFD',
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    minWidth: 46,
     alignItems: 'center',
   },
   pickerChipActive: {
-    backgroundColor: LoginTheme.green,
+    backgroundColor: '#5CB35D',
+    borderColor: '#5CB35D',
   },
   pickerChipDisabled: {
     opacity: 0.35,
   },
   navBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: LoginTheme.inputBg,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#FCFCFD',
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -406,17 +401,18 @@ const styles = StyleSheet.create({
   },
   weekRow: {
     flexDirection: 'row',
-    marginBottom: Spacing.sm,
+    marginBottom: 4,
+    marginTop: Spacing.xs,
   },
   weekLabel: {
     flex: 1,
     textAlign: 'center',
-    fontSize: 11,
+    fontSize: 10,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   dayCell: {
     width: `${100 / 7}%`,
@@ -426,18 +422,23 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   dayInner: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dayInnerSelected: {
-    backgroundColor: LoginTheme.green,
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   dayInnerToday: {
     borderWidth: 1.5,
-    borderColor: LoginTheme.green,
+    borderColor: '#5CB35D',
   },
   actions: {
     flexDirection: 'row',
@@ -445,27 +446,25 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: Radius.md,
-    backgroundColor: LoginTheme.inputBg,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#FCFCFD',
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   confirmBtn: {
     flex: 1,
-    height: 46,
-    borderRadius: Radius.md,
-    backgroundColor: LoginTheme.green,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#5CB35D',
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: LoginTheme.buttonShadow,
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-      },
-      android: { elevation: 4 },
-    }),
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 3,
   },
 });

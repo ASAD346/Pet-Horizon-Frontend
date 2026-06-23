@@ -3,14 +3,13 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Platform,
   ScrollView,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import { getSpeciesIcon } from '../../services/pets/speciesIcons';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Radius, Spacing } from '../../constants/theme';
 
 interface SpeciesSelectorProps {
   speciesList: string[];
@@ -19,16 +18,6 @@ interface SpeciesSelectorProps {
   loading?: boolean;
   error?: string;
 }
-
-const tileShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-  },
-  android: { elevation: 1 },
-});
 
 export function SpeciesSelector({
   speciesList,
@@ -39,7 +28,7 @@ export function SpeciesSelector({
 }: SpeciesSelectorProps) {
   return (
     <View style={styles.wrapper}>
-      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
+      <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Species
       </AppText>
 
@@ -63,13 +52,13 @@ export function SpeciesSelector({
               >
                 <MaterialCommunityIcons
                   name={icon}
-                  size={22}
-                  color={selected ? LoginTheme.footerText : LoginTheme.charcoal}
+                  size={20}
+                  color={selected ? Palette.white : '#1A2B4E'}
                 />
                 <AppText
                   variant="caption"
-                  color={selected ? LoginTheme.footerText : LoginTheme.tagline}
-                  style={styles.tileLabel}
+                  color={selected ? Palette.white : Palette.gray[500]}
+                  style={[styles.tileLabel, selected && styles.tileLabelSelected]}
                   numberOfLines={1}
                 >
                   {species}
@@ -95,43 +84,51 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: Spacing.xs,
-    marginLeft: 2,
-  },
-  loadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    minHeight: 62,
-  },
-  loadingText: {
-    marginLeft: Spacing.sm,
+    marginLeft: 4,
   },
   row: {
     flexDirection: 'row',
     gap: 8,
     paddingRight: Spacing.sm,
+    paddingVertical: 2,
   },
   tile: {
-    width: 62,
-    height: 62,
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
+    width: 58,
+    height: 58,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.xs,
-    ...tileShadow,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.01,
+    shadowRadius: 4,
+    elevation: 1,
   },
   tileSelected: {
-    backgroundColor: LoginTheme.green,
+    backgroundColor: '#5CB35D',
+    borderColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
   },
   tileLabel: {
-    marginTop: 2,
+    marginTop: 4,
     fontSize: 10,
     fontWeight: '600',
-    maxWidth: 56,
+    maxWidth: 60,
     textAlign: 'center',
+  },
+  tileLabelSelected: {
+    fontWeight: '700',
   },
   errorText: {
     marginTop: Spacing.xs,
-    marginLeft: 2,
+    marginLeft: 4,
   },
 });

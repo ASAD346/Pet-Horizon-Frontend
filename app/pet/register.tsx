@@ -26,7 +26,7 @@ import {
 } from '@/components/pet';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/errors';
-import { LoginTheme, Spacing } from '@/constants/theme';
+import { LoginTheme, Palette, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
 import { dateToApiDateString } from '@/lib/grooming/groomingForm';
 import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, fetchSpecies, updatePet } from '@/services/pets/petApi';
@@ -38,6 +38,8 @@ import {
   validateRegisterPetForm,
   type RegisterPetFieldErrors,
 } from '@/services/pets/validation';
+
+import { LoginHeaderDecor } from '@/components/auth/login';
 
 const DEFAULT_BIRTHDAY = new Date(2021, 4, 15);
 
@@ -58,7 +60,7 @@ export default function RegisterPetScreen() {
   const [gender, setGender] = useState<PetGender>('Male');
   const [species, setSpecies] = useState('');
   const [breed, setBreed] = useState('');
-  const [birthday, setBirthday] = useState(DEFAULT_BIRTHDAY);
+  const [birthday, setBirthday] = useState<Date | null>(null);
   const [weight, setWeight] = useState('25');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -210,7 +212,7 @@ export default function RegisterPetScreen() {
       }
     }
 
-    const validation = validateRegisterPetForm(petName, species, breed, weight);
+    const validation = validateRegisterPetForm(petName, species, breed, weight, birthday);
     if (hasRegisterPetFieldErrors(validation)) {
       log.fail('AddPet', 'Validation failed', { ...validation });
       setFieldErrors(validation);
@@ -228,7 +230,7 @@ export default function RegisterPetScreen() {
         species,
         breed: breed.trim(),
         gender,
-        birthday: dateToApiDateString(birthday),
+        birthday: birthday ? dateToApiDateString(birthday) : undefined,
         weight: weightNum,
         weightUnit: apiWeightUnit,
       };
@@ -311,6 +313,7 @@ export default function RegisterPetScreen() {
 
   return (
     <View style={styles.root}>
+      <LoginHeaderDecor />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -322,97 +325,111 @@ export default function RegisterPetScreen() {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.header}>
-              <AppText variant="h3" weight="800" align="center" style={styles.title}>
-                {isEditMode ? 'Edit pet profile' : isAddMode ? 'Add another pet' : 'Tell us about your furry friend!'}
-              </AppText>
-              <AppText variant="bodySmall" color={LoginTheme.tagline} align="center" style={styles.subtitle}>
-                Let&apos;s create a profile to help you track their healthy lifestyle.
-              </AppText>
+            <View style={styles.formContainer}>
+              <View style={styles.header}>
+                <AppText variant="h3" weight="800" align="center" style={styles.title}>
+                  {isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!'}
+                </AppText>
+                <View style={styles.accentLine} />
+                <AppText variant="bodySmall" color={Palette.gray[500]} align="center" style={styles.subtitle}>
+                  Let&apos;s create a profile to help you track their healthy lifestyle.
+                </AppText>
+              </View>
+
+              {formError ? <AuthErrorBanner message={formError} /> : null}
+
+              <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />
+
+              <PetLabeledInput
+                label="Pet Name"
+                placeholder="Pet Name"
+                value={petName}
+                onChangeText={(text) => {
+                  setPetName(text);
+                  if (fieldErrors.petName) {
+                    setFieldErrors((prev) => ({ ...prev, petName: undefined }));
+                  }
+                }}
+              />
+              {fieldErrors.petName ? (
+                <AppText variant="caption" color="#C62828" style={styles.inlineError}>
+                  {fieldErrors.petName}
+                </AppText>
+              ) : null}
+
+              <GenderSelect value={gender} onChange={setGender} />
+
+              <SpeciesSelector
+                speciesList={speciesList}
+                value={species}
+                onChange={handleSpeciesChange}
+                loading={speciesLoading}
+                error={fieldErrors.species}
+              />
+
+              <BreedSelector
+                value={breed}
+                breeds={breeds}
+                loading={breedsLoading}
+                disabled={!species}
+                error={fieldErrors.breed}
+                onChange={(next) => {
+                  setBreed(next);
+                  if (fieldErrors.breed) {
+                    setFieldErrors((prev) => ({ ...prev, breed: undefined }));
+                  }
+                }}
+              />
+
+              <BirthdayField
+                value={birthday}
+                onChange={(date) => {
+                  setBirthday(date);
+                  if (fieldErrors.birthday) {
+                    setFieldErrors((prev) => ({ ...prev, birthday: undefined }));
+                  }
+                }}
+                error={fieldErrors.birthday}
+              />
+
+              <WeightInput
+                value={weight}
+                unit={weightUnit}
+                onValueChange={setWeight}
+                onUnitChange={setWeightUnit}
+              />
+              {fieldErrors.weight ? (
+                <AppText variant="caption" color="#C62828" style={styles.inlineError}>
+                  {fieldErrors.weight}
+                </AppText>
+              ) : null}
             </View>
-
-            {formError ? <AuthErrorBanner message={formError} /> : null}
-
-            <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />
-
-            <PetLabeledInput
-              label="Pet Name"
-              placeholder="Pet Name"
-              value={petName}
-              onChangeText={(text) => {
-                setPetName(text);
-                if (fieldErrors.petName) {
-                  setFieldErrors((prev) => ({ ...prev, petName: undefined }));
-                }
-              }}
-            />
-            {fieldErrors.petName ? (
-              <AppText variant="caption" color="#C62828" style={styles.inlineError}>
-                {fieldErrors.petName}
-              </AppText>
-            ) : null}
-
-            <GenderSelect value={gender} onChange={setGender} />
-
-            <SpeciesSelector
-              speciesList={speciesList}
-              value={species}
-              onChange={handleSpeciesChange}
-              loading={speciesLoading}
-              error={fieldErrors.species}
-            />
-
-            <BreedSelector
-              value={breed}
-              breeds={breeds}
-              loading={breedsLoading}
-              disabled={!species}
-              error={fieldErrors.breed}
-              onChange={(next) => {
-                setBreed(next);
-                if (fieldErrors.breed) {
-                  setFieldErrors((prev) => ({ ...prev, breed: undefined }));
-                }
-              }}
-            />
-
-            <BirthdayField value={birthday} onChange={setBirthday} />
-
-            <WeightInput
-              value={weight}
-              unit={weightUnit}
-              onValueChange={setWeight}
-              onUnitChange={setWeightUnit}
-            />
-            {fieldErrors.weight ? (
-              <AppText variant="caption" color="#C62828" style={styles.inlineError}>
-                {fieldErrors.weight}
-              </AppText>
-            ) : null}
           </ScrollView>
 
           <View style={styles.footer}>
-            <AppButton
-              title={isEditMode ? 'Save Changes' : 'Add Pet'}
-              onPress={handleAddPet}
-              loading={loading}
-              disabled={speciesLoading || loading}
-              variant="success"
-              size="sm"
-              style={styles.addButton}
-              textStyle={styles.addButtonText}
-            />
-            {isEditMode ? (
+            <View style={styles.formContainer}>
               <AppButton
-                title="Delete Pet"
-                onPress={handleDeletePet}
-                disabled={loading}
-                variant="outline"
+                title={isEditMode ? 'Save Changes' : 'Add Pet'}
+                onPress={handleAddPet}
+                loading={loading}
+                disabled={speciesLoading || loading}
+                variant="success"
                 size="sm"
-                style={styles.deleteButton}
-                textStyle={styles.deleteButtonText}
+                style={styles.addButton}
+                textStyle={styles.addButtonText}
               />
-            ) : null}
+              {isEditMode ? (
+                <AppButton
+                  title="Delete Pet"
+                  onPress={handleDeletePet}
+                  disabled={loading}
+                  variant="outline"
+                  size="sm"
+                  style={styles.deleteButton}
+                  textStyle={styles.deleteButtonText}
+                />
+              ) : null}
+            </View>
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -420,20 +437,10 @@ export default function RegisterPetScreen() {
   );
 }
 
-const buttonShadow = Platform.select({
-  ios: {
-    shadowColor: LoginTheme.buttonShadow,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  android: { elevation: 6 },
-});
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: LoginTheme.screenBg,
+    backgroundColor: '#FFF9F5',
   },
   safeArea: {
     flex: 1,
@@ -442,55 +449,78 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.sm,
+  },
+  formContainer: {
+    width: '100%',
+    maxWidth: 340,
+    alignSelf: 'center',
   },
   header: {
     marginTop: Spacing.xs,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+    alignItems: 'center',
   },
   title: {
     fontSize: 20,
-    lineHeight: 26,
-    color: LoginTheme.charcoal,
+    lineHeight: 24,
+    color: '#1A2B4E',
+    marginBottom: Spacing.xs,
+  },
+  accentLine: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#5CB35D',
     marginBottom: Spacing.xs,
   },
   subtitle: {
-    lineHeight: 18,
-    paddingHorizontal: Spacing.sm,
+    lineHeight: 16,
+    color: Palette.gray[500],
+    fontSize: 12,
   },
   inlineError: {
     marginTop: -Spacing.xs,
     marginBottom: Spacing.sm,
-    marginLeft: 2,
+    marginLeft: 4,
+    fontWeight: '600',
   },
   footer: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
     paddingTop: Spacing.xs,
+    backgroundColor: 'transparent',
   },
   addButton: {
     width: '100%',
-    minHeight: 48,
-    borderRadius: 24,
-    backgroundColor: LoginTheme.green,
-    paddingVertical: 12,
-    ...buttonShadow,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#5CB35D',
+    shadowColor: '#5CB35D',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 5,
+    borderWidth: 0,
   },
   addButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+    color: Palette.white,
+    letterSpacing: 0.5,
   },
   deleteButton: {
     width: '100%',
-    minHeight: 48,
-    borderRadius: 24,
+    height: 52,
+    borderRadius: 14,
     marginTop: Spacing.sm,
     borderColor: '#C62828',
+    borderWidth: 1.5,
   },
   deleteButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#C62828',
   },
 });

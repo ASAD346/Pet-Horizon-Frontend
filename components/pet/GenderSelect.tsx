@@ -5,11 +5,10 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { Palette, Radius, Spacing } from '../../constants/theme';
 
 const GENDERS = ['Male', 'Female'] as const;
 export type PetGender = (typeof GENDERS)[number];
@@ -24,14 +23,18 @@ export function GenderSelect({ value, onChange }: GenderSelectProps) {
 
   return (
     <View style={styles.wrapper}>
-      <AppText variant="bodySmall" weight="700" color={LoginTheme.charcoal} style={styles.label}>
+      <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Gender
       </AppText>
-      <TouchableOpacity style={styles.field} onPress={() => setOpen(true)} activeOpacity={0.8}>
-        <AppText variant="body" color={LoginTheme.charcoal} weight="500">
+      <TouchableOpacity 
+        style={[styles.field, open && styles.fieldActive]} 
+        onPress={() => setOpen(true)} 
+        activeOpacity={0.8}
+      >
+        <AppText variant="body" color={Palette.gray[800]} weight="600">
           {value}
         </AppText>
-        <Ionicons name="chevron-down" size={18} color={LoginTheme.inputPlaceholder} />
+        <Ionicons name="chevron-down" size={18} color="#5CB35D" />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
@@ -48,11 +51,14 @@ export function GenderSelect({ value, onChange }: GenderSelectProps) {
               >
                 <AppText
                   variant="body"
-                  weight={value === option ? '700' : '500'}
-                  color={value === option ? LoginTheme.green : LoginTheme.charcoal}
+                  weight={value === option ? '700' : '600'}
+                  color={value === option ? '#5CB35D' : Palette.gray[800]}
                 >
                   {option}
                 </AppText>
+                {value === option && (
+                  <Ionicons name="checkmark" size={18} color="#5CB35D" />
+                )}
               </TouchableOpacity>
             ))}
           </View>
@@ -62,52 +68,56 @@ export function GenderSelect({ value, onChange }: GenderSelectProps) {
   );
 }
 
-const fieldShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-  },
-  android: { elevation: 1 },
-});
-
 const styles = StyleSheet.create({
   wrapper: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   label: {
     marginBottom: Spacing.xs,
-    marginLeft: 2,
+    marginLeft: 4,
   },
   field: {
-    height: 42,
-    backgroundColor: LoginTheme.inputBg,
-    borderRadius: Radius.md,
+    height: 52,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
     paddingHorizontal: Spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    ...fieldShadow,
+    shadowColor: '#1A2B4E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.01,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  fieldActive: {
+    borderColor: '#5CB35D',
+    backgroundColor: Palette.white,
   },
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(26, 43, 78, 0.4)',
     justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
   },
   sheet: {
-    backgroundColor: LoginTheme.screenBg,
-    borderRadius: Radius.md,
+    backgroundColor: '#FFF9F5',
+    borderRadius: 18,
     overflow: 'hidden',
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    paddingVertical: Spacing.sm,
   },
   option: {
-    paddingVertical: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
     paddingHorizontal: Spacing.lg,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: LoginTheme.inputBg,
   },
   optionActive: {
-    backgroundColor: '#F0F7F0',
+    backgroundColor: 'rgba(92, 179, 93, 0.08)',
   },
 });

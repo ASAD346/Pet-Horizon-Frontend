@@ -77,6 +77,7 @@ import { LogVaccinationSheet } from '@/components/log-vaccination';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
+import { LoginHeaderDecor } from '@/components/auth/login';
 
 import type { GroomingRecord } from '@/types/grooming';
 

@@ -3,6 +3,7 @@ export interface RegisterPetFieldErrors {
   species?: string;
   breed?: string;
   weight?: string;
+  birthday?: string;
 }
 
 export function validateRegisterPetForm(
@@ -10,6 +11,7 @@ export function validateRegisterPetForm(
   species: string,
   breed: string,
   weight: string,
+  birthday: Date | null,
 ): RegisterPetFieldErrors {
   const errors: RegisterPetFieldErrors = {};
 
@@ -25,6 +27,10 @@ export function validateRegisterPetForm(
     errors.breed = 'Select a breed';
   }
 
+  if (!birthday) {
+    errors.birthday = 'Select birthday is required';
+  }
+
   if (weight.trim()) {
     const n = Number(weight);
     if (Number.isNaN(n) || n <= 0) {
@@ -36,5 +42,5 @@ export function validateRegisterPetForm(
 }
 
 export function hasRegisterPetFieldErrors(errors: RegisterPetFieldErrors): boolean {
-  return Boolean(errors.petName || errors.species || errors.breed || errors.weight);
+  return Boolean(errors.petName || errors.species || errors.breed || errors.weight || errors.birthday);
 }
