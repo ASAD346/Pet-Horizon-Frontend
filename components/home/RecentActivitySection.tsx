@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
@@ -8,7 +8,8 @@ import { HomeTheme, Spacing } from '../../constants/theme';
 
 export interface RecentActivityItem {
   id: string;
-  title: string;
+  actorName: string;
+  actionText: string;
   time: string;
   icon: 'walk' | 'silverware-fork-knife' | 'pill' | 'content-cut' | 'needle';
   color: string;
@@ -38,10 +39,16 @@ export function RecentActivitySection({ activities = [] }: RecentActivitySection
               materialIcon={item.icon}
               size={44}
               iconSize={22}
+              style={styles.iconBadge}
             />
             <View style={styles.textBlock}>
-              <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                {item.title}
+              <AppText variant="bodySmall">
+                <Text style={{ fontWeight: 'bold', color: HomeTheme.text }}>
+                  {item.actorName}
+                </Text>
+                <Text style={{ color: HomeTheme.textMuted }}>
+                  {' '}{item.actionText}
+                </Text>
               </AppText>
               <AppText variant="caption" color={HomeTheme.textMuted}>
                 {item.time}
@@ -67,5 +74,8 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: Spacing.sm,
     gap: 2,
+  },
+  iconBadge: {
+    alignSelf: 'center',
   },
 });

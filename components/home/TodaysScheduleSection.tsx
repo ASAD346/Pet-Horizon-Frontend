@@ -365,7 +365,7 @@ export function TodaysScheduleSection({
         medicineSchedules,
         groomingRecords,
         vaccinationSchedules,
-      ),
+      ).filter((row) => !rowIsDone(row) && !rowIsSkipped(row)),
     [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 

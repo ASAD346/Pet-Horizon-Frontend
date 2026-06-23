@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -74,6 +74,13 @@ import { LogWalkSheet } from '@/components/log-walk';
 
 import { LogVaccinationSheet } from '@/components/log-vaccination';
 
+import { useJournalEntries } from '@/hooks/useJournalEntries';
+import {
+  mapActivityTypeToCategory,
+  formatEntryTitle,
+  categoryToMaterialIcon,
+} from '@/lib/journal/journalMappers';
+
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
@@ -81,6 +88,8 @@ import { SkeletonScreenLayout } from '@/components/ui/skeletons';
 import { LoginHeaderDecor } from '@/components/auth/login';
 
 import type { GroomingRecord } from '@/types/grooming';
+import { fetchPetMembers } from '@/services/family/familyApi';
+import type { PetMemberRow } from '@/types/family';
 
 
 
@@ -99,6 +108,15 @@ function formatDateLabel(date: Date): string {
 }
 
 
+
+const ACTIVITY_COLORS: Record<string, { color: string; bg: string }> = {
+  food: { color: '#D97706', bg: '#FEF3C7' },
+  walk: { color: '#2563EB', bg: '#DBEAFE' },
+  medicine: { color: '#9333EA', bg: '#F3E8FF' },
+  grooming: { color: '#0D9488', bg: '#CCFBF1' },
+  vaccination: { color: '#DB2777', bg: '#FCE7F3' },
+  general: { color: '#4B5563', bg: '#F3F4F6' },
+};
 
 export default function HomeScreen() {
   const { clearance: tabBarClearance } = useTabBarLayout();
@@ -122,6 +140,24 @@ export default function HomeScreen() {
   const { tasks: dashboardTasks, loading: tasksLoading } = useUpcomingTasks(token);
 
   const { unreadCount } = useNotifications(token);
+
+  const { entries: journalEntries, reload: reloadJournal } = useJournalEntries(
+    token,
+    pet?._id ?? null,
+    Boolean(token && pet?._id),
+  );
+
+  const [familyMembers, setFamilyMembers] = useState<PetMemberRow[]>([]);
+
+  useEffect(() => {
+    if (token && pet?._id) {
+      fetchPetMembers(token, pet._id)
+        .then(setFamilyMembers)
+        .catch(() => setFamilyMembers([]));
+    } else {
+      setFamilyMembers([]);
+    }
+  }, [token, pet?._id]);
 
   const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
     token,
@@ -281,6 +317,45 @@ export default function HomeScreen() {
     !loading && Boolean(pet?.name) && isBirthdayToday(petBirthday);
   const petCardLoading = loading && !pet;
 
+  const recentActivities = useMemo(() => {
+    return journalEntries.slice(0, 5).map((entry) => {
+      const category = mapActivityTypeToCategory(entry.activityType);
+      const colors = ACTIVITY_COLORS[category] || ACTIVITY_COLORS.general;
+      
+      const date = new Date(entry.createdAt);
+      const isToday = new Date().toDateString() === date.toDateString();
+      const timeLabel = isToday
+        ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      const member = familyMembers.find((m) => m.userId?._id === entry.userId);
+      const actorName = entry.userId === user?._id 
+        ? 'You' 
+        : (member?.userId?.fullName ? member.userId.fullName : 'A family member');
+      
+      let actionText = entry.note ? entry.note.trim() : `logged ${category}`;
+      if (actionText.toLowerCase().startsWith('completed')) {
+        actionText = actionText.replace(/^[Cc]ompleted\s*/, 'completed ');
+      } else if (actionText.toLowerCase().startsWith('skipped')) {
+        actionText = actionText.replace(/^[Ss]kipped\s*/, 'skipped ');
+      } else if (actionText.toLowerCase().startsWith('logged')) {
+        actionText = actionText.replace(/^[Ll]ogged\s*/, 'logged ');
+      } else {
+        actionText = `logged ${category}: ${actionText}`;
+      }
+
+      return {
+        id: entry._id,
+        actorName,
+        actionText,
+        time: timeLabel,
+        icon: categoryToMaterialIcon(category) as any,
+        color: colors.color,
+        bg: colors.bg,
+      };
+    });
+  }, [journalEntries, user, familyMembers]);
+
 
 
   const userName = user?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? 'there';
@@ -350,6 +425,48 @@ export default function HomeScreen() {
   };
 
 
+
+  const handleCompleteFeeding = async (scheduleId: string) => {
+    if (completeFeeding) {
+      await completeFeeding(scheduleId);
+      void reloadJournal();
+    }
+  };
+
+  const handleSkipFeeding = async (scheduleId: string) => {
+    if (skipFeeding) {
+      await skipFeeding(scheduleId);
+      void reloadJournal();
+    }
+  };
+
+  const handleCompleteWalk = async (scheduleId: string) => {
+    if (completeWalk) {
+      await completeWalk(scheduleId);
+      void reloadJournal();
+    }
+  };
+
+  const handleCompleteMedicine = async (scheduleId: string) => {
+    if (completeMedicine) {
+      await completeMedicine(scheduleId);
+      void reloadJournal();
+    }
+  };
+
+  const handleCompleteGrooming = async (recordId: string) => {
+    if (completeGrooming) {
+      await completeGrooming(recordId);
+      void reloadJournal();
+    }
+  };
+
+  const handleCompleteVaccination = async (scheduleId: string) => {
+    if (completeVaccination) {
+      await completeVaccination(scheduleId);
+      void reloadJournal();
+    }
+  };
 
   if (petCardLoading) {
     return (
@@ -422,11 +539,11 @@ export default function HomeScreen() {
 
           <UpNextSection
             loading={scheduleLoading}
-            onLogFeeding={canEdit('feeding') ? completeFeeding : undefined}
-            onLogWalk={canEdit('walks') ? completeWalk : undefined}
-            onLogMedicine={canEdit('medicine') ? completeMedicine : undefined}
-            onLogGrooming={canEdit('grooming') ? completeGrooming : undefined}
-            onLogVaccination={canEdit('vaccination') ? completeVaccination : undefined}
+            onLogFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
+            onLogWalk={canEdit('walks') ? handleCompleteWalk : undefined}
+            onLogMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
+            onLogGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
+            onLogVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
             dashboardTasks={visibleDashboardTasks}
           />
 
@@ -442,16 +559,16 @@ export default function HomeScreen() {
             medicineActionId={medicineActionId}
             groomingActionId={groomingActionId}
             vaccinationActionId={vaccinationActionId}
-            onCompleteFeeding={canEdit('feeding') ? completeFeeding : undefined}
-            onSkipFeeding={canEdit('feeding') ? skipFeeding : undefined}
-            onCompleteWalk={canEdit('walks') ? completeWalk : undefined}
-            onCompleteMedicine={canEdit('medicine') ? completeMedicine : undefined}
-            onCompleteGrooming={canEdit('grooming') ? completeGrooming : undefined}
+            onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
+            onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
+            onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
+            onCompleteMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
+            onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
             onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
-            onCompleteVaccination={canEdit('vaccination') ? completeVaccination : undefined}
+            onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
           />
 
-          <RecentActivitySection />
+          <RecentActivitySection activities={recentActivities} />
         </ScrollView>
 
         <LogFoodSheet
@@ -459,7 +576,10 @@ export default function HomeScreen() {
           onClose={() => setLogFoodVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={() => reloadFeeding(true)}
+          onSaved={() => {
+            reloadFeeding(true);
+            void reloadJournal();
+          }}
         />
 
         <LogWalkSheet
@@ -467,7 +587,10 @@ export default function HomeScreen() {
           onClose={() => setLogWalkVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={() => reloadWalks(true)}
+          onSaved={() => {
+            reloadWalks(true);
+            void reloadJournal();
+          }}
         />
 
         <LogMedicineSheet
@@ -475,7 +598,10 @@ export default function HomeScreen() {
           onClose={() => setLogMedicineVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={() => reloadMedicine(true)}
+          onSaved={() => {
+            reloadMedicine(true);
+            void reloadJournal();
+          }}
         />
 
         <LogGroomingSheet
@@ -483,7 +609,10 @@ export default function HomeScreen() {
           onClose={() => setLogGroomingVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={() => reloadGrooming(true)}
+          onSaved={() => {
+            reloadGrooming(true);
+            void reloadJournal();
+          }}
         />
 
         <LogVaccinationSheet
@@ -491,7 +620,10 @@ export default function HomeScreen() {
           onClose={() => setLogVaccinationVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={() => reloadVaccination(true)}
+          onSaved={() => {
+            reloadVaccination(true);
+            void reloadJournal();
+          }}
         />
 
         <LogJournalSheet

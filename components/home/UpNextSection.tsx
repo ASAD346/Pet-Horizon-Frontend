@@ -128,22 +128,6 @@ export function UpNextSection({
   onLogVaccination,
   dashboardTasks = [],
 }: UpNextSectionProps) {
-  const showLoading = loading && dashboardTasks.length === 0;
-
-  if (showLoading) {
-    return (
-      <View style={styles.section}>
-        <SectionHeader title="Up Next" />
-        <View style={[homePillCard.card, { justifyContent: 'center', alignItems: 'center' }]}>
-          <ActivityIndicator size="small" color="#5CB35D" style={{ marginRight: Spacing.sm }} />
-          <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-            Loading tasks…
-          </AppText>
-        </View>
-      </View>
-    );
-  }
-
   if (dashboardTasks.length === 0) {
     return null;
   }
