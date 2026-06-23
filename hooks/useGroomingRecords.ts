@@ -8,6 +8,7 @@ import {
 } from '@/services/grooming/groomingApi';
 import type { GroomingRecord } from '@/types/grooming';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
+import { useToast } from '@/hooks/useToast';
 
 interface GroomingLoadResult {
   records: GroomingRecord[];
@@ -57,6 +58,8 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
     setLoading,
   });
 
+  const { showToast } = useToast();
+
   const completeGrooming = useCallback(
     async (recordId: string) => {
       if (!token) {
@@ -66,7 +69,8 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
       setActionId(recordId);
       try {
         await completeGroomingRecord(token, recordId);
-        await reload();
+        await reload(true);
+        showToast('Grooming marked done successfully!');
       } catch (error) {
         log.fail('Grooming', 'Complete action failed', getErrorMessage(error));
         throw error;
@@ -74,7 +78,7 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
         setActionId(null);
       }
     },
-    [token, reload],
+    [token, reload, showToast],
   );
 
   return {

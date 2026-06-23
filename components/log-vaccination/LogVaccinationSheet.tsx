@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { useToast } from '@/hooks/useToast';
 import {
   FormChipRow,
   FormPickerField,
@@ -109,6 +110,8 @@ export function LogVaccinationSheet({
     }
   }, [visible, resetForm, loadHistory]);
 
+  const { showToast } = useToast();
+
   const handleSave = async () => {
     if (!petId || !token) {
       setError('Add a pet before saving a vaccination.');
@@ -145,6 +148,7 @@ export function LogVaccinationSheet({
       log.ok('LogVaccination', 'Vaccination schedule saved', {
         vaccineName: vaccineName.trim(),
       });
+      showToast('Vaccination logged successfully!');
       onSaved?.();
       await loadHistory();
       onClose();

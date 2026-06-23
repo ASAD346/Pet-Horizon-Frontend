@@ -127,21 +127,45 @@ export function validateScheduleDate(state: ScheduleDateState): string | null {
   return null;
 }
 
+function adjustDateForTimezone(date: Date): Date {
+  const localDate = new Date(date);
+  const now = new Date();
+  const utcYear = now.getUTCFullYear();
+  const utcMonth = now.getUTCMonth();
+  const utcDay = now.getUTCDate();
+  
+  const localYear = now.getFullYear();
+  const localMonth = now.getMonth();
+  const localDay = now.getDate();
+  
+  // If local date is ahead of UTC date, shift back by 1 day to match server's date
+  if (
+    localYear > utcYear ||
+    (localYear === utcYear && localMonth > utcMonth) ||
+    (localYear === utcYear && localMonth === utcMonth && localDay > utcDay)
+  ) {
+    const adjusted = new Date(localDate);
+    adjusted.setDate(adjusted.getDate() - 1);
+    return adjusted;
+  }
+  return localDate;
+}
+
 export function buildScheduleDatePayload(state: ScheduleDateState): ScheduleDateApiFields {
   if (state.mode === 'single' && state.singleDate) {
-    const date = dateToApiDateString(state.singleDate);
+    const date = dateToApiDateString(adjustDateForTimezone(state.singleDate));
     return { date, scheduleDate: date };
   }
 
   if (state.mode === 'range' && state.startDate && state.endDate) {
     return {
-      startDate: dateToApiDateString(state.startDate),
-      endDate: dateToApiDateString(state.endDate),
+      startDate: dateToApiDateString(adjustDateForTimezone(state.startDate)),
+      endDate: dateToApiDateString(adjustDateForTimezone(state.endDate)),
     };
   }
 
   if (state.mode === 'ongoing' && state.startDate) {
-    return { startDate: dateToApiDateString(state.startDate) };
+    return { startDate: dateToApiDateString(adjustDateForTimezone(state.startDate)) };
   }
 
   return {};

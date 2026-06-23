@@ -77,6 +77,7 @@ import { LogVaccinationSheet } from '@/components/log-vaccination';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
+import { SkeletonScreenLayout } from '@/components/ui/skeletons';
 import { LoginHeaderDecor } from '@/components/auth/login';
 
 import type { GroomingRecord } from '@/types/grooming';
@@ -222,14 +223,45 @@ export default function HomeScreen() {
   const visibleGroomingRecords = canView('grooming') ? groomingRecords : [];
   const visibleVaccinationSchedules = canView('vaccination') ? vaccinationSchedules : [];
 
-  const visibleDashboardTasks = useMemo(
-    () =>
-      dashboardTasks.filter((task) => {
-        const moduleId = dashboardTaskModule(task);
-        return moduleId ? canView(moduleId) : false;
-      }),
-    [dashboardTasks, canView],
-  );
+  const visibleDashboardTasks = useMemo(() => {
+    const activeScheduleIds = new Set<string>();
+    visibleFeedingSchedules.forEach((s: any) => {
+      if (s._id) activeScheduleIds.add(s._id);
+      if (s.id) activeScheduleIds.add(s.id);
+    });
+    visibleWalkSchedules.forEach((s: any) => {
+      if (s._id) activeScheduleIds.add(s._id);
+      if (s.id) activeScheduleIds.add(s.id);
+    });
+    visibleMedicineSchedules.forEach((s: any) => {
+      if (s._id) activeScheduleIds.add(s._id);
+      if (s.id) activeScheduleIds.add(s.id);
+    });
+    visibleGroomingRecords.forEach((s: any) => {
+      if (s._id) activeScheduleIds.add(s._id);
+      if (s.id) activeScheduleIds.add(s.id);
+    });
+    visibleVaccinationSchedules.forEach((s: any) => {
+      if (s._id) activeScheduleIds.add(s._id);
+      if (s.id) activeScheduleIds.add(s.id);
+    });
+
+    return dashboardTasks.filter((task) => {
+      if (activeScheduleIds.has(task.id)) {
+        return false;
+      }
+      const moduleId = dashboardTaskModule(task);
+      return moduleId ? canView(moduleId) : false;
+    });
+  }, [
+    dashboardTasks,
+    canView,
+    visibleFeedingSchedules,
+    visibleWalkSchedules,
+    visibleMedicineSchedules,
+    visibleGroomingRecords,
+    visibleVaccinationSchedules,
+  ]);
 
 
 
@@ -319,6 +351,16 @@ export default function HomeScreen() {
 
 
 
+  if (petCardLoading) {
+    return (
+      <View style={styles.root}>
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <SkeletonScreenLayout />
+        </SafeAreaView>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.root}>
       <LoginHeaderDecor />
@@ -379,17 +421,7 @@ export default function HomeScreen() {
           />
 
           <UpNextSection
-            feedingSchedules={visibleFeedingSchedules}
-            walkSchedules={visibleWalkSchedules}
-            medicineSchedules={visibleMedicineSchedules}
-            groomingRecords={visibleGroomingRecords}
-            vaccinationSchedules={visibleVaccinationSchedules}
             loading={scheduleLoading}
-            feedingActionId={feedingActionId}
-            walkActionId={walkActionId}
-            medicineActionId={medicineActionId}
-            groomingActionId={groomingActionId}
-            vaccinationActionId={vaccinationActionId}
             onLogFeeding={canEdit('feeding') ? completeFeeding : undefined}
             onLogWalk={canEdit('walks') ? completeWalk : undefined}
             onLogMedicine={canEdit('medicine') ? completeMedicine : undefined}
@@ -427,7 +459,7 @@ export default function HomeScreen() {
           onClose={() => setLogFoodVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={reloadFeeding}
+          onSaved={() => reloadFeeding(true)}
         />
 
         <LogWalkSheet
@@ -435,7 +467,7 @@ export default function HomeScreen() {
           onClose={() => setLogWalkVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={reloadWalks}
+          onSaved={() => reloadWalks(true)}
         />
 
         <LogMedicineSheet
@@ -443,7 +475,7 @@ export default function HomeScreen() {
           onClose={() => setLogMedicineVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={reloadMedicine}
+          onSaved={() => reloadMedicine(true)}
         />
 
         <LogGroomingSheet
@@ -451,7 +483,7 @@ export default function HomeScreen() {
           onClose={() => setLogGroomingVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={reloadGrooming}
+          onSaved={() => reloadGrooming(true)}
         />
 
         <LogVaccinationSheet
@@ -459,7 +491,7 @@ export default function HomeScreen() {
           onClose={() => setLogVaccinationVisible(false)}
           petId={pet?._id ?? null}
           token={token}
-          onSaved={reloadVaccination}
+          onSaved={() => reloadVaccination(true)}
         />
 
         <LogJournalSheet

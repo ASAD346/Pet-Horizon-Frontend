@@ -14,6 +14,7 @@ import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { createGroomingRecord, fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useToast } from '@/hooks/useToast';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import {
   FormChipRow,
@@ -92,6 +93,8 @@ export function LogGroomingSheet({
     }
   }, [visible, resetForm, loadTypes]);
 
+  const { showToast } = useToast();
+
   const handleSave = async () => {
     if (!petId || !token) {
       setError('Add a pet before saving a grooming task.');
@@ -127,6 +130,7 @@ export function LogGroomingSheet({
       log.ok('LogGrooming', 'Grooming record saved', {
         type: groomingType,
       });
+      showToast('Grooming logged successfully!');
       onSaved?.();
       onClose();
     } catch (e) {

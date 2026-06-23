@@ -22,6 +22,7 @@ import {
 import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
 import React, { useCallback, useEffect, useState } from 'react';
+import { useToast } from '@/hooks/useToast';
 import { View } from 'react-native';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import {
@@ -148,6 +149,8 @@ export function LogFoodSheet({
     }
   }, [visible, resetForm, loadSpeciesFeatures]);
 
+  const { showToast } = useToast();
+
   const handleSave = async () => {
     if (!petId || !token) {
       setError('Add a pet before saving a feeding schedule.');
@@ -192,6 +195,7 @@ export function LogFoodSheet({
         ...buildScheduleDatePayload(scheduleDate),
       });
       log.ok('LogFood', 'Feeding schedule saved', { mealType, time: timeHHmm, unit });
+      showToast('Food logged successfully!');
       onSaved?.();
       onClose();
     } catch (e) {

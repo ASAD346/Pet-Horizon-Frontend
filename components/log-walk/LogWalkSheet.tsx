@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { useToast } from '@/hooks/useToast';
 import {
   FormChipRow,
   FormPickerField,
@@ -90,6 +91,8 @@ export function LogWalkSheet({
     }
   }, [visible, resetForm]);
 
+  const { showToast } = useToast();
+
   const handleSave = async () => {
     if (!petId || !token) {
       setError('Add a pet before saving a walk schedule.');
@@ -125,6 +128,7 @@ export function LogWalkSheet({
         ...buildScheduleDatePayload(scheduleDate),
       });
       log.ok('LogWalk', 'Walk schedule saved', { walkTime, time: timeHHmm, duration: durationMinutes });
+      showToast('Walk logged successfully!');
       onSaved?.();
       onClose();
     } catch (e) {

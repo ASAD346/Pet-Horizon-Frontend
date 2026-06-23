@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { useToast } from '@/hooks/useToast';
 import {
   FormChipRow,
   FormMultiChipRow,
@@ -109,6 +110,8 @@ export function LogMedicineSheet({
     );
   };
 
+  const { showToast } = useToast();
+
   const handleSave = async () => {
     if (!petId || !token) {
       setError('Add a pet before saving a medicine schedule.');
@@ -172,6 +175,7 @@ export function LogMedicineSheet({
         time: timeHHmm,
         frequency,
       });
+      showToast('Medicine logged successfully!');
       onSaved?.();
       onClose();
     } catch (e) {

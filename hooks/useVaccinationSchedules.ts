@@ -11,6 +11,7 @@ import {
 } from '@/services/schedules/vaccinationApi';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
+import { useToast } from '@/hooks/useToast';
 
 export function useVaccinationSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<VaccinationScheduleItem[]>([]);
@@ -38,6 +39,8 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
     setLoading,
   });
 
+  const { showToast } = useToast();
+
   const completeVaccination = useCallback(
     async (scheduleId: string) => {
       if (!token) {
@@ -61,7 +64,8 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
       setActionId(scheduleId);
       try {
         await completeVaccinationSchedule(token, scheduleId, body);
-        await reload();
+        await reload(true);
+        showToast('Vaccination marked done successfully!');
       } catch (error) {
         log.fail('Vaccination', 'Complete action failed', getErrorMessage(error));
         throw error;
@@ -69,7 +73,7 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
         setActionId(null);
       }
     },
-    [token, reload, schedules],
+    [token, reload, schedules, showToast],
   );
 
   return {

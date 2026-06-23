@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from './ColorIconBadge';
@@ -208,8 +208,8 @@ function ScheduleRowCard({
     setCompleteBusy(true);
     try {
       await onComplete(rowId(row));
-    } catch (e) {
-      // error handled by hook
+    } catch (e: any) {
+      Alert.alert('Action Failed', e?.message || 'Could not complete the schedule.');
     } finally {
       setCompleteBusy(false);
     }
@@ -220,8 +220,8 @@ function ScheduleRowCard({
     setSkipBusy(true);
     try {
       await onSkipFeeding(rowId(row));
-    } catch (e) {
-      // error handled by hook
+    } catch (e: any) {
+      Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
     } finally {
       setSkipBusy(false);
     }

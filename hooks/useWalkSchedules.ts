@@ -4,6 +4,7 @@ import { log } from '@/lib/log';
 import { completeWalkSchedule, fetchTodayWalkSchedules } from '@/services/schedules/walkApi';
 import type { WalkScheduleItem } from '@/types/walk';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
+import { useToast } from '@/hooks/useToast';
 
 export function useWalkSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<WalkScheduleItem[]>([]);
@@ -31,6 +32,8 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
     setLoading,
   });
 
+  const { showToast } = useToast();
+
   const completeWalk = useCallback(
     async (scheduleId: string) => {
       if (!token) {
@@ -40,7 +43,8 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
       setActionId(scheduleId);
       try {
         await completeWalkSchedule(token, scheduleId, { status: 'done' });
-        await reload();
+        await reload(true);
+        showToast('Walk marked done successfully!');
       } catch (error) {
         log.fail('Walk', 'Complete action failed', getErrorMessage(error));
         throw error;
@@ -48,7 +52,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
         setActionId(null);
       }
     },
-    [token, reload],
+    [token, reload, showToast],
   );
 
   return {

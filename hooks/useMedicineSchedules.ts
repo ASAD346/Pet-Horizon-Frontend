@@ -7,6 +7,7 @@ import {
 } from '@/services/schedules/medicineApi';
 import type { MedicineScheduleItem } from '@/types/medicine';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
+import { useToast } from '@/hooks/useToast';
 
 export function useMedicineSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<MedicineScheduleItem[]>([]);
@@ -34,6 +35,8 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
     setLoading,
   });
 
+  const { showToast } = useToast();
+
   const completeMedicine = useCallback(
     async (scheduleId: string) => {
       if (!token) {
@@ -43,7 +46,8 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
       setActionId(scheduleId);
       try {
         await completeMedicineSchedule(token, scheduleId, { status: 'done' });
-        await reload();
+        await reload(true);
+        showToast('Medicine marked done successfully!');
       } catch (error) {
         log.fail('Medicine', 'Complete action failed', getErrorMessage(error));
         throw error;
@@ -51,7 +55,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
         setActionId(null);
       }
     },
-    [token, reload],
+    [token, reload, showToast],
   );
 
   return {

@@ -31,14 +31,14 @@ export function useStaleFocusLoader<T>({
       return;
     }
 
-    const block = shouldBlockUI();
-    
-    // Skip loading if already loaded and not forced (e.g. background focus refresh)
-    if (!block && !force) {
-      return;
-    }
+    const block = shouldBlockUI() || force;
 
-    if (block) setLoading(true);
+    if (block) {
+      if (shouldBlockUI()) {
+        onClear();
+      }
+      setLoading(true);
+    }
 
     try {
       const data = await load();
