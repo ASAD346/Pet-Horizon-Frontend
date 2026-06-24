@@ -11,11 +11,11 @@ export const ProfileTheme = {
   green: HomeTheme.cardGreen,
   navy: LoginTheme.brandHorizon,
   border: '#E8E8E8',
-  // Royal Gold premium palette
-  premiumGradientStart: '#7A5500',
-  premiumGradientEnd: '#D4A017',
+  // Premium Deep Emerald + Gold combination
+  premiumGradientStart: '#0E3821',
+  premiumGradientEnd: '#267343',
   premiumGold: '#D4A017',
-  premiumGoldDark: '#7A5500',
+  premiumGoldDark: '#0E3821',      // elegant dark emerald for text/shadows
   premiumGoldLight: '#FFF9E6',
 } as const;
 

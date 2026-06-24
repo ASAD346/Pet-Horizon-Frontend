@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
 import { AppButton } from '@/components/ui/AppButton';
 import { Radius, Spacing } from '@/constants/theme';
@@ -12,26 +13,33 @@ interface PremiumUpgradeBannerProps {
 
 export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerProps) {
   return (
-    <View style={styles.banner}>
-      <View style={styles.iconWrap}>
-        <Ionicons name="diamond" size={22} color="#FFF176" />
-      </View>
-      <View style={styles.textBlock}>
-        <AppText variant="body" weight="800" color="#FFFFFF">
-          Unlock Full Potential
-        </AppText>
-        <AppText variant="bodySmall" color="rgba(255,255,255,0.85)" style={styles.subtitle}>
-          Experience Pet Horizon without limits.
-        </AppText>
-      </View>
-      <AppButton
-        title="Upgrade Now"
-        onPress={onUpgradePress}
-        variant="ghost"
-        size="sm"
-        style={styles.btn}
-        textStyle={styles.btnText}
-      />
+    <View style={styles.wrapper}>
+      <LinearGradient
+        colors={[ProfileTheme.premiumGradientStart, ProfileTheme.premiumGradientEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.banner}
+      >
+        <View style={styles.iconWrap}>
+          <Ionicons name="diamond" size={22} color="#FFF176" />
+        </View>
+        <View style={styles.textBlock}>
+          <AppText variant="body" weight="800" color="#FFFFFF">
+            Unlock Full Potential
+          </AppText>
+          <AppText variant="bodySmall" color="rgba(255,255,255,0.85)" style={styles.subtitle}>
+            Experience Pet Horizon without limits.
+          </AppText>
+        </View>
+        <AppButton
+          title="Upgrade Now"
+          onPress={onUpgradePress}
+          variant="ghost"
+          size="sm"
+          style={styles.btn}
+          textStyle={styles.btnText}
+        />
+      </LinearGradient>
     </View>
   );
 }
@@ -40,20 +48,24 @@ const bannerShadow = Platform.select({
   ios: {
     shadowColor: ProfileTheme.premiumGoldDark,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.25,
     shadowRadius: 8,
   },
   android: { elevation: 4 },
 });
 
 const styles = StyleSheet.create({
-  banner: {
-    backgroundColor: ProfileTheme.premiumGradientStart,
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
+  wrapper: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
+    borderRadius: Radius.xl,
     ...bannerShadow,
+  },
+  banner: {
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+    borderWidth: 1.5,
+    borderColor: '#D4A017',
   },
   iconWrap: {
     width: 40,

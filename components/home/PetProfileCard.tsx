@@ -48,23 +48,23 @@ export function PetProfileCard({
     return <SkeletonPetProfileCard />;
   }
 
-  // Royal Gold for Premium, Emerald Forest for Free
+  // Deep Forest Emerald gradient for Premium with gold trim, vibrant brand green for Free (same as header)
   const gradientColors = isPremium 
-    ? (['#7A5500', '#B8860B', '#D4A017'] as const)
-    : (['#429B46', '#266B2A'] as const);
+    ? (['#0E3821', '#184F2E', '#267343'] as const)
+    : (['#3A8F3B', '#5CB35D'] as const);
 
-  const shadowColor = isPremium ? '#5C3D00' : '#266B2A';
-  const borderColor = isPremium ? 'rgba(255, 220, 80, 0.35)' : 'rgba(255, 255, 255, 0.16)';
+  const shadowColor = isPremium ? '#082113' : '#1B5E20';
+  const borderColor = isPremium ? '#D4A017' : 'rgba(255, 255, 255, 0.16)';
 
   // Ensure gender is a safe string before processing
   const safeGender = gender || '—';
   const genderIconName = safeGender.toLowerCase() === 'male' 
     ? 'gender-male' 
     : safeGender.toLowerCase() === 'female' 
-      ? 'gender-female' 
-      : 'gender-male-female';
+    ? 'gender-female' 
+    : 'gender-male-female';
 
-  const badgeIconColor = isPremium ? '#7A5500' : '#429B46';
+  const badgeIconColor = isPremium ? '#184F2E' : '#429B46';
   const goldColor = '#FFF176';           // bright lemon gold — pops on dark amber
   const textAccentColor = isPremium ? '#FFF9E6' : '#FFFFFF';
 
@@ -74,7 +74,13 @@ export function PetProfileCard({
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={[styles.gradient, { borderWidth: 1, borderColor }]}
+        style={[
+          styles.gradient, 
+          { 
+            borderWidth: isPremium ? 1.5 : 1, 
+            borderColor 
+          }
+        ]}
       >
         {/* Soft Background Accent Circles */}
         <View style={styles.bgCircle1} />
@@ -103,7 +109,14 @@ export function PetProfileCard({
 
         <View style={styles.top}>
           <View style={styles.avatarContainer}>
-            <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
+            <Image 
+              source={avatarSource} 
+              style={[
+                styles.avatar, 
+                { borderColor: isPremium ? '#D4A017' : 'rgba(255,255,255,0.95)' }
+              ]} 
+              contentFit="cover" 
+            />
             <View style={[styles.avatarBadge, { borderColor: isPremium ? '#D4A017' : '#429B46' }]}>
               <MaterialCommunityIcons name="swap-horizontal" size={11} color={badgeIconColor} />
             </View>
@@ -133,12 +146,12 @@ export function PetProfileCard({
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, isPremium && { backgroundColor: 'rgba(212, 160, 23, 0.4)' }]} />
 
         <View style={styles.stats}>
-          <StatColumn label="Plan" value={activity} icon="star-circle-outline" />
-          <StatColumn label="Weight" value={health} icon="weight-kilogram" />
-          <StatColumn label="Status" value={mood} icon="heart-pulse" />
+          <StatColumn label="Plan" value={activity} icon="star-circle-outline" isPremium={isPremium} />
+          <StatColumn label="Weight" value={health} icon="weight-kilogram" isPremium={isPremium} />
+          <StatColumn label="Status" value={mood} icon="heart-pulse" isPremium={isPremium} />
         </View>
       </LinearGradient>
     </CardWrapper>
@@ -149,11 +162,12 @@ interface StatColumnProps {
   label: string;
   value: string;
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  isPremium?: boolean;
 }
 
-function StatColumn({ label, value, icon }: StatColumnProps) {
+function StatColumn({ label, value, icon, isPremium = false }: StatColumnProps) {
   return (
-    <View style={styles.statCol}>
+    <View style={[styles.statCol, isPremium && { borderColor: 'rgba(212, 160, 23, 0.25)', backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}>
       <View style={styles.statLabelRow}>
         <MaterialCommunityIcons name={icon} size={12} color="rgba(255,255,255,0.8)" style={styles.statIcon} />
         <AppText variant="caption" weight="800" color="rgba(255,255,255,0.7)" style={styles.statLabel}>

@@ -488,6 +488,7 @@ export default function HomeScreen() {
           onNotificationsPress={() => router.push('/notifications' as Href)}
           showJournal={canViewJournal}
           topInset={insets.top}
+          isPremium={isPremium}
         />
         <View style={styles.skeletonArea}>
           <SkeletonScreenLayout />
@@ -509,6 +510,7 @@ export default function HomeScreen() {
         onNotificationsPress={() => router.push('/notifications' as Href)}
         showJournal={canViewJournal}
         topInset={insets.top}
+        isPremium={isPremium}
       />
 
       {/* Scrollable content area below the sticky header */}
@@ -680,7 +682,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#3A8F3B',   // Green fills behind status bar (matches header)
+    backgroundColor: '#FFF9F5',   // Matches the ScrollView cream background so curved header corners are visible
   },
   scroll: {
     flex: 1,

@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { HapticTab } from '@/components/haptic-tab';
@@ -22,11 +23,16 @@ function TabIcon({ focused, activeIcon, inactiveIcon }: TabIconProps) {
   return (
     <View style={styles.tabSlot}>
       {focused ? (
-        <View style={styles.tabCircleActive}>
+        <LinearGradient
+          colors={['#3A8F3B', '#5CB35D']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.tabCircleActive}
+        >
           <Ionicons name={activeIcon} size={TAB_ICON_SIZE} color={HomeTheme.white} />
-        </View>
+        </LinearGradient>
       ) : (
-        <Ionicons name={inactiveIcon} size={TAB_INACTIVE_ICON_SIZE} color={HomeTheme.text} />
+        <Ionicons name={inactiveIcon} size={TAB_INACTIVE_ICON_SIZE} color="#7A869A" />
       )}
     </View>
   );
@@ -115,16 +121,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderRadius: TAB_BAR_HEIGHT / 2,
     backgroundColor: HomeTheme.surface,
-    borderTopWidth: 0,
+    borderWidth: 1.2,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
     paddingHorizontal: 8,
     paddingTop: 0,
     paddingBottom: 0,
-    overflow: 'hidden',
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
+    overflow: 'visible',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+    }),
   },
   tabBarItem: {
     flex: 1,
@@ -156,8 +169,18 @@ const styles = StyleSheet.create({
     width: TAB_SLOT_SIZE,
     height: TAB_SLOT_SIZE,
     borderRadius: TAB_SLOT_SIZE / 2,
-    backgroundColor: HomeTheme.cardGreen,
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#3A8F3B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.35,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
 });
