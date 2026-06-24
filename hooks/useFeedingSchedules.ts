@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -11,6 +12,7 @@ import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
 
 export function useFeedingSchedules(token: string | null, petId: string | null | undefined) {
+  const queryClient = useQueryClient();
   const [schedules, setSchedules] = useState<FeedingScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -52,6 +54,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       );
       try {
         await completeFeedingSchedule(token, scheduleId, { status: 'done' });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Feeding marked done successfully!');
       } catch (error) {
@@ -65,7 +68,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         setActionId(null);
       }
     },
-    [token, reload, showToast],
+    [token, reload, showToast, queryClient, petId],
   );
 
   const skipFeeding = useCallback(
@@ -81,6 +84,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       );
       try {
         await skipFeedingSchedule(token, scheduleId);
+        queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Feeding skipped successfully!');
       } catch (error) {
@@ -94,7 +98,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         setActionId(null);
       }
     },
-    [token, reload, showToast],
+    [token, reload, showToast, queryClient, petId],
   );
 
   return {

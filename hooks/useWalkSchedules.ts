@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { completeWalkSchedule, fetchTodayWalkSchedules } from '@/services/schedules/walkApi';
@@ -7,6 +8,7 @@ import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
 
 export function useWalkSchedules(token: string | null, petId: string | null | undefined) {
+  const queryClient = useQueryClient();
   const [schedules, setSchedules] = useState<WalkScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -48,6 +50,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
       );
       try {
         await completeWalkSchedule(token, scheduleId, { status: 'done' });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Walk marked done successfully!');
       } catch (error) {
@@ -61,7 +64,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
         setActionId(null);
       }
     },
-    [token, reload, showToast],
+    [token, reload, showToast, queryClient, petId],
   );
 
   return {

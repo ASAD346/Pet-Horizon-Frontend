@@ -193,12 +193,33 @@ export default function HomeScreen() {
   ]);
 
   const profileStats = dashboardData?.activePet;
+  const isPremium = profileStats?.isPremium ?? user?.premiumStatus === 'premium';
 
   const profile = useMemo(() => {
     let baseProfile: any = null;
-    if (profileStats && profileStats.petId === pet?._id) baseProfile = profileStats;
-    else if (pet) baseProfile = petToProfileProps(pet);
-    else if (profileStats) baseProfile = profileStats;
+    if (profileStats && profileStats.petId === pet?._id) {
+      baseProfile = {
+        ...profileStats,
+        activity: profileStats.plan ? String(profileStats.plan).toUpperCase() : 'FREE',
+        health: profileStats.weight != null ? `${profileStats.weight} ${String(profileStats.weightUnit || 'kg').toUpperCase()}` : '—',
+        mood: profileStats.isPremium ? 'Premium' : 'Free',
+      };
+    } else if (pet) {
+      const mapped = petToProfileProps(pet);
+      baseProfile = {
+        ...mapped,
+        activity: isPremium ? 'PREMIUM' : 'FREE',
+        health: mapped.weight,
+        mood: isPremium ? 'Premium' : 'Free',
+      };
+    } else if (profileStats) {
+      baseProfile = {
+        ...profileStats,
+        activity: profileStats.plan ? String(profileStats.plan).toUpperCase() : 'FREE',
+        health: profileStats.weight != null ? `${profileStats.weight} ${String(profileStats.weightUnit || 'kg').toUpperCase()}` : '—',
+        mood: profileStats.isPremium ? 'Premium' : 'Free',
+      };
+    }
 
     if (baseProfile) {
       return {
@@ -207,7 +228,7 @@ export default function HomeScreen() {
       };
     }
     return null;
-  }, [pet, profileStats]);
+  }, [pet, profileStats, isPremium]);
 
   const petImageUrl = resolveMediaUrl(
     profileStats?.petId === pet?._id ? profileStats?.photoUrl ?? pet?.image : pet?.image,
@@ -300,8 +321,6 @@ export default function HomeScreen() {
     await reloadPets();
     setPetSwitcherVisible(false);
   }, [token, switchPet, user, setSession, reloadPet, reloadPets]);
-
-  const isPremium = profileStats?.isPremium ?? user?.premiumStatus === 'premium';
 
   const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {

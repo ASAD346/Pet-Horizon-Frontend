@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -10,6 +11,7 @@ import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
 
 export function useMedicineSchedules(token: string | null, petId: string | null | undefined) {
+  const queryClient = useQueryClient();
   const [schedules, setSchedules] = useState<MedicineScheduleItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
@@ -51,6 +53,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
       );
       try {
         await completeMedicineSchedule(token, scheduleId, { status: 'done' });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Medicine marked done successfully!');
       } catch (error) {
@@ -64,7 +67,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
         setActionId(null);
       }
     },
-    [token, reload, showToast],
+    [token, reload, showToast, queryClient, petId],
   );
 
   return {

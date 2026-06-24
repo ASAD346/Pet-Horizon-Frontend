@@ -1,13 +1,8 @@
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { fetchUnifiedDashboard } from '@/services/dashboard/dashboardApi';
 import type { UnifiedDashboardData } from '@/types/dashboard';
-import { completeFeedingSchedule, skipFeedingSchedule } from '@/services/schedules/feedingApi';
-import { completeWalkSchedule } from '@/services/schedules/walkApi';
-import { completeMedicineSchedule } from '@/services/schedules/medicineApi';
-import { completeGroomingRecord } from '@/services/grooming/groomingApi';
-import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
 
 // Hook for Pet Profile Segment
 export function usePetProfileQuery(token: string | null, petId: string | null | undefined) {
@@ -24,14 +19,14 @@ export function usePetProfileQuery(token: string | null, petId: string | null | 
   }, [petId]);
 
   const query = useQuery({
-    queryKey: ['dashboard', 'profile', petId],
+    queryKey: ['dashboard', petId],
     queryFn: async () => {
-      const data = await fetchUnifiedDashboard(token!);
-      return data.activePet;
+      return fetchUnifiedDashboard(token!);
     },
+    select: (data) => data.activePet,
     enabled: Boolean(token && petId),
     staleTime: 1000 * 60 * 5,
-    placeholderData: cached ?? undefined,
+    placeholderData: cached ? { activePet: cached } as any : undefined,
   });
 
   useEffect(() => {
@@ -58,14 +53,14 @@ export function useTodaySchedulesQuery(token: string | null, petId: string | nul
   }, [petId]);
 
   const query = useQuery({
-    queryKey: ['dashboard', 'schedules', petId],
+    queryKey: ['dashboard', petId],
     queryFn: async () => {
-      const data = await fetchUnifiedDashboard(token!);
-      return data.todaySchedules;
+      return fetchUnifiedDashboard(token!);
     },
+    select: (data) => data.todaySchedules,
     enabled: Boolean(token && petId),
     staleTime: 1000 * 60 * 5,
-    placeholderData: cached ?? undefined,
+    placeholderData: cached ? { todaySchedules: cached } as any : undefined,
   });
 
   useEffect(() => {
@@ -92,14 +87,14 @@ export function useUpcomingTasksQuery(token: string | null, petId: string | null
   }, [petId]);
 
   const query = useQuery({
-    queryKey: ['dashboard', 'upcomingTasks', petId],
+    queryKey: ['dashboard', petId],
     queryFn: async () => {
-      const data = await fetchUnifiedDashboard(token!);
-      return data.upcomingTasks;
+      return fetchUnifiedDashboard(token!);
     },
+    select: (data) => data.upcomingTasks,
     enabled: Boolean(token && petId),
     staleTime: 1000 * 60 * 5,
-    placeholderData: cached ?? undefined,
+    placeholderData: cached ? { upcomingTasks: cached } as any : undefined,
   });
 
   useEffect(() => {
@@ -126,14 +121,14 @@ export function useNotificationsQuery(token: string | null, petId: string | null
   }, [petId]);
 
   const query = useQuery({
-    queryKey: ['dashboard', 'notifications', petId],
+    queryKey: ['dashboard', petId],
     queryFn: async () => {
-      const data = await fetchUnifiedDashboard(token!);
-      return data.notifications;
+      return fetchUnifiedDashboard(token!);
     },
+    select: (data) => data.notifications,
     enabled: Boolean(token && petId),
     staleTime: 1000 * 60 * 5,
-    placeholderData: cached ?? undefined,
+    placeholderData: cached ? { notifications: cached } as any : undefined,
   });
 
   useEffect(() => {
@@ -160,14 +155,14 @@ export function useRecentActivitiesQuery(token: string | null, petId: string | n
   }, [petId]);
 
   const query = useQuery({
-    queryKey: ['dashboard', 'recentActivities', petId],
+    queryKey: ['dashboard', petId],
     queryFn: async () => {
-      const data = await fetchUnifiedDashboard(token!);
-      return data.recentActivities;
+      return fetchUnifiedDashboard(token!);
     },
+    select: (data) => data.recentActivities,
     enabled: Boolean(token && petId),
     staleTime: 1000 * 60 * 5,
-    placeholderData: cached ?? undefined,
+    placeholderData: cached ? { recentActivities: cached } as any : undefined,
   });
 
   useEffect(() => {
@@ -178,3 +173,4 @@ export function useRecentActivitiesQuery(token: string | null, petId: string | n
 
   return query;
 }
+
