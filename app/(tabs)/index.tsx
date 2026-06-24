@@ -558,6 +558,7 @@ export default function HomeScreen() {
           groomingVisible={groomingVisible}
           canView={canView}
           canEdit={canEdit}
+          isPremium={isPremium}
         />
 
         <UpNextSection
@@ -682,11 +683,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FFF9F5',   // Matches the ScrollView cream background so curved header corners are visible
+    backgroundColor: '#F1F7F1',   // Matches the ScrollView soft green background so curved header corners are visible
   },
   scroll: {
     flex: 1,
-    backgroundColor: '#FFF9F5',
+    backgroundColor: '#F1F7F1',
   },
   content: {
     paddingHorizontal: Spacing.lg,
@@ -694,7 +695,7 @@ const styles = StyleSheet.create({
   },
   skeletonArea: {
     flex: 1,
-    backgroundColor: '#FFF9F5',
+    backgroundColor: '#F1F7F1',
   },
 });
 

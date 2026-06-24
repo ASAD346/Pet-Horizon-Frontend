@@ -15,9 +15,6 @@ interface ActionItem {
   label: string;
   displayLabel: string;
   icon: ActionIcon;
-  colors: [string, string];
-  tint: string;
-  plusBg: string;
   subText: string;
 }
 
@@ -26,45 +23,30 @@ const ACTIONS: ActionItem[] = [
     label: 'Log Food',
     displayLabel: 'Food',
     icon: 'silverware-fork-knife',
-    colors: ['#FFF8F0', '#FFEEDB'],
-    tint: '#E65100',
-    plusBg: 'rgba(230, 81, 0, 0.08)',
     subText: 'Log meal',
   },
   {
     label: 'Log Walk',
     displayLabel: 'Walk',
     icon: 'walk',
-    colors: ['#F1F9F1', '#E1F3E2'],
-    tint: '#1B5E20',
-    plusBg: 'rgba(27, 94, 32, 0.08)',
     subText: 'Track route',
   },
   {
     label: 'Medicine',
     displayLabel: 'Meds',
     icon: 'pill',
-    colors: ['#F0F7FF', '#E1F0FF'],
-    tint: '#0D47A1',
-    plusBg: 'rgba(13, 71, 161, 0.08)',
     subText: 'Add dose',
   },
   {
     label: 'Grooming',
     displayLabel: 'Grooming',
     icon: 'content-cut',
-    colors: ['#FFF0F6', '#FFE1F0'],
-    tint: '#880E4F',
-    plusBg: 'rgba(136, 14, 79, 0.08)',
     subText: 'Style pet',
   },
   {
     label: 'Vaccination',
     displayLabel: 'Vaccine',
     icon: 'needle',
-    colors: ['#F6F0FF', '#EBE0FF'],
-    tint: '#4A148C',
-    plusBg: 'rgba(74, 20, 140, 0.08)',
     subText: 'Add shot',
   },
 ];
@@ -78,6 +60,7 @@ interface QuickActionsSectionProps {
   groomingVisible?: boolean;
   canView?: (moduleId: AppModuleId) => boolean;
   canEdit?: (moduleId: AppModuleId) => boolean;
+  isPremium?: boolean;
 }
 
 const ACTION_HANDLERS: Record<
@@ -100,6 +83,7 @@ export function QuickActionsSection({
   groomingVisible = true,
   canView,
   canEdit,
+  isPremium = false,
 }: QuickActionsSectionProps) {
   const handlers = {
     onLogFoodPress,
@@ -131,6 +115,29 @@ export function QuickActionsSection({
     }
   };
 
+  // Dynamic color palette based on premium status
+  const cardColors = ['#FFFFFF', '#FFFFFF'] as const; // White cards to pop out from the soft green background
+
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
+
+  const cardTint = isPremium
+    ? '#184F2E'  // Deep emerald green text/icons for premium
+    : '#2E7D32';  // Standard brand green text/icons
+
+  const cardPlusBg = isPremium
+    ? 'rgba(212, 160, 23, 0.12)'  // Translucent gold indicator
+    : 'rgba(46, 125, 50, 0.08)';  // Translucent green indicator
+
+  const plusIconColor = isPremium
+    ? '#D4A017'  // Gold plus
+    : '#2E7D32';  // Green plus
+
+  const iconCircleBg = isPremium
+    ? 'rgba(212, 160, 23, 0.08)'
+    : 'rgba(46, 125, 50, 0.06)';
+
   return (
     <View style={styles.section}>
       <SectionHeader title="Quick Actions" />
@@ -151,27 +158,27 @@ export function QuickActionsSection({
               style={styles.cardWrapper}
             >
               <LinearGradient
-                colors={action.colors}
+                colors={cardColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={styles.tileCard}
+                style={[styles.tileCard, { borderColor: cardBorderColor }]}
               >
                 {/* Header elements: Icon container on left, plus icon on right */}
                 <View style={styles.cardHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 255, 255, 0.75)' }]}>
-                    <MaterialCommunityIcons name={action.icon} size={16} color={action.tint} />
+                  <View style={[styles.iconCircle, { backgroundColor: iconCircleBg }]}>
+                    <MaterialCommunityIcons name={action.icon} size={16} color={cardTint} />
                   </View>
-                  <View style={[styles.plusButton, { backgroundColor: action.plusBg }]}>
-                    <Feather name="plus" size={10} color={action.tint} style={styles.plusIcon} />
+                  <View style={[styles.plusButton, { backgroundColor: cardPlusBg }]}>
+                    <Feather name="plus" size={10} color={plusIconColor} style={styles.plusIcon} />
                   </View>
                 </View>
 
                 {/* Footer elements: Action title and subtext */}
                 <View style={styles.textContainer}>
-                  <AppText variant="bodySmall" weight="800" color={action.tint} style={styles.label}>
+                  <AppText variant="bodySmall" weight="800" color={cardTint} style={styles.label}>
                     {action.displayLabel}
                   </AppText>
-                  <AppText variant="caption" weight="500" color={action.tint} style={styles.subLabel}>
+                  <AppText variant="caption" weight="500" color={cardTint} style={styles.subLabel}>
                     {action.subText}
                   </AppText>
                 </View>
@@ -210,7 +217,7 @@ const styles = StyleSheet.create({
   },
   tileCard: {
     width: 82,
-    height: 90,
+    height: 78,
     borderRadius: 18,
     padding: 8,
     justifyContent: 'space-between',

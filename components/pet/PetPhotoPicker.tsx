@@ -136,6 +136,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#FFF9F5',
+    borderColor: '#F1F7F1',
   },
 });

@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
     overflow: 'hidden',
-    backgroundColor: '#FFF9F5', // Solid background color is required on Android to trigger border radius clipping on child views
+    backgroundColor: '#F1F7F1', // Solid background color is required on Android to trigger border radius clipping on child views
   },
   gradient: {
     // paddingTop / paddingLeft / paddingRight set inline

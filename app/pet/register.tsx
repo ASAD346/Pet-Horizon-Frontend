@@ -440,7 +440,7 @@ export default function RegisterPetScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FFF9F5',
+    backgroundColor: '#F1F7F1',
   },
   safeArea: {
     flex: 1,

@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
   },
   sheet: {
-    backgroundColor: '#FFF9F5',
+    backgroundColor: '#F1F7F1',
     borderRadius: 18,
     overflow: 'hidden',
     borderWidth: 1.5,
