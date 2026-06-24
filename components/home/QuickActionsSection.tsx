@@ -74,7 +74,7 @@ const ACTION_HANDLERS: Record<
   Vaccination: 'onVaccinationPress',
 };
 
-export function QuickActionsSection({
+export const QuickActionsSection = React.memo(function QuickActionsSection({
   onLogFoodPress,
   onLogWalkPress,
   onMedicinePress,
@@ -189,7 +189,7 @@ export function QuickActionsSection({
       </ScrollView>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {
@@ -261,4 +261,3 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
-

@@ -21,7 +21,7 @@ interface RecentActivitySectionProps {
   isPremium?: boolean;
 }
 
-export function RecentActivitySection({ activities = [], isPremium = false }: RecentActivitySectionProps) {
+export const RecentActivitySection = React.memo(function RecentActivitySection({ activities = [], isPremium = false }: RecentActivitySectionProps) {
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border
@@ -67,7 +67,7 @@ export function RecentActivitySection({ activities = [], isPremium = false }: Re
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {

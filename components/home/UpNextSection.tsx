@@ -4,12 +4,7 @@ import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
-import { feedingScheduleColors } from '@/lib/feeding/feedingDisplay';
 import { formatTimeHHmmDisplay } from '@/lib/feeding/feedingForm';
-import { groomingRecordColors } from '@/lib/grooming/groomingDisplay';
-import { walkScheduleColors } from '@/lib/walk/walkDisplay';
-import type { FeedingScheduleItem } from '@/types/feeding';
-import type { WalkScheduleItem } from '@/types/walk';
 import type { DashboardTask } from '@/types/dashboard';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
@@ -56,14 +51,13 @@ function dashboardTaskHandler(
   return handlers.onLogFeeding;
 }
 
-// Subcomponent for Dashboard Task Cards with independent loading
 interface DashboardTaskCardProps {
   task: DashboardTask;
   onLog?: (id: string) => void | Promise<void>;
   isPremium?: boolean;
 }
 
-function DashboardTaskCard({ task, onLog, isPremium = false }: DashboardTaskCardProps) {
+const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, isPremium = false }: DashboardTaskCardProps) {
   const [busy, setBusy] = useState(false);
   const iconColor = isPremium ? '#184F2E' : '#2E7D32';
   const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
@@ -115,9 +109,9 @@ function DashboardTaskCard({ task, onLog, isPremium = false }: DashboardTaskCard
       ) : null}
     </View>
   );
-}
+});
 
-export function UpNextSection({
+export const UpNextSection = React.memo(function UpNextSection({
   loading = false,
   onLogFeeding,
   onLogWalk,
@@ -165,7 +159,7 @@ export function UpNextSection({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   section: {

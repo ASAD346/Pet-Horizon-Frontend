@@ -17,6 +17,10 @@ import { resolveMediaUrl } from '@/lib/mediaUrl';
 import type { ApiPet } from '@/types/pet';
 import { Image } from 'expo-image';
 
+import { useQueryClient } from '@tanstack/react-query';
+import { prefetchDashboardData } from '@/lib/query/prefetchQueries';
+import { useAuth } from '@/hooks/useAuth';
+
 interface PetSwitcherSheetProps {
   visible: boolean;
   pets: ApiPet[];
@@ -41,6 +45,18 @@ export function PetSwitcherSheet({
   onAddPet,
 }: PetSwitcherSheetProps) {
   const insets = useSafeAreaInsets();
+  const queryClient = useQueryClient();
+  const { token } = useAuth();
+
+  React.useEffect(() => {
+    if (visible && token && pets.length) {
+      pets.forEach((p) => {
+        if (p._id !== activePetId) {
+          void prefetchDashboardData(queryClient, token, p._id, p.image);
+        }
+      });
+    }
+  }, [visible, token, pets, activePetId, queryClient]);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

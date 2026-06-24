@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchUnifiedDashboard } from '@/services/dashboard/dashboardApi';
 import type { UnifiedDashboardData } from '@/types/dashboard';
@@ -9,14 +11,36 @@ import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi
 
 export function useDashboardQuery(token: string | null, petId: string | null | undefined) {
   const queryClient = useQueryClient();
+  const [localCachedData, setLocalCachedData] = useState<UnifiedDashboardData | null>(null);
+
+  useEffect(() => {
+    if (petId) {
+      AsyncStorage.getItem(`@dashboard_cache_${petId}`).then((val) => {
+        if (val) {
+          try {
+            setLocalCachedData(JSON.parse(val));
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      });
+    }
+  }, [petId]);
 
   // Define unified query
   const query = useQuery<UnifiedDashboardData>({
     queryKey: ['dashboard', petId],
     queryFn: () => fetchUnifiedDashboard(token!),
     enabled: Boolean(token && petId),
-    staleTime: 1000 * 60 * 2, // 2 minutes stale time
+    staleTime: 1000 * 60 * 5, // 5 minutes stale time
+    placeholderData: localCachedData ?? undefined,
   });
+
+  useEffect(() => {
+    if (query.data && petId) {
+      AsyncStorage.setItem(`@dashboard_cache_${petId}`, JSON.stringify(query.data));
+    }
+  }, [query.data, petId]);
 
   // Mutator helper for updating a schedule item status optimistically in the cached todaySchedules
   const updateCacheScheduleStatus = (
