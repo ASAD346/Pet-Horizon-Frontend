@@ -24,10 +24,13 @@ export default function AddExpenseScreen() {
     return null;
   }
 
+  const isPremium = user?.premiumStatus === 'premium';
+
   return (
     <AddExpenseView
       petId={pet?._id ?? null}
       token={token}
+      isPremium={isPremium}
       onClose={() => router.back()}
       onSaved={() => router.back()}
     />

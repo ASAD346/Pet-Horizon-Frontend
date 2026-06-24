@@ -1,173 +1,246 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Skeleton } from '@/components/ui/skeletons';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { Radius, Spacing } from '../../constants/theme';
 
-const cardShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
-  android: { elevation: 4 },
-});
+// Free plan: vibrant brand green (matches HomeHeader free gradient)
+const FREE_GRAD: readonly [string, string] = ['#3A8F3B', '#5CB35D'];
+const FREE_SHADOW = '#1B5E20';
+
+// Premium plan: dark luxurious emerald (matches HomeHeader premium gradient)
+const PREM_GRAD: readonly [string, string, string] = ['#0E3821', '#184F2E', '#267343'];
+const PREM_SHADOW = '#082113';
 
 interface WeeklySpendingCardProps {
   periodLabel: string;
-  periodType: 'weekly' | 'monthly';
   limitLabel: string;
   spentPercent: number;
   remainingLabel: string;
   status: string;
   hasBudget?: boolean;
   loading?: boolean;
-  onEditPress?: () => void;
-  onPeriodChange?: (period: 'weekly' | 'monthly') => void;
+  isPremium?: boolean;
+  onEditPress?: (isNew?: boolean) => void;
+  periodStart?: string;
+  periodEnd?: string;
 }
 
 export function WeeklySpendingCard({
   periodLabel,
-  periodType,
   limitLabel,
   spentPercent,
   remainingLabel,
   status,
   hasBudget = false,
   loading,
+  isPremium = false,
   onEditPress,
-  onPeriodChange,
+  periodStart,
+  periodEnd,
 }: WeeklySpendingCardProps) {
   const isOver = status === 'Over budget';
+  const clampedPercent = Math.min(spentPercent, 100);
+
+  const gradientColors = isPremium ? PREM_GRAD : FREE_GRAD;
+  const shadowColor = isPremium ? PREM_SHADOW : FREE_SHADOW;
+
+  // Premium uses gold accent for the chip border and progress bar
+  const progressColor = isOver ? '#EF9A9A' : (isPremium ? '#FFF176' : '#A5D6A7');
+
+  const isExpired = periodEnd ? new Date(periodEnd) < new Date() : false;
+
+  let editButtonLabel = 'Edit Budget';
+  if (isExpired) {
+    editButtonLabel = 'Add New';
+  } else if (isOver) {
+    editButtonLabel = 'New Budget';
+  }
+
+  const formattedEnd = periodEnd
+    ? new Date(periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    : '';
 
   return (
-    <View style={[styles.card, cardShadow]}>
-      <View style={styles.topRow}>
-        <AppText variant="bodySmall" color="rgba(255,255,255,0.75)">
-          {periodLabel}
-        </AppText>
-        {hasBudget ? (
-          <View style={[styles.statusBadge, isOver && styles.statusOver]}>
-            <Ionicons
-              name={isOver ? 'alert-circle' : 'checkmark-circle'}
-              size={14}
-              color={isOver ? '#FFCDD2' : HomeTheme.green}
-            />
-            <AppText variant="caption" weight="700" color={isOver ? '#FFCDD2' : HomeTheme.green}>
-              {status}
+    <View style={[styles.wrapper, { shadowColor }]}>
+      <LinearGradient
+        colors={gradientColors as any}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.card}
+      >
+        {/* Decorative rings */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={styles.bgRing1} />
+          <View style={styles.bgRing2} />
+        </View>
+
+        {/* Top Row: period label + status badge */}
+        <View style={styles.topRow}>
+          <View style={styles.topLeft}>
+            <AppText variant="bodySmall" weight="700" color="rgba(255,255,255,0.85)">
+              {periodLabel}
             </AppText>
           </View>
-        ) : null}
-      </View>
-
-      {onPeriodChange ? (
-        <View style={styles.periodToggle}>
-          {(['weekly', 'monthly'] as const).map((option) => {
-            const selected = periodType === option;
-            return (
-              <TouchableOpacity
-                key={option}
-                style={[styles.periodChip, selected && styles.periodChipActive]}
-                onPress={() => onPeriodChange(option)}
-                activeOpacity={0.85}
-              >
-                <AppText
-                  variant="caption"
-                  weight="700"
-                  color={selected ? HomeTheme.text : 'rgba(255,255,255,0.75)'}
-                >
-                  {option === 'weekly' ? 'Weekly' : 'Monthly'}
-                </AppText>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      ) : null}
-
-      {loading ? (
-        <View style={styles.skeletonBody}>
-          <Skeleton width="55%" height={36} tone="dark" />
-          <Skeleton width="100%" height={8} borderRadius={4} tone="dark" style={styles.skeletonGap} />
-          <View style={styles.bottomRow}>
-            <Skeleton width="45%" height={12} tone="dark" />
-            <Skeleton width={88} height={28} borderRadius={Radius.full} tone="dark" />
-          </View>
-        </View>
-      ) : (
-        <>
-          <AppText variant="h1" weight="800" color={HomeTheme.white} style={styles.limitAmount}>
-            {limitLabel}
-          </AppText>
-
           {hasBudget ? (
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: `${spentPercent}%` }]} />
-            </View>
-          ) : (
-            <View style={styles.progressTrack} />
-          )}
-
-          <View style={styles.bottomRow}>
-            <View style={styles.remainingRow}>
-              {!hasBudget ? <View style={styles.dot} /> : null}
-              <AppText variant="bodySmall" weight="600" color={HomeTheme.white}>
-                {remainingLabel}
+            <View style={[styles.statusBadge, isOver && styles.statusOver]}>
+              <Ionicons
+                name={isOver ? 'alert-circle' : 'checkmark-circle'}
+                size={13}
+                color={isOver ? '#FFCDD2' : '#C8E6C9'}
+              />
+              <AppText variant="caption" weight="800" color={isOver ? '#FFCDD2' : '#C8E6C9'}>
+                {status}
               </AppText>
             </View>
-            {onEditPress ? (
-              <TouchableOpacity style={styles.editBtn} activeOpacity={0.85} onPress={onEditPress}>
-                <AppText variant="caption" weight="700" color={HomeTheme.white}>
-                  Edit Budget
-                </AppText>
-              </TouchableOpacity>
-            ) : null}
+          ) : null}
+        </View>
+
+        {loading ? (
+          <View style={styles.skeletonBody}>
+            <Skeleton width="55%" height={36} tone="dark" />
+            <Skeleton width="100%" height={8} borderRadius={4} tone="dark" style={styles.skeletonGap} />
+            <View style={styles.bottomRow}>
+              <Skeleton width="45%" height={12} tone="dark" />
+              <Skeleton width={88} height={28} borderRadius={Radius.full} tone="dark" />
+            </View>
           </View>
-        </>
-      )}
+        ) : (
+          <>
+            {/* Big budget amount */}
+            <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.limitAmount}>
+              {limitLabel}
+            </AppText>
+
+            {/* Progress bar */}
+            <View style={styles.progressTrack}>
+              {hasBudget ? (
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${clampedPercent}%`, backgroundColor: progressColor },
+                  ]}
+                />
+              ) : null}
+            </View>
+
+            {/* Bottom: remaining label + edit button */}
+            <View style={styles.bottomRow}>
+              <View style={styles.remainingRow}>
+                {!hasBudget ? <View style={[styles.dot, { backgroundColor: progressColor }]} /> : null}
+                <View style={styles.remainingTextContainer}>
+                  <AppText variant="bodySmall" weight="600" color="rgba(255,255,255,0.9)">
+                    {remainingLabel}
+                  </AppText>
+                  {formattedEnd ? (
+                    <AppText variant="caption" color="rgba(255,255,255,0.65)" style={styles.expiryText}>
+                      Expires {formattedEnd}
+                    </AppText>
+                  ) : null}
+                </View>
+              </View>
+              {onEditPress ? (
+                <TouchableOpacity
+                  style={[styles.editBtn, isPremium && styles.editBtnPremium]}
+                  activeOpacity={0.85}
+                  onPress={() => onEditPress(isExpired || isOver)}
+                >
+                  <Ionicons name="pencil" size={13} color={isPremium ? '#D4A017' : '#FFFFFF'} />
+                  <AppText
+                    variant="caption"
+                    weight="700"
+                    color={isPremium ? '#FFF176' : '#FFFFFF'}
+                  >
+                    {editButtonLabel}
+                  </AppText>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </>
+        )}
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 14,
+      },
+      android: { elevation: 6 },
+    }),
+  },
   card: {
-    backgroundColor: '#1A2B4E',
     borderRadius: Radius.lg,
     padding: Spacing.lg,
-    marginBottom: Spacing.lg,
+    overflow: 'hidden',
+  },
+  bgRing1: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    top: -80,
+    right: -60,
+  },
+  bgRing2: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    bottom: -40,
+    left: -30,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
-  periodToggle: {
+  topLeft: {
     flexDirection: 'row',
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
-  periodChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  premiumBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(212,160,23,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(212,160,23,0.3)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(255,255,255,0.1)',
   },
-  periodChipActive: {
-    backgroundColor: HomeTheme.white,
+  premiumText: {
+    fontSize: 9,
+    letterSpacing: 0.6,
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(92,179,93,0.2)',
+    backgroundColor: 'rgba(200,230,201,0.18)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(200,230,201,0.25)',
   },
   statusOver: {
     backgroundColor: 'rgba(198,40,40,0.25)',
+    borderColor: 'rgba(255,205,210,0.25)',
   },
   skeletonBody: {
     marginTop: Spacing.sm,
@@ -176,21 +249,21 @@ const styles = StyleSheet.create({
     marginVertical: Spacing.md,
   },
   limitAmount: {
-    fontSize: 36,
-    lineHeight: 42,
+    fontSize: 38,
+    lineHeight: 44,
     marginBottom: Spacing.md,
+    letterSpacing: -0.5,
   },
   progressTrack: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     overflow: 'hidden',
     marginBottom: Spacing.md,
   },
   progressFill: {
     height: '100%',
     borderRadius: 4,
-    backgroundColor: HomeTheme.green,
   },
   bottomRow: {
     flexDirection: 'row',
@@ -208,12 +281,28 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: HomeTheme.green,
+  },
+  remainingTextContainer: {
+    flex: 1,
+    gap: 1,
+  },
+  expiryText: {
+    fontSize: 10,
+    lineHeight: 12,
   },
   editBtn: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255,255,255,0.14)',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
+  editBtnPremium: {
+    backgroundColor: 'rgba(212,160,23,0.18)',
+    borderColor: 'rgba(212,160,23,0.4)',
   },
 });

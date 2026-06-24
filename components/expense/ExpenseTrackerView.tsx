@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import {
+  Platform,
   RefreshControl,
   ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter, type Href } from 'expo-router';
+import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
@@ -17,6 +18,7 @@ import { useBudget } from '@/hooks/useBudget';
 import { useExpenses } from '@/hooks/useExpenses';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
+import { SheetOptionPicker } from '@/components/sheets';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
 import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
 import { EditBudgetSheet } from './EditBudgetSheet';
@@ -24,7 +26,7 @@ import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
-import { HomeTheme, Spacing } from '../../constants/theme';
+import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 interface ExpenseTrackerViewProps {
   onJournalPress?: () => void;
@@ -45,19 +47,55 @@ export function ExpenseTrackerView({
     canViewJournal,
     accessBannerMessage,
   } = usePetPermissions(token, pet, user?._id);
+
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  });
+  const [monthPickerVisible, setMonthPickerVisible] = useState(false);
+
+  const monthOptions = useMemo(() => {
+    const list = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      list.push({ label, value });
+    }
+    return list;
+  }, []);
+
+  const selectedMonthLabel = useMemo(() => {
+    const match = monthOptions.find((o) => o.value === selectedMonth);
+    return match ? match.label : '';
+  }, [selectedMonth, monthOptions]);
+
   const { expenses, loading: expensesLoading, error, reload: reloadExpenses } = useExpenses(
     token,
     pet?._id,
+    selectedMonth,
   );
   const { budget, loading: budgetLoading, periodType, setPeriodType, reload: reloadBudget } = useBudget(
     token,
     pet?._id,
   );
   const { unreadCount } = useNotifications(token);
+  const isPremium = user?.premiumStatus === 'premium';
 
   const [category, setCategory] = useState<ExpenseTrackerCategory>('all');
   const [refreshing, setRefreshing] = useState(false);
   const [budgetSheetVisible, setBudgetSheetVisible] = useState(false);
+  const [isNewBudget, setIsNewBudget] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      void reloadExpenses(true);
+      void reloadBudget(true);
+    }, [reloadExpenses, reloadBudget])
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -67,6 +105,16 @@ export function ExpenseTrackerView({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <ExpenseTrackerHeader
+        notificationCount={unreadCount}
+        onJournalPress={canViewJournal ? onJournalPress : undefined}
+        onNotificationsPress={onNotificationsPress}
+        showJournal={canViewJournal}
+        isPremium={isPremium}
+        selectedMonthLabel={selectedMonthLabel}
+        onDatePress={() => setMonthPickerVisible(true)}
+      />
+
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
@@ -75,12 +123,6 @@ export function ExpenseTrackerView({
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
         }
       >
-        <ExpenseTrackerHeader
-          notificationCount={unreadCount}
-          onJournalPress={canViewJournal ? onJournalPress : undefined}
-          onNotificationsPress={onNotificationsPress}
-          showJournal={canViewJournal}
-        />
 
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from Home to track expenses." />
@@ -100,15 +142,19 @@ export function ExpenseTrackerView({
           <>
             <WeeklySpendingCard
               periodLabel={budget.periodLabel}
-              periodType={budget.periodType}
               limitLabel={budget.limitLabel}
               spentPercent={budget.spentPercent}
               remainingLabel={budget.remainingLabel}
               status={budget.status}
               hasBudget={budget.hasBudget}
               loading={budgetLoading || petLoading}
-              onPeriodChange={setPeriodType}
-              onEditPress={canEditExpenses ? () => setBudgetSheetVisible(true) : undefined}
+              isPremium={isPremium}
+              onEditPress={canEditExpenses ? (isNew) => {
+                setIsNewBudget(!!isNew);
+                setBudgetSheetVisible(true);
+              } : undefined}
+              periodStart={budget.periodStart}
+              periodEnd={budget.periodEnd}
             />
 
             <ExpenseCategoryTiles selected={category} onSelect={setCategory} />
@@ -116,6 +162,7 @@ export function ExpenseTrackerView({
               categoryFilter={category}
               transactions={expenses}
               loading={expensesLoading || petLoading}
+              isPremium={isPremium}
             />
           </>
         ) : null}
@@ -137,16 +184,33 @@ export function ExpenseTrackerView({
         visible={budgetSheetVisible}
         petId={pet?._id ?? null}
         token={token}
-        budgetId={budget.budgetId}
-        currentLimit={budget.amountLimit}
+        budgetId={isNewBudget ? undefined : budget.budgetId}
+        currentLimit={isNewBudget ? undefined : budget.amountLimit}
         periodType={periodType}
+        isPremium={isPremium}
+        periodStart={isNewBudget ? undefined : budget.periodStart}
+        periodEnd={isNewBudget ? undefined : budget.periodEnd}
         onClose={() => setBudgetSheetVisible(false)}
-        onSaved={() => {
+        onSaved={(savedPeriod) => {
+          if (savedPeriod) {
+            setPeriodType(savedPeriod);
+          }
           reloadBudget();
           reloadExpenses();
         }}
       />
       ) : null}
+
+      <SheetOptionPicker
+        visible={monthPickerVisible}
+        title="Select Month"
+        options={monthOptions}
+        selectedValue={selectedMonth}
+        onClose={() => setMonthPickerVisible(false)}
+        onSelect={(value) => {
+          setSelectedMonth(value);
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -154,14 +218,14 @@ export function ExpenseTrackerView({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: HomeTheme.background,
+    backgroundColor: '#F1F7F1', // Matches ProfileTheme.background
   },
   scroll: {
     flex: 1,
   },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.lg,
   },
   fab: {
     position: 'absolute',
@@ -169,8 +233,17 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: HomeTheme.cardGreen,
+    backgroundColor: '#2E7D32',
     alignItems: 'center',
     justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1B5E20',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 10,
+      },
+      android: { elevation: 8 },
+    }),
   },
 });

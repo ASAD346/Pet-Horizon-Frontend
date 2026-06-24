@@ -30,6 +30,18 @@ export function useBudget(token: string | null, petId: string | null | undefined
     load,
     onSuccess: (rows) => {
       setBudgets(rows);
+      if (rows && rows.length > 0) {
+        const currentActive = rows.find((b) => b.periodType === periodType && b.amountLimit > 0);
+        if (!currentActive) {
+          const hasWeekly = rows.some((b) => b.periodType === 'weekly' && b.amountLimit > 0);
+          const hasMonthly = rows.some((b) => b.periodType === 'monthly' && b.amountLimit > 0);
+          if (!hasWeekly && hasMonthly) {
+            setPeriodType('monthly');
+          } else if (hasWeekly && !hasMonthly) {
+            setPeriodType('weekly');
+          }
+        }
+      }
       setError(null);
     },
     onClear: () => {

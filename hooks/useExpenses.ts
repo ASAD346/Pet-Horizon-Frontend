@@ -9,11 +9,14 @@ import { log } from '@/lib/log';
 import { fetchExpenses } from '@/services/expense/expenseApi';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 
-export function useExpenses(token: string | null, petId: string | null | undefined) {
+export function useExpenses(
+  token: string | null,
+  petId: string | null | undefined,
+  month: string,
+) {
   const [expenses, setExpenses] = useState<ExpenseTransaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const month = useMemo(() => currentMonthKey(), []);
   const scopeKey = token && petId ? `${token}:${petId}:${month}` : null;
 
   const load = useCallback(async () => {

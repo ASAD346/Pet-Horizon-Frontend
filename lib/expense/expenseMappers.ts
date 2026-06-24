@@ -125,6 +125,8 @@ export function mapBudgetDisplay(
       hasBudget: false as const,
       budgetId: undefined as string | undefined,
       amountLimit: undefined as number | undefined,
+      periodStart: undefined as string | undefined,
+      periodEnd: undefined as string | undefined,
     };
   }
 
@@ -143,6 +145,8 @@ export function mapBudgetDisplay(
     hasBudget: true as const,
     budgetId: budget.budgetId,
     amountLimit: budget.amountLimit,
+    periodStart: budget.periodStart,
+    periodEnd: budget.periodEnd,
   };
 }
 
