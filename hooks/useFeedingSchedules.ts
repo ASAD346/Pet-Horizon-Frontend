@@ -45,11 +45,19 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         return;
       }
       setActionId(scheduleId);
+      // Optimistic: mark as done locally so it vanishes from Today's Schedule immediately
+      setSchedules((prev) =>
+        prev.map((s) => s._id === scheduleId ? { ...s, status: 'done' as const, completedAt: new Date().toISOString() } : s),
+      );
       try {
         await completeFeedingSchedule(token, scheduleId, { status: 'done' });
-        await reload(true);
+        void reload(true);
         showToast('Feeding marked done successfully!');
       } catch (error) {
+        // Revert optimistic update on failure
+        setSchedules((prev) =>
+          prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const, completedAt: undefined } : s),
+        );
         log.fail('Feeding', 'Complete action failed', getErrorMessage(error));
         throw error;
       } finally {
@@ -66,11 +74,19 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         return;
       }
       setActionId(scheduleId);
+      // Optimistic: mark as skipped locally so it vanishes from Today's Schedule immediately
+      setSchedules((prev) =>
+        prev.map((s) => s._id === scheduleId ? { ...s, status: 'skipped' as const } : s),
+      );
       try {
         await skipFeedingSchedule(token, scheduleId);
-        await reload(true);
+        void reload(true);
         showToast('Feeding skipped successfully!');
       } catch (error) {
+        // Revert optimistic update on failure
+        setSchedules((prev) =>
+          prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const } : s),
+        );
         log.fail('Feeding', 'Skip action failed', getErrorMessage(error));
         throw error;
       } finally {

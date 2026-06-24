@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
+import { useFocusReload } from '@/hooks/useStaleLoadScope';
 import {
   featureOptionsFromRemote,
   hydrateScheduleFeaturesFromSpecies,
@@ -160,6 +161,14 @@ export function ScheduleSetupView({
     },
     [token],
   );
+
+  const focusReload = useCallback(() => {
+    if (pet?._id) {
+      void reloadSchedules(pet._id, { silent: true });
+    }
+  }, [pet?._id, reloadSchedules]);
+
+  useFocusReload(focusReload, Boolean(token && pet?._id));
 
   useEffect(() => {
     if (!token || !pet?._id) {

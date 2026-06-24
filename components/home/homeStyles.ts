@@ -3,11 +3,13 @@ import { Platform, StyleSheet } from 'react-native';
 export const homeCardShadow = Platform.select({
   ios: {
     shadowColor: '#1A2B4E',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
   },
-  android: { elevation: 2 },
+  android: {
+    elevation: 3,
+  },
 });
 
 export const homePillCard = StyleSheet.create({
@@ -15,12 +17,11 @@ export const homePillCard = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#F2ECE9',
+    borderRadius: 18,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingVertical: 14,
+    marginBottom: 10,
+    marginHorizontal: 4, // prevents Android shadow clipping
     minHeight: 74,
     ...homeCardShadow,
   },

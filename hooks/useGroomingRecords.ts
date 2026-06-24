@@ -67,11 +67,19 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
         return;
       }
       setActionId(recordId);
+      // Optimistic: set performedAt locally so it vanishes from Today's Schedule immediately
+      setRecords((prev) =>
+        prev.map((r) => r._id === recordId ? { ...r, performedAt: new Date().toISOString() } : r),
+      );
       try {
         await completeGroomingRecord(token, recordId);
-        await reload(true);
+        void reload(true);
         showToast('Grooming marked done successfully!');
       } catch (error) {
+        // Revert optimistic update on failure
+        setRecords((prev) =>
+          prev.map((r) => r._id === recordId ? { ...r, performedAt: undefined } : r),
+        );
         log.fail('Grooming', 'Complete action failed', getErrorMessage(error));
         throw error;
       } finally {

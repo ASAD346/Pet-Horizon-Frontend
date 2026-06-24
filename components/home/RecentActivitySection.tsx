@@ -75,6 +75,17 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
     gap: 2,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  categoryTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    alignSelf: 'center',
+  },
   iconBadge: {
     alignSelf: 'center',
   },

@@ -85,6 +85,7 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { SkeletonScreenLayout } from '@/components/ui/skeletons';
+import { clearCachedSchedules } from '@/lib/schedule/scheduleCache';
 import { LoginHeaderDecor } from '@/components/auth/login';
 
 import type { GroomingRecord } from '@/types/grooming';
@@ -429,6 +430,7 @@ export default function HomeScreen() {
   const handleCompleteFeeding = async (scheduleId: string) => {
     if (completeFeeding) {
       await completeFeeding(scheduleId);
+      if (pet?._id) clearCachedSchedules(pet._id);
       void reloadJournal();
     }
   };
@@ -436,6 +438,7 @@ export default function HomeScreen() {
   const handleSkipFeeding = async (scheduleId: string) => {
     if (skipFeeding) {
       await skipFeeding(scheduleId);
+      if (pet?._id) clearCachedSchedules(pet._id);
       void reloadJournal();
     }
   };
@@ -443,6 +446,7 @@ export default function HomeScreen() {
   const handleCompleteWalk = async (scheduleId: string) => {
     if (completeWalk) {
       await completeWalk(scheduleId);
+      if (pet?._id) clearCachedSchedules(pet._id);
       void reloadJournal();
     }
   };
@@ -450,6 +454,7 @@ export default function HomeScreen() {
   const handleCompleteMedicine = async (scheduleId: string) => {
     if (completeMedicine) {
       await completeMedicine(scheduleId);
+      if (pet?._id) clearCachedSchedules(pet._id);
       void reloadJournal();
     }
   };
@@ -457,6 +462,7 @@ export default function HomeScreen() {
   const handleCompleteGrooming = async (recordId: string) => {
     if (completeGrooming) {
       await completeGrooming(recordId);
+      if (pet?._id) clearCachedSchedules(pet._id);
       void reloadJournal();
     }
   };
@@ -464,6 +470,7 @@ export default function HomeScreen() {
   const handleCompleteVaccination = async (scheduleId: string) => {
     if (completeVaccination) {
       await completeVaccination(scheduleId);
+      if (pet?._id) clearCachedSchedules(pet._id);
       void reloadJournal();
     }
   };

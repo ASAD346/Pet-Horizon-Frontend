@@ -44,11 +44,19 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
         return;
       }
       setActionId(scheduleId);
+      // Optimistic: mark as done locally so it vanishes from Today's Schedule immediately
+      setSchedules((prev) =>
+        prev.map((s) => s._id === scheduleId ? { ...s, status: 'done' as const, completedAt: new Date().toISOString() } : s),
+      );
       try {
         await completeMedicineSchedule(token, scheduleId, { status: 'done' });
-        await reload(true);
+        void reload(true);
         showToast('Medicine marked done successfully!');
       } catch (error) {
+        // Revert optimistic update on failure
+        setSchedules((prev) =>
+          prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const, completedAt: undefined } : s),
+        );
         log.fail('Medicine', 'Complete action failed', getErrorMessage(error));
         throw error;
       } finally {

@@ -62,11 +62,27 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
       }
 
       setActionId(scheduleId);
+      // Optimistic: set administeredDate locally so it vanishes from Today's Schedule immediately
+      setSchedules((prev) =>
+        prev.map((s) =>
+          s._id === scheduleId
+            ? { ...s, metadata: { ...s.metadata, administeredDate: administeredDate } }
+            : s,
+        ),
+      );
       try {
         await completeVaccinationSchedule(token, scheduleId, body);
-        await reload(true);
+        void reload(true);
         showToast('Vaccination marked done successfully!');
       } catch (error) {
+        // Revert optimistic update on failure
+        setSchedules((prev) =>
+          prev.map((s) =>
+            s._id === scheduleId
+              ? { ...s, metadata: { ...s.metadata, administeredDate: undefined } }
+              : s,
+          ),
+        );
         log.fail('Vaccination', 'Complete action failed', getErrorMessage(error));
         throw error;
       } finally {

@@ -42,7 +42,7 @@ import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
-import { HomeTheme, Spacing } from '../../constants/theme';
+import { HomeTheme, Spacing, Radius } from '../../constants/theme';
 
 type ScheduleRow =
   | { kind: 'feeding'; item: FeedingScheduleItem }
@@ -137,8 +137,8 @@ function rowIcon(
 
 function rowIsDone(row: ScheduleRow) {
   if (row.kind === 'grooming') return !!row.item.performedAt;
-  if (row.kind === 'vaccination') return row.item.isActive === false;
-  return row.item.status === 'done';
+  if (row.kind === 'vaccination') return row.item.isActive === false || !!row.item.metadata?.administeredDate;
+  return row.item.status === 'done' || row.item.isComplete === true || !!row.item.completedAt;
 }
 
 function rowIsSkipped(row: ScheduleRow) {
@@ -269,9 +269,9 @@ function ScheduleRowCard({
               onPress={handleSkip}
             >
               {skipBusy ? (
-                <ActivityIndicator size="small" color={HomeTheme.textMuted} />
+                <ActivityIndicator size="small" color="#757575" />
               ) : (
-                <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
+                <AppText variant="caption" weight="800" color="#757575">
                   Skip
                 </AppText>
               )}
@@ -285,9 +285,9 @@ function ScheduleRowCard({
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                <ActivityIndicator size="small" color="#2E7D32" />
               ) : (
-                <AppText variant="caption" weight="600" color="#8FAF8F">
+                <AppText variant="caption" weight="800" color="#2E7D32">
                   Done
                 </AppText>
               )}
@@ -302,7 +302,7 @@ function ScheduleRowCard({
               activeOpacity={0.85}
               onPress={() => onManageGrooming(rowId(row))}
             >
-              <Ionicons name="settings-outline" size={16} color={HomeTheme.textMuted} />
+              <Ionicons name="settings-outline" size={16} color="#757575" />
             </TouchableOpacity>
           ) : null}
           {onComplete ? (
@@ -313,9 +313,9 @@ function ScheduleRowCard({
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+                <ActivityIndicator size="small" color="#2E7D32" />
               ) : (
-                <AppText variant="caption" weight="600" color="#8FAF8F">
+                <AppText variant="caption" weight="800" color="#2E7D32">
                   Done
                 </AppText>
               )}
@@ -330,9 +330,9 @@ function ScheduleRowCard({
           onPress={handleComplete}
         >
           {completeBusy ? (
-            <ActivityIndicator size="small" color={HomeTheme.cardGreen} />
+            <ActivityIndicator size="small" color="#2E7D32" />
           ) : (
-            <AppText variant="caption" weight="600" color="#8FAF8F">
+            <AppText variant="caption" weight="800" color="#2E7D32">
               Done
             </AppText>
           )}
@@ -373,14 +373,7 @@ export function TodaysScheduleSection({
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
 
-      {loading && items.length === 0 ? (
-        <View style={[homePillCard.card, styles.emptyCard]}>
-          <ActivityIndicator size="small" color="#5CB35D" style={{ marginRight: Spacing.sm }} />
-          <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-            Loading schedules…
-          </AppText>
-        </View>
-      ) : items.length === 0 ? (
+      {items.length === 0 ? (
         <View style={[homePillCard.card, styles.emptyCard]}>
           <AppText variant="bodySmall" color={HomeTheme.textMuted}>
             No schedules yet. Use Quick Actions to add one.
@@ -420,6 +413,17 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
     gap: 2,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  categoryTag: {
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    alignSelf: 'center',
+  },
   checks: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -428,18 +432,30 @@ const styles = StyleSheet.create({
     marginLeft: -8,
   },
   doneBtn: {
-    minWidth: 44,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(92, 179, 93, 0.08)',
+    borderColor: 'rgba(92, 179, 93, 0.25)',
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 54,
   },
   actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 8,
   },
   skipBtn: {
-    minWidth: 36,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 50,
   },
 });
