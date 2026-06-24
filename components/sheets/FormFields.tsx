@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme } from '@/constants/theme';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
+import { useAppThemeColor } from './useAppThemeColor';
 
 export function FormSectionLabel({ text }: { text: string }) {
   return (
@@ -22,10 +23,11 @@ interface FormChipRowProps {
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
-  accentColor: string;
+  accentColor?: string;
 }
 
-export function FormChipRow({ options, selected, onSelect, accentColor }: FormChipRowProps) {
+export function FormChipRow({ options, selected, onSelect }: FormChipRowProps) {
+  const { accentColor } = useAppThemeColor();
   return (
     <View style={[formSheetStyles.chipRow, formSheetStyles.fieldGap]}>
       {options.map((option) => {
@@ -58,10 +60,11 @@ interface FormMultiChipRowProps {
   options: { value: string; label: string }[];
   selected: string[];
   onToggle: (value: string) => void;
-  accentColor: string;
+  accentColor?: string;
 }
 
-export function FormMultiChipRow({ options, selected, onToggle, accentColor }: FormMultiChipRowProps) {
+export function FormMultiChipRow({ options, selected, onToggle }: FormMultiChipRowProps) {
+  const { accentColor } = useAppThemeColor();
   return (
     <View style={[formSheetStyles.chipRow, formSheetStyles.fieldGap]}>
       {options.map((option) => {
@@ -104,8 +107,8 @@ export function FormTextField({
   placeholder,
   keyboardType = 'default',
   multiline,
-  accentColor = '#5CB35D',
 }: FormTextFieldProps) {
+  const { accentColor } = useAppThemeColor();
   const [focused, setFocused] = React.useState(false);
   return (
     <TextInput
@@ -149,11 +152,12 @@ interface FormSwitchRowProps {
   label: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
-  accentColor: string;
+  accentColor?: string;
   icon?: React.ComponentProps<typeof Ionicons>['name'];
 }
 
-export function FormSwitchRow({ label, value, onValueChange, accentColor, icon }: FormSwitchRowProps) {
+export function FormSwitchRow({ label, value, onValueChange, icon }: FormSwitchRowProps) {
+  const { accentColor } = useAppThemeColor();
   return (
     <View style={[formSheetStyles.switchRow, formSheetStyles.fieldGap]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -188,8 +192,8 @@ export function FormSuffixInput({
   suffix,
   keyboardType = 'decimal-pad',
   placeholder,
-  accentColor = '#5CB35D',
 }: FormSuffixInputProps) {
+  const { accentColor } = useAppThemeColor();
   const [focused, setFocused] = React.useState(false);
   return (
     <View style={[formSheetStyles.suffixInputWrap, formSheetStyles.fieldGap, focused && { borderColor: accentColor }]}>

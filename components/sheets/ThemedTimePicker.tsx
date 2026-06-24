@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { LoginTheme, Radius, Spacing } from '../../constants/theme';
+import { useAppThemeColor } from './useAppThemeColor';
 
 interface ThemedTimePickerProps {
   visible: boolean;
@@ -14,6 +15,7 @@ interface ThemedTimePickerProps {
 
 export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedTimePickerProps) {
   const [selected, setSelected] = useState(value);
+  const { accentColor } = useAppThemeColor();
 
   useEffect(() => {
     if (visible) setSelected(value);
@@ -42,12 +44,12 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHeader}>
-            <Ionicons name="time-outline" size={22} color={LoginTheme.green} />
+            <Ionicons name="time-outline" size={22} color={accentColor} />
             <AppText variant="h3" weight="700" color={LoginTheme.charcoal}>
               Select time
             </AppText>
           </View>
-
+ 
           <DateTimePicker
             value={selected}
             mode="time"
@@ -55,7 +57,7 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
             onChange={(_, date) => date && setSelected(date)}
             style={styles.picker}
           />
-
+ 
           <View style={styles.actions}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.8}>
               <AppText variant="body" weight="600" color={LoginTheme.charcoal}>
@@ -63,7 +65,7 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.confirmBtn}
+              style={[styles.confirmBtn, { backgroundColor: accentColor }]}
               onPress={() => onConfirm(selected)}
               activeOpacity={0.85}
             >
@@ -118,7 +120,6 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 46,
     borderRadius: Radius.md,
-    backgroundColor: LoginTheme.green,
     alignItems: 'center',
     justifyContent: 'center',
   },

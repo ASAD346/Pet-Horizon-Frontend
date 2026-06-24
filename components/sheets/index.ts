@@ -16,3 +16,4 @@ export {
   FormSuffixInput,
 } from './FormFields';
 export { FormSheetColors, formSheetStyles } from './formSheetStyles';
+export { useAppThemeColor } from './useAppThemeColor';

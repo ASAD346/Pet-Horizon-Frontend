@@ -17,7 +17,7 @@ import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { FormSheetHero } from './FormSheetHero';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
-import { useAuth } from '@/hooks/useAuth';
+import { useAppThemeColor } from './useAppThemeColor';
 
 interface FormSheetShellProps {
   visible: boolean;
@@ -25,8 +25,8 @@ interface FormSheetShellProps {
   title: string;
   subtitle?: string;
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  accentColor: string;
-  accentBg: string;
+  accentColor?: string;
+  accentBg?: string;
   saveLabel: string;
   onSave: () => void;
   saving?: boolean;
@@ -42,8 +42,8 @@ export function FormSheetShell({
   title,
   subtitle,
   icon,
-  accentColor,
-  accentBg,
+  accentColor: _accentColor,
+  accentBg: _accentBg,
   saveLabel,
   onSave,
   saving,
@@ -53,22 +53,7 @@ export function FormSheetShell({
   children,
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const isPremium = user?.premiumStatus === 'premium';
-
-  // Cohesive brand gradients matching the activity accent color
-  const getGradientColors = (color: string) => {
-    switch (color.toLowerCase()) {
-      case '#f5a623': return ['#F5A623', '#E08B14'] as const;
-      case '#5cb35d': return ['#5CB35D', '#4A9E4B'] as const;
-      case '#5b9bd5': return ['#5B9BD5', '#4182C3'] as const;
-      case '#e91e8c': return ['#E91E8C', '#D01470'] as const;
-      case '#673ab7': return ['#673AB7', '#512DA8'] as const;
-      default: return [color, color] as const;
-    }
-  };
-
-  const gradientColors = getGradientColors(accentColor);
+  const { accentColor, accentBg, gradientColors } = useAppThemeColor();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

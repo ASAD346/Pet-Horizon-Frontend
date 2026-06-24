@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
+import { useAppThemeColor } from './useAppThemeColor';
 
 interface FormSectionProps {
   title: string;
@@ -12,7 +13,8 @@ interface FormSectionProps {
   children: React.ReactNode;
 }
 
-export function FormSection({ title, icon, accentColor, accentBg, children }: FormSectionProps) {
+export function FormSection({ title, icon, children }: FormSectionProps) {
+  const { accentColor, accentBg } = useAppThemeColor();
   return (
     <View style={formSheetStyles.section}>
       <View style={formSheetStyles.sectionHeader}>
@@ -20,10 +22,10 @@ export function FormSection({ title, icon, accentColor, accentBg, children }: Fo
           <View
             style={[
               formSheetStyles.sectionIcon,
-              { backgroundColor: accentBg ?? FormSheetColors.pageBg },
+              { backgroundColor: accentBg },
             ]}
           >
-            <MaterialCommunityIcons name={icon} size={22} color={accentColor ?? FormSheetColors.label} />
+            <MaterialCommunityIcons name={icon} size={22} color={accentColor} />
           </View>
         ) : null}
         <AppText variant="caption" weight="800" color={FormSheetColors.text} style={{ letterSpacing: 0.3 }}>
