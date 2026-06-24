@@ -179,6 +179,7 @@ interface FormSuffixInputProps {
   suffix: string;
   keyboardType?: 'decimal-pad' | 'number-pad';
   placeholder?: string;
+  accentColor?: string;
 }
 
 export function FormSuffixInput({
@@ -187,15 +188,19 @@ export function FormSuffixInput({
   suffix,
   keyboardType = 'decimal-pad',
   placeholder,
+  accentColor = '#5CB35D',
 }: FormSuffixInputProps) {
+  const [focused, setFocused] = React.useState(false);
   return (
-    <View style={[formSheetStyles.suffixInputWrap, formSheetStyles.fieldGap]}>
+    <View style={[formSheetStyles.suffixInputWrap, formSheetStyles.fieldGap, focused && { borderColor: accentColor }]}>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
         placeholder={placeholder}
         placeholderTextColor={FormSheetColors.placeholder}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         style={formSheetStyles.suffixInput}
       />
       <AppText variant="caption" weight="700" color={FormSheetColors.label}>

@@ -116,6 +116,7 @@ export function FeedingEntryCard({
                 onChangeText={(amount) => onChange({ ...entry, amount })}
                 keyboardType="decimal-pad"
                 placeholder="0"
+                accentColor={accentColor}
               />
             </View>
             <View style={formSheetStyles.halfCol}>
@@ -178,6 +179,7 @@ export function FeedingEntryCard({
             onChangeText={(notes) => onChange({ ...entry, notes })}
             placeholder="Optional details..."
             multiline
+            accentColor={accentColor}
           />
         </FormSection>
 

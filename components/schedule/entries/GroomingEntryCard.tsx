@@ -68,6 +68,7 @@ export function GroomingEntryCard({
             onChangeText={(notes) => onChange({ ...entry, notes })}
             placeholder="Optional details..."
             multiline
+            accentColor={accentColor}
           />
         </FormSection>
       </>

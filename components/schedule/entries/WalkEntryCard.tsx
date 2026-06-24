@@ -105,6 +105,7 @@ export function WalkEntryCard({
                 onChangeText={(duration) => onChange({ ...entry, duration })}
                 suffix="min"
                 keyboardType="number-pad"
+                accentColor={accentColor}
               />
             </View>
           </View>
@@ -136,6 +137,7 @@ export function WalkEntryCard({
             onChangeText={(notes) => onChange({ ...entry, notes })}
             placeholder="Optional details..."
             multiline
+            accentColor={accentColor}
           />
         </FormSection>
 

@@ -100,6 +100,7 @@ export function MedicineEntryCard({
             value={entry.medicineName}
             onChangeText={(medicineName) => onChange({ ...entry, medicineName })}
             placeholder="e.g. Amoxicillin"
+            accentColor={accentColor}
           />
           <View style={formSheetStyles.twoColRow}>
             <View style={[formSheetStyles.halfCol, { flex: 1.1 }]}>
@@ -108,6 +109,7 @@ export function MedicineEntryCard({
                 value={entry.doseAmount}
                 onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
                 suffix={entry.doseForm === 'tablet' ? 'qty' : 'ml'}
+                accentColor={accentColor}
               />
             </View>
             <View style={formSheetStyles.halfCol}>
@@ -118,6 +120,7 @@ export function MedicineEntryCard({
                 suffix="pills"
                 keyboardType="number-pad"
                 placeholder="30"
+                accentColor={accentColor}
               />
             </View>
           </View>
@@ -201,6 +204,7 @@ export function MedicineEntryCard({
             onChangeText={(notes) => onChange({ ...entry, notes })}
             placeholder="Optional instructions..."
             multiline
+            accentColor={accentColor}
           />
         </FormSection>
 

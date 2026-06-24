@@ -65,6 +65,7 @@ export function VaccinationEntryCard({
             value={entry.vaccineName}
             onChangeText={(vaccineName) => onChange({ ...entry, vaccineName })}
             placeholder="e.g. Rabies, DHPP"
+            accentColor={accentColor}
           />
           <ScheduleDateFields
             value={entry.scheduleDate}
@@ -129,6 +130,7 @@ export function VaccinationEntryCard({
             onChangeText={(notes) => onChange({ ...entry, notes })}
             placeholder="Optional details..."
             multiline
+            accentColor={accentColor}
           />
         </FormSection>
 
