@@ -159,10 +159,10 @@ export function QuickActionsSection({
                 {/* Header elements: Icon container on left, plus icon on right */}
                 <View style={styles.cardHeader}>
                   <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 255, 255, 0.75)' }]}>
-                    <MaterialCommunityIcons name={action.icon} size={20} color={action.tint} />
+                    <MaterialCommunityIcons name={action.icon} size={16} color={action.tint} />
                   </View>
                   <View style={[styles.plusButton, { backgroundColor: action.plusBg }]}>
-                    <Feather name="plus" size={12} color={action.tint} style={styles.plusIcon} />
+                    <Feather name="plus" size={10} color={action.tint} style={styles.plusIcon} />
                   </View>
                 </View>
 
@@ -192,10 +192,10 @@ const styles = StyleSheet.create({
     paddingLeft: 4,
     paddingRight: Spacing.md,
     paddingVertical: 8,
-    gap: 12,
+    gap: 10,
   },
   cardWrapper: {
-    borderRadius: 20,
+    borderRadius: 18,
     ...Platform.select({
       ios: {
         shadowColor: '#1A2B4E',
@@ -209,10 +209,10 @@ const styles = StyleSheet.create({
     }),
   },
   tileCard: {
-    width: 96,
-    height: 104,
-    borderRadius: 20,
-    padding: 10,
+    width: 82,
+    height: 90,
+    borderRadius: 18,
+    padding: 8,
     justifyContent: 'space-between',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)',
@@ -224,16 +224,16 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   plusButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -244,13 +244,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   label: {
-    fontSize: 12,
-    lineHeight: 15,
+    fontSize: 11,
+    lineHeight: 14,
     marginBottom: 1,
   },
   subLabel: {
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 8,
+    lineHeight: 10,
     opacity: 0.6,
   },
 });

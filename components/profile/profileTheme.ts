@@ -5,14 +5,18 @@ export const ProfileTheme = {
   surface: HomeTheme.surface,
   text: HomeTheme.text,
   textMuted: HomeTheme.textMuted,
-  purple: '#6B4EAA',
+  purple: '#6B4EAA',             // kept for any existing references
   purpleDark: '#563D8A',
   purpleLight: '#F3EEFC',
   green: HomeTheme.cardGreen,
   navy: LoginTheme.brandHorizon,
   border: '#E8E8E8',
-  premiumGradientStart: '#7C5CBF',
-  premiumGradientEnd: '#563D8A',
+  // Royal Gold premium palette
+  premiumGradientStart: '#7A5500',
+  premiumGradientEnd: '#D4A017',
+  premiumGold: '#D4A017',
+  premiumGoldDark: '#7A5500',
+  premiumGoldLight: '#FFF9E6',
 } as const;
 
 /** @deprecated Use `useTabBarLayout().clearance` for scroll padding under the floating tab bar. */

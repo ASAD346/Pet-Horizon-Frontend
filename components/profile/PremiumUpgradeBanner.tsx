@@ -14,7 +14,7 @@ export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerPro
   return (
     <View style={styles.banner}>
       <View style={styles.iconWrap}>
-        <Ionicons name="diamond" size={22} color="#F0C419" />
+        <Ionicons name="diamond" size={22} color="#FFF176" />
       </View>
       <View style={styles.textBlock}>
         <AppText variant="body" weight="800" color="#FFFFFF">
@@ -38,9 +38,9 @@ export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerPro
 
 const bannerShadow = Platform.select({
   ios: {
-    shadowColor: ProfileTheme.purpleDark,
+    shadowColor: ProfileTheme.premiumGoldDark,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
   },
   android: { elevation: 4 },
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
   },
   btnText: {
-    color: ProfileTheme.purple,
+    color: ProfileTheme.premiumGoldDark,
     fontWeight: '700',
   },
 });

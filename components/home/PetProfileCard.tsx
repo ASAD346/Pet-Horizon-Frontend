@@ -48,13 +48,13 @@ export function PetProfileCard({
     return <SkeletonPetProfileCard />;
   }
 
-  // Royal Sapphire & Platinum Silver for Premium vs Emerald Forest for Free
+  // Royal Gold for Premium, Emerald Forest for Free
   const gradientColors = isPremium 
-    ? (['#2E4E8C', '#12254F'] as const)
+    ? (['#7A5500', '#B8860B', '#D4A017'] as const)
     : (['#429B46', '#266B2A'] as const);
 
-  const shadowColor = isPremium ? '#12254F' : '#266B2A';
-  const borderColor = isPremium ? 'rgba(255, 255, 255, 0.32)' : 'rgba(255, 255, 255, 0.16)';
+  const shadowColor = isPremium ? '#5C3D00' : '#266B2A';
+  const borderColor = isPremium ? 'rgba(255, 220, 80, 0.35)' : 'rgba(255, 255, 255, 0.16)';
 
   // Ensure gender is a safe string before processing
   const safeGender = gender || '—';
@@ -64,9 +64,9 @@ export function PetProfileCard({
       ? 'gender-female' 
       : 'gender-male-female';
 
-  const badgeIconColor = isPremium ? '#2E4E8C' : '#429B46';
-  const goldColor = '#FFE082';
-  const textAccentColor = isPremium ? '#BBE0FF' : '#FFFFFF';
+  const badgeIconColor = isPremium ? '#7A5500' : '#429B46';
+  const goldColor = '#FFF176';           // bright lemon gold — pops on dark amber
+  const textAccentColor = isPremium ? '#FFF9E6' : '#FFFFFF';
 
   return (
     <CardWrapper style={[styles.card, { shadowColor }]} {...cardProps}>
@@ -104,7 +104,7 @@ export function PetProfileCard({
         <View style={styles.top}>
           <View style={styles.avatarContainer}>
             <Image source={avatarSource} style={styles.avatar} contentFit="cover" />
-            <View style={[styles.avatarBadge, { borderColor: isPremium ? '#2E4E8C' : '#429B46' }]}>
+            <View style={[styles.avatarBadge, { borderColor: isPremium ? '#D4A017' : '#429B46' }]}>
               <MaterialCommunityIcons name="swap-horizontal" size={11} color={badgeIconColor} />
             </View>
           </View>
@@ -269,12 +269,12 @@ const styles = StyleSheet.create({
   premiumPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 220, 80, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(187, 224, 255, 0.35)',
+    borderColor: 'rgba(255, 220, 80, 0.45)',
   },
   freePill: {
     flexDirection: 'row',
