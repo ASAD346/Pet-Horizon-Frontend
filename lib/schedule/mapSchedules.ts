@@ -231,12 +231,19 @@ export function scheduleEntrySubtitle(key: ScheduleSectionKey, entry: ScheduleEn
   switch (key) {
     case 'feeding': {
       const e = entry as FeedingEntryState;
-      const portion =
-        e.amount && e.unit
-          ? `${e.amount} ${formatUnitLabel(e.unit)} · `
-          : e.amount
-            ? `${e.amount} · `
-            : '';
+      let portion = '';
+      if (e.amount) {
+        if (e.unit) {
+          const num = parseFloat(e.amount);
+          let uLabel = formatUnitLabel(e.unit);
+          if (uLabel.toLowerCase() === 'cup' && num > 1) {
+            uLabel = 'cups';
+          }
+          portion = `${e.amount} ${uLabel} · `;
+        } else {
+          portion = `${e.amount} · `;
+        }
+      }
       return `${portion}${formatTimeHHmmDisplay(dateToTimeHHmm(e.feedingTime))} · ${formatScheduleDateSummary(e.scheduleDate)}`;
     }
     case 'walk': {

@@ -51,7 +51,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       );
       try {
         await completeFeedingSchedule(token, scheduleId, { status: 'done' });
-        void reload(true);
+        void reload(false);
         showToast('Feeding marked done successfully!');
       } catch (error) {
         // Revert optimistic update on failure
@@ -80,7 +80,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       );
       try {
         await skipFeedingSchedule(token, scheduleId);
-        void reload(true);
+        void reload(false);
         showToast('Feeding skipped successfully!');
       } catch (error) {
         // Revert optimistic update on failure

@@ -46,13 +46,14 @@ export default function TabLayout() {
     () => [
       styles.tabBar,
       {
-        bottom: bottomOffset,
+        bottom: 0,
         height,
-        left: TAB_BAR_SIDE_MARGIN,
-        right: TAB_BAR_SIDE_MARGIN,
+        left: 0,
+        right: 0,
+        paddingBottom: insets.bottom,
       },
     ],
-    [bottomOffset, height],
+    [height, insets.bottom],
   );
 
   return (
@@ -119,7 +120,8 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   tabBar: {
     position: 'absolute',
-    borderRadius: TAB_BAR_HEIGHT / 2,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     backgroundColor: HomeTheme.surface,
     borderWidth: 1.2,
     borderColor: 'rgba(0, 0, 0, 0.05)',
@@ -130,9 +132,9 @@ const styles = StyleSheet.create({
     ...Platform.select({
       ios: {
         shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 12,
       },
       android: {
         elevation: 8,

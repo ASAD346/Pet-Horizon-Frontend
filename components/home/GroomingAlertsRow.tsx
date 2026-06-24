@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   cardWrap: {
     flex: 1,

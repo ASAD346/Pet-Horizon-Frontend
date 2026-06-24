@@ -72,7 +72,7 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
       );
       try {
         await completeVaccinationSchedule(token, scheduleId, body);
-        void reload(true);
+        void reload(false);
         showToast('Vaccination marked done successfully!');
       } catch (error) {
         // Revert optimistic update on failure

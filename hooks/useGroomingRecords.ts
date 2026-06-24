@@ -73,7 +73,7 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
       );
       try {
         await completeGroomingRecord(token, recordId);
-        void reload(true);
+        void reload(false);
         showToast('Grooming marked done successfully!');
       } catch (error) {
         // Revert optimistic update on failure

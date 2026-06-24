@@ -20,11 +20,11 @@ export interface TabBarLayoutMetrics {
  * `clearance` is how much space scroll content needs at the bottom.
  */
 export function getTabBarMetrics(insetsBottom: number): TabBarLayoutMetrics {
-  const bottomOffset = insetsBottom + TAB_BAR_FLOAT_GAP;
-  const clearance = bottomOffset + TAB_BAR_HEIGHT + Spacing.xl + Spacing.sm;
+  const height = TAB_BAR_HEIGHT + insetsBottom;
+  const clearance = height + Spacing.md;
   return {
-    bottomOffset,
+    bottomOffset: 0,
     clearance,
-    height: TAB_BAR_HEIGHT,
+    height,
   };
 }

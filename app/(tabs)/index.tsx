@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
-
+import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
-
-import { useRouter, type Href } from 'expo-router';
+import { useRouter, type Href, useFocusEffect } from 'expo-router';
 
 import { StatusBar } from 'expo-status-bar';
 
@@ -87,7 +85,7 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { SkeletonScreenLayout } from '@/components/ui/skeletons';
-import { clearCachedSchedules } from '@/lib/schedule/scheduleCache';
+import { clearCachedSchedules, getCacheVersion } from '@/lib/schedule/scheduleCache';
 import type { GroomingRecord } from '@/types/grooming';
 import { fetchPetMembers } from '@/services/family/familyApi';
 import type { PetMemberRow } from '@/types/family';
@@ -139,7 +137,7 @@ export default function HomeScreen() {
 
   const { profileStats, status: dashboardStatus } = useDashboardStatus(token);
 
-  const { tasks: dashboardTasks, loading: tasksLoading } = useUpcomingTasks(token);
+  const { tasks: dashboardTasks, loading: tasksLoading, reload: reloadTasks } = useUpcomingTasks(token);
 
   const { unreadCount } = useNotifications(token);
 
@@ -252,6 +250,24 @@ export default function HomeScreen() {
   } = useVaccinationSchedules(token, pet?._id);
 
 
+
+  const lastCacheVersionRef = useRef(getCacheVersion());
+
+  useFocusEffect(
+    useCallback(() => {
+      const currentVersion = getCacheVersion();
+      if (currentVersion !== lastCacheVersionRef.current) {
+        lastCacheVersionRef.current = currentVersion;
+        // Forced reload of all schedule hooks to show skeletons and sync them
+        void reloadFeeding(true);
+        void reloadWalks(true);
+        void reloadMedicine(true);
+        void reloadGrooming(true);
+        void reloadVaccination(true);
+        void reloadTasks(true);
+      }
+    }, [reloadFeeding, reloadWalks, reloadMedicine, reloadGrooming, reloadVaccination, reloadTasks])
+  );
 
   const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading || tasksLoading;
 
@@ -569,6 +585,7 @@ export default function HomeScreen() {
           onLogGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
           onLogVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
           dashboardTasks={visibleDashboardTasks}
+          isPremium={isPremium}
         />
 
         <TodaysScheduleSection
@@ -590,9 +607,10 @@ export default function HomeScreen() {
           onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
           onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
           onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
+          isPremium={isPremium}
         />
 
-        <RecentActivitySection activities={recentActivities} />
+        <RecentActivitySection activities={recentActivities} isPremium={isPremium} />
       </ScrollView>
 
         <LogFoodSheet

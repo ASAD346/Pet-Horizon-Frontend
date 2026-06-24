@@ -47,7 +47,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
       );
       try {
         await completeWalkSchedule(token, scheduleId, { status: 'done' });
-        void reload(true);
+        void reload(false);
         showToast('Walk marked done successfully!');
       } catch (error) {
         // Revert optimistic update on failure

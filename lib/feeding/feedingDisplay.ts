@@ -16,8 +16,20 @@ export function feedingScheduleTitle(item: FeedingScheduleItem): string {
 export function feedingScheduleSubtitle(item: FeedingScheduleItem): string {
   const amount = item.metadata?.amount;
   const unit = item.metadata?.unit;
-  const portion =
-    amount && unit ? `${amount} ${formatUnitLabel(unit)} · ` : amount ? `${amount} · ` : '';
+  
+  let portion = '';
+  if (amount) {
+    if (unit) {
+      const num = parseFloat(amount);
+      let uLabel = formatUnitLabel(unit);
+      if (uLabel.toLowerCase() === 'cup' && num > 1) {
+        uLabel = 'cups';
+      }
+      portion = `${amount} ${uLabel} · `;
+    } else {
+      portion = `${amount} · `;
+    }
+  }
 
   if (item.status === 'done') {
     const when = item.completedAt ? formatCompletedAt(item.completedAt) : formatTimeHHmmDisplay(item.timeOfDay);

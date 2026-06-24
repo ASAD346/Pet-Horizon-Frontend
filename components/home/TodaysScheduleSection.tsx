@@ -70,6 +70,7 @@ interface TodaysScheduleSectionProps {
   onCompleteGrooming?: (recordId: string) => void | Promise<void>;
   onManageGrooming?: (recordId: string) => void | Promise<void>;
   onCompleteVaccination?: (scheduleId: string) => void | Promise<void>;
+  isPremium?: boolean;
 }
 
 function rowSortKey(row: ScheduleRow): number {
@@ -175,6 +176,7 @@ interface ScheduleRowCardProps {
   onCompleteGrooming?: (id: string) => void | Promise<void>;
   onManageGrooming?: (id: string) => void | Promise<void>;
   onCompleteVaccination?: (id: string) => void | Promise<void>;
+  isPremium?: boolean;
 }
 
 function ScheduleRowCard({
@@ -186,6 +188,7 @@ function ScheduleRowCard({
   onCompleteGrooming,
   onManageGrooming,
   onCompleteVaccination,
+  isPremium = false,
 }: ScheduleRowCardProps) {
   const [completeBusy, setCompleteBusy] = useState(false);
   const [skipBusy, setSkipBusy] = useState(false);
@@ -193,6 +196,10 @@ function ScheduleRowCard({
   const isDone = rowIsDone(row);
   const isSkipped = rowIsSkipped(row);
   const colors = rowColors(row);
+
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
 
   const onComplete = rowOnComplete(
     row,
@@ -229,14 +236,17 @@ function ScheduleRowCard({
 
   const busy = completeBusy || skipBusy;
 
+  const iconColor = isPremium ? '#184F2E' : '#2E7D32';
+  const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
+
   return (
-    <View style={homePillCard.card}>
+    <View style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
       {isDone ? (
-        <ColorIconBadge color={colors.color} completed size={44} iconSize={24} shape="circle" />
+        <ColorIconBadge color={iconColor} completed size={44} iconSize={24} shape="circle" />
       ) : (
         <ColorIconBadge
-          color={colors.color}
-          backgroundColor={colors.bg}
+          color={iconColor}
+          backgroundColor={iconBg}
           materialIcon={rowIcon(row)}
           size={44}
           iconSize={22}
@@ -269,9 +279,9 @@ function ScheduleRowCard({
               onPress={handleSkip}
             >
               {skipBusy ? (
-                <ActivityIndicator size="small" color="#757575" />
+                <ActivityIndicator size="small" color="#7A869A" />
               ) : (
-                <AppText variant="caption" weight="800" color="#757575">
+                <AppText variant="caption" weight="800" color="#7A869A">
                   Skip
                 </AppText>
               )}
@@ -279,15 +289,15 @@ function ScheduleRowCard({
           ) : null}
           {onComplete ? (
             <TouchableOpacity
-              style={styles.doneBtn}
+              style={[styles.doneBtn, { backgroundColor: isPremium ? '#D4A017' : '#3A8F3B', borderColor: isPremium ? '#D4A017' : '#3A8F3B' }]}
               activeOpacity={0.85}
               disabled={busy}
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color="#2E7D32" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <AppText variant="caption" weight="800" color="#2E7D32">
+                <AppText variant="caption" weight="800" color="#FFFFFF">
                   Done
                 </AppText>
               )}
@@ -302,20 +312,20 @@ function ScheduleRowCard({
               activeOpacity={0.85}
               onPress={() => onManageGrooming(rowId(row))}
             >
-              <Ionicons name="settings-outline" size={16} color="#757575" />
+              <Ionicons name="settings-outline" size={16} color="#7A869A" />
             </TouchableOpacity>
           ) : null}
           {onComplete ? (
             <TouchableOpacity
-              style={styles.doneBtn}
+              style={[styles.doneBtn, { backgroundColor: isPremium ? '#D4A017' : '#3A8F3B', borderColor: isPremium ? '#D4A017' : '#3A8F3B' }]}
               activeOpacity={0.85}
               disabled={busy}
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color="#2E7D32" />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <AppText variant="caption" weight="800" color="#2E7D32">
+                <AppText variant="caption" weight="800" color="#FFFFFF">
                   Done
                 </AppText>
               )}
@@ -324,15 +334,15 @@ function ScheduleRowCard({
         </View>
       ) : onComplete ? (
         <TouchableOpacity
-          style={styles.doneBtn}
+          style={[styles.doneBtn, { backgroundColor: isPremium ? '#D4A017' : '#3A8F3B', borderColor: isPremium ? '#D4A017' : '#3A8F3B' }]}
           activeOpacity={0.85}
           disabled={busy}
           onPress={handleComplete}
         >
           {completeBusy ? (
-            <ActivityIndicator size="small" color="#2E7D32" />
+            <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <AppText variant="caption" weight="800" color="#2E7D32">
+            <AppText variant="caption" weight="800" color="#FFFFFF">
               Done
             </AppText>
           )}
@@ -340,6 +350,57 @@ function ScheduleRowCard({
       ) : null}
     </View>
   );
+}
+
+function parseDateString(str: string | undefined | null): Date | null {
+  if (!str) return null;
+  const parts = str.split('T')[0].split('-');
+  if (parts.length !== 3) return null;
+  const y = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10) - 1;
+  const d = parseInt(parts[2], 10);
+  const date = new Date(y, m, d);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function isScheduleActiveToday(row: ScheduleRow): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const item = row.item as any;
+
+  // 1. Explicit single date check
+  const explicitDateStr = item.date || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate;
+  const explicitDate = parseDateString(explicitDateStr);
+  
+  if (explicitDate) {
+    return explicitDate.getTime() === today.getTime();
+  }
+
+  // 2. Date Range check
+  const startDate = parseDateString(item.startDate);
+  const endDate = parseDateString(item.endDate);
+
+  if (startDate && today.getTime() < startDate.getTime()) {
+    return false;
+  }
+
+  if (endDate && today.getTime() > endDate.getTime()) {
+    return false;
+  }
+
+  // 3. Days of Week check (for Medicine, or if other items have it)
+  const meta = item.metadata;
+  if (meta && 'daysOfWeek' in meta && Array.isArray(meta.daysOfWeek) && meta.daysOfWeek.length > 0) {
+    const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+    const todayDayCode = DAY_CODES[today.getDay()];
+    if (!meta.daysOfWeek.includes(todayDayCode)) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 export function TodaysScheduleSection({
@@ -356,6 +417,7 @@ export function TodaysScheduleSection({
   onCompleteGrooming,
   onManageGrooming,
   onCompleteVaccination,
+  isPremium = false,
 }: TodaysScheduleSectionProps) {
   const items = useMemo(
     () =>
@@ -365,16 +427,24 @@ export function TodaysScheduleSection({
         medicineSchedules,
         groomingRecords,
         vaccinationSchedules,
-      ).filter((row) => !rowIsDone(row) && !rowIsSkipped(row)),
+      ).filter((row) => !rowIsDone(row) && !rowIsSkipped(row) && isScheduleActiveToday(row)),
     [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
+
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
 
   return (
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
 
-      {items.length === 0 ? (
-        <View style={[homePillCard.card, styles.emptyCard]}>
+      {loading ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="small" color={HomeTheme.green} />
+        </View>
+      ) : items.length === 0 ? (
+        <View style={[homePillCard.card, styles.emptyCard, { borderWidth: 1, borderColor: cardBorderColor }]}>
           <AppText variant="bodySmall" color={HomeTheme.textMuted}>
             No schedules yet. Use Quick Actions to add one.
           </AppText>
@@ -391,6 +461,7 @@ export function TodaysScheduleSection({
             onCompleteGrooming={onCompleteGrooming}
             onManageGrooming={onManageGrooming}
             onCompleteVaccination={onCompleteVaccination}
+            isPremium={isPremium}
           />
         ))
       )}
@@ -400,7 +471,7 @@ export function TodaysScheduleSection({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   loader: {
     marginVertical: Spacing.md,
@@ -432,15 +503,13 @@ const styles = StyleSheet.create({
     marginLeft: -8,
   },
   doneBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(92, 179, 93, 0.08)',
-    borderColor: 'rgba(92, 179, 93, 0.25)',
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 54,
+    minWidth: 58,
   },
   actionRow: {
     flexDirection: 'row',
@@ -448,14 +517,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skipBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(122, 134, 154, 0.05)',
+    borderColor: 'rgba(122, 134, 154, 0.15)',
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 50,
+    minWidth: 54,
   },
 });

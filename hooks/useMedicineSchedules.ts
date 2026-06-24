@@ -50,7 +50,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
       );
       try {
         await completeMedicineSchedule(token, scheduleId, { status: 'done' });
-        void reload(true);
+        void reload(false);
         showToast('Medicine marked done successfully!');
       } catch (error) {
         // Revert optimistic update on failure

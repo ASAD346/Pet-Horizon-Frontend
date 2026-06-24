@@ -21,6 +21,7 @@ interface UpNextSectionProps {
   onLogGrooming?: (recordId: string) => void | Promise<void>;
   onLogVaccination?: (scheduleId: string) => void | Promise<void>;
   dashboardTasks?: DashboardTask[];
+  isPremium?: boolean;
 }
 
 function dashboardTaskCaption(task: DashboardTask): string {
@@ -59,16 +60,13 @@ function dashboardTaskHandler(
 interface DashboardTaskCardProps {
   task: DashboardTask;
   onLog?: (id: string) => void | Promise<void>;
+  isPremium?: boolean;
 }
 
-function DashboardTaskCard({ task, onLog }: DashboardTaskCardProps) {
+function DashboardTaskCard({ task, onLog, isPremium = false }: DashboardTaskCardProps) {
   const [busy, setBusy] = useState(false);
-  const colors =
-    task.source === 'grooming'
-      ? groomingRecordColors()
-      : task.category === 'walk'
-        ? walkScheduleColors({} as WalkScheduleItem)
-        : feedingScheduleColors({} as FeedingScheduleItem);
+  const iconColor = isPremium ? '#184F2E' : '#2E7D32';
+  const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
 
   const handlePress = async () => {
     if (!onLog) return;
@@ -85,8 +83,8 @@ function DashboardTaskCard({ task, onLog }: DashboardTaskCardProps) {
   return (
     <View style={[homePillCard.card, styles.card]}>
       <ColorIconBadge
-        color={colors.color}
-        backgroundColor={colors.bg}
+        color={iconColor}
+        backgroundColor={iconBg}
         materialIcon={dashboardTaskIcon(task)}
         size={46}
         iconSize={22}
@@ -127,43 +125,51 @@ export function UpNextSection({
   onLogGrooming,
   onLogVaccination,
   dashboardTasks = [],
+  isPremium = false,
 }: UpNextSectionProps) {
-  if (dashboardTasks.length === 0) {
+  if (dashboardTasks.length === 0 && !loading) {
     return null;
   }
 
   return (
     <View style={styles.section}>
       <SectionHeader title="Up Next" />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {dashboardTasks.map((task) => {
-          const onLog = dashboardTaskHandler(task, {
-            onLogFeeding,
-            onLogWalk,
-            onLogMedicine,
-            onLogGrooming,
-            onLogVaccination,
-          });
-          return (
-            <DashboardTaskCard
-              key={`${task.source}-${task.id}`}
-              task={task}
-              onLog={onLog}
-            />
-          );
-        })}
-      </ScrollView>
+      {loading ? (
+        <View style={styles.loader}>
+          <ActivityIndicator size="small" color={HomeTheme.green} />
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {dashboardTasks.map((task) => {
+            const onLog = dashboardTaskHandler(task, {
+              onLogFeeding,
+              onLogWalk,
+              onLogMedicine,
+              onLogGrooming,
+              onLogVaccination,
+            });
+            return (
+              <DashboardTaskCard
+                key={`${task.source}-${task.id}`}
+                task={task}
+                onLog={onLog}
+                isPremium={isPremium}
+              />
+            );
+          })}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   loader: {
     marginVertical: Spacing.sm,

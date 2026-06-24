@@ -193,7 +193,7 @@ export function QuickActionsSection({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   scrollContainer: {
     paddingLeft: 4,

@@ -18,24 +18,32 @@ export interface RecentActivityItem {
 
 interface RecentActivitySectionProps {
   activities?: RecentActivityItem[];
+  isPremium?: boolean;
 }
 
-export function RecentActivitySection({ activities = [] }: RecentActivitySectionProps) {
+export function RecentActivitySection({ activities = [], isPremium = false }: RecentActivitySectionProps) {
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
+
+  const iconColor = isPremium ? '#184F2E' : '#2E7D32';
+  const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
+
   return (
     <View style={styles.section}>
       <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={() => {}} />
       {activities.length === 0 ? (
-        <View style={[homePillCard.card, styles.emptyCard]}>
+        <View style={[homePillCard.card, styles.emptyCard, { borderWidth: 1, borderColor: cardBorderColor }]}>
           <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
             No activity yet. Use Quick Actions to log something.
           </AppText>
         </View>
       ) : (
         activities.map((item) => (
-          <View key={item.id} style={homePillCard.card}>
+          <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
             <ColorIconBadge
-              color={item.color}
-              backgroundColor={item.bg}
+              color={iconColor}
+              backgroundColor={iconBg}
               materialIcon={item.icon}
               size={44}
               iconSize={22}
@@ -63,7 +71,7 @@ export function RecentActivitySection({ activities = [] }: RecentActivitySection
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
     paddingBottom: Spacing.sm,
   },
   emptyCard: {
