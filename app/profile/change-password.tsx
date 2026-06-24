@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
+import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
@@ -21,6 +22,8 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/errors';
 import { changePassword } from '@/services/users/userApi';
+
+import { homeCardShadow } from '@/components/home/homeStyles';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -35,6 +38,9 @@ export default function ChangePasswordScreen() {
   const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
   const [newPasswordVisible, setNewPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
+  // Focus tracking state
+  const [activeField, setActiveField] = useState<'current' | 'new' | 'confirm' | null>(null);
 
   const handleSave = useCallback(async () => {
     if (!token) {
@@ -78,74 +84,127 @@ export default function ChangePasswordScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {error ? <AuthErrorBanner message={error} /> : null}
-          {success ? <AuthInfoBanner message={success} /> : null}
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {error ? <View style={styles.banner}><AuthErrorBanner message={error} /></View> : null}
+          {success ? <View style={styles.banner}><AuthInfoBanner message={success} /></View> : null}
 
-          <SectionLabel text="CURRENT PASSWORD" />
-          <View style={styles.inputContainer}>
-            <TextInput
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              placeholder="Current password"
-              placeholderTextColor={SheetColors.placeholder}
-              style={styles.input}
-              secureTextEntry={!currentPasswordVisible}
-            />
-            <TouchableOpacity
-              onPress={() => setCurrentPasswordVisible((prev) => !prev)}
-              style={styles.toggleButton}
-            >
-              <Ionicons
-                name={currentPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color={SheetColors.placeholder}
+          <View style={styles.formCard}>
+            {/* Current Password */}
+            <View style={styles.labelContainer}>
+              <View style={[styles.labelDot, activeField === 'current' && styles.labelDotActive]} />
+              <AppText variant="caption" weight="800" color={activeField === 'current' ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+                CURRENT PASSWORD
+              </AppText>
+            </View>
+            <View style={[
+              styles.inputContainer,
+              activeField === 'current' && styles.inputContainerActive
+            ]}>
+              <Ionicons 
+                name="lock-closed-outline" 
+                size={18} 
+                color={activeField === 'current' ? '#2E7D32' : '#94A3B8'} 
+                style={styles.fieldIcon}
               />
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Enter current password"
+                placeholderTextColor={SheetColors.placeholder}
+                style={styles.input}
+                secureTextEntry={!currentPasswordVisible}
+                onFocus={() => setActiveField('current')}
+                onBlur={() => setActiveField(null)}
+              />
+              <TouchableOpacity
+                onPress={() => setCurrentPasswordVisible((prev) => !prev)}
+                style={styles.toggleButton}
+              >
+                <Ionicons
+                  name={currentPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
+                  color={SheetColors.placeholder}
+                />
+              </TouchableOpacity>
+            </View>
 
-          <SectionLabel text="NEW PASSWORD" />
-          <View style={styles.inputContainer}>
-            <TextInput
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholder="At least 8 characters"
-              placeholderTextColor={SheetColors.placeholder}
-              style={styles.input}
-              secureTextEntry={!newPasswordVisible}
-            />
-            <TouchableOpacity
-              onPress={() => setNewPasswordVisible((prev) => !prev)}
-              style={styles.toggleButton}
-            >
-              <Ionicons
-                name={newPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color={SheetColors.placeholder}
+            {/* New Password */}
+            <View style={styles.labelContainer}>
+              <View style={[styles.labelDot, activeField === 'new' && styles.labelDotActive]} />
+              <AppText variant="caption" weight="800" color={activeField === 'new' ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+                NEW PASSWORD
+              </AppText>
+            </View>
+            <View style={[
+              styles.inputContainer,
+              activeField === 'new' && styles.inputContainerActive
+            ]}>
+              <Ionicons 
+                name="shield-outline" 
+                size={18} 
+                color={activeField === 'new' ? '#2E7D32' : '#94A3B8'} 
+                style={styles.fieldIcon}
               />
-            </TouchableOpacity>
-          </View>
+              <TextInput
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="At least 8 characters"
+                placeholderTextColor={SheetColors.placeholder}
+                style={styles.input}
+                secureTextEntry={!newPasswordVisible}
+                onFocus={() => setActiveField('new')}
+                onBlur={() => setActiveField(null)}
+              />
+              <TouchableOpacity
+                onPress={() => setNewPasswordVisible((prev) => !prev)}
+                style={styles.toggleButton}
+              >
+                <Ionicons
+                  name={newPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
+                  color={SheetColors.placeholder}
+                />
+              </TouchableOpacity>
+            </View>
 
-          <SectionLabel text="CONFIRM NEW PASSWORD" />
-          <View style={styles.inputContainer}>
-            <TextInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Repeat new password"
-              placeholderTextColor={SheetColors.placeholder}
-              style={styles.input}
-              secureTextEntry={!confirmPasswordVisible}
-            />
-            <TouchableOpacity
-              onPress={() => setConfirmPasswordVisible((prev) => !prev)}
-              style={styles.toggleButton}
-            >
-              <Ionicons
-                name={confirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
-                size={20}
-                color={SheetColors.placeholder}
+            {/* Confirm Password */}
+            <View style={styles.labelContainer}>
+              <View style={[styles.labelDot, activeField === 'confirm' && styles.labelDotActive]} />
+              <AppText variant="caption" weight="800" color={activeField === 'confirm' ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+                CONFIRM NEW PASSWORD
+              </AppText>
+            </View>
+            <View style={[
+              styles.inputContainer,
+              activeField === 'confirm' && styles.inputContainerActive
+            ]}>
+              <Ionicons 
+                name="checkmark-circle-outline" 
+                size={18} 
+                color={activeField === 'confirm' ? '#2E7D32' : '#94A3B8'} 
+                style={styles.fieldIcon}
               />
-            </TouchableOpacity>
+              <TextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Repeat new password"
+                placeholderTextColor={SheetColors.placeholder}
+                style={styles.input}
+                secureTextEntry={!confirmPasswordVisible}
+                onFocus={() => setActiveField('confirm')}
+                onBlur={() => setActiveField(null)}
+              />
+              <TouchableOpacity
+                onPress={() => setConfirmPasswordVisible((prev) => !prev)}
+                style={styles.toggleButton}
+              >
+                <Ionicons
+                  name={confirmPasswordVisible ? 'eye-off-outline' : 'eye-outline'}
+                  size={18}
+                  color={SheetColors.placeholder}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <AppButton
@@ -173,21 +232,77 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xxl,
+  },
+  banner: {
+    marginBottom: Spacing.md,
+    borderRadius: Radius.md,
+  },
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    marginBottom: Spacing.lg,
+    ...homeCardShadow,
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Spacing.xs,
+    paddingLeft: 2,
+  },
+  labelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
+  },
+  labelDotActive: {
+    backgroundColor: '#2E7D32',
+  },
+  labelText: {
+    fontSize: 11,
+    letterSpacing: 0.8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: SheetColors.inputBg,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     borderRadius: Radius.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.md,
+    minHeight: 48,
+  },
+  inputContainerActive: {
+    borderColor: '#2E7D32',
+    backgroundColor: '#FCFDFC',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.12,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
+  },
+  fieldIcon: {
+    marginRight: 2,
   },
   input: {
     flex: 1,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     fontSize: 14,
     color: SheetColors.inputText,
+    marginLeft: 2,
   },
   toggleButton: {
     paddingLeft: Spacing.sm,
@@ -197,10 +312,21 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: Radius.full,
     minHeight: 52,
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1B5E20',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   submitText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

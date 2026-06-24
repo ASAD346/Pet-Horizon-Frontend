@@ -30,6 +30,8 @@ import {
 } from '@/services/users/userApi';
 import { uploadUserAvatar } from '@/services/users/uploadUserAvatar';
 
+import { homeCardShadow } from '@/components/home/homeStyles';
+
 export default function EditProfileScreen() {
   const router = useRouter();
   const { token, user, setSession } = useAuth();
@@ -44,6 +46,9 @@ export default function EditProfileScreen() {
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Active input state for gorgeous focus effects
+  const [activeField, setActiveField] = useState<'name' | 'email' | 'otp' | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -144,66 +149,123 @@ export default function EditProfileScreen() {
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.photoSection}>
-            <PetPhotoPicker
-              imageUri={displayPhoto}
-              onImageChange={(uri) => setPhotoUri(uri)}
-            />
-            <AppText variant="caption" color={ProfileTheme.textMuted} style={styles.photoHint}>
-              Tap the camera to change photo
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {/* Avatar / Photo picker with premium layout */}
+          <View style={styles.avatarCard}>
+            <View style={styles.photoContainer}>
+              <PetPhotoPicker
+                imageUri={displayPhoto}
+                onImageChange={(uri) => setPhotoUri(uri)}
+              />
+            </View>
+            <AppText variant="bodySmall" weight="700" color={ProfileTheme.green} style={styles.photoHint}>
+              Change Profile Photo
+            </AppText>
+            <AppText variant="caption" color={ProfileTheme.textMuted} style={styles.photoSubhint}>
+              Tap the circular badge above to upload or take a new picture
             </AppText>
           </View>
 
-          {error ? <AuthErrorBanner message={error} /> : null}
-          {devOtpHint ? <AuthInfoBanner message={devOtpHint} /> : null}
+          {error ? <View style={styles.banner}><AuthErrorBanner message={error} /></View> : null}
+          {devOtpHint ? <View style={styles.banner}><AuthInfoBanner message={devOtpHint} /></View> : null}
 
-          <SectionLabel text="FULL NAME" />
-          <View style={styles.inputRow}>
-            <Ionicons name="person-outline" size={18} color={HomeTheme.textMuted} />
-            <TextInput
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="Your name"
-              placeholderTextColor={SheetColors.placeholder}
-              style={styles.input}
-              autoCapitalize="words"
-            />
-          </View>
-
-          <SectionLabel text="EMAIL ADDRESS" />
-          <View style={styles.inputRow}>
-            <Ionicons name="mail-outline" size={18} color={HomeTheme.textMuted} />
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              placeholder="you@example.com"
-              placeholderTextColor={SheetColors.placeholder}
-              style={styles.input}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          {emailChangePending ? (
-            <>
-              <SectionLabel text="EMAIL VERIFICATION CODE" />
-              <TextInput
-                value={emailOtp}
-                onChangeText={setEmailOtp}
-                placeholder="Enter code from email"
-                placeholderTextColor={SheetColors.placeholder}
-                style={styles.otpInput}
-                keyboardType="number-pad"
+          {/* Form container */}
+          <View style={styles.formCard}>
+            {/* Full Name input */}
+            <View style={styles.labelContainer}>
+              <View style={[styles.labelDot, activeField === 'name' && styles.labelDotActive]} />
+              <AppText variant="caption" weight="800" color={activeField === 'name' ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+                FULL NAME
+              </AppText>
+            </View>
+            <View style={[
+              styles.inputRow,
+              activeField === 'name' && styles.inputRowActive
+            ]}>
+              <Ionicons 
+                name="person-outline" 
+                size={18} 
+                color={activeField === 'name' ? '#2E7D32' : '#94A3B8'} 
               />
-            </>
-          ) : null}
+              <TextInput
+                value={fullName}
+                onChangeText={setFullName}
+                placeholder="Your name"
+                placeholderTextColor={SheetColors.placeholder}
+                style={styles.input}
+                autoCapitalize="words"
+                onFocus={() => setActiveField('name')}
+                onBlur={() => setActiveField(null)}
+              />
+            </View>
+
+            {/* Email input */}
+            <View style={styles.labelContainer}>
+              <View style={[styles.labelDot, activeField === 'email' && styles.labelDotActive]} />
+              <AppText variant="caption" weight="800" color={activeField === 'email' ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+                EMAIL ADDRESS
+              </AppText>
+            </View>
+            <View style={[
+              styles.inputRow,
+              activeField === 'email' && styles.inputRowActive
+            ]}>
+              <Ionicons 
+                name="mail-outline" 
+                size={18} 
+                color={activeField === 'email' ? '#2E7D32' : '#94A3B8'} 
+              />
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="you@example.com"
+                placeholderTextColor={SheetColors.placeholder}
+                style={styles.input}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onFocus={() => setActiveField('email')}
+                onBlur={() => setActiveField(null)}
+              />
+            </View>
+
+            {/* Email OTP code input if pending */}
+            {emailChangePending ? (
+              <>
+                <View style={styles.labelContainer}>
+                  <View style={[styles.labelDot, activeField === 'otp' && styles.labelDotActive]} />
+                  <AppText variant="caption" weight="800" color={activeField === 'otp' ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+                    EMAIL VERIFICATION CODE
+                  </AppText>
+                </View>
+                <View style={[
+                  styles.inputRow,
+                  activeField === 'otp' && styles.inputRowActive
+                ]}>
+                  <Ionicons 
+                    name="key-outline" 
+                    size={18} 
+                    color={activeField === 'otp' ? '#2E7D32' : '#94A3B8'} 
+                  />
+                  <TextInput
+                    value={emailOtp}
+                    onChangeText={setEmailOtp}
+                    placeholder="Enter verification code"
+                    placeholderTextColor={SheetColors.placeholder}
+                    style={styles.input}
+                    keyboardType="number-pad"
+                    onFocus={() => setActiveField('otp')}
+                    onBlur={() => setActiveField(null)}
+                  />
+                </View>
+              </>
+            ) : null}
+          </View>
 
           <AppButton
-            title="Update Profile"
+            title="Save Changes"
             onPress={handleSave}
             loading={saving}
-            variant="primary"
+            variant="success"
             size="md"
             style={styles.submitBtn}
             textStyle={styles.submitText}
@@ -224,24 +286,92 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
     paddingBottom: Spacing.xxl,
   },
-  photoSection: {
+  avatarCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     alignItems: 'center',
     marginBottom: Spacing.lg,
+    ...homeCardShadow,
+  },
+  photoContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
   },
   photoHint: {
-    marginTop: Spacing.sm,
+    fontSize: 14,
+    marginTop: Spacing.xs,
+  },
+  photoSubhint: {
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: Spacing.lg,
+  },
+  banner: {
+    marginBottom: Spacing.md,
+    borderRadius: Radius.md,
+  },
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    marginBottom: Spacing.lg,
+    ...homeCardShadow,
+  },
+  labelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Spacing.xs,
+    paddingLeft: 2,
+  },
+  labelDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
+  },
+  labelDotActive: {
+    backgroundColor: '#2E7D32',
+  },
+  labelText: {
+    fontSize: 11,
+    letterSpacing: 0.8,
   },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    backgroundColor: SheetColors.inputBg,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
     minHeight: 48,
+  },
+  inputRowActive: {
+    borderColor: '#2E7D32',
+    backgroundColor: '#FCFDFC',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.12,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
   },
   input: {
     flex: 1,
@@ -249,24 +379,25 @@ const styles = StyleSheet.create({
     color: SheetColors.inputText,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
   },
-  otpInput: {
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
-    fontSize: 14,
-    color: SheetColors.inputText,
-    marginBottom: Spacing.md,
-  },
   submitBtn: {
     width: '100%',
     borderRadius: Radius.full,
     minHeight: 52,
-    marginTop: Spacing.md,
-    backgroundColor: ProfileTheme.navy,
+    marginTop: Spacing.sm,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1B5E20',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   submitText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

@@ -17,7 +17,7 @@ export function ProfileMenuRow({ icon, title, subtitle, onPress }: ProfileMenuRo
   return (
     <TouchableOpacity style={[homePillCard.card, styles.row]} onPress={onPress} activeOpacity={0.85}>
       <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={20} color={ProfileTheme.purple} />
+        <Ionicons name={icon} size={20} color="#2E7D32" />
       </View>
       <View style={styles.textBlock}>
         <AppText variant="body" weight="700" color={ProfileTheme.text}>
@@ -31,6 +31,7 @@ export function ProfileMenuRow({ icon, title, subtitle, onPress }: ProfileMenuRo
     </TouchableOpacity>
   );
 }
+
 
 interface ProfileMenuSectionProps {
   title: string;
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: ProfileTheme.purpleLight,
+    backgroundColor: 'rgba(46, 125, 50, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.md,

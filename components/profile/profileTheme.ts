@@ -1,7 +1,7 @@
 import { HomeTheme, LoginTheme } from '@/constants/theme';
 
 export const ProfileTheme = {
-  background: HomeTheme.background,
+  background: '#F1F7F1',
   surface: HomeTheme.surface,
   text: HomeTheme.text,
   textMuted: HomeTheme.textMuted,
