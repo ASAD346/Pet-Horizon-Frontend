@@ -6,7 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { FamilyHubHeader } from '@/components/family/FamilyHubHeader';
@@ -20,6 +20,9 @@ import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { usePetMembers } from '@/hooks/usePetMembers';
+import { usePetPermissions } from '@/hooks/usePetPermissions';
+import { LogJournalSheet } from '@/components/journal';
+import { generatePetInvite } from '@/services/family/familyApi';
 import {
   buildFamilyMembersList,
   buildGuestMemberDisplay,
@@ -38,6 +41,7 @@ import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
 import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
 
 export function FamilyHubView() {
+  const insets = useSafeAreaInsets();
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { notificationCount, onNotificationsPress } = useTabHeaderActions();
   const { token, user } = useAuth();
@@ -45,6 +49,9 @@ export function FamilyHubView() {
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
   const { members, loading: membersLoading, error: membersError, reload: reloadMembers } =
     usePetMembers(token, pet?._id ?? null, isOwner);
+
+  const { canViewJournal } = usePetPermissions(token, pet, user?._id);
+  const [journalVisible, setJournalVisible] = useState(false);
 
   const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
   const [invite, setInvite] = useState<GenerateInviteResponse | null>(null);
@@ -106,6 +113,23 @@ export function FamilyHubView() {
     loadGuestAccess();
   }, [loadGuestAccess]);
 
+  useEffect(() => {
+    const loadDefaultInvite = async () => {
+      if (!token || !pet?._id || !isOwner || !isPremium) return;
+      try {
+        const data = await generatePetInvite(token, {
+          petId: pet._id,
+          accessLevel: 'edit',
+          allowedModules: ['feeding', 'walks', 'medicine', 'grooming', 'vaccination', 'journal', 'expenses'],
+        });
+        setInvite(data);
+      } catch {
+        // Silently ignore
+      }
+    };
+    loadDefaultInvite();
+  }, [token, pet?._id, isOwner, isPremium]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await Promise.all([reloadPet(), reloadMembers(), loadGuestAccess()]);
@@ -126,10 +150,14 @@ export function FamilyHubView() {
   const joinCode = invite ? formatJoinCode(invite.inviteToken) : null;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <FamilyHubHeader
         notificationCount={notificationCount}
         onNotificationsPress={onNotificationsPress}
+        onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
+        showJournal={canViewJournal}
+        isPremium={isPremium}
+        topInset={insets.top}
       />
 
       <ScrollView
@@ -192,6 +220,7 @@ export function FamilyHubView() {
               members={displayMembers}
               loading={(membersLoading && isOwner) || (guestLoading && !isOwner)}
               manageableIds={isOwner ? manageableMemberIds : []}
+              isPremium={isPremium}
               onMemberSettingsPress={(memberId) => {
                 const row = members.find((member) => member.userId._id === memberId);
                 if (row) {
@@ -209,6 +238,7 @@ export function FamilyHubView() {
         onClose={() => setInviteSheetVisible(false)}
         petId={pet?._id ?? null}
         token={token}
+        isPremium={isPremium}
         onInviteGenerated={(generated) => {
           setInvite(generated);
         }}
@@ -219,22 +249,30 @@ export function FamilyHubView() {
         member={selectedMember}
         petId={pet?._id ?? null}
         token={token}
+        isPremium={isPremium}
         onClose={() => {
           setPermissionsVisible(false);
           setSelectedMember(null);
         }}
         onUpdated={reloadMembers}
       />
-    </SafeAreaView>
+
+      <LogJournalSheet
+        visible={journalVisible}
+        onClose={() => setJournalVisible(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: HomeTheme.background,
+    backgroundColor: '#F1F7F1', // Soft green background
   },
-  scrollContent: {},
+  scrollContent: {
+    paddingTop: Spacing.lg,
+  },
   bannerWrap: {
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.sm,

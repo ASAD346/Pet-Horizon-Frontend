@@ -93,3 +93,24 @@ export function parseInviteTokenFromUrl(url: string): string | null {
 
   return null;
 }
+
+/** Shorten and mask the sensitive token part of the invite link for visual display security. */
+export function maskInviteLink(link: string | null | undefined): string {
+  if (!link) return '—';
+  // Match standard web join link format: protocol + host + /join/family/ + token
+  const match = link.match(/^(https?:\/\/[^\/]+(?:\/join\/family\/|\/invite\/))(.+)$/i);
+  if (match) {
+    const base = match[1];
+    const token = match[2];
+    if (token.length > 8) {
+      // E.g., https://pethorizon.app/join/family/••••••••f4e8
+      return `${base}••••••••${token.slice(-4)}`;
+    }
+    return `${base}••••••••`;
+  }
+  
+  if (link.length > 30) {
+    return `${link.slice(0, 26)}••••••••`;
+  }
+  return link;
+}

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
@@ -31,15 +33,19 @@ import {
   buildInviteShareMessage,
   resolveInviteAppLink,
   resolveInviteWebLink,
+  maskInviteLink,
 } from '@/lib/family/inviteLinks';
 import { generatePetInvite } from '@/services/family/familyApi';
 import type { GenerateInviteResponse } from '@/types/family';
+
+const BRAND_GREEN = '#2E7D32';
 
 interface InviteFamilySheetProps {
   visible: boolean;
   onClose: () => void;
   petId: string | null;
   token: string | null;
+  isPremium?: boolean;
   onInviteGenerated?: (invite: GenerateInviteResponse) => void;
 }
 
@@ -48,6 +54,7 @@ export function InviteFamilySheet({
   onClose,
   petId,
   token,
+  isPremium = false,
   onInviteGenerated,
 }: InviteFamilySheetProps) {
   const insets = useSafeAreaInsets();
@@ -190,140 +197,168 @@ export function InviteFamilySheet({
     }
   };
 
+  const headerColors = isPremium
+    ? (['#0E3821', '#184F2E', '#267343'] as const)
+    : (['#3A8F3B', '#5CB35D'] as const);
+
+  const activeGreen = isPremium ? '#184F2E' : '#3A8F3B';
+
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]} onPress={() => {}}>
-          <View style={styles.handle} />
-
-          <View style={styles.header}>
-            <AppText variant="h3" weight="800" color={SheetColors.title} style={styles.headerTitle}>
-              Invite Family Member
-            </AppText>
-            <TouchableOpacity onPress={onClose} hitSlop={12} accessibilityLabel="Close">
-              <Ionicons name="close" size={24} color={HomeTheme.text} />
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <SectionLabel text="SET PERMISSIONS FOR INVITE" />
-
-            {INVITE_PERMISSION_OPTIONS.map((option) => {
-              const enabled = modules.includes(option.id);
-              return (
-                <View key={option.id} style={styles.permissionRow}>
-                  <View style={styles.permissionLeft}>
-                    <View style={styles.permissionIconWrap}>
-                      <Ionicons name={option.icon} size={18} color={HomeTheme.cardGreen} />
-                    </View>
-                    <AppText variant="bodySmall" weight="600" color={HomeTheme.text}>
-                      {option.label}
+      <KeyboardAvoidingView
+        style={styles.overlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <Pressable style={styles.overlayInner} onPress={onClose}>
+          <Pressable style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]} onPress={() => {}}>
+            <LinearGradient
+              colors={headerColors as any}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.gradientHeader}
+            >
+              <View style={styles.handle} />
+              <View style={styles.headerContent}>
+                <View style={styles.headerLeft}>
+                  <View style={styles.headerIconBadge}>
+                    <Ionicons name="people-outline" size={18} color="#FFFFFF" />
+                  </View>
+                  <View>
+                    <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
+                      Invite Family Member
+                    </AppText>
+                    <AppText variant="caption" color="rgba(255,255,255,0.75)">
+                      Share access with caregivers
                     </AppText>
                   </View>
-                  <Switch
-                    value={enabled}
-                    onValueChange={() => toggleModule(option.id)}
-                    trackColor={{ false: '#E5E7EB', true: HomeTheme.cardGreen }}
-                    thumbColor={HomeTheme.white}
-                    ios_backgroundColor="#E5E7EB"
-                  />
                 </View>
-              );
-            })}
-
-            {error ? (
-              <View style={styles.banner}>
-                <AuthErrorBanner message={error} />
-                <TouchableOpacity style={styles.retryBtn} onPress={loadInvite} activeOpacity={0.8}>
-                  <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
-                    Try again
-                  </AppText>
+                <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.closeButton}>
+                  <Ionicons name="close" size={20} color="rgba(255,255,255,0.85)" />
                 </TouchableOpacity>
               </View>
-            ) : null}
+            </LinearGradient>
 
-            <SectionLabel text="SHARE INVITATION LINK" />
-            <AppText variant="caption" color={HomeTheme.textMuted} style={styles.linkHint}>
-              Tap the link to open it. Share the https link — it works in WhatsApp and messages.
-            </AppText>
-            <View style={styles.linkRow}>
-              <TouchableOpacity
-                style={styles.linkTapArea}
-                onPress={handleOpenWebLink}
-                disabled={loading || !webLink}
-                activeOpacity={0.85}
-                accessibilityRole="link"
-                accessibilityLabel="Open invitation link"
-              >
-                <AppText
-                  variant="bodySmall"
-                  weight="600"
-                  color={HomeTheme.cardGreen}
-                  style={styles.linkText}
-                  numberOfLines={2}
-                >
-                  {loading ? 'Generating link…' : webLink ?? '—'}
-                </AppText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.copyBtn}
-                onPress={handleCopyLink}
-                disabled={loading || !webLink}
-                activeOpacity={0.8}
-                accessibilityLabel="Copy invitation link"
-              >
-                <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color={HomeTheme.cardGreen} />
-              </TouchableOpacity>
-            </View>
-            {copied ? (
-              <AppText variant="caption" color={HomeTheme.cardGreen} style={styles.copiedHint}>
-                Link copied — paste in chat (it will be tappable)
-              </AppText>
-            ) : null}
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.scrollContent}>
+              <SectionLabel text="SET PERMISSIONS FOR INVITE" />
 
-            {appLink ? (
-              <TouchableOpacity
-                style={styles.openAppBtn}
-                onPress={handleOpenAppLink}
-                disabled={loading}
-                activeOpacity={0.85}
-              >
-                <Ionicons name="open-outline" size={18} color={HomeTheme.cardGreen} />
-                <AppText variant="bodySmall" weight="700" color={HomeTheme.cardGreen}>
-                  Open directly in Pet Horizon app
-                </AppText>
-              </TouchableOpacity>
-            ) : null}
+              {INVITE_PERMISSION_OPTIONS.map((option) => {
+                const enabled = modules.includes(option.id);
+                return (
+                  <View key={option.id} style={styles.permissionRow}>
+                    <View style={styles.permissionLeft}>
+                      <View style={[styles.permissionIconWrap, { backgroundColor: isPremium ? '#E8F5E9' : '#EEF8EE' }]}>
+                        <Ionicons name={option.icon} size={18} color={activeGreen} />
+                      </View>
+                      <AppText variant="bodySmall" weight="600" color={HomeTheme.text}>
+                        {option.label}
+                      </AppText>
+                    </View>
+                    <Switch
+                      value={enabled}
+                      onValueChange={() => toggleModule(option.id)}
+                      trackColor={{ false: '#E5E7EB', true: activeGreen }}
+                      thumbColor={HomeTheme.white}
+                      ios_backgroundColor="#E5E7EB"
+                    />
+                  </View>
+                );
+              })}
 
-            <SectionLabel text="OR SCAN QR CODE" />
-            <View style={styles.qrWrap}>
-              {loading ? (
-                <SkeletonQRBox />
-              ) : webLink ? (
-                <InviteQrCode value={webLink} size={200} />
-              ) : (
-                <View style={styles.qrPlaceholder}>
-                  <Ionicons name="qr-code-outline" size={48} color={HomeTheme.textMuted} />
+              {error ? (
+                <View style={styles.banner}>
+                  <AuthErrorBanner message={error} />
+                  <TouchableOpacity style={styles.retryBtn} onPress={loadInvite} activeOpacity={0.8}>
+                    <AppText variant="bodySmall" weight="700" color={activeGreen}>
+                      Try again
+                    </AppText>
+                  </TouchableOpacity>
                 </View>
-              )}
-            </View>
-            <AppText variant="caption" color={HomeTheme.textMuted} style={styles.qrCaption}>
-              Scan to open the app and join family
-            </AppText>
-          </ScrollView>
+              ) : null}
 
-          <AppButton
-            title="Send Invitation"
-            onPress={handleShare}
-            disabled={loading || !invite}
-            variant="success"
-            size="md"
-            style={styles.shareBtn}
-            textStyle={styles.shareBtnText}
-            icon={<Ionicons name="share-social-outline" size={20} color={HomeTheme.white} />}
-          />
+              <SectionLabel text="SHARE INVITATION LINK" />
+              <AppText variant="caption" color={HomeTheme.textMuted} style={styles.linkHint}>
+                Tap the link to open it. Share the https link — it works in WhatsApp and messages.
+              </AppText>
+              <View style={[styles.linkRow, { borderColor: isPremium ? 'rgba(24, 79, 46, 0.25)' : 'rgba(92, 179, 93, 0.25)', backgroundColor: isPremium ? '#F4F9F4' : '#EEF8EE' }]}>
+                <TouchableOpacity
+                  style={styles.linkTapArea}
+                  onPress={handleOpenWebLink}
+                  disabled={loading || !webLink}
+                  activeOpacity={0.85}
+                  accessibilityRole="link"
+                  accessibilityLabel="Open invitation link"
+                >
+                  <AppText
+                    variant="bodySmall"
+                    weight="600"
+                    color={activeGreen}
+                    style={styles.linkText}
+                    numberOfLines={2}
+                  >
+                    {loading ? 'Generating link…' : maskInviteLink(webLink)}
+                  </AppText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.copyBtn}
+                  onPress={handleCopyLink}
+                  disabled={loading || !webLink}
+                  activeOpacity={0.8}
+                  accessibilityLabel="Copy invitation link"
+                >
+                  <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color={activeGreen} />
+                </TouchableOpacity>
+              </View>
+              {copied ? (
+                <AppText variant="caption" color={activeGreen} style={styles.copiedHint}>
+                  Link copied — paste in chat (it will be tappable)
+                </AppText>
+              ) : null}
+
+              {appLink ? (
+                <TouchableOpacity
+                  style={styles.openAppBtn}
+                  onPress={handleOpenAppLink}
+                  disabled={loading}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons name="open-outline" size={18} color={activeGreen} />
+                  <AppText variant="bodySmall" weight="700" color={activeGreen}>
+                    Open directly in Pet Horizon app
+                  </AppText>
+                </TouchableOpacity>
+              ) : null}
+
+              <SectionLabel text="OR SCAN QR CODE" />
+              <View style={styles.qrWrap}>
+                {loading ? (
+                  <SkeletonQRBox />
+                ) : webLink ? (
+                  <InviteQrCode value={webLink} size={200} />
+                ) : (
+                  <View style={styles.qrPlaceholder}>
+                    <Ionicons name="qr-code-outline" size={48} color={HomeTheme.textMuted} />
+                  </View>
+                )}
+              </View>
+              <AppText variant="caption" color={HomeTheme.textMuted} style={styles.qrCaption}>
+                Scan to open the app and join family
+              </AppText>
+            </ScrollView>
+
+            <AppButton
+              title="Send Invitation"
+              onPress={handleShare}
+              disabled={loading || !invite}
+              variant="success"
+              size="md"
+              style={[styles.shareBtn, { backgroundColor: activeGreen }]}
+              textStyle={styles.shareBtnText}
+              icon={<Ionicons name="share-social-outline" size={20} color={HomeTheme.white} />}
+            />
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -331,35 +366,72 @@ export function InviteFamilySheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: SheetColors.overlay,
+  },
+  overlayInner: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 30, 15, 0.55)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: SheetColors.sheetBg,
+    backgroundColor: '#FAFFFE',
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
-    paddingTop: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    maxHeight: '92%',
+    paddingTop: 0,
+    maxHeight: '94%',
+    overflow: 'hidden',
   },
   handle: {
     alignSelf: 'center',
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D0D0D0',
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    marginTop: Spacing.sm,
     marginBottom: Spacing.sm,
   },
-  header: {
+  gradientHeader: {
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    marginBottom: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    flex: 1,
+  },
+  headerIconBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    flex: 1,
-    fontSize: 22,
-    lineHeight: 28,
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  closeButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.sm,
   },
   permissionRow: {
     flexDirection: 'row',
@@ -384,7 +456,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#EEF8EE',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -402,10 +473,8 @@ const styles = StyleSheet.create({
   linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EEF8EE',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: 'rgba(92, 179, 93, 0.25)',
     paddingRight: Spacing.xs,
     minHeight: 48,
     marginBottom: Spacing.xs,
@@ -463,10 +532,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   shareBtn: {
-    width: '100%',
     borderRadius: Radius.full,
     minHeight: 52,
     marginBottom: Spacing.sm,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
   },
   shareBtnText: {
     fontSize: 16,
