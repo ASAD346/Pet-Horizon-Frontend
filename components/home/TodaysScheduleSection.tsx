@@ -371,11 +371,14 @@ function isScheduleActiveToday(row: ScheduleRow): boolean {
   const item = row.item as any;
 
   // 1. Explicit single date check
-  const explicitDateStr = item.date || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate;
-  const explicitDate = parseDateString(explicitDateStr);
-  
-  if (explicitDate) {
-    return explicitDate.getTime() === today.getTime();
+  const scheduleType = item.scheduleType;
+  if (scheduleType === 'single' || !scheduleType) {
+    const explicitDateStr = item.date || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
+    const explicitDate = parseDateString(explicitDateStr);
+    
+    if (explicitDate) {
+      return explicitDate.getTime() === today.getTime();
+    }
   }
 
   // 2. Date Range check

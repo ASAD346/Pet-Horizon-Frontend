@@ -19,6 +19,7 @@ import { ScheduleScreenHeader } from './ScheduleScreenHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
@@ -103,6 +104,7 @@ export function ScheduleSetupView({
   const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
   const { unreadCount } = useNotifications(token);
+  const queryClient = useQueryClient();
   const {
     canViewSchedule,
     canEditSchedule,
@@ -309,6 +311,7 @@ export function ScheduleSetupView({
       await saveScheduleEntry(token, pet._id, editor.section.key, editor.entry, {
         groomingVisible,
       });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       setEditor(null);
       setFormSuccess(
         editor.mode === 'add' ? 'Schedule added successfully.' : 'Schedule updated successfully.',
@@ -346,6 +349,7 @@ export function ScheduleSetupView({
 
     try {
       await deleteScheduleEntry(token, key, remoteId);
+      queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       setFormSuccess('Schedule deleted.');
       await reloadSchedules(pet._id);
     } catch (e) {
@@ -416,6 +420,13 @@ export function ScheduleSetupView({
             visibleSections.map((sectionMeta) => {
               const sectionState = sections[sectionMeta.key];
               const canEdit = canEditSchedule(sectionMeta.key);
+              const visibleEntries = sectionState.entries.filter(
+                (entry: any) =>
+                  entry.status !== 'done' &&
+                  entry.status !== 'skipped' &&
+                  !entry.isComplete &&
+                  !(sectionMeta.key === 'grooming' && entry.performedAt),
+              );
               return (
                 <ScheduleSectionCard
                   key={sectionMeta.key}
@@ -424,9 +435,9 @@ export function ScheduleSetupView({
                   onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
                   canEdit={canEdit}
                 >
-                  {schedulesLoading && sectionState.entries.length === 0 ? (
+                  {schedulesLoading && visibleEntries.length === 0 ? (
                     <ScheduleEntriesSkeleton />
-                  ) : sectionState.entries.length === 0 ? (
+                  ) : visibleEntries.length === 0 ? (
                     <View style={styles.emptyHintBox}>
                        <MaterialCommunityIcons
                         name={sectionMeta.icon}
@@ -439,7 +450,7 @@ export function ScheduleSetupView({
                       </AppText>
                     </View>
                   ) : (
-                    sectionState.entries.map((entry) => {
+                    visibleEntries.map((entry) => {
                       const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
                       return (
                         <ScheduleEntrySummaryCard

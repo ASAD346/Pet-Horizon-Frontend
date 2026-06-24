@@ -83,6 +83,8 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
     notificationsOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
+    status: (item as any).status,
+    isComplete: (item as any).isComplete,
   };
 }
 
@@ -102,6 +104,8 @@ export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
     notificationsOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
+    status: (item as any).status,
+    isComplete: (item as any).isComplete,
   };
 }
 
@@ -131,6 +135,8 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
     reminderOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',
+    status: (item as any).status,
+    isComplete: (item as any).isComplete,
   };
 }
 
@@ -152,6 +158,8 @@ export function mapVaccinationItem(item: VaccinationScheduleItem): VaccinationEn
     isRecurring: meta.isRecurring ?? false,
     recurrenceInterval: meta.recurrenceInterval ?? 'yearly',
     notes: meta.notes ?? item.notes ?? item.description ?? '',
+    status: (item as any).status,
+    isComplete: (item as any).isComplete,
   };
 }
 
@@ -167,6 +175,7 @@ export function mapGroomingItem(item: GroomingRecord): GroomingEntryState {
     }),
     reminderOn: item.reminderEnabled === true,
     notes: item.notes ?? '',
+    performedAt: item.performedAt ?? undefined,
   };
 }
 

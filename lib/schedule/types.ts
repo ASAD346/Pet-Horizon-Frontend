@@ -15,6 +15,8 @@ export interface FeedingEntryState {
   notificationsOn: boolean;
   reminderMinutes: number;
   notes: string;
+  status?: string;
+  isComplete?: boolean;
 }
 
 export interface WalkEntryState {
@@ -27,6 +29,8 @@ export interface WalkEntryState {
   notificationsOn: boolean;
   reminderMinutes: number;
   notes: string;
+  status?: string;
+  isComplete?: boolean;
 }
 
 export interface MedicineEntryState {
@@ -43,6 +47,8 @@ export interface MedicineEntryState {
   reminderOn: boolean;
   reminderMinutes: number;
   notes: string;
+  status?: string;
+  isComplete?: boolean;
 }
 
 export interface VaccinationEntryState {
@@ -56,6 +62,8 @@ export interface VaccinationEntryState {
   isRecurring: boolean;
   recurrenceInterval: VaccinationRecurrenceInterval;
   notes: string;
+  status?: string;
+  isComplete?: boolean;
 }
 
 export interface GroomingEntryState {
@@ -65,6 +73,9 @@ export interface GroomingEntryState {
   scheduleDate: ScheduleDateState;
   reminderOn: boolean;
   notes: string;
+  status?: string;
+  isComplete?: boolean;
+  performedAt?: string;
 }
 
 export interface ScheduleSectionsState {
