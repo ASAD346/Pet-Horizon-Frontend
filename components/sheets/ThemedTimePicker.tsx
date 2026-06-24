@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   sheet: {
-    backgroundColor: '#F1F7F1',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: Spacing.md,
     borderWidth: 1.5,

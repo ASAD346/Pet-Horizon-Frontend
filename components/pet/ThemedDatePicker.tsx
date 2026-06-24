@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Palette, Radius, Spacing } from '../../constants/theme';
+import { useAppThemeColor } from '../sheets/useAppThemeColor';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
@@ -91,6 +92,7 @@ export function ThemedDatePicker({
   onClose,
   onConfirm,
 }: ThemedDatePickerProps) {
+  const { accentColor } = useAppThemeColor();
   const [viewYear, setViewYear] = useState(value.getFullYear());
   const [viewMonth, setViewMonth] = useState(value.getMonth());
   const [selected, setSelected] = useState(value);
@@ -155,7 +157,7 @@ export function ThemedDatePicker({
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHeader}>
-            <Ionicons name="calendar" size={20} color="#5CB35D" />
+            <Ionicons name="calendar" size={20} color={accentColor} />
             <AppText variant="h3" weight="800" color="#1A2B4E">
               {title}
             </AppText>
@@ -211,7 +213,7 @@ export function ThemedDatePicker({
               return (
                 <TouchableOpacity
                   key={name}
-                  style={[styles.pickerChip, active && styles.pickerChipActive, disabled && styles.pickerChipDisabled]}
+                  style={[styles.pickerChip, active && { backgroundColor: accentColor, borderColor: accentColor }, disabled && styles.pickerChipDisabled]}
                   onPress={() => !disabled && setViewMonth(index)}
                   disabled={disabled}
                 >
@@ -237,7 +239,7 @@ export function ThemedDatePicker({
               return (
                 <TouchableOpacity
                   key={year}
-                  style={[styles.pickerChip, active && styles.pickerChipActive]}
+                  style={[styles.pickerChip, active && { backgroundColor: accentColor, borderColor: accentColor }]}
                   onPress={() => setViewYear(year)}
                 >
                   <AppText
@@ -283,8 +285,8 @@ export function ThemedDatePicker({
                   <View
                     style={[
                       styles.dayInner,
-                      isSelected && styles.dayInnerSelected,
-                      isToday && !isSelected && styles.dayInnerToday,
+                      isSelected && { backgroundColor: accentColor, shadowColor: accentColor },
+                      isToday && !isSelected && { borderWidth: 1.5, borderColor: accentColor },
                     ]}
                   >
                     <AppText
@@ -315,7 +317,7 @@ export function ThemedDatePicker({
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.confirmBtn}
+              style={[styles.confirmBtn, { backgroundColor: accentColor, shadowColor: accentColor }]}
               onPress={() => onConfirm(selected)}
               activeOpacity={0.85}
             >
@@ -338,7 +340,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
   },
   sheet: {
-    backgroundColor: '#F1F7F1',
+    backgroundColor: '#FFFFFF',
     borderRadius: 24,
     padding: Spacing.md,
     borderWidth: 1.5,
@@ -378,10 +380,6 @@ const styles = StyleSheet.create({
     borderColor: '#EFEFEF',
     minWidth: 46,
     alignItems: 'center',
-  },
-  pickerChipActive: {
-    backgroundColor: '#5CB35D',
-    borderColor: '#5CB35D',
   },
   pickerChipDisabled: {
     opacity: 0.35,
@@ -428,18 +426,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayInnerSelected: {
-    backgroundColor: '#5CB35D',
-    shadowColor: '#5CB35D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-  dayInnerToday: {
-    borderWidth: 1.5,
-    borderColor: '#5CB35D',
-  },
   actions: {
     flexDirection: 'row',
     gap: Spacing.sm,
@@ -458,10 +444,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#5CB35D',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#5CB35D',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
