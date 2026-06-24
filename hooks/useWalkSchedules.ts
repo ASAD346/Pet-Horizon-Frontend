@@ -59,6 +59,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
           prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const, completedAt: undefined } : s),
         );
         log.fail('Walk', 'Complete action failed', getErrorMessage(error));
+        showToast(`Failed to complete: ${getErrorMessage(error)}`);
         throw error;
       } finally {
         setActionId(null);

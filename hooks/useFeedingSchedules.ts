@@ -63,6 +63,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
           prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const, completedAt: undefined } : s),
         );
         log.fail('Feeding', 'Complete action failed', getErrorMessage(error));
+        showToast(`Failed to complete: ${getErrorMessage(error)}`);
         throw error;
       } finally {
         setActionId(null);
@@ -93,6 +94,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
           prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const } : s),
         );
         log.fail('Feeding', 'Skip action failed', getErrorMessage(error));
+        showToast(`Failed to skip: ${getErrorMessage(error)}`);
         throw error;
       } finally {
         setActionId(null);

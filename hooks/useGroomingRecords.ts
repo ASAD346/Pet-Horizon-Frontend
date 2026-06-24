@@ -82,6 +82,7 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
           prev.map((r) => r._id === recordId ? { ...r, performedAt: undefined } : r),
         );
         log.fail('Grooming', 'Complete action failed', getErrorMessage(error));
+        showToast(`Failed to complete: ${getErrorMessage(error)}`);
         throw error;
       } finally {
         setActionId(null);

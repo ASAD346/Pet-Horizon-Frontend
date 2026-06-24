@@ -1,28 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
 import { useToast } from '@/hooks/useToast';
-import {
-  FormChipRow,
-  FormPickerField,
-  FormSection,
-  FormSectionLabel,
-  FormSheetShell,
-  FormSuffixInput,
-  FormSwitchRow,
-  FormTextField,
-  SheetOptionPicker,
-  ThemedTimePicker,
-  formSheetStyles,
-} from '../sheets';
-import type { SheetOption } from '../sheets';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
-  addMinutesToTimeHHmm,
   DEFAULT_REMINDER_MINUTES,
-  formatTimeDisplay,
-  getReminderMinutesLabel,
-  REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
 import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
@@ -31,19 +12,14 @@ import {
   parseDurationMinutes,
   WALK_TIME_OPTIONS,
 } from '@/lib/walk/walkForm';
-import { createWalkSchedule } from '@/services/schedules/walkApi';
 import {
-  buildScheduleDatePayload,
   createDefaultScheduleDate,
   validateScheduleDate,
-  type ScheduleDateState,
 } from '@/lib/schedule/scheduleDate';
-import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
-
-const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
-  value: String(option.value),
-  label: option.label,
-}));
+import { FormSheetShell } from '../sheets';
+import { WalkEntryCard } from '../schedule/entries/WalkEntryCard';
+import type { WalkEntryState } from '@/lib/schedule/types';
+import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 
 const WALK_THEME = LOG_SHEET_THEMES.walk;
 
@@ -53,6 +29,7 @@ interface LogWalkSheetProps {
   petId: string | null;
   token: string | null;
   onSaved?: () => void;
+  initialEntry?: WalkEntryState | null;
 }
 
 export function LogWalkSheet({
@@ -61,29 +38,39 @@ export function LogWalkSheet({
   petId,
   token,
   onSaved,
+  initialEntry,
 }: LogWalkSheetProps) {
-  const [walkTime, setWalkTime] = useState<string>(WALK_TIME_OPTIONS[0].value);
-  const [duration, setDuration] = useState('45');
-  const [walkClockTime, setWalkClockTime] = useState(defaultWalkTimeDate);
-  const [scheduleDate, setScheduleDate] = useState<ScheduleDateState>(createDefaultScheduleDate('ongoing'));
-  const [reminderMinutes, setReminderMinutes] = useState(DEFAULT_REMINDER_MINUTES);
-  const [notificationsOn, setNotificationsOn] = useState(true);
-  const [notes, setNotes] = useState('');
-  const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
-  const [timePickerVisible, setTimePickerVisible] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [entry, setEntry] = useState<WalkEntryState>(() => ({
+    id: 'draft',
+    walkTime: WALK_TIME_OPTIONS[0].value,
+    duration: '45',
+    walkClockTime: defaultWalkTimeDate(),
+    scheduleDate: createDefaultScheduleDate('ongoing'),
+    reminderMinutes: DEFAULT_REMINDER_MINUTES,
+    notificationsOn: true,
+    notes: '',
+  }));
 
   const resetForm = useCallback(() => {
-    setWalkTime(WALK_TIME_OPTIONS[0].value);
-    setDuration('45');
-    setWalkClockTime(defaultWalkTimeDate());
-    setScheduleDate(createDefaultScheduleDate('ongoing'));
-    setReminderMinutes(DEFAULT_REMINDER_MINUTES);
-    setNotificationsOn(true);
-    setNotes('');
+    if (initialEntry) {
+      setEntry({ ...initialEntry });
+    } else {
+      setEntry({
+        id: 'draft',
+        walkTime: WALK_TIME_OPTIONS[0].value,
+        duration: '45',
+        walkClockTime: defaultWalkTimeDate(),
+        scheduleDate: createDefaultScheduleDate('ongoing'),
+        reminderMinutes: DEFAULT_REMINDER_MINUTES,
+        notificationsOn: true,
+        notes: '',
+      });
+    }
     setError(null);
-  }, []);
+  }, [initialEntry]);
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (visible) {
@@ -99,36 +86,26 @@ export function LogWalkSheet({
       return;
     }
 
-    const durationMinutes = parseDurationMinutes(duration);
+    const durationMinutes = parseDurationMinutes(entry.duration);
     if (durationMinutes === null) {
       setError('Enter a valid duration in minutes.');
       return;
     }
-    const dateError = validateScheduleDate(scheduleDate);
+    const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
       setError(dateError);
       return;
     }
 
-    const timeHHmm = dateToTimeHHmm(walkClockTime);
-    const noteText = notes.trim();
+    const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
 
     setSaving(true);
     setError(null);
     try {
-      await createWalkSchedule(token, {
-        petId,
-        walkTime,
-        time: timeHHmm,
-        duration: durationMinutes,
-        notes: noteText || undefined,
-        reminder: notificationsOn,
-        reminderMinutes: notificationsOn ? reminderMinutes : undefined,
-        reminderTime: notificationsOn ? addMinutesToTimeHHmm(timeHHmm, reminderMinutes) : undefined,
-        ...buildScheduleDatePayload(scheduleDate),
-      });
-      log.ok('LogWalk', 'Walk schedule saved', { walkTime, time: timeHHmm, duration: durationMinutes });
-      showToast('Walk logged successfully!');
+      await saveScheduleEntry(token, petId, 'walk', entry);
+      const isEdit = Boolean(entry.scheduleId);
+      log.ok('LogWalk', isEdit ? 'Walk schedule updated' : 'Walk schedule saved', { walkTime: entry.walkTime, time: timeHHmm, duration: durationMinutes });
+      showToast(isEdit ? 'Walk schedule updated successfully!' : 'Walk logged successfully!');
       onSaved?.();
       onClose();
     } catch (e) {
@@ -139,122 +116,29 @@ export function LogWalkSheet({
   };
 
   return (
-    <>
-      <FormSheetShell
-        visible={visible}
-        onClose={onClose}
-        title="Log Walk"
-        icon={WALK_THEME.icon}
+    <FormSheetShell
+      visible={visible}
+      onClose={onClose}
+      title={entry.scheduleId ? 'Edit Walk' : 'Log Walk'}
+      icon={WALK_THEME.icon}
+      accentColor={WALK_THEME.color}
+      accentBg={WALK_THEME.bg}
+      saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Walk'}
+      onSave={handleSave}
+      saving={saving}
+      error={error}
+      compact
+    >
+      <WalkEntryCard
+        entry={entry}
+        index={0}
         accentColor={WALK_THEME.color}
         accentBg={WALK_THEME.bg}
-        saveLabel="Save Walk"
-        onSave={handleSave}
-        saving={saving}
-        error={error}
-        compact
-      >
-        <FormSection
-          title="Walk details"
-          icon="walk"
-          accentColor={WALK_THEME.color}
-          accentBg={WALK_THEME.bg}
-        >
-          <FormSectionLabel text="WHICH WALK?" />
-          <FormChipRow
-            options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-            selected={walkTime}
-            onSelect={setWalkTime}
-            accentColor={WALK_THEME.color}
-          />
-
-          <View style={formSheetStyles.twoColRow}>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="TIME" />
-              <FormPickerField
-                label={formatTimeDisplay(walkClockTime)}
-                icon="time-outline"
-                onPress={() => setTimePickerVisible(true)}
-              />
-            </View>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="DURATION" />
-              <FormSuffixInput
-                value={duration}
-                onChangeText={setDuration}
-                suffix="min"
-                keyboardType="number-pad"
-                placeholder="45"
-              />
-            </View>
-          </View>
-        </FormSection>
-
-        <FormSection
-          title="Schedule dates"
-          icon="calendar-clock"
-          accentColor={WALK_THEME.color}
-          accentBg={WALK_THEME.bg}
-        >
-          <ScheduleDateFields
-            value={scheduleDate}
-            onChange={setScheduleDate}
-            accentColor={WALK_THEME.color}
-          />
-        </FormSection>
-
-        <FormSection
-          title="Reminders"
-          icon="bell-outline"
-          accentColor={WALK_THEME.color}
-          accentBg={WALK_THEME.bg}
-        >
-          <FormSwitchRow
-            label="Remind me before walk"
-            value={notificationsOn}
-            onValueChange={setNotificationsOn}
-            accentColor={WALK_THEME.color}
-            icon="notifications-outline"
-          />
-          {notificationsOn ? (
-            <>
-              <FormSectionLabel text="REMINDER TIMING" />
-              <FormPickerField
-                label={getReminderMinutesLabel(reminderMinutes)}
-                icon="chevron-down"
-                onPress={() => setReminderPickerVisible(true)}
-              />
-            </>
-          ) : null}
-        </FormSection>
-
-        <FormSection title="Notes" icon="text-box-outline" accentColor={WALK_THEME.color} accentBg={WALK_THEME.bg}>
-          <FormTextField
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Park route, leash preference..."
-            multiline
-          />
-        </FormSection>
-      </FormSheetShell>
-
-      <SheetOptionPicker
-        visible={reminderPickerVisible}
-        title="Remind me after"
-        options={REMINDER_MINUTES_PICKER_OPTIONS}
-        selectedValue={String(reminderMinutes)}
-        onClose={() => setReminderPickerVisible(false)}
-        onSelect={(value) => setReminderMinutes(Number(value))}
+        canRemove={false}
+        embeddedInSheet
+        onChange={setEntry}
+        onRemove={() => {}}
       />
-
-      <ThemedTimePicker
-        visible={timePickerVisible}
-        value={walkClockTime}
-        onClose={() => setTimePickerVisible(false)}
-        onConfirm={(date) => {
-          setWalkClockTime(date);
-          setTimePickerVisible(false);
-        }}
-      />
-    </>
+    </FormSheetShell>
   );
 }

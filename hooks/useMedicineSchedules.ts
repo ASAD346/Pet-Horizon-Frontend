@@ -62,6 +62,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
           prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const, completedAt: undefined } : s),
         );
         log.fail('Medicine', 'Complete action failed', getErrorMessage(error));
+        showToast(`Failed to complete: ${getErrorMessage(error)}`);
         throw error;
       } finally {
         setActionId(null);

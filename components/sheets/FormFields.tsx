@@ -95,6 +95,7 @@ interface FormTextFieldProps {
   placeholder?: string;
   keyboardType?: 'default' | 'decimal-pad' | 'number-pad';
   multiline?: boolean;
+  accentColor?: string;
 }
 
 export function FormTextField({
@@ -103,7 +104,9 @@ export function FormTextField({
   placeholder,
   keyboardType = 'default',
   multiline,
+  accentColor = '#5CB35D',
 }: FormTextFieldProps) {
+  const [focused, setFocused] = React.useState(false);
   return (
     <TextInput
       value={value}
@@ -113,10 +116,13 @@ export function FormTextField({
       keyboardType={keyboardType}
       multiline={multiline}
       textAlignVertical={multiline ? 'top' : 'center'}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       style={[
         formSheetStyles.textInput,
         formSheetStyles.fieldGap,
         multiline ? formSheetStyles.notesInput : undefined,
+        focused && { borderColor: accentColor },
       ]}
     />
   );

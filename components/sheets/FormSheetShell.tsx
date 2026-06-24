@@ -56,12 +56,19 @@ export function FormSheetShell({
   const { user } = useAuth();
   const isPremium = user?.premiumStatus === 'premium';
 
-  // Cohesive brand gradients
-  const gradientColors = isPremium
-    ? (['#0E3821', '#184F2E', '#267343'] as const)
-    : (['#3A8F3B', '#5CB35D'] as const);
+  // Cohesive brand gradients matching the activity accent color
+  const getGradientColors = (color: string) => {
+    switch (color.toLowerCase()) {
+      case '#f5a623': return ['#F5A623', '#E08B14'] as const;
+      case '#5cb35d': return ['#5CB35D', '#4A9E4B'] as const;
+      case '#5b9bd5': return ['#5B9BD5', '#4182C3'] as const;
+      case '#e91e8c': return ['#E91E8C', '#D01470'] as const;
+      case '#673ab7': return ['#673AB7', '#512DA8'] as const;
+      default: return [color, color] as const;
+    }
+  };
 
-  const activeGreen = isPremium ? '#184F2E' : '#3A8F3B';
+  const gradientColors = getGradientColors(accentColor);
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -84,7 +91,7 @@ export function FormSheetShell({
             >
               {/* Drag handle inside the header */}
               <View style={[formSheetStyles.handle, { backgroundColor: 'rgba(255, 255, 255, 0.45)' }]} />
-
+ 
               <View style={formSheetStyles.headerContent}>
                 <View style={formSheetStyles.headerLeft}>
                   <View style={formSheetStyles.headerIconBadge}>
@@ -106,7 +113,7 @@ export function FormSheetShell({
                 </Pressable>
               </View>
             </LinearGradient>
-
+ 
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
@@ -120,12 +127,12 @@ export function FormSheetShell({
                   subtitle={subtitle}
                 />
               ) : null}
-
+ 
               {error ? <AuthErrorBanner message={error} /> : null}
-
+ 
               {children}
             </ScrollView>
-
+ 
             <View style={formSheetStyles.footer}>
               <AppButton
                 title={saveLabel}
@@ -134,7 +141,7 @@ export function FormSheetShell({
                 disabled={saving || saveDisabled}
                 variant="success"
                 size="md"
-                style={[formSheetStyles.saveBtn, { backgroundColor: activeGreen }]}
+                style={[formSheetStyles.saveBtn, { backgroundColor: accentColor }]}
                 textStyle={formSheetStyles.saveBtnText}
               />
             </View>

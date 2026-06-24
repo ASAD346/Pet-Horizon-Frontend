@@ -85,6 +85,7 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
           ),
         );
         log.fail('Vaccination', 'Complete action failed', getErrorMessage(error));
+        showToast(`Failed to complete: ${getErrorMessage(error)}`);
         throw error;
       } finally {
         setActionId(null);

@@ -8,6 +8,7 @@ import type {
   WalkEntryState,
 } from '@/lib/schedule/types';
 import { FormSheetShell } from '@/components/sheets';
+import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import { type ScheduleSectionTheme } from './scheduleTheme';
 import { FeedingEntryCard } from './entries/FeedingEntryCard';
 import { WalkEntryCard } from './entries/WalkEntryCard';
@@ -29,6 +30,14 @@ const SECTION_SUBTITLES: Record<ScheduleSectionTheme['key'], string | undefined>
   medicine: undefined,
   vaccination: undefined,
   grooming: undefined,
+};
+
+const keyMap: Record<ScheduleSectionTheme['key'], keyof typeof LOG_SHEET_THEMES> = {
+  feeding: 'food',
+  walk: 'walk',
+  medicine: 'medicine',
+  vaccination: 'vaccination',
+  grooming: 'grooming',
 };
 
 export interface ScheduleEntryEditorSheetProps {
@@ -62,11 +71,12 @@ export function ScheduleEntryEditorSheet({
 }: ScheduleEntryEditorSheetProps) {
   const [draft, setDraft] = useState<EditorEntry | null>(entry);
   const { user } = useAuth();
-  const isPremium = user?.premiumStatus === 'premium';
 
-  // Cohesive brand colors
-  const brandColor = isPremium ? '#184F2E' : '#3A8F3B';
-  const brandBg = isPremium ? '#E8F5E9' : '#EEF8EE';
+  const themeKey = keyMap[section.key];
+  const theme = LOG_SHEET_THEMES[themeKey];
+  const accentColor = theme.color;
+  const accentBg = theme.bg;
+  const iconName = theme.icon;
 
   useEffect(() => {
     if (visible) setDraft(entry);
@@ -85,9 +95,9 @@ export function ScheduleEntryEditorSheet({
       onClose={onClose}
       title={title}
       subtitle={SECTION_SUBTITLES[section.key]}
-      icon={section.icon}
-      accentColor={brandColor}
-      accentBg={brandBg}
+      icon={iconName}
+      accentColor={accentColor}
+      accentBg={accentBg}
       saveLabel={mode === 'add' ? 'Add Schedule' : 'Save Changes'}
       onSave={onSave}
       saving={saving}
@@ -99,8 +109,8 @@ export function ScheduleEntryEditorSheet({
         <FeedingEntryCard
           entry={draft as FeedingEntryState}
           index={0}
-          accentColor={brandColor}
-          accentBg={brandBg}
+          accentColor={accentColor}
+          accentBg={accentBg}
           mealTypeOptions={mealTypeOptions}
           unitOptions={unitOptions}
           canRemove={false}
@@ -114,8 +124,8 @@ export function ScheduleEntryEditorSheet({
         <WalkEntryCard
           entry={draft as WalkEntryState}
           index={0}
-          accentColor={brandColor}
-          accentBg={brandBg}
+          accentColor={accentColor}
+          accentBg={accentBg}
           canRemove={false}
           embeddedInSheet
           onChange={(next) => handleChange(next)}
@@ -127,8 +137,8 @@ export function ScheduleEntryEditorSheet({
         <MedicineEntryCard
           entry={draft as MedicineEntryState}
           index={0}
-          accentColor={brandColor}
-          accentBg={brandBg}
+          accentColor={accentColor}
+          accentBg={accentBg}
           canRemove={false}
           embeddedInSheet
           onChange={(next) => handleChange(next)}
@@ -140,8 +150,8 @@ export function ScheduleEntryEditorSheet({
         <VaccinationEntryCard
           entry={draft as VaccinationEntryState}
           index={0}
-          accentColor={brandColor}
-          accentBg={brandBg}
+          accentColor={accentColor}
+          accentBg={accentBg}
           canRemove={false}
           embeddedInSheet
           onChange={(next) => handleChange(next)}
@@ -153,8 +163,8 @@ export function ScheduleEntryEditorSheet({
         <GroomingEntryCard
           entry={draft as GroomingEntryState}
           index={0}
-          accentColor={brandColor}
-          accentBg={brandBg}
+          accentColor={accentColor}
+          accentBg={accentBg}
           typeOptions={groomingTypeOptions}
           canRemove={false}
           embeddedInSheet

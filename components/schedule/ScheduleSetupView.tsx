@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/hooks/useToast';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
@@ -64,7 +65,11 @@ import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
 import { ScheduleSectionCard } from './ScheduleSectionCard';
 import { ScheduleEntrySummaryCard } from './ScheduleEntrySummaryCard';
-import { ScheduleEntryEditorSheet } from './ScheduleEntryEditorSheet';
+import { LogFoodSheet } from '../log-food/LogFoodSheet';
+import { LogWalkSheet } from '../log-walk/LogWalkSheet';
+import { LogMedicineSheet } from '../log-medicine/LogMedicineSheet';
+import { LogVaccinationSheet } from '../log-vaccination/LogVaccinationSheet';
+import { LogGroomingSheet } from '../log-grooming/LogGroomingSheet';
 import { SCHEDULE_SECTIONS, type ScheduleSectionTheme } from './scheduleTheme';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { scheduleFieldStyles } from './scheduleStyles';
@@ -105,6 +110,7 @@ export function ScheduleSetupView({
   const { pet, loading: petLoading } = useActivePet(token);
   const { unreadCount } = useNotifications(token);
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const {
     canViewSchedule,
     canEditSchedule,
@@ -313,12 +319,14 @@ export function ScheduleSetupView({
       });
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       setEditor(null);
-      setFormSuccess(
-        editor.mode === 'add' ? 'Schedule added successfully.' : 'Schedule updated successfully.',
-      );
+      const msg = editor.mode === 'add' ? 'Schedule added successfully.' : 'Schedule updated successfully.';
+      setFormSuccess(msg);
+      showToast(msg);
       await reloadSchedules(pet._id);
     } catch (e) {
-      setEditorError(e instanceof Error ? e.message : 'Unable to save schedule.');
+      const err = e instanceof Error ? e.message : 'Unable to save schedule.';
+      setEditorError(err);
+      showToast(err);
     } finally {
       setEditorSaving(false);
     }
@@ -351,9 +359,12 @@ export function ScheduleSetupView({
       await deleteScheduleEntry(token, key, remoteId);
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       setFormSuccess('Schedule deleted.');
+      showToast('Schedule deleted.');
       await reloadSchedules(pet._id);
     } catch (e) {
-      setFormError(e instanceof Error ? e.message : 'Unable to delete schedule.');
+      const err = e instanceof Error ? e.message : 'Unable to delete schedule.';
+      setFormError(err);
+      showToast(err);
     } finally {
       setDeletingId(null);
     }
@@ -487,19 +498,72 @@ export function ScheduleSetupView({
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {editor ? (
-        <ScheduleEntryEditorSheet
+      {editor?.section.key === 'feeding' ? (
+        <LogFoodSheet
           visible
-          mode={editor.mode}
-          section={editor.section}
-          entry={editor.entry}
-          mealTypeOptions={mealTypeOptions}
-          unitOptions={unitOptions}
-          groomingTypeOptions={groomingTypeOptions}
-          saving={editorSaving}
-          error={editorError}
-          onChange={(entry) => setEditor((prev) => (prev ? { ...prev, entry } : prev))}
-          onSave={() => void handleEditorSave()}
+          petId={pet?._id ?? null}
+          token={token}
+          initialEntry={editor.entry as FeedingEntryState}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });
+            if (pet?._id) void reloadSchedules(pet._id);
+          }}
+          onClose={closeEditor}
+        />
+      ) : null}
+
+      {editor?.section.key === 'walk' ? (
+        <LogWalkSheet
+          visible
+          petId={pet?._id ?? null}
+          token={token}
+          initialEntry={editor.entry as WalkEntryState}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });
+            if (pet?._id) void reloadSchedules(pet._id);
+          }}
+          onClose={closeEditor}
+        />
+      ) : null}
+
+      {editor?.section.key === 'medicine' ? (
+        <LogMedicineSheet
+          visible
+          petId={pet?._id ?? null}
+          token={token}
+          initialEntry={editor.entry as MedicineEntryState}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });
+            if (pet?._id) void reloadSchedules(pet._id);
+          }}
+          onClose={closeEditor}
+        />
+      ) : null}
+
+      {editor?.section.key === 'vaccination' ? (
+        <LogVaccinationSheet
+          visible
+          petId={pet?._id ?? null}
+          token={token}
+          initialEntry={editor.entry as VaccinationEntryState}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });
+            if (pet?._id) void reloadSchedules(pet._id);
+          }}
+          onClose={closeEditor}
+        />
+      ) : null}
+
+      {editor?.section.key === 'grooming' ? (
+        <LogGroomingSheet
+          visible
+          petId={pet?._id ?? null}
+          token={token}
+          initialEntry={editor.entry as GroomingEntryState}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });
+            if (pet?._id) void reloadSchedules(pet._id);
+          }}
           onClose={closeEditor}
         />
       ) : null}
