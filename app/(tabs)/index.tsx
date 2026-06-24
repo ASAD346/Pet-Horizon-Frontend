@@ -25,30 +25,11 @@ import {
 } from '@/components/home';
 
 import { useAuth } from '@/hooks/useAuth';
-
 import { useActivePet } from '@/hooks/useActivePet';
-
-import { useDashboardStatus } from '@/hooks/useDashboardStatus';
-
-import { useNotifications } from '@/hooks/useNotifications';
-
 import { usePetPermissions } from '@/hooks/usePetPermissions';
-
 import { usePets } from '@/hooks/usePets';
-
-import { useUpcomingTasks } from '@/hooks/useUpcomingTasks';
-
+import { useDashboardQuery } from '@/hooks/useDashboardQuery';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
-
-import { useFeedingSchedules } from '@/hooks/useFeedingSchedules';
-
-import { useWalkSchedules } from '@/hooks/useWalkSchedules';
-
-import { useMedicineSchedules } from '@/hooks/useMedicineSchedules';
-
-import { useGroomingRecords } from '@/hooks/useGroomingRecords';
-
-import { useVaccinationSchedules } from '@/hooks/useVaccinationSchedules';
 
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
@@ -74,7 +55,6 @@ import { LogWalkSheet } from '@/components/log-walk';
 
 import { LogVaccinationSheet } from '@/components/log-vaccination';
 
-import { useJournalEntries } from '@/hooks/useJournalEntries';
 import {
   mapActivityTypeToCategory,
   formatEntryTitle,
@@ -85,10 +65,7 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { SkeletonScreenLayout } from '@/components/ui/skeletons';
-import { clearCachedSchedules, getCacheVersion } from '@/lib/schedule/scheduleCache';
 import type { GroomingRecord } from '@/types/grooming';
-import { fetchPetMembers } from '@/services/family/familyApi';
-import type { PetMemberRow } from '@/types/family';
 
 
 
@@ -135,29 +112,17 @@ export default function HomeScreen() {
     accessBannerMessage,
   } = usePetPermissions(token, pet, user?._id);
 
-  const { profileStats, status: dashboardStatus } = useDashboardStatus(token);
-
-  const { tasks: dashboardTasks, loading: tasksLoading, reload: reloadTasks } = useUpcomingTasks(token);
-
-  const { unreadCount } = useNotifications(token);
-
-  const { entries: journalEntries, reload: reloadJournal } = useJournalEntries(
-    token,
-    pet?._id ?? null,
-    Boolean(token && pet?._id),
-  );
-
-  const [familyMembers, setFamilyMembers] = useState<PetMemberRow[]>([]);
-
-  useEffect(() => {
-    if (token && pet?._id) {
-      fetchPetMembers(token, pet._id)
-        .then(setFamilyMembers)
-        .catch(() => setFamilyMembers([]));
-    } else {
-      setFamilyMembers([]);
-    }
-  }, [token, pet?._id]);
+  const {
+    data: dashboardData,
+    isLoading: dashboardLoading,
+    refetch: refetchDashboard,
+    completeFeeding,
+    skipFeeding,
+    completeWalk,
+    completeMedicine,
+    completeGrooming,
+    completeVaccination,
+  } = useDashboardQuery(token, pet?._id);
 
   const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
     token,
@@ -165,115 +130,21 @@ export default function HomeScreen() {
     user?._id,
   );
 
-
-
-  const {
-
-    schedules: feedingSchedules,
-
-    loading: feedingLoading,
-
-    actionId: feedingActionId,
-
-    reload: reloadFeeding,
-
-    completeFeeding,
-
-    skipFeeding,
-
-  } = useFeedingSchedules(token, pet?._id);
-
-
-
-  const {
-
-    schedules: walkSchedules,
-
-    loading: walkLoading,
-
-    actionId: walkActionId,
-
-    reload: reloadWalks,
-
-    completeWalk,
-
-  } = useWalkSchedules(token, pet?._id);
-
-
-
-  const {
-
-    schedules: medicineSchedules,
-
-    loading: medicineLoading,
-
-    actionId: medicineActionId,
-
-    reload: reloadMedicine,
-
-    completeMedicine,
-
-  } = useMedicineSchedules(token, pet?._id);
-
-
-
-  const {
-
-    records: groomingRecords,
-
-    groomingVisible,
-
-    loading: groomingLoading,
-
-    actionId: groomingActionId,
-
-    reload: reloadGrooming,
-
-    completeGrooming,
-
-  } = useGroomingRecords(token, pet?._id);
-
-
-
-  const {
-
-    schedules: vaccinationSchedules,
-
-    loading: vaccinationLoading,
-
-    actionId: vaccinationActionId,
-
-    reload: reloadVaccination,
-
-    completeVaccination,
-
-  } = useVaccinationSchedules(token, pet?._id);
-
-
-
-  const lastCacheVersionRef = useRef(getCacheVersion());
-
   useFocusEffect(
     useCallback(() => {
-      const currentVersion = getCacheVersion();
-      const isDirty = currentVersion !== lastCacheVersionRef.current;
-      if (isDirty) {
-        lastCacheVersionRef.current = currentVersion;
-      }
-      
-      // Perform a single unified reload of all dashboard hooks.
-      // If the cache is dirty, we pass true to show spinners/skeletons.
-      // If it's NOT dirty (just focusing back to tab), we pass false for a silent revalidation.
-      void reloadFeeding(isDirty);
-      void reloadWalks(isDirty);
-      void reloadMedicine(isDirty);
-      void reloadGrooming(isDirty);
-      void reloadVaccination(isDirty);
-      void reloadTasks(isDirty);
-    }, [reloadFeeding, reloadWalks, reloadMedicine, reloadGrooming, reloadVaccination, reloadTasks])
+      void refetchDashboard();
+    }, [refetchDashboard])
   );
 
-  const scheduleLoading = feedingLoading || walkLoading || medicineLoading || groomingLoading || vaccinationLoading || tasksLoading;
+  const feedingSchedules = dashboardData?.todaySchedules?.feeding ?? [];
+  const walkSchedules = dashboardData?.todaySchedules?.walk ?? [];
+  const medicineSchedules = dashboardData?.todaySchedules?.medicine ?? [];
+  const groomingRecords = dashboardData?.todaySchedules?.grooming ?? [];
+  const vaccinationSchedules = dashboardData?.todaySchedules?.vaccination ?? [];
+  const dashboardTasks = dashboardData?.upcomingTasks ?? [];
+  const unreadCount = dashboardData?.notifications?.unreadCount ?? 0;
+  
+  const scheduleLoading = dashboardLoading;
 
   const visibleFeedingSchedules = canView('feeding') ? feedingSchedules : [];
   const visibleWalkSchedules = canView('walks') ? walkSchedules : [];
@@ -321,26 +192,35 @@ export default function HomeScreen() {
     visibleVaccinationSchedules,
   ]);
 
-
+  const profileStats = dashboardData?.activePet;
 
   const profile = useMemo(() => {
-    if (profileStats && dashboardStatus?.petId === pet?._id) return profileStats;
-    if (pet) return petToProfileProps(pet);
-    if (profileStats) return profileStats;
+    let baseProfile: any = null;
+    if (profileStats && profileStats.petId === pet?._id) baseProfile = profileStats;
+    else if (pet) baseProfile = petToProfileProps(pet);
+    else if (profileStats) baseProfile = profileStats;
+
+    if (baseProfile) {
+      return {
+        ...baseProfile,
+        age: baseProfile.age != null ? String(baseProfile.age) : undefined,
+      };
+    }
     return null;
-  }, [pet, profileStats, dashboardStatus?.petId]);
+  }, [pet, profileStats]);
 
   const petImageUrl = resolveMediaUrl(
-    dashboardStatus?.petId === pet?._id ? profileStats?.photoUrl ?? pet?.image : pet?.image,
+    profileStats?.petId === pet?._id ? profileStats?.photoUrl ?? pet?.image : pet?.image,
   );
 
-  const petBirthday = dashboardStatus?.birthday ?? pet?.birthday ?? null;
+  const petBirthday = profileStats?.birthday ?? pet?.birthday ?? null;
   const showBirthdayBanner =
     !loading && Boolean(pet?.name) && isBirthdayToday(petBirthday);
   const petCardLoading = loading && !pet;
 
   const recentActivities = useMemo(() => {
-    return journalEntries.slice(0, 5).map((entry) => {
+    const list = dashboardData?.recentActivities ?? [];
+    return list.slice(0, 5).map((entry) => {
       const category = mapActivityTypeToCategory(entry.activityType);
       const colors = ACTIVITY_COLORS[category] || ACTIVITY_COLORS.general;
       
@@ -350,10 +230,9 @@ export default function HomeScreen() {
         ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
         : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-      const member = familyMembers.find((m) => m.userId?._id === entry.userId);
-      const actorName = entry.userId === user?._id 
+      const actorName = entry.userId?._id === user?._id || entry.userId === user?._id 
         ? 'You' 
-        : (member?.userId?.fullName ? member.userId.fullName : 'A family member');
+        : (entry.userId?.fullName ? entry.userId.fullName : 'A family member');
       
       let actionText = entry.note ? entry.note.trim() : `logged ${category}`;
       if (actionText.toLowerCase().startsWith('completed')) {
@@ -376,7 +255,7 @@ export default function HomeScreen() {
         bg: colors.bg,
       };
     });
-  }, [journalEntries, user, familyMembers]);
+  }, [dashboardData?.recentActivities, user]);
 
 
 
@@ -449,51 +328,27 @@ export default function HomeScreen() {
 
 
   const handleCompleteFeeding = async (scheduleId: string) => {
-    if (completeFeeding) {
-      await completeFeeding(scheduleId);
-      if (pet?._id) clearCachedSchedules(pet._id);
-      void reloadJournal();
-    }
+    await completeFeeding(scheduleId);
   };
 
   const handleSkipFeeding = async (scheduleId: string) => {
-    if (skipFeeding) {
-      await skipFeeding(scheduleId);
-      if (pet?._id) clearCachedSchedules(pet._id);
-      void reloadJournal();
-    }
+    await skipFeeding(scheduleId);
   };
 
   const handleCompleteWalk = async (scheduleId: string) => {
-    if (completeWalk) {
-      await completeWalk(scheduleId);
-      if (pet?._id) clearCachedSchedules(pet._id);
-      void reloadJournal();
-    }
+    await completeWalk(scheduleId);
   };
 
   const handleCompleteMedicine = async (scheduleId: string) => {
-    if (completeMedicine) {
-      await completeMedicine(scheduleId);
-      if (pet?._id) clearCachedSchedules(pet._id);
-      void reloadJournal();
-    }
+    await completeMedicine(scheduleId);
   };
 
   const handleCompleteGrooming = async (recordId: string) => {
-    if (completeGrooming) {
-      await completeGrooming(recordId);
-      if (pet?._id) clearCachedSchedules(pet._id);
-      void reloadJournal();
-    }
+    await completeGrooming(recordId);
   };
 
   const handleCompleteVaccination = async (scheduleId: string) => {
-    if (completeVaccination) {
-      await completeVaccination(scheduleId);
-      if (pet?._id) clearCachedSchedules(pet._id);
-      void reloadJournal();
-    }
+    await completeVaccination(scheduleId);
   };
 
   if (petCardLoading) {
@@ -575,7 +430,7 @@ export default function HomeScreen() {
           onMedicinePress={() => setLogMedicineVisible(true)}
           onGroomingPress={() => setLogGroomingVisible(true)}
           onVaccinationPress={() => setLogVaccinationVisible(true)}
-          groomingVisible={groomingVisible}
+          groomingVisible={canView('grooming')}
           canView={canView}
           canEdit={canEdit}
           isPremium={isPremium}
@@ -599,11 +454,11 @@ export default function HomeScreen() {
           groomingRecords={visibleGroomingRecords}
           vaccinationSchedules={visibleVaccinationSchedules}
           loading={scheduleLoading}
-          feedingActionId={feedingActionId}
-          walkActionId={walkActionId}
-          medicineActionId={medicineActionId}
-          groomingActionId={groomingActionId}
-          vaccinationActionId={vaccinationActionId}
+          feedingActionId={undefined}
+          walkActionId={undefined}
+          medicineActionId={undefined}
+          groomingActionId={undefined}
+          vaccinationActionId={undefined}
           onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
           onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
           onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
@@ -623,8 +478,7 @@ export default function HomeScreen() {
           petId={pet?._id ?? null}
           token={token}
           onSaved={() => {
-            reloadFeeding(true);
-            void reloadJournal();
+            void refetchDashboard();
           }}
         />
 
@@ -634,8 +488,7 @@ export default function HomeScreen() {
           petId={pet?._id ?? null}
           token={token}
           onSaved={() => {
-            reloadWalks(true);
-            void reloadJournal();
+            void refetchDashboard();
           }}
         />
 
@@ -645,8 +498,7 @@ export default function HomeScreen() {
           petId={pet?._id ?? null}
           token={token}
           onSaved={() => {
-            reloadMedicine(true);
-            void reloadJournal();
+            void refetchDashboard();
           }}
         />
 
@@ -656,8 +508,7 @@ export default function HomeScreen() {
           petId={pet?._id ?? null}
           token={token}
           onSaved={() => {
-            reloadGrooming(true);
-            void reloadJournal();
+            void refetchDashboard();
           }}
         />
 
@@ -667,8 +518,7 @@ export default function HomeScreen() {
           petId={pet?._id ?? null}
           token={token}
           onSaved={() => {
-            reloadVaccination(true);
-            void reloadJournal();
+            void refetchDashboard();
           }}
         />
 
@@ -685,7 +535,7 @@ export default function HomeScreen() {
             setGroomingManageVisible(false);
             setGroomingManageRecord(null);
           }}
-          onUpdated={reloadGrooming}
+          onUpdated={() => void refetchDashboard()}
         />
 
         <PetSwitcherSheet

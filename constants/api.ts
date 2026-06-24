@@ -55,6 +55,7 @@ export const API_ENDPOINTS = {
   dashboard: {
     status: '/dashboard/status',
     upcomingTasks: '/dashboard/upcoming-tasks',
+    unified: '/dashboard',
   },
   schedules: {
     today: '/schedules/today',

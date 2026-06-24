@@ -2,7 +2,7 @@ import { API_ENDPOINTS } from '@/constants/api';
 import { apiRequest } from '@/lib/api/client';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
-import type { DashboardStatus, DashboardTask } from '@/types/dashboard';
+import type { DashboardStatus, DashboardTask, UnifiedDashboardData } from '@/types/dashboard';
 
 const SCOPE = 'DashboardAPI';
 
@@ -26,6 +26,18 @@ export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Upcoming tasks failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function fetchUnifiedDashboard(token: string): Promise<UnifiedDashboardData> {
+  log.info(SCOPE, 'GET /dashboard');
+  try {
+    const data = await apiRequest<UnifiedDashboardData>(API_ENDPOINTS.dashboard.unified, { token });
+    log.ok(SCOPE, 'Unified dashboard loaded');
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Unified dashboard loading failed', getErrorMessage(error));
     throw error;
   }
 }

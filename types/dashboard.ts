@@ -1,3 +1,10 @@
+import type { FeedingScheduleItem } from './feeding';
+import type { WalkScheduleItem } from './walk';
+import type { MedicineScheduleItem } from './medicine';
+import type { GroomingRecord } from './grooming';
+import type { VaccinationScheduleItem } from './vaccination';
+import type { ApiNotification } from './notification';
+
 export interface DashboardStatus {
   petId: string;
   name: string;
@@ -21,4 +28,21 @@ export interface DashboardTask {
   title: string;
   timeOfDay?: string;
   scheduledDate?: string;
+}
+
+export interface UnifiedDashboardData {
+  activePet: DashboardStatus | null;
+  todaySchedules: {
+    feeding: FeedingScheduleItem[];
+    walk: WalkScheduleItem[];
+    medicine: MedicineScheduleItem[];
+    grooming: GroomingRecord[];
+    vaccination: VaccinationScheduleItem[];
+  };
+  upcomingTasks: DashboardTask[];
+  notifications: {
+    unreadCount: number;
+    list: ApiNotification[];
+  };
+  recentActivities: any[];
 }
