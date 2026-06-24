@@ -279,19 +279,13 @@ export default function HomeScreen() {
 
   const [groomingManageRecord, setGroomingManageRecord] = useState<GroomingRecord | null>(null);
 
-  const openGroomingManage = (recordId: string) => {
-
+  const openGroomingManage = useCallback((recordId: string) => {
     const record = groomingRecords.find((item) => item._id === recordId) ?? null;
-
     setGroomingManageRecord(record);
-
     setGroomingManageVisible(true);
+  }, [groomingRecords]);
 
-  };
-
-
-
-  const handleSwitchPet = async (petId: string) => {
+  const handleSwitchPet = useCallback(async (petId: string) => {
     if (!token) return;
     await switchPet(petId);
     if (user) {
@@ -305,11 +299,11 @@ export default function HomeScreen() {
     await reloadPet();
     await reloadPets();
     setPetSwitcherVisible(false);
-  };
+  }, [token, switchPet, user, setSession, reloadPet, reloadPets]);
 
   const isPremium = profileStats?.isPremium ?? user?.premiumStatus === 'premium';
 
-  const handleAddPet = () => {
+  const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {
       Alert.alert(
         'Premium required',
@@ -323,33 +317,33 @@ export default function HomeScreen() {
     }
     setPetSwitcherVisible(false);
     router.push({ pathname: '/pet/register', params: { mode: 'add' } });
-  };
+  }, [pets.length, isPremium, router]);
 
 
 
-  const handleCompleteFeeding = async (scheduleId: string) => {
+  const handleCompleteFeeding = useCallback(async (scheduleId: string) => {
     await completeFeeding(scheduleId);
-  };
+  }, [completeFeeding]);
 
-  const handleSkipFeeding = async (scheduleId: string) => {
+  const handleSkipFeeding = useCallback(async (scheduleId: string) => {
     await skipFeeding(scheduleId);
-  };
+  }, [skipFeeding]);
 
-  const handleCompleteWalk = async (scheduleId: string) => {
+  const handleCompleteWalk = useCallback(async (scheduleId: string) => {
     await completeWalk(scheduleId);
-  };
+  }, [completeWalk]);
 
-  const handleCompleteMedicine = async (scheduleId: string) => {
+  const handleCompleteMedicine = useCallback(async (scheduleId: string) => {
     await completeMedicine(scheduleId);
-  };
+  }, [completeMedicine]);
 
-  const handleCompleteGrooming = async (recordId: string) => {
+  const handleCompleteGrooming = useCallback(async (recordId: string) => {
     await completeGrooming(recordId);
-  };
+  }, [completeGrooming]);
 
-  const handleCompleteVaccination = async (scheduleId: string) => {
+  const handleCompleteVaccination = useCallback(async (scheduleId: string) => {
     await completeVaccination(scheduleId);
-  };
+  }, [completeVaccination]);
 
   if (petCardLoading) {
     return (

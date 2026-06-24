@@ -1,7 +1,12 @@
-import { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fetchUnifiedDashboard } from '@/services/dashboard/dashboardApi';
+import { useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  usePetProfileQuery,
+  useTodaySchedulesQuery,
+  useUpcomingTasksQuery,
+  useNotificationsQuery,
+  useRecentActivitiesQuery,
+} from './useDashboardSegments';
 import type { UnifiedDashboardData } from '@/types/dashboard';
 import { completeFeedingSchedule, skipFeedingSchedule } from '@/services/schedules/feedingApi';
 import { completeWalkSchedule } from '@/services/schedules/walkApi';
@@ -11,46 +16,72 @@ import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi
 
 export function useDashboardQuery(token: string | null, petId: string | null | undefined) {
   const queryClient = useQueryClient();
-  const [localCachedData, setLocalCachedData] = useState<UnifiedDashboardData | null>(null);
 
-  useEffect(() => {
-    if (petId) {
-      AsyncStorage.getItem(`@dashboard_cache_${petId}`).then((val) => {
-        if (val) {
-          try {
-            setLocalCachedData(JSON.parse(val));
-          } catch {
-            // Ignore parse errors
-          }
-        }
-      });
-    }
-  }, [petId]);
+  const profileQuery = usePetProfileQuery(token, petId);
+  const schedulesQuery = useTodaySchedulesQuery(token, petId);
+  const tasksQuery = useUpcomingTasksQuery(token, petId);
+  const notificationsQuery = useNotificationsQuery(token, petId);
+  const activitiesQuery = useRecentActivitiesQuery(token, petId);
 
-  // Define unified query
-  const query = useQuery<UnifiedDashboardData>({
-    queryKey: ['dashboard', petId],
-    queryFn: () => fetchUnifiedDashboard(token!),
-    enabled: Boolean(token && petId),
-    staleTime: 1000 * 60 * 5, // 5 minutes stale time
-    placeholderData: localCachedData ?? undefined,
-  });
+  // Combine query status details
+  const isLoading =
+    profileQuery.isLoading ||
+    schedulesQuery.isLoading ||
+    tasksQuery.isLoading ||
+    notificationsQuery.isLoading ||
+    activitiesQuery.isLoading;
 
-  useEffect(() => {
-    if (query.data && petId) {
-      AsyncStorage.setItem(`@dashboard_cache_${petId}`, JSON.stringify(query.data));
-    }
-  }, [query.data, petId]);
+  const isFetching =
+    profileQuery.isFetching ||
+    schedulesQuery.isFetching ||
+    tasksQuery.isFetching ||
+    notificationsQuery.isFetching ||
+    activitiesQuery.isFetching;
+
+  const error =
+    profileQuery.error ||
+    schedulesQuery.error ||
+    tasksQuery.error ||
+    notificationsQuery.error ||
+    activitiesQuery.error;
+
+  const data = useMemo<UnifiedDashboardData | undefined>(() => {
+    if (!profileQuery.data && !schedulesQuery.data) return undefined;
+    return {
+      activePet: (profileQuery.data ?? null) as any,
+      todaySchedules: schedulesQuery.data || { feeding: [], walk: [], medicine: [], grooming: [], vaccination: [] },
+      upcomingTasks: tasksQuery.data || [],
+      notifications: notificationsQuery.data || { unreadCount: 0, list: [] },
+      recentActivities: activitiesQuery.data || [],
+    };
+  }, [
+    profileQuery.data,
+    schedulesQuery.data,
+    tasksQuery.data,
+    notificationsQuery.data,
+    activitiesQuery.data,
+  ]);
+
+  const refetch = async () => {
+    await Promise.all([
+      profileQuery.refetch(),
+      schedulesQuery.refetch(),
+      tasksQuery.refetch(),
+      notificationsQuery.refetch(),
+      activitiesQuery.refetch(),
+    ]);
+    return { data };
+  };
 
   // Mutator helper for updating a schedule item status optimistically in the cached todaySchedules
   const updateCacheScheduleStatus = (
-    prev: UnifiedDashboardData | undefined,
+    prev: any,
     category: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination',
     itemId: string,
     status: 'done' | 'skipped' | 'pending'
-  ): UnifiedDashboardData | undefined => {
+  ): any => {
     if (!prev) return prev;
-    const todaySchedules = { ...prev.todaySchedules };
+    const todaySchedules = { ...prev };
     if (todaySchedules[category]) {
       todaySchedules[category] = (todaySchedules[category] as any[]).map((item) =>
         item._id === itemId || item.id === itemId
@@ -63,27 +94,28 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
           : item
       );
     }
-    return { ...prev, todaySchedules };
+    return todaySchedules;
   };
 
   // 1. Feeding Complete Mutation
   const completeFeedingMutation = useMutation({
     mutationFn: (scheduleId: string) => completeFeedingSchedule(token!, scheduleId, { status: 'done' }),
     onMutate: async (scheduleId) => {
-      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId]);
-      queryClient.setQueryData<UnifiedDashboardData>(['dashboard', petId], (prev) =>
+      await queryClient.cancelQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      const previousSchedules = queryClient.getQueryData(['dashboard', 'schedules', petId]);
+      queryClient.setQueryData(['dashboard', 'schedules', petId], (prev) =>
         updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'done')
       );
-      return { previousDashboard };
+      return { previousSchedules };
     },
     onError: (err, scheduleId, context) => {
-      if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      if (context?.previousSchedules) {
+        queryClient.setQueryData(['dashboard', 'schedules', petId], context.previousSchedules);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recentActivities', petId] });
     },
   });
 
@@ -91,20 +123,21 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const skipFeedingMutation = useMutation({
     mutationFn: (scheduleId: string) => skipFeedingSchedule(token!, scheduleId),
     onMutate: async (scheduleId) => {
-      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId]);
-      queryClient.setQueryData<UnifiedDashboardData>(['dashboard', petId], (prev) =>
+      await queryClient.cancelQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      const previousSchedules = queryClient.getQueryData(['dashboard', 'schedules', petId]);
+      queryClient.setQueryData(['dashboard', 'schedules', petId], (prev) =>
         updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'skipped')
       );
-      return { previousDashboard };
+      return { previousSchedules };
     },
     onError: (err, scheduleId, context) => {
-      if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      if (context?.previousSchedules) {
+        queryClient.setQueryData(['dashboard', 'schedules', petId], context.previousSchedules);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recentActivities', petId] });
     },
   });
 
@@ -112,20 +145,21 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const completeWalkMutation = useMutation({
     mutationFn: (scheduleId: string) => completeWalkSchedule(token!, scheduleId, { status: 'done' }),
     onMutate: async (scheduleId) => {
-      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId]);
-      queryClient.setQueryData<UnifiedDashboardData>(['dashboard', petId], (prev) =>
+      await queryClient.cancelQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      const previousSchedules = queryClient.getQueryData(['dashboard', 'schedules', petId]);
+      queryClient.setQueryData(['dashboard', 'schedules', petId], (prev) =>
         updateCacheScheduleStatus(prev, 'walk', scheduleId, 'done')
       );
-      return { previousDashboard };
+      return { previousSchedules };
     },
     onError: (err, scheduleId, context) => {
-      if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      if (context?.previousSchedules) {
+        queryClient.setQueryData(['dashboard', 'schedules', petId], context.previousSchedules);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recentActivities', petId] });
     },
   });
 
@@ -133,20 +167,21 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const completeMedicineMutation = useMutation({
     mutationFn: (scheduleId: string) => completeMedicineSchedule(token!, scheduleId, { status: 'done' }),
     onMutate: async (scheduleId) => {
-      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId]);
-      queryClient.setQueryData<UnifiedDashboardData>(['dashboard', petId], (prev) =>
+      await queryClient.cancelQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      const previousSchedules = queryClient.getQueryData(['dashboard', 'schedules', petId]);
+      queryClient.setQueryData(['dashboard', 'schedules', petId], (prev) =>
         updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'done')
       );
-      return { previousDashboard };
+      return { previousSchedules };
     },
     onError: (err, scheduleId, context) => {
-      if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      if (context?.previousSchedules) {
+        queryClient.setQueryData(['dashboard', 'schedules', petId], context.previousSchedules);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recentActivities', petId] });
     },
   });
 
@@ -154,20 +189,21 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const completeGroomingMutation = useMutation({
     mutationFn: (recordId: string) => completeGroomingRecord(token!, recordId),
     onMutate: async (recordId) => {
-      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId]);
-      queryClient.setQueryData<UnifiedDashboardData>(['dashboard', petId], (prev) =>
+      await queryClient.cancelQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      const previousSchedules = queryClient.getQueryData(['dashboard', 'schedules', petId]);
+      queryClient.setQueryData(['dashboard', 'schedules', petId], (prev) =>
         updateCacheScheduleStatus(prev, 'grooming', recordId, 'done')
       );
-      return { previousDashboard };
+      return { previousSchedules };
     },
     onError: (err, recordId, context) => {
-      if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      if (context?.previousSchedules) {
+        queryClient.setQueryData(['dashboard', 'schedules', petId], context.previousSchedules);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recentActivities', petId] });
     },
   });
 
@@ -175,25 +211,30 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const completeVaccinationMutation = useMutation({
     mutationFn: (scheduleId: string) => completeVaccinationSchedule(token!, scheduleId),
     onMutate: async (scheduleId) => {
-      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId]);
-      queryClient.setQueryData<UnifiedDashboardData>(['dashboard', petId], (prev) =>
+      await queryClient.cancelQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      const previousSchedules = queryClient.getQueryData(['dashboard', 'schedules', petId]);
+      queryClient.setQueryData(['dashboard', 'schedules', petId], (prev) =>
         updateCacheScheduleStatus(prev, 'vaccination', scheduleId, 'done')
       );
-      return { previousDashboard };
+      return { previousSchedules };
     },
     onError: (err, scheduleId, context) => {
-      if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      if (context?.previousSchedules) {
+        queryClient.setQueryData(['dashboard', 'schedules', petId], context.previousSchedules);
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'recentActivities', petId] });
     },
   });
 
   return {
-    ...query,
+    data,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
     completeFeeding: completeFeedingMutation.mutateAsync,
     skipFeeding: skipFeedingMutation.mutateAsync,
     completeWalk: completeWalkMutation.mutateAsync,

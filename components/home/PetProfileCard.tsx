@@ -116,6 +116,7 @@ export function PetProfileCard({
                 { borderColor: isPremium ? '#D4A017' : 'rgba(255,255,255,0.95)' }
               ]} 
               contentFit="cover" 
+              cachePolicy="disk"
             />
             <View style={[styles.avatarBadge, { borderColor: isPremium ? '#D4A017' : '#429B46' }]}>
               <MaterialCommunityIcons name="swap-horizontal" size={11} color={badgeIconColor} />

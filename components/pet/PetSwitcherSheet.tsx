@@ -103,6 +103,7 @@ export function PetSwitcherSheet({
                             : require('../../assets/images/onboarding.png')
                         }
                         style={styles.avatar}
+                        cachePolicy="disk"
                       />
                       <View style={styles.info}>
                         <AppText variant="body" weight="700" color="#1A2B4E">

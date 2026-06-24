@@ -179,7 +179,7 @@ interface ScheduleRowCardProps {
   isPremium?: boolean;
 }
 
-function ScheduleRowCard({
+const ScheduleRowCard = React.memo(function ScheduleRowCard({
   row,
   onCompleteFeeding,
   onSkipFeeding,
@@ -350,7 +350,7 @@ function ScheduleRowCard({
       ) : null}
     </View>
   );
-}
+});
 
 function parseDateString(str: string | undefined | null): Date | null {
   if (!str) return null;
