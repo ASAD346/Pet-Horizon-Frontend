@@ -4,7 +4,9 @@ import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 
 import { useRouter, type Href } from 'expo-router';
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
     HomeHeader,
@@ -86,8 +88,6 @@ import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { SkeletonScreenLayout } from '@/components/ui/skeletons';
 import { clearCachedSchedules } from '@/lib/schedule/scheduleCache';
-import { LoginHeaderDecor } from '@/components/auth/login';
-
 import type { GroomingRecord } from '@/types/grooming';
 import { fetchPetMembers } from '@/services/family/familyApi';
 import type { PetMemberRow } from '@/types/family';
@@ -121,6 +121,7 @@ const ACTIVITY_COLORS: Record<string, { color: string; bg: string }> = {
 
 export default function HomeScreen() {
   const { clearance: tabBarClearance } = useTabBarLayout();
+  const insets = useSafeAreaInsets();
 
   const router = useRouter();
 
@@ -478,105 +479,118 @@ export default function HomeScreen() {
   if (petCardLoading) {
     return (
       <View style={styles.root}>
-        <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <StatusBar style="light" />
+        <HomeHeader
+          userName={userName}
+          dateLabel={formatDateLabel(new Date())}
+          notificationCount={unreadCount}
+          onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
+          onNotificationsPress={() => router.push('/notifications' as Href)}
+          showJournal={canViewJournal}
+          topInset={insets.top}
+        />
+        <View style={styles.skeletonArea}>
           <SkeletonScreenLayout />
-        </SafeAreaView>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.root}>
-      <LoginHeaderDecor />
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
-          showsVerticalScrollIndicator={false}
-        >
-          <HomeHeader
-            userName={userName}
-            dateLabel={formatDateLabel(new Date())}
-            notificationCount={unreadCount}
-            onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
-            onNotificationsPress={() => router.push('/notifications' as Href)}
-            showJournal={canViewJournal}
-          />
+      <StatusBar style="light" />
 
-          {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
+      {/* Sticky header — lives outside ScrollView, extends behind status bar */}
+      <HomeHeader
+        userName={userName}
+        dateLabel={formatDateLabel(new Date())}
+        notificationCount={unreadCount}
+        onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
+        onNotificationsPress={() => router.push('/notifications' as Href)}
+        showJournal={canViewJournal}
+        topInset={insets.top}
+      />
 
-          {showBirthdayBanner ? (
-            <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
-          ) : null}
+      {/* Scrollable content area below the sticky header */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
-          <PetProfileCard
-            {...(profile ?? {})}
-            imageUrl={petImageUrl}
-            loading={petCardLoading}
-            isBirthdayToday={showBirthdayBanner}
-            isPremium={isPremium}
-            onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
-          />
+        {showBirthdayBanner ? (
+          <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
+        ) : null}
 
-          {canView('grooming') ? (
-          <GroomingAlertsRow
-            token={token}
-            petId={pet?._id}
-            onAlertPress={
-              canEdit('grooming')
-                ? (record) => {
-                    setGroomingManageRecord(record);
-                    setGroomingManageVisible(true);
-                  }
-                : undefined
-            }
-          />
-          ) : null}
+        <PetProfileCard
+          {...(profile ?? {})}
+          imageUrl={petImageUrl}
+          loading={petCardLoading}
+          isBirthdayToday={showBirthdayBanner}
+          isPremium={isPremium}
+          onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
+        />
 
-          <QuickActionsSection
-            onLogFoodPress={() => setLogFoodVisible(true)}
-            onLogWalkPress={() => setLogWalkVisible(true)}
-            onMedicinePress={() => setLogMedicineVisible(true)}
-            onGroomingPress={() => setLogGroomingVisible(true)}
-            onVaccinationPress={() => setLogVaccinationVisible(true)}
-            groomingVisible={groomingVisible}
-            canView={canView}
-            canEdit={canEdit}
-          />
+        {canView('grooming') ? (
+        <GroomingAlertsRow
+          token={token}
+          petId={pet?._id}
+          onAlertPress={
+            canEdit('grooming')
+              ? (record) => {
+                  setGroomingManageRecord(record);
+                  setGroomingManageVisible(true);
+                }
+              : undefined
+          }
+        />
+        ) : null}
 
-          <UpNextSection
-            loading={scheduleLoading}
-            onLogFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
-            onLogWalk={canEdit('walks') ? handleCompleteWalk : undefined}
-            onLogMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
-            onLogGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
-            onLogVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
-            dashboardTasks={visibleDashboardTasks}
-          />
+        <QuickActionsSection
+          onLogFoodPress={() => setLogFoodVisible(true)}
+          onLogWalkPress={() => setLogWalkVisible(true)}
+          onMedicinePress={() => setLogMedicineVisible(true)}
+          onGroomingPress={() => setLogGroomingVisible(true)}
+          onVaccinationPress={() => setLogVaccinationVisible(true)}
+          groomingVisible={groomingVisible}
+          canView={canView}
+          canEdit={canEdit}
+        />
 
-          <TodaysScheduleSection
-            feedingSchedules={visibleFeedingSchedules}
-            walkSchedules={visibleWalkSchedules}
-            medicineSchedules={visibleMedicineSchedules}
-            groomingRecords={visibleGroomingRecords}
-            vaccinationSchedules={visibleVaccinationSchedules}
-            loading={scheduleLoading}
-            feedingActionId={feedingActionId}
-            walkActionId={walkActionId}
-            medicineActionId={medicineActionId}
-            groomingActionId={groomingActionId}
-            vaccinationActionId={vaccinationActionId}
-            onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
-            onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
-            onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
-            onCompleteMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
-            onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
-            onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
-            onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
-          />
+        <UpNextSection
+          loading={scheduleLoading}
+          onLogFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
+          onLogWalk={canEdit('walks') ? handleCompleteWalk : undefined}
+          onLogMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
+          onLogGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
+          onLogVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
+          dashboardTasks={visibleDashboardTasks}
+        />
 
-          <RecentActivitySection activities={recentActivities} />
-        </ScrollView>
+        <TodaysScheduleSection
+          feedingSchedules={visibleFeedingSchedules}
+          walkSchedules={visibleWalkSchedules}
+          medicineSchedules={visibleMedicineSchedules}
+          groomingRecords={visibleGroomingRecords}
+          vaccinationSchedules={visibleVaccinationSchedules}
+          loading={scheduleLoading}
+          feedingActionId={feedingActionId}
+          walkActionId={walkActionId}
+          medicineActionId={medicineActionId}
+          groomingActionId={groomingActionId}
+          vaccinationActionId={vaccinationActionId}
+          onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
+          onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
+          onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
+          onCompleteMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
+          onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
+          onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
+          onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
+        />
+
+        <RecentActivitySection activities={recentActivities} />
+      </ScrollView>
 
         <LogFoodSheet
           visible={logFoodVisible}
@@ -659,7 +673,6 @@ export default function HomeScreen() {
           onSelectPet={handleSwitchPet}
           onAddPet={handleAddPet}
         />
-      </SafeAreaView>
     </View>
   );
 }
@@ -667,18 +680,19 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#FFF9F5',
-  },
-  safeArea: {
-    flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#3A8F3B',   // Green fills behind status bar (matches header)
   },
   scroll: {
     flex: 1,
+    backgroundColor: '#FFF9F5',
   },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.md,
+  },
+  skeletonArea: {
+    flex: 1,
+    backgroundColor: '#FFF9F5',
   },
 });
 

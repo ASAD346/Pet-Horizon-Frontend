@@ -9,46 +9,43 @@ interface HeaderActionButtonsProps {
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
   showJournal?: boolean;
+  /** When true, renders icon buttons as dark-themed (white icons on navy) */
+  dark?: boolean;
 }
-
-const iconShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  android: { elevation: 3 },
-});
 
 export function HeaderActionButtons({
   notificationCount = 0,
   onJournalPress,
   onNotificationsPress,
   showJournal = true,
+  dark = false,
 }: HeaderActionButtonsProps) {
   const badgeLabel = notificationCount > 99 ? '99+' : String(notificationCount);
+
+  const btnStyle = dark ? styles.iconBtnDark : styles.iconBtnLight;
+  const iconColor = dark ? '#FFFFFF' : HomeTheme.text;
 
   return (
     <View style={styles.actions}>
       {showJournal && onJournalPress ? (
         <TouchableOpacity
-          style={styles.iconBtn}
-          activeOpacity={0.8}
+          style={[styles.iconBtn, btnStyle]}
+          activeOpacity={0.75}
           onPress={onJournalPress}
           accessibilityLabel="Open pet journal"
         >
-          <MaterialCommunityIcons name="notebook-outline" size={22} color={HomeTheme.text} />
+          <MaterialCommunityIcons name="notebook-outline" size={20} color={iconColor} />
         </TouchableOpacity>
       ) : null}
+
       <TouchableOpacity
-        style={styles.iconBtn}
-        activeOpacity={0.8}
+        style={[styles.iconBtn, btnStyle]}
+        activeOpacity={0.75}
         onPress={onNotificationsPress}
         accessibilityLabel="Open notifications"
         disabled={!onNotificationsPress}
       >
-        <Ionicons name="notifications-outline" size={20} color={HomeTheme.text} />
+        <Ionicons name="notifications-outline" size={20} color={iconColor} />
         {notificationCount > 0 ? (
           <View style={styles.badge}>
             <AppText variant="caption" weight="700" color={HomeTheme.white} style={styles.badgeText}>
@@ -61,36 +58,58 @@ export function HeaderActionButtons({
   );
 }
 
+const baseIconBtn = {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  alignItems: 'center' as const,
+  justifyContent: 'center' as const,
+};
+
 const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: Spacing.sm,
+    alignItems: 'center',
   },
   iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
+    ...baseIconBtn,
+  },
+  // Light mode: white card with border
+  iconBtnLight: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#EFEFEF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...iconShadow,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2D7A2D',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: { elevation: 3 },
+    }),
+  },
+  // Dark mode: translucent white on navy
+  iconBtnDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   badge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    minWidth: 16,
-    height: 16,
+    top: 5,
+    right: 5,
+    minWidth: 15,
+    height: 15,
     borderRadius: 8,
-    backgroundColor: HomeTheme.badgeRed,
+    backgroundColor: '#E53935',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: 3,
   },
   badgeText: {
-    fontSize: 9,
-    lineHeight: 11,
+    fontSize: 8,
+    lineHeight: 10,
   },
 });

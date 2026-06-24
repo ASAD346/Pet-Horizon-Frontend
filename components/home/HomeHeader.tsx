@@ -1,8 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '../ui/AppText';
 import { HeaderActionButtons } from '../ui/HeaderActionButtons';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { Spacing } from '../../constants/theme';
 
 interface HomeHeaderProps {
   userName?: string;
@@ -11,61 +14,141 @@ interface HomeHeaderProps {
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
   showJournal?: boolean;
+  /** Status bar height — header extends behind the status bar */
+  topInset?: number;
 }
 
 function getGreeting(userName: string): string {
-  // new Date().getHours() retrieves the local hour of the user's device,
-  // automatically adapting to their local timezone and country location.
   const hours = new Date().getHours();
-  if (hours >= 5 && hours < 12) return `Good morning, ${userName}!`;
-  if (hours >= 12 && hours < 17) return `Good afternoon, ${userName}!`;
-  if (hours >= 17 && hours < 22) return `Good evening, ${userName}!`;
-  return `Good night, ${userName}!`;
+  if (hours >= 5 && hours < 12) return `Morning, ${userName} ☀️`;
+  if (hours >= 12 && hours < 17) return `Afternoon, ${userName} 🌤️`;
+  if (hours >= 17 && hours < 22) return `Evening, ${userName} 🌆`;
+  return `Night, ${userName} 🌙`;
 }
 
 export function HomeHeader({
-  userName = 'Sarah',
-  dateLabel = 'Monday, May 15th',
+  userName = 'there',
+  dateLabel = 'Today',
   notificationCount = 0,
   onJournalPress,
   onNotificationsPress,
   showJournal = true,
+  topInset = 0,
 }: HomeHeaderProps) {
-  return (
-    <View style={styles.container}>
-      <View style={styles.textBlock}>
-        <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.greeting}>
-          {getGreeting(userName)}
-        </AppText>
-        <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-          {dateLabel}
-        </AppText>
-      </View>
+  const greeting = getGreeting(userName);
+  const insets = useSafeAreaInsets();
 
-      <HeaderActionButtons
-        notificationCount={notificationCount}
-        onJournalPress={onJournalPress}
-        onNotificationsPress={onNotificationsPress}
-        showJournal={showJournal}
-      />
+  // Respect device safe area on left/right (notches, rounded corners)
+  const safeLeft = Math.max(insets.left, Spacing.lg);
+  const safeRight = Math.max(insets.right, Spacing.lg);
+
+  return (
+    <View style={styles.wrapper}>
+      <LinearGradient
+        colors={['#3A8F3B', '#5CB35D']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.gradient,
+          {
+            paddingTop: topInset + 10,
+            paddingLeft: safeLeft,
+            paddingRight: safeRight,
+          },
+        ]}
+      >
+        {/* Single compact row */}
+        <View style={styles.row}>
+          {/* Left: greeting + date */}
+          <View style={styles.textBlock}>
+            <AppText
+              variant="bodySmall"
+              weight="800"
+              color="#FFFFFF"
+              style={styles.greetingText}
+              numberOfLines={1}
+            >
+              {greeting}
+            </AppText>
+            <View style={styles.dateLine}>
+              <MaterialCommunityIcons name="calendar-today" size={10} color="rgba(255,255,255,0.7)" />
+              <AppText
+                variant="caption"
+                weight="500"
+                color="rgba(255,255,255,0.5)"
+                style={styles.dateText}
+                numberOfLines={1}
+              >
+                {'  '}{dateLabel}
+              </AppText>
+            </View>
+          </View>
+
+          {/* Right: action buttons */}
+          <HeaderActionButtons
+            notificationCount={notificationCount}
+            onJournalPress={onJournalPress}
+            onNotificationsPress={onNotificationsPress}
+            showJournal={showJournal}
+            dark
+          />
+        </View>
+
+        {/* Ultra-thin accent rule */}
+        <View style={styles.divider} />
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
+    width: '100%',   // fills screen width naturally — no negative margins
+    marginBottom: Spacing.sm,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0D1B33',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+      },
+      android: { elevation: 8 },
+    }),
+  },
+  gradient: {
+    // paddingTop / paddingLeft / paddingRight set inline
+    paddingBottom: 0,
+    borderBottomLeftRadius: 22,
+    borderBottomRightRadius: 22,
+    overflow: 'hidden',
+  },
+  row: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    paddingBottom: 12,
   },
   textBlock: {
     flex: 1,
     paddingRight: Spacing.sm,
+    gap: 3,
   },
-  greeting: {
-    fontSize: 22,
-    lineHeight: 28,
-    marginBottom: 2,
+  greetingText: {
+    fontSize: 17,
+    lineHeight: 22,
+    letterSpacing: 0.1,
+  },
+  dateLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  divider: {
+    height: 1.5,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    opacity: 1,
   },
 });
