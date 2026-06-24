@@ -194,7 +194,14 @@ export function WalkEntryCard({
               value={entry.duration}
               onChangeText={(duration) => onChange({ ...entry, duration })}
               keyboardType="number-pad"
-              style={scheduleFieldStyles.suffixInput}
+              style={[
+                scheduleFieldStyles.suffixInput,
+                {
+                  borderWidth: 0,
+                  borderStyle: 'none',
+                  backgroundColor: 'transparent',
+                } as any
+              ]}
             />
             <AppText variant="caption" weight="600" color={ScheduleColors.label}>
               min

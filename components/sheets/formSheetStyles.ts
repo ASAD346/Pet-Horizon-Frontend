@@ -147,7 +147,7 @@ export const formSheetStyles = StyleSheet.create({
     fontWeight: '500',
     ...Platform.select({
       web: {
-        outlineStyle: 'none',
+        outlineStyle: 'none' as any,
       },
     }),
   },
@@ -157,6 +157,7 @@ export const formSheetStyles = StyleSheet.create({
     backgroundColor: FormSheetColors.inputBg,
     borderRadius: 10,
     borderWidth: 1,
+    borderStyle: 'solid',
     borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: 10,
     minHeight: 36,
@@ -169,9 +170,13 @@ export const formSheetStyles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 0,
     margin: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
     ...Platform.select({
       web: {
-        outlineStyle: 'none',
+        outlineStyle: 'none' as any,
+        borderWidth: 0,
+        backgroundColor: 'transparent',
       },
     }),
   },

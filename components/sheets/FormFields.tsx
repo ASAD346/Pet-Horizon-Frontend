@@ -205,7 +205,14 @@ export function FormSuffixInput({
         placeholderTextColor={FormSheetColors.placeholder}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        style={formSheetStyles.suffixInput}
+        style={[
+          formSheetStyles.suffixInput,
+          {
+            borderWidth: 0,
+            borderStyle: 'none',
+            backgroundColor: 'transparent',
+          } as any
+        ]}
       />
       <AppText variant="caption" weight="700" color={FormSheetColors.label}>
         {suffix}

@@ -182,6 +182,7 @@ export const scheduleFieldStyles = StyleSheet.create({
     backgroundColor: ScheduleTheme.fieldBg,
     borderRadius: 14,
     borderWidth: 1,
+    borderStyle: 'solid',
     borderColor: ScheduleTheme.fieldBorder,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.sm,
@@ -193,6 +194,17 @@ export const scheduleFieldStyles = StyleSheet.create({
     color: ScheduleTheme.text,
     fontWeight: '600',
     paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    paddingHorizontal: 0,
+    margin: 0,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none' as any,
+        borderWidth: 0,
+        backgroundColor: 'transparent',
+      },
+    }),
   },
   notifyBtn: {
     flexDirection: 'row',

@@ -243,7 +243,14 @@ export function MedicineEntryCard({
               value={entry.doseAmount}
               onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
               keyboardType="decimal-pad"
-              style={scheduleFieldStyles.suffixInput}
+              style={[
+                scheduleFieldStyles.suffixInput,
+                {
+                  borderWidth: 0,
+                  borderStyle: 'none',
+                  backgroundColor: 'transparent',
+                } as any
+              ]}
             />
             <AppText variant="caption" weight="600" color={ScheduleColors.label}>
               {entry.doseForm === 'tablet' ? 'qty' : 'ml'}
@@ -350,7 +357,14 @@ export function MedicineEntryCard({
           value={entry.totalPills}
           onChangeText={(totalPills) => onChange({ ...entry, totalPills })}
           keyboardType="number-pad"
-          style={scheduleFieldStyles.suffixInput}
+          style={[
+            scheduleFieldStyles.suffixInput,
+            {
+              borderWidth: 0,
+              borderStyle: 'none',
+              backgroundColor: 'transparent',
+            } as any
+          ]}
           placeholder="30"
           placeholderTextColor={ScheduleColors.placeholder}
         />
