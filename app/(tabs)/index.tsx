@@ -256,16 +256,20 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       const currentVersion = getCacheVersion();
-      if (currentVersion !== lastCacheVersionRef.current) {
+      const isDirty = currentVersion !== lastCacheVersionRef.current;
+      if (isDirty) {
         lastCacheVersionRef.current = currentVersion;
-        // Forced reload of all schedule hooks to show skeletons and sync them
-        void reloadFeeding(true);
-        void reloadWalks(true);
-        void reloadMedicine(true);
-        void reloadGrooming(true);
-        void reloadVaccination(true);
-        void reloadTasks(true);
       }
+      
+      // Perform a single unified reload of all dashboard hooks.
+      // If the cache is dirty, we pass true to show spinners/skeletons.
+      // If it's NOT dirty (just focusing back to tab), we pass false for a silent revalidation.
+      void reloadFeeding(isDirty);
+      void reloadWalks(isDirty);
+      void reloadMedicine(isDirty);
+      void reloadGrooming(isDirty);
+      void reloadVaccination(isDirty);
+      void reloadTasks(isDirty);
     }, [reloadFeeding, reloadWalks, reloadMedicine, reloadGrooming, reloadVaccination, reloadTasks])
   );
 

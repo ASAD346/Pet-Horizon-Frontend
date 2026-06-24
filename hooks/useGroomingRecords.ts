@@ -56,6 +56,7 @@ export function useGroomingRecords(token: string | null, petId: string | null | 
       }
     },
     setLoading,
+    focusReload: false,
   });
 
   const { showToast } = useToast();

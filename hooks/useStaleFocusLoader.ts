@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import { useFocusReload, useStaleLoadScope } from './useStaleLoadScope';
 
 interface StaleFocusLoaderOptions<T> {
@@ -9,6 +9,7 @@ interface StaleFocusLoaderOptions<T> {
   onClear: () => void;
   onError?: (error: unknown, isFirstLoad: boolean) => void;
   setLoading: (loading: boolean) => void;
+  focusReload?: boolean;
 }
 
 /** Standard stale-while-revalidate loader for tab screens. */
@@ -20,14 +21,31 @@ export function useStaleFocusLoader<T>({
   onClear,
   onError,
   setLoading,
+  focusReload = true,
 }: StaleFocusLoaderOptions<T>) {
   const { shouldBlockUI, markLoaded, reset } = useStaleLoadScope(scopeKey);
+
+  // Use refs for transient callback parameters to keep the callback reference stable.
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
+
+  const onClearRef = useRef(onClear);
+  onClearRef.current = onClear;
+
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+
+  const setLoadingRef = useRef(setLoading);
+  setLoadingRef.current = setLoading;
 
   const reload = useCallback(async (force = false) => {
     if (!enabled) {
       reset();
-      onClear();
-      setLoading(false);
+      onClearRef.current();
+      setLoadingRef.current(false);
       return;
     }
 
@@ -35,34 +53,32 @@ export function useStaleFocusLoader<T>({
 
     if (block) {
       if (shouldBlockUI()) {
-        onClear();
+        onClearRef.current();
       }
-      setLoading(true);
+      setLoadingRef.current(true);
     }
 
     try {
-      const data = await load();
-      onSuccess(data);
+      const data = await loadRef.current();
+      onSuccessRef.current(data);
       markLoaded();
     } catch (error) {
-      onError?.(error, block);
-      if (block) onClear();
+      onErrorRef.current?.(error, block);
+      if (block) onClearRef.current();
     } finally {
-      setLoading(false);
+      setLoadingRef.current(false);
     }
   }, [
     enabled,
-    load,
     markLoaded,
-    onClear,
-    onError,
-    onSuccess,
     reset,
-    setLoading,
     shouldBlockUI,
   ]);
 
-  useFocusReload(reload, enabled);
+  if (focusReload) {
+    useFocusReload(reload, enabled);
+  }
 
   return reload;
 }
+

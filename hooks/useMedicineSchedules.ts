@@ -33,6 +33,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
       }
     },
     setLoading,
+    focusReload: false,
   });
 
   const { showToast } = useToast();

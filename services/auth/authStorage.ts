@@ -20,16 +20,19 @@ async function getBackend(): Promise<StorageBackend> {
 
 async function writeItem(key: string, value: string): Promise<void> {
   try {
-    await SecureStore.setItemAsync(key, value);
-    await markBackend('secure');
+    if (await SecureStore.isAvailableAsync()) {
+      await SecureStore.setItemAsync(key, value);
+      await markBackend('secure');
+      return;
+    }
   } catch (error) {
     log.warn('AuthStorage', 'SecureStore write failed — using AsyncStorage', {
       key,
       message: error instanceof Error ? error.message : String(error),
     });
-    await AsyncStorage.setItem(key, value);
-    await markBackend('async');
   }
+  await AsyncStorage.setItem(key, value);
+  await markBackend('async');
 }
 
 async function readItem(key: string): Promise<string | null> {
@@ -40,8 +43,10 @@ async function readItem(key: string): Promise<string | null> {
   }
 
   try {
-    const secureValue = await SecureStore.getItemAsync(key);
-    if (secureValue) return secureValue;
+    if (await SecureStore.isAvailableAsync()) {
+      const secureValue = await SecureStore.getItemAsync(key);
+      if (secureValue) return secureValue;
+    }
   } catch (error) {
     log.warn('AuthStorage', 'SecureStore read failed — trying AsyncStorage', {
       key,
@@ -53,10 +58,15 @@ async function readItem(key: string): Promise<string | null> {
 }
 
 async function deleteItem(key: string): Promise<void> {
-  await Promise.allSettled([
-    SecureStore.deleteItemAsync(key),
-    AsyncStorage.removeItem(key),
-  ]);
+  const isSecureAvailable = await SecureStore.isAvailableAsync();
+  if (isSecureAvailable) {
+    await Promise.allSettled([
+      SecureStore.deleteItemAsync(key),
+      AsyncStorage.removeItem(key),
+    ]);
+  } else {
+    await AsyncStorage.removeItem(key);
+  }
 }
 
 export async function saveSession(session: AuthSession): Promise<void> {

@@ -30,6 +30,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
       }
     },
     setLoading,
+    focusReload: false,
   });
 
   const { showToast } = useToast();

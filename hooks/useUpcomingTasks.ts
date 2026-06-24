@@ -35,6 +35,7 @@ export function useUpcomingTasks(token: string | null) {
       }
     },
     setLoading,
+    focusReload: false,
   });
 
   return { tasks, loading, error, reload };

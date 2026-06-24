@@ -34,6 +34,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       }
     },
     setLoading,
+    focusReload: false,
   });
 
   const { showToast } = useToast();

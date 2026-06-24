@@ -37,6 +37,7 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
       }
     },
     setLoading,
+    focusReload: false,
   });
 
   const { showToast } = useToast();
