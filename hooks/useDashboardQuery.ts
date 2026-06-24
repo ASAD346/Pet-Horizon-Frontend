@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UnifiedDashboardData } from '@/types/dashboard';
@@ -77,9 +77,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const error = query.error;
   const data = query.data || cachedData;
 
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     return query.refetch();
-  };
+  }, [query.refetch]);
 
   // Mutator helper for updating a schedule item status optimistically in the cached todaySchedules
   const updateCacheScheduleStatus = (

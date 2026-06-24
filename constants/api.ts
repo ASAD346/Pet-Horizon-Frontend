@@ -8,11 +8,11 @@ import { Platform } from 'react-native';
  */
 
 function getDevApiBaseUrl(): string {
-  return 'http://16.171.154.65/v1';
+  return process.env.EXPO_PUBLIC_API_URL || 'http://16.171.154.65/v1';
 }
 
 /** Root API URL including `/v1` — no trailing slash */
-export const API_BASE_URL = 'http://16.171.154.65/v1';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://16.171.154.65/v1';
 
 /**
  * Relative paths (appended to API_BASE_URL).
