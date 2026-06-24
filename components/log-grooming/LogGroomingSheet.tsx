@@ -204,6 +204,7 @@ export function LogGroomingSheet({
                 value={reminderOn}
                 onValueChange={setReminderOn}
                 accentColor={GROOMING_THEME.color}
+                icon="notifications-outline"
               />
             </FormSection>
 

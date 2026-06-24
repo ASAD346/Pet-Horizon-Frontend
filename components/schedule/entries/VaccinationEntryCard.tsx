@@ -76,6 +76,7 @@ export function VaccinationEntryCard({
             value={entry.reminderOn}
             onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
             accentColor={accentColor}
+            icon="notifications-outline"
           />
           {entry.reminderOn ? (
             <>
@@ -104,6 +105,7 @@ export function VaccinationEntryCard({
             value={entry.isRecurring}
             onValueChange={(isRecurring) => onChange({ ...entry, isRecurring })}
             accentColor={accentColor}
+            icon="repeat-outline"
           />
           {entry.isRecurring ? (
             <>

@@ -60,6 +60,7 @@ export function GroomingEntryCard({
             value={entry.reminderOn}
             onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
             accentColor={accentColor}
+            icon="notifications-outline"
           />
           <FormSectionLabel text="NOTES" />
           <FormTextField

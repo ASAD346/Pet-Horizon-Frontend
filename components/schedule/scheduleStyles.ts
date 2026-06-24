@@ -35,7 +35,7 @@ export const scheduleFieldStyles = StyleSheet.create({
   sectionBody: {
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.lg,
   },
   entryCard: {
     backgroundColor: ScheduleTheme.fieldBg,
@@ -243,6 +243,7 @@ export const scheduleFieldStyles = StyleSheet.create({
     gap: Spacing.xs,
     paddingVertical: 14,
     marginTop: Spacing.xs,
+    marginBottom: Spacing.xs + 4,
     borderRadius: 14,
     borderWidth: 1.5,
     borderStyle: 'dashed',

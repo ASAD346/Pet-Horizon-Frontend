@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { View, TouchableOpacity, TextInput, Switch, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { SectionLabel, SheetOptionPicker, ThemedTimePicker } from '@/components/sheets';
@@ -17,7 +17,7 @@ import {
 } from '@/components/sheets';
 import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
 import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
-import { HomeTheme } from '@/constants/theme';
+import { HomeTheme, Spacing } from '@/constants/theme';
 import {
   formatTimeDisplay,
   getReminderMinutesLabel,
@@ -155,7 +155,7 @@ export function MedicineEntryCard({
               />
             </>
           ) : null}
-          <View style={formSheetStyles.twoColRow}>
+          <View style={[formSheetStyles.twoColRow, { marginBottom: Spacing.sm }]}>
             <View style={formSheetStyles.halfCol}>
               <FormSectionLabel text="TIME" />
               <FormPickerField
@@ -164,28 +164,37 @@ export function MedicineEntryCard({
                 onPress={() => setTimePickerVisible(true)}
               />
             </View>
-            {entry.reminderOn ? (
-              <View style={formSheetStyles.halfCol}>
-                <FormSectionLabel text="REMINDER" />
-                <FormPickerField
-                  label={getReminderMinutesLabel(entry.reminderMinutes)}
-                  icon="chevron-down"
-                  onPress={() => setReminderPickerVisible(true)}
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="NOTIFICATIONS" />
+              <View style={[formSheetStyles.switchRow, styles.switchContainer]}>
+                <AppText variant="bodySmall" weight="600" color={HomeTheme.text}>
+                  Remind me
+                </AppText>
+                <Switch
+                  value={entry.reminderOn}
+                  onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
+                  trackColor={{ false: '#E2E8F0', true: accentColor }}
+                  thumbColor={HomeTheme.white}
+                  ios_backgroundColor="#E2E8F0"
                 />
               </View>
-            ) : null}
+            </View>
           </View>
           <ScheduleDateFields
             value={entry.scheduleDate}
             onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
             accentColor={accentColor}
           />
-          <FormSwitchRow
-            label="Remind me to give medicine"
-            value={entry.reminderOn}
-            onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
-            accentColor={accentColor}
-          />
+          {entry.reminderOn ? (
+            <View style={{ marginBottom: Spacing.sm }}>
+              <FormSectionLabel text="REMINDER DELAY" />
+              <FormPickerField
+                label={getReminderMinutesLabel(entry.reminderMinutes)}
+                icon="notifications-outline"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </View>
+          ) : null}
           <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
@@ -390,3 +399,12 @@ export function MedicineEntryCard({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  switchContainer: {
+    minHeight: 44,
+    marginTop: 0,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+});

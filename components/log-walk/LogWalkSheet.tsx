@@ -213,6 +213,7 @@ export function LogWalkSheet({
             value={notificationsOn}
             onValueChange={setNotificationsOn}
             accentColor={WALK_THEME.color}
+            icon="notifications-outline"
           />
           {notificationsOn ? (
             <>

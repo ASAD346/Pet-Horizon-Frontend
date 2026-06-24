@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { View, TouchableOpacity, TextInput, Switch, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
@@ -15,7 +15,7 @@ import {
   formSheetStyles,
 } from '@/components/sheets';
 import type { SheetOption } from '@/components/sheets';
-import { HomeTheme } from '@/constants/theme';
+import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import {
   formatTimeDisplay,
   getReminderMinutesLabel,
@@ -57,6 +57,12 @@ export function FeedingEntryCard({
 }: FeedingEntryCardProps) {
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
+  const [unitPickerVisible, setUnitPickerVisible] = useState(false);
+
+  const mappedUnitOptions: SheetOption[] = unitOptions.map((o) => ({
+    value: o.value,
+    label: o.label,
+  }));
 
   const pickers = (
     <>
@@ -76,6 +82,17 @@ export function FeedingEntryCard({
         selectedValue={String(entry.reminderMinutes)}
         onClose={() => setReminderPickerVisible(false)}
         onSelect={(value) => onChange({ ...entry, reminderMinutes: Number(value) })}
+      />
+      <SheetOptionPicker
+        visible={unitPickerVisible}
+        title="Select Unit"
+        options={mappedUnitOptions}
+        selectedValue={entry.unit}
+        onClose={() => setUnitPickerVisible(false)}
+        onSelect={(value) => {
+          onChange({ ...entry, unit: value });
+          setUnitPickerVisible(false);
+        }}
       />
     </>
   );
@@ -103,11 +120,10 @@ export function FeedingEntryCard({
             </View>
             <View style={formSheetStyles.halfCol}>
               <FormSectionLabel text="UNIT" />
-              <FormChipRow
-                options={unitOptions}
-                selected={entry.unit}
-                onSelect={(unit) => onChange({ ...entry, unit })}
-                accentColor={accentColor}
+              <FormPickerField
+                label={unitOptions.find((o) => o.value === entry.unit)?.label || entry.unit || 'Select'}
+                icon="scale-outline"
+                onPress={() => setUnitPickerVisible(true)}
               />
             </View>
           </View>
@@ -119,7 +135,7 @@ export function FeedingEntryCard({
             onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
             accentColor={accentColor}
           />
-          <View style={formSheetStyles.twoColRow}>
+          <View style={[formSheetStyles.twoColRow, { marginBottom: Spacing.sm }]}>
             <View style={formSheetStyles.halfCol}>
               <FormSectionLabel text="TIME" />
               <FormPickerField
@@ -128,23 +144,34 @@ export function FeedingEntryCard({
                 onPress={() => setTimePickerVisible(true)}
               />
             </View>
-            {entry.notificationsOn ? (
-              <View style={formSheetStyles.halfCol}>
-                <FormSectionLabel text="REMINDER" />
-                <FormPickerField
-                  label={getReminderMinutesLabel(entry.reminderMinutes)}
-                  icon="chevron-down"
-                  onPress={() => setReminderPickerVisible(true)}
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="NOTIFICATIONS" />
+              <View style={[formSheetStyles.switchRow, styles.switchContainer]}>
+                <AppText variant="bodySmall" weight="600" color={HomeTheme.text}>
+                  Remind me
+                </AppText>
+                <Switch
+                  value={entry.notificationsOn}
+                  onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+                  trackColor={{ false: '#E2E8F0', true: accentColor }}
+                  thumbColor={HomeTheme.white}
+                  ios_backgroundColor="#E2E8F0"
                 />
               </View>
-            ) : null}
+            </View>
           </View>
-          <FormSwitchRow
-            label="Remind me"
-            value={entry.notificationsOn}
-            onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
-            accentColor={accentColor}
-          />
+
+          {entry.notificationsOn ? (
+            <View style={{ marginBottom: Spacing.sm }}>
+              <FormSectionLabel text="REMINDER DELAY" />
+              <FormPickerField
+                label={getReminderMinutesLabel(entry.reminderMinutes)}
+                icon="notifications-outline"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </View>
+          ) : null}
+
           <FormSectionLabel text="NOTES" />
           <FormTextField
             value={entry.notes}
@@ -271,3 +298,12 @@ export function FeedingEntryCard({
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  switchContainer: {
+    minHeight: 44,
+    marginTop: 0,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+});

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, Switch, StyleSheet } from 'react-native';
 import { useToast } from '@/hooks/useToast';
 import {
   FormChipRow,
@@ -16,6 +16,8 @@ import {
   formSheetStyles,
 } from '../sheets';
 import type { SheetOption } from '../sheets';
+import { HomeTheme, Spacing } from '@/constants/theme';
+import { AppText } from '@/components/ui/AppText';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -274,43 +276,56 @@ export function LogMedicineSheet({
           ) : null}
 
           <FormSectionLabel text="TIME" />
-          <FormPickerField
-            label={formatTimeDisplay(medicineTime)}
-            icon="time-outline"
-            onPress={() => setTimePickerVisible(true)}
-          />
+          <View style={[formSheetStyles.twoColRow, { marginBottom: Spacing.sm }]}>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="TIME" />
+              <FormPickerField
+                label={formatTimeDisplay(medicineTime)}
+                icon="time-outline"
+                onPress={() => setTimePickerVisible(true)}
+              />
+            </View>
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="NOTIFICATIONS" />
+              <View style={[formSheetStyles.switchRow, styles.switchContainer]}>
+                <AppText variant="bodySmall" weight="600" color={HomeTheme.text}>
+                  Remind me
+                </AppText>
+                <Switch
+                  value={reminderOn}
+                  onValueChange={setReminderOn}
+                  trackColor={{ false: '#E2E8F0', true: MEDICINE_THEME.color }}
+                  thumbColor={HomeTheme.white}
+                  ios_backgroundColor="#E2E8F0"
+                />
+              </View>
+            </View>
+          </View>
 
           <ScheduleDateFields
             value={scheduleDate}
             onChange={setScheduleDate}
             accentColor={MEDICINE_THEME.color}
           />
+
+          {reminderOn ? (
+            <View style={{ marginBottom: Spacing.sm }}>
+              <FormSectionLabel text="REMINDER DELAY" />
+              <FormPickerField
+                label={getReminderMinutesLabel(reminderMinutes)}
+                icon="notifications-outline"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </View>
+          ) : null}
         </FormSection>
 
         <FormSection
-          title="Reminders & notes"
-          icon="bell-outline"
+          title="Notes"
+          icon="text-box-outline"
           accentColor={MEDICINE_THEME.color}
           accentBg={MEDICINE_THEME.bg}
         >
-          <FormSwitchRow
-            label="Remind me to give medicine"
-            value={reminderOn}
-            onValueChange={setReminderOn}
-            accentColor={MEDICINE_THEME.color}
-          />
-          {reminderOn ? (
-            <>
-              <FormSectionLabel text="REMINDER TIMING" />
-              <FormPickerField
-                label={getReminderMinutesLabel(reminderMinutes)}
-                icon="chevron-down"
-                onPress={() => setReminderPickerVisible(true)}
-              />
-            </>
-          ) : null}
-
-          <FormSectionLabel text="NOTES" />
           <FormTextField
             value={notes}
             onChangeText={setNotes}
@@ -338,7 +353,15 @@ export function LogMedicineSheet({
           setTimePickerVisible(false);
         }}
       />
-
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  switchContainer: {
+    minHeight: 44,
+    marginTop: 0,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+});

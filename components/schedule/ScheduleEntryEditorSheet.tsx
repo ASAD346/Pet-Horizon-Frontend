@@ -14,6 +14,7 @@ import { WalkEntryCard } from './entries/WalkEntryCard';
 import { MedicineEntryCard } from './entries/MedicineEntryCard';
 import { VaccinationEntryCard } from './entries/VaccinationEntryCard';
 import { GroomingEntryCard } from './entries/GroomingEntryCard';
+import { useAuth } from '@/hooks/useAuth';
 
 type EditorEntry =
   | FeedingEntryState
@@ -60,6 +61,12 @@ export function ScheduleEntryEditorSheet({
   onClose,
 }: ScheduleEntryEditorSheetProps) {
   const [draft, setDraft] = useState<EditorEntry | null>(entry);
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
+
+  // Cohesive brand colors
+  const brandColor = isPremium ? '#184F2E' : '#3A8F3B';
+  const brandBg = isPremium ? '#E8F5E9' : '#EEF8EE';
 
   useEffect(() => {
     if (visible) setDraft(entry);
@@ -79,8 +86,8 @@ export function ScheduleEntryEditorSheet({
       title={title}
       subtitle={SECTION_SUBTITLES[section.key]}
       icon={section.icon}
-      accentColor={section.color}
-      accentBg={section.lightBg}
+      accentColor={brandColor}
+      accentBg={brandBg}
       saveLabel={mode === 'add' ? 'Add Schedule' : 'Save Changes'}
       onSave={onSave}
       saving={saving}
@@ -92,8 +99,8 @@ export function ScheduleEntryEditorSheet({
         <FeedingEntryCard
           entry={draft as FeedingEntryState}
           index={0}
-          accentColor={section.color}
-          accentBg={section.bg}
+          accentColor={brandColor}
+          accentBg={brandBg}
           mealTypeOptions={mealTypeOptions}
           unitOptions={unitOptions}
           canRemove={false}
@@ -107,8 +114,8 @@ export function ScheduleEntryEditorSheet({
         <WalkEntryCard
           entry={draft as WalkEntryState}
           index={0}
-          accentColor={section.color}
-          accentBg={section.bg}
+          accentColor={brandColor}
+          accentBg={brandBg}
           canRemove={false}
           embeddedInSheet
           onChange={(next) => handleChange(next)}
@@ -120,8 +127,8 @@ export function ScheduleEntryEditorSheet({
         <MedicineEntryCard
           entry={draft as MedicineEntryState}
           index={0}
-          accentColor={section.color}
-          accentBg={section.bg}
+          accentColor={brandColor}
+          accentBg={brandBg}
           canRemove={false}
           embeddedInSheet
           onChange={(next) => handleChange(next)}
@@ -133,8 +140,8 @@ export function ScheduleEntryEditorSheet({
         <VaccinationEntryCard
           entry={draft as VaccinationEntryState}
           index={0}
-          accentColor={section.color}
-          accentBg={section.bg}
+          accentColor={brandColor}
+          accentBg={brandBg}
           canRemove={false}
           embeddedInSheet
           onChange={(next) => handleChange(next)}
@@ -146,8 +153,8 @@ export function ScheduleEntryEditorSheet({
         <GroomingEntryCard
           entry={draft as GroomingEntryState}
           index={0}
-          accentColor={section.color}
-          accentBg={section.bg}
+          accentColor={brandColor}
+          accentBg={brandBg}
           typeOptions={groomingTypeOptions}
           canRemove={false}
           embeddedInSheet

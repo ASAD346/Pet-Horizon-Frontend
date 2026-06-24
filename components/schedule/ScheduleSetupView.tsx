@@ -15,6 +15,8 @@ import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ScheduleScreenHeader } from './ScheduleScreenHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
@@ -360,8 +362,21 @@ export function ScheduleSetupView({
 
   const awaitingPet = petLoading && !pet;
 
+  const isPremium = user?.premiumStatus === 'premium';
+  const brandColor = isPremium ? '#184F2E' : '#3A8F3B';
+  const brandBg = isPremium ? '#E8F5E9' : '#EEF8EE';
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={styles.container}>
+      <ScheduleScreenHeader
+        notificationCount={unreadCount}
+        onNotificationsPress={onNotificationsPress}
+        onJournalPress={canViewJournal ? onJournalPress : undefined}
+        showJournal={canViewJournal}
+        isPremium={isPremium}
+        topInset={insets.top}
+      />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -372,13 +387,6 @@ export function ScheduleSetupView({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <ScreenHeader
-            title="Care Schedules"
-            notificationCount={unreadCount}
-            onJournalPress={canViewJournal ? onJournalPress : undefined}
-            onNotificationsPress={onNotificationsPress}
-            showJournal={canViewJournal}
-          />
           <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
             Set up feeding, walks, medicine, vaccines, and grooming for your pet.
           </AppText>
@@ -420,10 +428,10 @@ export function ScheduleSetupView({
                     <ScheduleEntriesSkeleton />
                   ) : sectionState.entries.length === 0 ? (
                     <View style={styles.emptyHintBox}>
-                      <MaterialCommunityIcons
+                       <MaterialCommunityIcons
                         name={sectionMeta.icon}
                         size={28}
-                        color={sectionMeta.color}
+                        color={brandColor}
                         style={styles.emptyHintIcon}
                       />
                       <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
@@ -438,8 +446,8 @@ export function ScheduleSetupView({
                           key={entry.id}
                           title={scheduleEntryTitle(sectionMeta.key, entry)}
                           subtitle={scheduleEntrySubtitle(sectionMeta.key, entry)}
-                          accentColor={sectionMeta.color}
-                          accentBg={sectionMeta.bg}
+                          accentColor={brandColor}
+                          accentBg={brandBg}
                           onEdit={() => openEditEditor(sectionMeta, entry)}
                           onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
                           deleting={!!remoteId && deletingId === remoteId}
@@ -451,12 +459,12 @@ export function ScheduleSetupView({
 
                   {canEdit ? (
                     <TouchableOpacity
-                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color }]}
+                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: brandColor, marginBottom: 20 }]}
                       onPress={() => openAddEditor(sectionMeta)}
                       activeOpacity={0.85}
                     >
-                      <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
-                      <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
+                      <Ionicons name="add-circle" size={20} color={brandColor} />
+                      <AppText variant="bodySmall" weight="700" color={brandColor}>
                         {sectionMeta.addLabel}
                       </AppText>
                     </TouchableOpacity>
@@ -484,14 +492,14 @@ export function ScheduleSetupView({
           onClose={closeEditor}
         />
       ) : null}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: HomeTheme.background,
+    backgroundColor: '#F5F6F8',
   },
   flex: {
     flex: 1,

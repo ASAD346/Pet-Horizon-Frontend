@@ -144,14 +144,18 @@ interface FormSwitchRowProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
   accentColor: string;
+  icon?: React.ComponentProps<typeof Ionicons>['name'];
 }
 
-export function FormSwitchRow({ label, value, onValueChange, accentColor }: FormSwitchRowProps) {
+export function FormSwitchRow({ label, value, onValueChange, accentColor, icon }: FormSwitchRowProps) {
   return (
     <View style={[formSheetStyles.switchRow, formSheetStyles.fieldGap]}>
-      <AppText variant="bodySmall" weight="600" color={FormSheetColors.text}>
-        {label}
-      </AppText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {icon ? <Ionicons name={icon} size={18} color={FormSheetColors.label} /> : null}
+        <AppText variant="bodySmall" weight="600" color={FormSheetColors.text}>
+          {label}
+        </AppText>
+      </View>
       <Switch
         value={value}
         onValueChange={onValueChange}

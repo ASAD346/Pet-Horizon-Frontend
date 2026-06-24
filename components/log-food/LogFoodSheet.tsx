@@ -23,7 +23,7 @@ import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { createFeedingSchedule, fetchPetPermissions } from '@/services/schedules/feedingApi';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/useToast';
-import { View } from 'react-native';
+import { View, Switch, StyleSheet } from 'react-native';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import {
   FormChipRow,
@@ -39,7 +39,7 @@ import {
 } from '../sheets';
 import type { SheetOption } from '../sheets';
 import { AppText } from '../ui/AppText';
-import { HomeTheme } from '../../constants/theme';
+import { HomeTheme, Spacing } from '../../constants/theme';
 
 const REMINDER_MINUTES_PICKER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((option) => ({
   value: String(option.value),
@@ -284,7 +284,7 @@ export function LogFoodSheet({
             onChange={setScheduleDate}
             accentColor={FOOD_THEME.color}
           />
-          <View style={formSheetStyles.twoColRow}>
+          <View style={[formSheetStyles.twoColRow, { marginBottom: Spacing.sm }]}>
             <View style={formSheetStyles.halfCol}>
               <FormSectionLabel text="TIME" />
               <FormPickerField
@@ -293,23 +293,32 @@ export function LogFoodSheet({
                 onPress={() => setFeedingTimePickerVisible(true)}
               />
             </View>
-            {notificationsOn ? (
-              <View style={formSheetStyles.halfCol}>
-                <FormSectionLabel text="REMINDER" />
-                <FormPickerField
-                  label={getReminderMinutesLabel(reminderMinutes)}
-                  icon="chevron-down"
-                  onPress={() => setReminderPickerVisible(true)}
+            <View style={formSheetStyles.halfCol}>
+              <FormSectionLabel text="NOTIFICATIONS" />
+              <View style={[formSheetStyles.switchRow, styles.switchContainer]}>
+                <AppText variant="bodySmall" weight="600" color={HomeTheme.text}>
+                  Remind me
+                </AppText>
+                <Switch
+                  value={notificationsOn}
+                  onValueChange={setNotificationsOn}
+                  trackColor={{ false: '#E2E8F0', true: FOOD_THEME.color }}
+                  thumbColor={HomeTheme.white}
+                  ios_backgroundColor="#E2E8F0"
                 />
               </View>
-            ) : null}
+            </View>
           </View>
-          <FormSwitchRow
-            label="Remind me"
-            value={notificationsOn}
-            onValueChange={setNotificationsOn}
-            accentColor={FOOD_THEME.color}
-          />
+          {notificationsOn ? (
+            <View style={{ marginBottom: Spacing.sm }}>
+              <FormSectionLabel text="REMINDER DELAY" />
+              <FormPickerField
+                label={getReminderMinutesLabel(reminderMinutes)}
+                icon="notifications-outline"
+                onPress={() => setReminderPickerVisible(true)}
+              />
+            </View>
+          ) : null}
           <FormSectionLabel text="NOTES" />
           <FormTextField
             value={notes}
@@ -341,3 +350,12 @@ export function LogFoodSheet({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  switchContainer: {
+    minHeight: 44,
+    marginTop: 0,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+});

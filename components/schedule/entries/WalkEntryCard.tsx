@@ -118,6 +118,7 @@ export function WalkEntryCard({
             value={entry.notificationsOn}
             onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
             accentColor={accentColor}
+            icon="notifications-outline"
           />
           {entry.notificationsOn ? (
             <>
