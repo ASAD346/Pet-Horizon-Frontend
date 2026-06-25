@@ -447,7 +447,7 @@ export function ScheduleSetupView({
     try {
       console.log('[handleDeleteEntry] Calling deleteScheduleEntry API...');
       await deleteScheduleEntry(token, key, remoteId);
-      console.log('[handleDeleteEntry] Success. Updating cache...');
+      console.log('[handleDeleteEntry] API succeeded. Optimistically updating cache, invalidating queries and reloading...');
       
       // Optimistically remove from dashboard todaySchedules & upcomingTasks
       queryClient.setQueryData(['dashboard', pet._id], (prev: any) => {

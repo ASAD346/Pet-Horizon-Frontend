@@ -63,18 +63,18 @@ export function ToastHost() {
 const styles = StyleSheet.create({
   toast: {
     position: 'absolute',
-    left: Spacing.lg,
-    right: Spacing.lg,
+    alignSelf: 'center',
+    maxWidth: '85%',
     backgroundColor: '#2E7D32',
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm + 2,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm + 4,
     zIndex: 9999,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.15,
         shadowRadius: 8,
       },
       android: { elevation: 8 },
@@ -82,6 +82,6 @@ const styles = StyleSheet.create({
   },
   toastText: {
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });
