@@ -18,6 +18,7 @@ import { HomeTheme, Spacing } from '@/constants/theme';
 import { FormSheetHero } from './FormSheetHero';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
+import { StickyActionFooter } from './FormSystem';
 
 interface FormSheetShellProps {
   visible: boolean;
@@ -102,7 +103,10 @@ export function FormSheetShell({
             <ScrollView
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
-              contentContainerStyle={formSheetStyles.scrollContent}
+              contentContainerStyle={[
+                formSheetStyles.scrollContent,
+                { paddingBottom: 100 } // Ensure last field is visible above sticky footer
+              ]}
             >
               {!compact && subtitle ? (
                 <FormSheetHero
@@ -112,24 +116,19 @@ export function FormSheetShell({
                   subtitle={subtitle}
                 />
               ) : null}
- 
+
               {error ? <AuthErrorBanner message={error} /> : null}
- 
+
               {children}
             </ScrollView>
- 
-            <View style={formSheetStyles.footer}>
-              <AppButton
-                title={saveLabel}
-                onPress={onSave}
-                loading={saving}
-                disabled={saving || saveDisabled}
-                variant="success"
-                size="sm"
-                style={[formSheetStyles.saveBtn, { backgroundColor: accentColor }]}
-                textStyle={formSheetStyles.saveBtnText}
-              />
-            </View>
+
+            <StickyActionFooter
+              onSave={onSave}
+              saveLabel={saveLabel}
+              saving={saving}
+              saveDisabled={saveDisabled}
+              accentColor={accentColor}
+            />
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>

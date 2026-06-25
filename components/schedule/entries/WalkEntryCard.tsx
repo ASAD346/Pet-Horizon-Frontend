@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, TextInput, Switch } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
-  FormChipRow,
-  FormPickerField,
   FormSection,
-  FormSectionLabel,
-  FormSuffixInput,
-  FormSwitchRow,
-  FormTextField,
-  SectionLabel,
-  SheetOptionPicker,
+  FormSegmentedControl,
+  FormTimeInput,
+  FormNumberInput,
+  FormSelectInput,
+  FormToggleRow,
+  FormTextInput,
   ThemedTimePicker,
-  formSheetStyles,
+  SheetOptionPicker,
 } from '@/components/sheets';
 import type { SheetOption } from '@/components/sheets';
 import { HomeTheme } from '@/constants/theme';
@@ -25,7 +23,6 @@ import {
 import type { WalkEntryState } from '@/lib/schedule/types';
 import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { WALK_TIME_OPTIONS } from '@/lib/walk/walkForm';
-import { ScheduleColors, scheduleFieldStyles } from '../scheduleStyles';
 
 const REMINDER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((o) => ({
   value: String(o.value),
@@ -78,178 +75,117 @@ export function WalkEntryCard({
     </>
   );
 
+  const cardContent = (
+    <>
+      <FormSegmentedControl
+        label="Which walk?"
+        options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+        selected={entry.walkTime}
+        onSelect={(walkTime) => onChange({ ...entry, walkTime })}
+      />
+
+      <View style={styles.twoColRow}>
+        <View style={styles.halfCol}>
+          <FormTimeInput
+            label="Time"
+            value={entry.walkClockTime}
+            onPress={() => setTimePickerVisible(true)}
+          />
+        </View>
+        <View style={styles.halfCol}>
+          <FormNumberInput
+            label="Duration"
+            value={entry.duration}
+            onChangeText={(duration) => onChange({ ...entry, duration })}
+            placeholder="45"
+            unit="min"
+          />
+        </View>
+      </View>
+
+      <ScheduleDateFields
+        value={entry.scheduleDate}
+        onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+        accentColor={accentColor}
+      />
+
+      <FormToggleRow
+        label="Remind me before walk"
+        value={entry.notificationsOn}
+        onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+        icon="notifications-outline"
+      />
+
+      {entry.notificationsOn ? (
+        <FormSelectInput
+          label="Reminder Timing"
+          valueLabel={getReminderMinutesLabel(entry.reminderMinutes)}
+          icon="chevron-down"
+          onPress={() => setReminderPickerVisible(true)}
+        />
+      ) : null}
+
+      <FormTextInput
+        label="Notes"
+        value={entry.notes}
+        onChangeText={(notes) => onChange({ ...entry, notes })}
+        placeholder="Optional details (route, leash)..."
+        multiline
+      />
+    </>
+  );
+
   if (embeddedInSheet) {
     return (
       <>
-        <FormSection title="Walk details" icon="walk" accentColor={accentColor} accentBg={accentBg}>
-          <FormSectionLabel text="WHICH WALK?" />
-          <FormChipRow
-            options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-            selected={entry.walkTime}
-            onSelect={(walkTime) => onChange({ ...entry, walkTime })}
-            accentColor={accentColor}
-          />
-          <View style={formSheetStyles.twoColRow}>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="TIME" />
-              <FormPickerField
-                label={formatTimeDisplay(entry.walkClockTime)}
-                icon="time-outline"
-                onPress={() => setTimePickerVisible(true)}
-              />
-            </View>
-            <View style={formSheetStyles.halfCol}>
-              <FormSectionLabel text="DURATION" />
-              <FormSuffixInput
-                value={entry.duration}
-                onChangeText={(duration) => onChange({ ...entry, duration })}
-                suffix="min"
-                keyboardType="number-pad"
-                accentColor={accentColor}
-              />
-            </View>
-          </View>
-          <ScheduleDateFields
-            value={entry.scheduleDate}
-            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
-            accentColor={accentColor}
-          />
-          <FormSwitchRow
-            label="Remind me before walk"
-            value={entry.notificationsOn}
-            onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
-            accentColor={accentColor}
-            icon="notifications-outline"
-          />
-          {entry.notificationsOn ? (
-            <>
-              <FormSectionLabel text="REMINDER TIMING" />
-              <FormPickerField
-                label={getReminderMinutesLabel(entry.reminderMinutes)}
-                icon="chevron-down"
-                onPress={() => setReminderPickerVisible(true)}
-              />
-            </>
-          ) : null}
-          <FormSectionLabel text="NOTES" />
-          <FormTextField
-            value={entry.notes}
-            onChangeText={(notes) => onChange({ ...entry, notes })}
-            placeholder="Optional details..."
-            multiline
-            accentColor={accentColor}
-          />
+        <FormSection title="Walk details" icon="walk">
+          {cardContent}
         </FormSection>
-
         {pickers}
       </>
     );
   }
 
   return (
-    <View style={scheduleFieldStyles.entryCard}>
-      <View style={scheduleFieldStyles.entryHeader}>
+    <View style={styles.entryCard}>
+      <View style={styles.entryHeader}>
         <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
           Walk {index + 1}
         </AppText>
         {canRemove ? (
           <TouchableOpacity onPress={onRemove} hitSlop={8}>
-            <Ionicons name="close-circle" size={22} color={ScheduleColors.label} />
+            <Ionicons name="close-circle" size={22} color="#94A3B8" />
           </TouchableOpacity>
         ) : null}
       </View>
-
-      <SectionLabel text="WHICH WALK?" />
-      <View style={scheduleFieldStyles.chipRow}>
-        {WALK_TIME_OPTIONS.map((option) => {
-          const selected = entry.walkTime === option.value;
-          return (
-            <TouchableOpacity
-              key={option.value}
-              style={[scheduleFieldStyles.chip, selected && { backgroundColor: accentColor }]}
-              onPress={() => onChange({ ...entry, walkTime: option.value })}
-            >
-              <AppText variant="caption" weight="600" color={selected ? HomeTheme.white : HomeTheme.text}>
-                {option.label}
-              </AppText>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <View style={scheduleFieldStyles.twoColRow}>
-        <View style={scheduleFieldStyles.halfCol}>
-          <SectionLabel text="TIME" />
-          <TouchableOpacity style={scheduleFieldStyles.pickerField} onPress={() => setTimePickerVisible(true)}>
-            <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-              {formatTimeDisplay(entry.walkClockTime)}
-            </AppText>
-            <Ionicons name="time-outline" size={18} color={ScheduleColors.label} />
-          </TouchableOpacity>
-        </View>
-        <View style={scheduleFieldStyles.halfCol}>
-          <SectionLabel text="DURATION" />
-          <View style={scheduleFieldStyles.suffixInputWrap}>
-            <TextInput
-              value={entry.duration}
-              onChangeText={(duration) => onChange({ ...entry, duration })}
-              keyboardType="number-pad"
-              style={[
-                scheduleFieldStyles.suffixInput,
-                {
-                  borderWidth: 0,
-                  borderStyle: 'none',
-                  backgroundColor: 'transparent',
-                } as any
-              ]}
-            />
-            <AppText variant="caption" weight="600" color={ScheduleColors.label}>
-              min
-            </AppText>
-          </View>
-        </View>
-      </View>
-
-      <View style={scheduleFieldStyles.twoColRow}>
-        <View style={scheduleFieldStyles.halfCol}>
-          <SectionLabel text="NOTIFICATIONS" />
-          <View style={scheduleFieldStyles.switchRow}>
-            <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-              Remind me
-            </AppText>
-            <Switch
-              value={entry.notificationsOn}
-              onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
-              trackColor={{ false: '#E0E0E0', true: accentColor }}
-              thumbColor={HomeTheme.white}
-              ios_backgroundColor="#E0E0E0"
-            />
-          </View>
-        </View>
-        {entry.notificationsOn ? (
-          <View style={scheduleFieldStyles.halfCol}>
-            <SectionLabel text="REMINDER" />
-            <TouchableOpacity style={scheduleFieldStyles.pickerField} onPress={() => setReminderPickerVisible(true)}>
-              <AppText variant="bodySmall" weight="600" color={ScheduleColors.fieldText}>
-                {getReminderMinutesLabel(entry.reminderMinutes)}
-              </AppText>
-              <Ionicons name="chevron-down" size={18} color={ScheduleColors.label} />
-            </TouchableOpacity>
-          </View>
-        ) : null}
-      </View>
-
-      <SectionLabel text="NOTES" />
-      <TextInput
-        value={entry.notes}
-        onChangeText={(notes) => onChange({ ...entry, notes })}
-        placeholder="Park route, leash preference..."
-        placeholderTextColor={ScheduleColors.placeholder}
-        style={[scheduleFieldStyles.textInput, scheduleFieldStyles.notesInput]}
-        multiline
-      />
-
+      {cardContent}
       {pickers}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  entryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E6E8EB',
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  twoColRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  halfCol: {
+    flex: 1,
+  },
+});
