@@ -94,17 +94,25 @@ export function ProfileHubView() {
   }, [reload]);
 
   const handleLogout = useCallback(async () => {
-    Alert.alert('Log out', 'Are you sure you want to log out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Log out',
-        style: 'destructive',
-        onPress: async () => {
-          await logout();
-          router.replace('/auth/login');
+    const performLogout = async () => {
+      await logout();
+      router.replace('/auth/login');
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to log out?')) {
+        void performLogout();
+      }
+    } else {
+      Alert.alert('Log out', 'Are you sure you want to log out?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log out',
+          style: 'destructive',
+          onPress: performLogout,
         },
-      },
-    ]);
+      ]);
+    }
   }, [logout, router]);
 
   const displayName = user?.fullName?.trim() || user?.email?.split('@')[0] || 'User';
