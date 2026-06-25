@@ -130,6 +130,10 @@ export function ScheduleSetupView({
     accessBannerMessage,
   } = usePetPermissions(token, pet, user?._id);
 
+  const isPremium = user?.premiumStatus === 'premium';
+  const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
+  const brandBg = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
+
   const [sections, setSections] = useState<ScheduleSectionsState>(() => createInitialScheduleState());
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
@@ -467,9 +471,6 @@ export function ScheduleSetupView({
 
   const awaitingPet = petLoading && !pet;
 
-  const isPremium = user?.premiumStatus === 'premium';
-  const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
-  const brandBg = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
   const insets = useSafeAreaInsets();
 
   return (
@@ -553,8 +554,8 @@ export function ScheduleSetupView({
                           key={entry.id}
                           title={scheduleEntryTitle(sectionMeta.key, entry)}
                           subtitle={scheduleEntrySubtitle(sectionMeta.key, entry)}
-                          accentColor={sectionMeta.color}
-                          accentBg={sectionMeta.bg}
+                          accentColor={brandColor}
+                          accentBg={brandBg}
                           onEdit={() => openEditEditor(sectionMeta, entry)}
                           onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
                           deleting={!!remoteId && deletingId === remoteId}
@@ -566,12 +567,12 @@ export function ScheduleSetupView({
 
                   {canEdit && visibleEntries.length > 0 ? (
                     <TouchableOpacity
-                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color, marginBottom: 20 }]}
+                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: brandColor, marginBottom: 20 }]}
                       onPress={() => openAddEditor(sectionMeta)}
                       activeOpacity={0.85}
                     >
-                      <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
-                      <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
+                      <Ionicons name="add-circle" size={20} color={brandColor} />
+                      <AppText variant="bodySmall" weight="700" color={brandColor}>
                         {sectionMeta.addLabel}
                       </AppText>
                     </TouchableOpacity>
