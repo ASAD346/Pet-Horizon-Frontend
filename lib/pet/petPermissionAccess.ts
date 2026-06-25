@@ -117,7 +117,7 @@ export function buildPetAccessControls(params: {
   species?: string | null;
 }): PetAccessControls {
   const { permissions, petOwnerUserId, userId, species } = params;
-  const isOwner = isPetOwner(petOwnerUserId, userId);
+  const isOwner = permissions === null ? true : isPetOwner(petOwnerUserId, userId);
   const accessLevel = permissions?.accessLevel ?? (isOwner ? 'admin' : 'readonly');
   const allowedModules = normalizeAllowedModules(permissions?.allowedModules);
   const lockedModules = normalizeLockedModules(permissions?.lockedModules);
