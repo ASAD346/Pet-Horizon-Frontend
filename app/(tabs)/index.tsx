@@ -287,6 +287,7 @@ export default function HomeScreen() {
         icon: categoryToMaterialIcon(category) as any,
         color: colors.color,
         bg: colors.bg,
+        createdAt: entry.createdAt,
       };
     });
   }, [dashboardData?.recentActivities, user]);
@@ -494,9 +495,15 @@ export default function HomeScreen() {
           onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
           onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
           isPremium={isPremium}
+          onViewAll={() => router.push('/schedule-history' as Href)}
         />
 
-        <RecentActivitySection activities={recentActivities} isPremium={isPremium} />
+        <RecentActivitySection
+          activities={recentActivities}
+          isPremium={isPremium}
+          todayOnly
+          onViewAll={() => router.push('/activity-history' as Href)}
+        />
       </ScrollView>
 
         <LogFoodSheet

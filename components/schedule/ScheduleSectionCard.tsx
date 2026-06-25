@@ -33,16 +33,32 @@ export function ScheduleSectionCard({
     <View style={scheduleFieldStyles.sectionCard}>
       <View style={scheduleFieldStyles.sectionHeader}>
         <View
-          style={[scheduleFieldStyles.sectionIconWrap, { backgroundColor: brandBg }]}
+          style={[
+            scheduleFieldStyles.sectionIconWrap,
+            { backgroundColor: enabled ? brandBg : '#F0F0F0' },
+          ]}
         >
-          <MaterialCommunityIcons name={section.icon} size={22} color={brandColor} />
+          <MaterialCommunityIcons
+            name={section.icon}
+            size={22}
+            color={enabled ? brandColor : '#A0AEC0'}
+          />
         </View>
         <View style={styles.titleBlock}>
-          <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+          <AppText
+            variant="bodySmall"
+            weight="800"
+            color={enabled ? HomeTheme.text : '#A0AEC0'}
+          >
             {section.title}
           </AppText>
+          {!enabled && (
+            <AppText variant="caption" color="#A0AEC0" style={styles.disabledHint}>
+              Disabled — toggle to enable
+            </AppText>
+          )}
         </View>
-        {canEdit && onAddPress && (
+        {canEdit && onAddPress && enabled && (
           <TouchableOpacity
             style={styles.headerAddBtn}
             onPress={onAddPress}
@@ -77,4 +93,9 @@ const styles = StyleSheet.create({
     padding: 6,
     marginRight: 8,
   },
+  disabledHint: {
+    marginTop: 2,
+    fontSize: 11,
+  },
 });
+

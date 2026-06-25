@@ -73,6 +73,7 @@ interface TodaysScheduleSectionProps {
   onManageGrooming?: (recordId: string) => void | Promise<void>;
   onCompleteVaccination?: (scheduleId: string) => void | Promise<void>;
   isPremium?: boolean;
+  onViewAll?: () => void;
 }
 
 function rowSortKey(row: ScheduleRow): number {
@@ -428,6 +429,7 @@ export function TodaysScheduleSection({
   onManageGrooming,
   onCompleteVaccination,
   isPremium = false,
+  onViewAll,
 }: TodaysScheduleSectionProps) {
   const items = useMemo(
     () =>
@@ -442,38 +444,55 @@ export function TodaysScheduleSection({
   );
 
   const cardBorderColor = isPremium
-    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
-    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
+    ? 'rgba(212, 160, 23, 0.35)'
+    : 'rgba(46, 125, 50, 0.12)';
+
+  const MAX_HOME_ITEMS = 3;
+  const visibleItems = items.slice(0, MAX_HOME_ITEMS);
+  const overflowCount = items.length - MAX_HOME_ITEMS;
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
+      <SectionHeader title="Today's Schedule" actionLabel="VIEW ALL" onActionPress={onViewAll} />
 
       {loading ? (
         <SkeletonScheduleSections count={2} />
       ) : items.length === 0 ? (
         <View style={{ marginVertical: Spacing.xs }}>
           <EmptyState
-            icon="calendar-outline"
-            title="Clear Schedule Today"
-            description="No tasks scheduled for today. You can add routines, medication timers, or grooming alerts."
+            icon="calendar-check-outline"
+            title="No tasks scheduled today"
+            description="Your pet's care schedule is clear for today."
           />
         </View>
       ) : (
-        items.map((row) => (
-          <ScheduleRowCard
-            key={`${row.kind}-${rowId(row)}`}
-            row={row}
-            onCompleteFeeding={onCompleteFeeding}
-            onSkipFeeding={onSkipFeeding}
-            onCompleteWalk={onCompleteWalk}
-            onCompleteMedicine={onCompleteMedicine}
-            onCompleteGrooming={onCompleteGrooming}
-            onManageGrooming={onManageGrooming}
-            onCompleteVaccination={onCompleteVaccination}
-            isPremium={isPremium}
-          />
-        ))
+        <>
+          {visibleItems.map((row) => (
+            <ScheduleRowCard
+              key={`${row.kind}-${rowId(row)}`}
+              row={row}
+              onCompleteFeeding={onCompleteFeeding}
+              onSkipFeeding={onSkipFeeding}
+              onCompleteWalk={onCompleteWalk}
+              onCompleteMedicine={onCompleteMedicine}
+              onCompleteGrooming={onCompleteGrooming}
+              onManageGrooming={onManageGrooming}
+              onCompleteVaccination={onCompleteVaccination}
+              isPremium={isPremium}
+            />
+          ))}
+          {overflowCount > 0 && onViewAll ? (
+            <TouchableOpacity
+              onPress={onViewAll}
+              style={styles.moreBtn}
+              activeOpacity={0.75}
+            >
+              <AppText variant="caption" weight="700" color={HomeTheme.cardGreen}>
+                +{overflowCount} more task{overflowCount !== 1 ? 's' : ''} · View All
+              </AppText>
+            </TouchableOpacity>
+          ) : null}
+        </>
       )}
     </View>
   );
@@ -536,5 +555,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 54,
+  },
+  moreBtn: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 2,
+    borderRadius: Radius.md,
+    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.12)',
   },
 });

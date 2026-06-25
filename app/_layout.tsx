@@ -47,6 +47,8 @@ export default function RootLayout() {
               <Stack.Screen name="profile" options={{ headerShown: false }} />
               <Stack.Screen name="invite/[token]" options={{ headerShown: false }} />
               <Stack.Screen name="notifications" options={{ headerShown: false }} />
+              <Stack.Screen name="schedule-history" options={{ headerShown: false }} />
+              <Stack.Screen name="activity-history" options={{ headerShown: false }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
             </Stack>
             <AppStatusBar />

@@ -9,7 +9,7 @@ import type { ScheduleSectionsState } from './types';
 export async function loadExistingSchedules(
   token: string,
   petId: string,
-  options: { groomingVisible?: boolean } = {},
+  options: { groomingVisible?: boolean; disabledCategories?: string[] } = {},
 ): Promise<ScheduleSectionsState> {
   const [feeding, walk, medicine, vaccination, grooming] = await Promise.all([
     fetchFeedingSchedules(token, petId),
@@ -21,11 +21,9 @@ export async function loadExistingSchedules(
       : fetchGroomingRecords(token, petId),
   ]);
 
-  return buildScheduleSectionsState({
-    feeding,
-    walk,
-    medicine,
-    vaccination,
-    grooming,
-  });
+  return buildScheduleSectionsState(
+    { feeding, walk, medicine, vaccination, grooming },
+    options.disabledCategories ?? [],
+  );
 }
+

@@ -179,33 +179,53 @@ export function mapGroomingItem(item: GroomingRecord): GroomingEntryState {
   };
 }
 
-export function buildScheduleSectionsState(input: {
-  feeding: FeedingScheduleItem[];
-  walk: WalkScheduleItem[];
-  medicine: MedicineScheduleItem[];
-  vaccination: VaccinationScheduleItem[];
-  grooming: GroomingRecord[];
-}): ScheduleSectionsState {
+export function buildScheduleSectionsState(
+  input: {
+    feeding: FeedingScheduleItem[];
+    walk: WalkScheduleItem[];
+    medicine: MedicineScheduleItem[];
+    vaccination: VaccinationScheduleItem[];
+    grooming: GroomingRecord[];
+  },
+  disabledCategories: string[] = [],
+): ScheduleSectionsState {
+  // A category is enabled when it is NOT in the disabledCategories list.
+  // If disabledCategories is empty (fresh/unset), fall back to enabling only
+  // sections that actually have entries so empty sections start collapsed.
+  const hasDisabledPreference = disabledCategories.length > 0;
+
+  function isEnabled(key: ScheduleSectionKey, entries: unknown[]): boolean {
+    if (disabledCategories.includes(key)) return false;
+    if (hasDisabledPreference) return true;
+    return entries.length > 0;
+  }
+
+  const feedingEntries = input.feeding.map(mapFeedingItem);
+  const walkEntries = input.walk.map(mapWalkItem);
+  const medicineEntries = input.medicine.map(mapMedicineItem);
+  const vaccinationEntries = input.vaccination.map(mapVaccinationItem);
+  const groomingEntries = input.grooming.map(mapGroomingItem);
+
   return {
     feeding: {
-      enabled: input.feeding.length > 0,
-      entries: input.feeding.map(mapFeedingItem),
+      enabled: isEnabled('feeding', feedingEntries),
+      entries: feedingEntries,
     },
     walk: {
-      enabled: input.walk.length > 0,
-      entries: input.walk.map(mapWalkItem),
+      enabled: isEnabled('walk', walkEntries),
+      entries: walkEntries,
     },
     medicine: {
-      enabled: input.medicine.length > 0,
-      entries: input.medicine.map(mapMedicineItem),
+      enabled: isEnabled('medicine', medicineEntries),
+      entries: medicineEntries,
     },
     vaccination: {
-      enabled: input.vaccination.length > 0,
-      entries: input.vaccination.map(mapVaccinationItem),
+      enabled: isEnabled('vaccination', vaccinationEntries),
+      entries: vaccinationEntries,
     },
     grooming: {
-      enabled: input.grooming.length > 0,
-      entries: input.grooming.map(mapGroomingItem),
+      enabled: isEnabled('grooming', groomingEntries),
+      entries: groomingEntries,
     },
   };
 }

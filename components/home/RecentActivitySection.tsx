@@ -15,14 +15,35 @@ export interface RecentActivityItem {
   icon: 'walk' | 'silverware-fork-knife' | 'pill' | 'content-cut' | 'needle';
   color: string;
   bg: string;
+  /** ISO date string used to filter today-only on home screen */
+  createdAt?: string;
 }
 
 interface RecentActivitySectionProps {
   activities?: RecentActivityItem[];
   isPremium?: boolean;
+  onViewAll?: () => void;
+  /** When true, only show activities from today (home screen mode) */
+  todayOnly?: boolean;
 }
 
-export const RecentActivitySection = React.memo(function RecentActivitySection({ activities = [], isPremium = false }: RecentActivitySectionProps) {
+function isToday(dateStr: string | undefined): boolean {
+  if (!dateStr) return true; // pass-through if no date info
+  const d = new Date(dateStr);
+  const now = new Date();
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  );
+}
+
+export const RecentActivitySection = React.memo(function RecentActivitySection({
+  activities = [],
+  isPremium = false,
+  onViewAll,
+  todayOnly = true,
+}: RecentActivitySectionProps) {
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border
@@ -30,18 +51,24 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
   const iconColor = isPremium ? '#184F2E' : '#2E7D32';
   const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
 
+  // Filter to today-only when on the home screen
+  const visibleActivities = todayOnly
+    ? activities.filter((a) => isToday(a.createdAt))
+    : activities;
+
   return (
     <View style={styles.section}>
-      <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={() => {}} />
-      {activities.length === 0 ? (
-        <EmptyState
-          icon="time-outline"
-          title="No Recent Activity"
-          description="Activities such as walks, meals, medicine doses, and vet visits will appear here once logged."
-          style={{ marginVertical: Spacing.xs }}
-        />
+      <SectionHeader title="Recent Activity" actionLabel="VIEW ALL" onActionPress={onViewAll} />
+      {visibleActivities.length === 0 ? (
+        <View style={{ marginVertical: Spacing.xs }}>
+          <EmptyState
+            icon="lightning-bolt-outline"
+            title="No activity yet today"
+            description="Completed pet care activities will appear here."
+          />
+        </View>
       ) : (
-        activities.map((item) => (
+        visibleActivities.map((item) => (
           <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
             <ColorIconBadge
               color={iconColor}

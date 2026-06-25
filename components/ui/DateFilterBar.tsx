@@ -11,11 +11,65 @@ import {
 import { AppText } from './AppText';
 import { Spacing, Radius } from '@/constants/theme';
 
-export type DatePreset = 'today' | 'yesterday' | 'last7' | 'last30' | 'custom';
+export type DatePreset = 'all' | 'today' | 'yesterday' | 'last7' | 'last30' | 'custom';
 
 export interface DateRange {
   startDate: Date;
   endDate: Date;
+}
+
+export interface DatePresetOption {
+  label: string;
+  value: DatePreset;
+}
+
+const DEFAULT_PRESETS: DatePresetOption[] = [
+  { label: 'All Time', value: 'all' },
+  { label: 'Today', value: 'today' },
+  { label: 'Yesterday', value: 'yesterday' },
+  { label: '7 Days', value: 'last7' },
+  { label: '30 Days', value: 'last30' },
+  { label: 'Custom', value: 'custom' },
+];
+
+export function getPresetRange(preset: DatePreset, custom?: DateRange): DateRange {
+  const now = new Date();
+  switch (preset) {
+    case 'all':
+      return { startDate: new Date(2020, 0, 1), endDate: new Date(2030, 11, 31, 23, 59, 59) };
+    case 'today': {
+      const s = new Date(now); s.setHours(0, 0, 0, 0);
+      const e = new Date(now); e.setHours(23, 59, 59, 999);
+      return { startDate: s, endDate: e };
+    }
+    case 'yesterday': {
+      const s = new Date(now); s.setDate(s.getDate() - 1); s.setHours(0, 0, 0, 0);
+      const e = new Date(s); e.setHours(23, 59, 59, 999);
+      return { startDate: s, endDate: e };
+    }
+    case 'last7': {
+      const e = new Date(now); e.setHours(23, 59, 59, 999);
+      const s = new Date(now); s.setDate(s.getDate() - 6); s.setHours(0, 0, 0, 0);
+      return { startDate: s, endDate: e };
+    }
+    case 'last30': {
+      const e = new Date(now); e.setHours(23, 59, 59, 999);
+      const s = new Date(now); s.setDate(s.getDate() - 29); s.setHours(0, 0, 0, 0);
+      return { startDate: s, endDate: e };
+    }
+    case 'custom':
+      return custom ?? getPresetRange('today');
+  }
+}
+
+function parseSimpleDate(str: string): Date | null {
+  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const [, y, mo, d] = m.map(Number);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  const date = new Date(y, mo - 1, d);
+  if (isNaN(date.getTime())) return null;
+  return date;
 }
 
 interface DateFilterBarProps {
@@ -23,72 +77,7 @@ interface DateFilterBarProps {
   customRange?: DateRange;
   onChange: (preset: DatePreset, range: DateRange) => void;
   accentColor?: string;
-}
-
-function getTodayRange(): DateRange {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-  return { startDate: start, endDate: end };
-}
-
-function getYesterdayRange(): DateRange {
-  const start = new Date();
-  start.setDate(start.getDate() - 1);
-  start.setHours(0, 0, 0, 0);
-  const end = new Date(start);
-  end.setHours(23, 59, 59, 999);
-  return { startDate: start, endDate: end };
-}
-
-function getLast7Range(): DateRange {
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-  const start = new Date();
-  start.setDate(start.getDate() - 6);
-  start.setHours(0, 0, 0, 0);
-  return { startDate: start, endDate: end };
-}
-
-function getLast30Range(): DateRange {
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-  const start = new Date();
-  start.setDate(start.getDate() - 29);
-  start.setHours(0, 0, 0, 0);
-  return { startDate: start, endDate: end };
-}
-
-export function getPresetRange(preset: DatePreset, custom?: DateRange): DateRange {
-  switch (preset) {
-    case 'today': return getTodayRange();
-    case 'yesterday': return getYesterdayRange();
-    case 'last7': return getLast7Range();
-    case 'last30': return getLast30Range();
-    case 'custom': return custom ?? getTodayRange();
-  }
-}
-
-const PRESETS: { label: string; value: DatePreset }[] = [
-  { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
-  { label: 'Last 7 Days', value: 'last7' },
-  { label: 'Last 30 Days', value: 'last30' },
-  { label: 'Custom Date', value: 'custom' },
-];
-
-/** Simple YYYY-MM-DD string validator */
-function parseSimpleDate(str: string): Date | null {
-  const m = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (!m) return null;
-  const y = parseInt(m[1], 10);
-  const mo = parseInt(m[2], 10) - 1;
-  const d = parseInt(m[3], 10);
-  if (mo < 0 || mo > 11 || d < 1 || d > 31) return null;
-  const date = new Date(y, mo, d);
-  if (isNaN(date.getTime())) return null;
-  return date;
+  presets?: DatePresetOption[];
 }
 
 export function DateFilterBar({
@@ -96,49 +85,40 @@ export function DateFilterBar({
   customRange,
   onChange,
   accentColor = '#2E7D32',
+  presets = DEFAULT_PRESETS,
 }: DateFilterBarProps) {
-  const [showCustomModal, setShowCustomModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [startInput, setStartInput] = useState('');
   const [endInput, setEndInput] = useState('');
-  const [inputError, setInputError] = useState('');
+  const [error, setError] = useState('');
 
-  const handlePresetPress = (preset: DatePreset) => {
+  const handlePress = (preset: DatePreset) => {
     if (preset === 'custom') {
       setStartInput('');
       setEndInput('');
-      setInputError('');
-      setShowCustomModal(true);
+      setError('');
+      setShowModal(true);
       return;
     }
     onChange(preset, getPresetRange(preset));
   };
 
-  const handleApplyCustom = () => {
-    const start = parseSimpleDate(startInput);
-    const end = parseSimpleDate(endInput);
-    if (!start) {
-      setInputError('Invalid start date. Use YYYY-MM-DD format.');
-      return;
-    }
-    if (!end) {
-      setInputError('Invalid end date. Use YYYY-MM-DD format.');
-      return;
-    }
-    if (start > end) {
-      setInputError('Start date must be before end date.');
-      return;
-    }
-    start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
-    setShowCustomModal(false);
-    onChange('custom', { startDate: start, endDate: end });
+  const handleApply = () => {
+    const s = parseSimpleDate(startInput);
+    const e = parseSimpleDate(endInput);
+    if (!s) { setError('Invalid start date — use YYYY-MM-DD'); return; }
+    if (!e) { setError('Invalid end date — use YYYY-MM-DD'); return; }
+    if (s > e) { setError('Start date must be before end date'); return; }
+    s.setHours(0, 0, 0, 0);
+    e.setHours(23, 59, 59, 999);
+    setShowModal(false);
+    onChange('custom', { startDate: s, endDate: e });
   };
 
-  const getCustomLabel = () => {
-    if (!customRange) return 'Custom Date';
-    const fmt = (d: Date) =>
-      d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    return `${fmt(customRange.startDate)} – ${fmt(customRange.endDate)}`;
+  const customLabel = () => {
+    if (!customRange) return 'Custom';
+    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${fmt(customRange.startDate)}–${fmt(customRange.endDate)}`;
   };
 
   return (
@@ -148,28 +128,24 @@ export function DateFilterBar({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >
-        {PRESETS.map((preset) => {
-          const isActive = preset.value === selected;
-          const label = preset.value === 'custom' && selected === 'custom'
-            ? getCustomLabel()
-            : preset.label;
+        {presets.map((p) => {
+          const active = p.value === selected;
+          const label = p.value === 'custom' && selected === 'custom' ? customLabel() : p.label;
           return (
             <TouchableOpacity
-              key={preset.value}
-              onPress={() => handlePresetPress(preset.value)}
-              style={[
-                styles.chip,
-                isActive
-                  ? { backgroundColor: accentColor + '18', borderColor: accentColor }
-                  : styles.chipInactive,
-              ]}
+              key={p.value}
+              onPress={() => handlePress(p.value)}
               activeOpacity={0.75}
+              style={[styles.chip, active
+                ? { backgroundColor: accentColor + '18', borderColor: accentColor }
+                : styles.inactive,
+              ]}
             >
               <AppText
                 variant="caption"
-                weight={isActive ? '700' : '500'}
-                color={isActive ? accentColor : '#616161'}
-                style={styles.label}
+                weight={active ? '700' : '500'}
+                color={active ? accentColor : '#616161'}
+                style={styles.chipLabel}
               >
                 {label}
               </AppText>
@@ -178,73 +154,46 @@ export function DateFilterBar({
         })}
       </ScrollView>
 
-      {/* Custom Date Picker Modal */}
-      <Modal
-        visible={showCustomModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowCustomModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <AppText variant="h3" weight="700" color="#212121" style={styles.modalTitle}>
-              Custom Date Range
-            </AppText>
-            <AppText variant="caption" color="#616161" style={styles.modalHint}>
+      <Modal visible={showModal} transparent animationType="fade" onRequestClose={() => setShowModal(false)}>
+        <View style={styles.overlay}>
+          <View style={styles.modal}>
+            <AppText variant="h3" weight="700" color="#212121">Custom Range</AppText>
+            <AppText variant="caption" color="#9E9E9E" style={{ marginTop: 2, marginBottom: Spacing.md }}>
               Enter dates in YYYY-MM-DD format
             </AppText>
-
             <View style={styles.inputRow}>
-              <View style={styles.inputWrap}>
-                <AppText variant="caption" weight="600" color="#616161" style={styles.inputLabel}>
-                  Start Date
-                </AppText>
+              <View style={{ flex: 1 }}>
+                <AppText variant="caption" weight="600" color="#616161" style={styles.inputLabel}>From</AppText>
                 <TextInput
                   style={styles.input}
                   placeholder="2026-06-01"
                   placeholderTextColor="#BDBDBD"
                   value={startInput}
-                  onChangeText={(t) => { setStartInput(t); setInputError(''); }}
+                  onChangeText={(t) => { setStartInput(t); setError(''); }}
                   keyboardType="numbers-and-punctuation"
                   maxLength={10}
                 />
               </View>
-              <View style={styles.inputWrap}>
-                <AppText variant="caption" weight="600" color="#616161" style={styles.inputLabel}>
-                  End Date
-                </AppText>
+              <View style={{ flex: 1 }}>
+                <AppText variant="caption" weight="600" color="#616161" style={styles.inputLabel}>To</AppText>
                 <TextInput
                   style={styles.input}
                   placeholder="2026-06-25"
                   placeholderTextColor="#BDBDBD"
                   value={endInput}
-                  onChangeText={(t) => { setEndInput(t); setInputError(''); }}
+                  onChangeText={(t) => { setEndInput(t); setError(''); }}
                   keyboardType="numbers-and-punctuation"
                   maxLength={10}
                 />
               </View>
             </View>
-
-            {inputError ? (
-              <AppText variant="caption" color="#D32F2F" style={styles.errorText}>
-                {inputError}
-              </AppText>
-            ) : null}
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelBtn}
-                onPress={() => setShowCustomModal(false)}
-                activeOpacity={0.75}
-              >
+            {error ? <AppText variant="caption" color="#DC2626" style={{ marginBottom: 8 }}>{error}</AppText> : null}
+            <View style={styles.modalBtns}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)} activeOpacity={0.75}>
                 <AppText variant="bodySmall" weight="600" color="#616161">Cancel</AppText>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.applyBtn, { backgroundColor: accentColor }]}
-                onPress={handleApplyCustom}
-                activeOpacity={0.8}
-              >
-                <AppText variant="bodySmall" weight="700" color="#FFFFFF">Apply</AppText>
+              <TouchableOpacity style={[styles.applyBtn, { backgroundColor: accentColor }]} onPress={handleApply} activeOpacity={0.8}>
+                <AppText variant="bodySmall" weight="700" color="#FFF">Apply</AppText>
               </TouchableOpacity>
             </View>
           </View>
@@ -255,97 +204,36 @@ export function DateFilterBar({
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.xs,
-    paddingBottom: Spacing.xs,
-  },
+  row: { flexDirection: 'row', gap: 6, paddingBottom: 2, paddingHorizontal: 2 },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 14, paddingVertical: 7,
+    borderRadius: Radius.full, borderWidth: 1.5,
+    alignItems: 'center', justifyContent: 'center',
   },
-  chipInactive: {
-    backgroundColor: '#F5F5F5',
-    borderColor: '#E0E0E0',
-  },
-  label: {
-    fontSize: 12,
-    letterSpacing: 0.2,
-  },
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  inactive: { backgroundColor: '#F5F5F5', borderColor: '#E0E0E0' },
+  chipLabel: { fontSize: 12, letterSpacing: 0.2 },
+  overlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center', justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
   },
-  modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: Spacing.lg,
-    width: '100%',
-    maxWidth: 380,
+  modal: {
+    backgroundColor: '#FFF', borderRadius: 20,
+    padding: Spacing.lg, width: '100%', maxWidth: 380,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 20 },
-      android: { elevation: 8 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.18, shadowRadius: 24 },
+      android: { elevation: 10 },
     }),
   },
-  modalTitle: {
-    marginBottom: 4,
-  },
-  modalHint: {
-    marginBottom: Spacing.md,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  inputWrap: {
-    flex: 1,
-  },
-  inputLabel: {
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
+  inputRow: { flexDirection: 'row', gap: Spacing.sm, marginBottom: Spacing.sm },
+  inputLabel: { marginBottom: 4, textTransform: 'uppercase', letterSpacing: 0.5 },
   input: {
-    backgroundColor: '#F5F6F8',
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    fontSize: 14,
-    color: '#212121',
-    fontFamily: Platform.OS === 'ios' ? 'System' : undefined,
+    backgroundColor: '#F5F6F8', borderRadius: Radius.sm,
+    borderWidth: 1, borderColor: '#E0E0E0',
+    paddingHorizontal: Spacing.sm, paddingVertical: 10,
+    fontSize: 14, color: '#212121',
   },
-  errorText: {
-    marginBottom: Spacing.sm,
-    color: '#D32F2F',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.sm,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: Radius.md,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-  },
-  applyBtn: {
-    flex: 2,
-    paddingVertical: 12,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-  },
+  modalBtns: { flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.sm },
+  cancelBtn: { flex: 1, paddingVertical: 12, borderRadius: Radius.md, backgroundColor: '#F5F5F5', alignItems: 'center' },
+  applyBtn: { flex: 2, paddingVertical: 12, borderRadius: Radius.md, alignItems: 'center' },
 });

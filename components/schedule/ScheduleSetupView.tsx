@@ -64,6 +64,7 @@ import type {
 import { fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import { updatePet } from '@/services/pets/petApi';
+import { setActivePetCache } from '@/lib/pet/activePetCache';
 import type { GroomingTypeOption } from '@/types/grooming';
 import { ScheduleSectionCard } from './ScheduleSectionCard';
 import { ScheduleEntrySummaryCard } from './ScheduleEntrySummaryCard';
@@ -109,8 +110,12 @@ export function ScheduleSetupView({
 }: ScheduleSetupViewProps) {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { token, user } = useAuth();
-  const { pet, loading: petLoading, reload: reloadActivePet } = useActivePet(token);
+  const { pet, loading: petLoading } = useActivePet(token);
   const { unreadCount } = useNotifications(token);
+  // Stable ref so focusReload closure always reads the latest pet without
+  // needing pet as a dependency (which would loop).
+  const petRef = useRef(pet);
+  petRef.current = pet;
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const {
@@ -151,7 +156,10 @@ export function ScheduleSetupView({
   }, []);
 
   const reloadSchedules = useCallback(
-    async (petId: string, options?: { silent?: boolean }) => {
+    async (
+      petId: string,
+      options?: { silent?: boolean; disabledCategories?: string[] },
+    ) => {
       if (!token) return;
 
       if (!options?.silent) {
@@ -159,8 +167,13 @@ export function ScheduleSetupView({
       }
 
       try {
+        // Always pass disabledCategories so enabled flags survive reload.
+        // If not provided, read from the current pet ref.
+        const disabled =
+          options?.disabledCategories ?? petRef.current?.disabledCategories ?? [];
         const loaded = await loadExistingSchedules(token, petId, {
           groomingVisible: groomingVisibleRef.current,
+          disabledCategories: disabled,
         });
         setSections(loaded);
         setCachedSchedules(petId, loaded);
@@ -175,10 +188,14 @@ export function ScheduleSetupView({
   );
 
   const focusReload = useCallback(() => {
-    if (pet?._id) {
-      void reloadSchedules(pet._id, { silent: true });
+    const currentPet = petRef.current;
+    if (currentPet?._id) {
+      void reloadSchedules(currentPet._id, {
+        silent: true,
+        disabledCategories: currentPet.disabledCategories ?? [],
+      });
     }
-  }, [pet?._id, reloadSchedules]);
+  }, [reloadSchedules]);
 
   useFocusReload(focusReload, Boolean(token && pet?._id));
 
@@ -212,6 +229,7 @@ export function ScheduleSetupView({
           fetchGroomingTypes(token, petId),
           loadExistingSchedules(token, petId, {
             groomingVisible: localOptions.groomingVisible,
+            disabledCategories: pet?.disabledCategories ?? [],
           }),
         ]);
 
@@ -249,12 +267,9 @@ export function ScheduleSetupView({
         );
 
         if (schedulesResult.status === 'fulfilled') {
+          // enabled flags are already correct because we passed disabledCategories
+          // into loadExistingSchedules → buildScheduleSectionsState above.
           const loaded = schedulesResult.value;
-          const disabled = pet?.disabledCategories || [];
-          const keys: ScheduleSectionKey[] = ['feeding', 'walk', 'medicine', 'vaccination', 'grooming'];
-          keys.forEach((k) => {
-            loaded[k].enabled = !disabled.includes(k);
-          });
           setSections(loaded);
           setCachedSchedules(petId, loaded);
         } else if (!cached) {
@@ -285,6 +300,7 @@ export function ScheduleSetupView({
       }
     }
 
+    // Optimistic UI update — apply toggle immediately
     setSections((prev) => ({
       ...prev,
       [key]: { ...prev[key], enabled },
@@ -293,12 +309,17 @@ export function ScheduleSetupView({
     setFormError(null);
 
     try {
-      await updatePet(token, pet._id, { disabledCategories: newDisabled });
-      await reloadActivePet(true);
-      queryClient.invalidateQueries({ queryKey: ['activePet', token] });
+      const updatedPet = await updatePet(token, pet._id, { disabledCategories: newDisabled });
+
+      // Update the cache directly so any subsequent focusReload uses the
+      // correct disabledCategories without triggering a cascading reload
+      // that would fight the optimistic toggle.
+      setActivePetCache(token, updatedPet);
+
+      // Invalidate dashboard so Today's Schedule & counts reflect the change
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
-      queryClient.invalidateQueries({ queryKey: ['pets', token] });
     } catch (e) {
+      // Rollback optimistic update on failure
       setSections((prev) => ({
         ...prev,
         [key]: { ...prev[key], enabled: !enabled },
