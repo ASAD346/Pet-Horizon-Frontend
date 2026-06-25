@@ -122,7 +122,7 @@ export function AddExpenseView({
                   Add Expense
                 </AppText>
                 <AppText variant="caption" color="rgba(255,255,255,0.75)">
-                  Track your pet's spending
+                  Track your pet&apos;s spending
                 </AppText>
               </View>
             </View>
