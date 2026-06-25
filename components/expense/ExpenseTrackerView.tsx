@@ -10,6 +10,7 @@ import {
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,7 +21,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { SheetOptionPicker } from '@/components/sheets';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
-import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { EditBudgetSheet } from './EditBudgetSheet';
 import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
@@ -28,6 +29,7 @@ import { WeeklySpendingCard } from './WeeklySpendingCard';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useLocalization } from '@/hooks/useLocalization';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { Colors } from '@/constants/colors';
 
 interface ExpenseTrackerViewProps {
   onJournalPress?: () => void;
@@ -106,15 +108,14 @@ export function ExpenseTrackerView({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <ExpenseTrackerHeader
+    <View style={styles.safeArea}>
+      <ScreenHeader
+        title="Expenses"
+        variant="white"
         notificationCount={unreadCount}
         onJournalPress={canViewJournal ? onJournalPress : undefined}
         onNotificationsPress={onNotificationsPress}
         showJournal={canViewJournal}
-        isPremium={isPremium}
-        selectedMonthLabel={selectedMonthLabel}
-        onDatePress={() => setMonthPickerVisible(true)}
       />
 
       <ScrollView
@@ -125,6 +126,19 @@ export function ExpenseTrackerView({
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
         }
       >
+        {canViewExpenses && (
+          <View style={styles.monthSelectorRow}>
+            <AppText variant="caption" color={Colors.textMuted} weight="700">
+              SHOWING EXPENSES FOR:
+            </AppText>
+            <TouchableOpacity onPress={() => setMonthPickerVisible(true)} style={styles.monthButton}>
+              <AppText variant="caption" weight="800" color={Colors.primary}>
+                {selectedMonthLabel.toUpperCase()}
+              </AppText>
+              <Ionicons name="chevron-down" size={14} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from Home to track expenses." />
@@ -213,7 +227,7 @@ export function ExpenseTrackerView({
           setSelectedMonth(value);
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -228,6 +242,22 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
+  },
+  monthSelectorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    padding: Spacing.md,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  monthButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   fab: {
     position: 'absolute',

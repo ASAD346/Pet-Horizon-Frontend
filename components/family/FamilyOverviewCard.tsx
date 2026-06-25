@@ -1,19 +1,14 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
-import { AppButton } from '@/components/ui/AppButton';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { AppCard } from '@/components/ui/AppCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { SkeletonCodeBlock } from '@/components/ui/skeletons';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
-
-// Free plan: vibrant brand green
-const FREE_GRAD: readonly [string, string] = ['#3A8F3B', '#5CB35D'];
-const FREE_SHADOW = '#1B5E20';
-
-// Premium plan: dark luxurious emerald
-const PREM_GRAD: readonly [string, string, string] = ['#0E3821', '#184F2E', '#267343'];
-const PREM_SHADOW = '#082113';
+import { Colors } from '@/constants/colors';
+import { Radius } from '@/constants/radius';
+import { Spacing } from '@/constants/spacing';
 
 interface FamilyOverviewCardProps {
   familyName: string;
@@ -40,163 +35,91 @@ export function FamilyOverviewCard({
   onShareCode,
   onInvitePress,
 }: FamilyOverviewCardProps) {
-  const gradientColors = isPremium ? PREM_GRAD : FREE_GRAD;
-  const shadowColor = isPremium ? PREM_SHADOW : FREE_SHADOW;
-
-  // Premium style overrides
-  const codeBoxBg = isPremium ? 'rgba(212,160,23,0.12)' : 'rgba(0,0,0,0.18)';
-  const codeBoxBorderColor = isPremium ? 'rgba(212,160,23,0.3)' : 'rgba(255,255,255,0.15)';
-
   return (
-    <View style={[styles.wrapper, { shadowColor }]}>
-      <LinearGradient
-        colors={gradientColors as any}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.card}
-      >
-        {/* Decorative background rings */}
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <View style={styles.bgRing1} />
-          <View style={styles.bgRing2} />
-        </View>
-
-        {isPremium ? (
-          <View style={styles.proBadge}>
-            <Ionicons name="star" size={11} color="#FFD700" style={styles.proStar} />
-            <AppText variant="caption" weight="800" color="#FFFFFF" style={styles.proText}>
-              PREMIUM
-            </AppText>
-          </View>
-        ) : null}
-
-        <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.familyName}>
+    <AppCard variant="elevated" style={styles.card}>
+      <View style={styles.headerRow}>
+        <AppText variant="h3" weight="800" color={Colors.text} style={styles.familyName}>
           {familyName}
         </AppText>
-        <AppText variant="bodySmall" color="rgba(255,255,255,0.85)" style={styles.stats}>
-          {memberCount} active member{memberCount === 1 ? '' : 's'} • {petCount} pet
-          {petCount === 1 ? '' : 's'}
-        </AppText>
+        {isPremium ? (
+          <StatusBadge status="premium" />
+        ) : (
+          <StatusBadge status="active" label="Free Plan" />
+        )}
+      </View>
 
-        {showInviteSection ? (
-          <>
-            <View style={[styles.codeBox, { backgroundColor: codeBoxBg, borderColor: codeBoxBorderColor }]}>
-              <View style={styles.codeTextBlock}>
-                <AppText variant="caption" weight="700" color="rgba(255,255,255,0.7)" style={styles.codeLabel}>
-                  JOIN CODE
+      <AppText variant="bodySmall" color={Colors.textMuted} style={styles.stats}>
+        {memberCount} active member{memberCount === 1 ? '' : 's'} • {petCount} pet
+        {petCount === 1 ? '' : 's'}
+      </AppText>
+
+      {showInviteSection ? (
+        <>
+          <View style={styles.codeBox}>
+            <View style={styles.codeTextBlock}>
+              <AppText variant="caption" weight="800" color={Colors.textLight} style={styles.codeLabel}>
+                JOIN CODE
+              </AppText>
+              {loadingInvite ? (
+                <SkeletonCodeBlock />
+              ) : (
+                <AppText variant="h3" weight="800" color={Colors.text} style={styles.codeValue}>
+                  {joinCode ?? '--------'}
                 </AppText>
-                {loadingInvite ? (
-                  <SkeletonCodeBlock />
-                ) : (
-                  <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.codeValue}>
-                    {joinCode ?? '--------'}
-                  </AppText>
-                )}
-              </View>
-              <TouchableOpacity
-                style={styles.shareBtn}
-                onPress={onShareCode ?? (() => {})}
-                disabled={!canInvite || !joinCode || loadingInvite}
-                activeOpacity={0.8}
-                accessibilityLabel="Share join code"
-              >
-                <Ionicons name="share-outline" size={20} color={HomeTheme.white} />
-              </TouchableOpacity>
+              )}
             </View>
+            <TouchableOpacity
+              style={styles.shareBtn}
+              onPress={onShareCode ?? (() => {})}
+              disabled={!canInvite || !joinCode || loadingInvite}
+              activeOpacity={0.7}
+              accessibilityLabel="Share join code"
+            >
+              <Ionicons name="share-outline" size={20} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
 
-            <AppButton
-              title="Invite Member"
-              onPress={onInvitePress ?? (() => {})}
-              disabled={!canInvite || loadingInvite}
-              variant="success"
-              size="md"
-              style={[styles.inviteBtn, isPremium && styles.inviteBtnPremium]}
-              textStyle={styles.inviteBtnText}
-              icon={<Ionicons name="person-add-outline" size={18} color={isPremium ? '#D4A017' : HomeTheme.white} />}
-            />
-          </>
-        ) : null}
-      </LinearGradient>
-    </View>
+          <PrimaryButton
+            title="Invite Member"
+            onPress={onInvitePress ?? (() => {})}
+            disabled={!canInvite || loadingInvite}
+            size="md"
+            icon={<Ionicons name="person-add-outline" size={18} color="#FFFFFF" />}
+          />
+        </>
+      ) : null}
+    </AppCard>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
+  card: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
-    borderRadius: Radius.xl,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: { elevation: 3 },
-    }),
   },
-  card: {
-    borderRadius: Radius.xl,
-    padding: Spacing.md,
-    overflow: 'hidden',
-  },
-  bgRing1: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    top: -80,
-    right: -60,
-  },
-  bgRing2: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    bottom: -40,
-    left: -30,
-  },
-  proBadge: {
-    position: 'absolute',
-    top: Spacing.xs,
-    right: Spacing.xs,
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: Radius.full,
-  },
-  proStar: {
-    marginTop: -1,
-  },
-  proText: {
-    fontSize: 9,
-    letterSpacing: 0.8,
-    fontWeight: '800',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
   },
   familyName: {
-    marginTop: 0,
-    marginBottom: 2,
-    fontSize: 18,
+    flex: 1,
+    marginRight: Spacing.sm,
   },
   stats: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   codeBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
     borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   codeTextBlock: {
     flex: 1,
@@ -214,25 +137,11 @@ const styles = StyleSheet.create({
   shareBtn: {
     width: 36,
     height: 36,
-    borderRadius: Radius.md,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: Radius.sm,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: Colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  inviteBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    minHeight: 40,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
-  inviteBtnPremium: {
-    backgroundColor: 'rgba(212,160,23,0.18)',
-    borderColor: 'rgba(212,160,23,0.4)',
-  },
-  inviteBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
 });

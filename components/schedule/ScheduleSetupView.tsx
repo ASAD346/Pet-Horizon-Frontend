@@ -385,13 +385,13 @@ export function ScheduleSetupView({
 
   return (
     <View style={styles.container}>
-      <ScheduleScreenHeader
+      <ScreenHeader
+        title="Care Schedules"
+        variant="white"
         notificationCount={unreadCount}
         onNotificationsPress={onNotificationsPress}
         onJournalPress={canViewJournal ? onJournalPress : undefined}
         showJournal={canViewJournal}
-        isPremium={isPremium}
-        topInset={insets.top}
       />
       <KeyboardAvoidingView
         style={styles.flex}

@@ -1,111 +1,75 @@
 import React from 'react';
-import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Colors } from '@/constants/colors';
+import { Spacing } from '@/constants/spacing';
 import { AppText } from './AppText';
 import { AppButton } from './AppButton';
-import { Radius, Spacing, HomeTheme } from '../../constants/theme';
 
 interface EmptyStateProps {
-  icon: string;
-  iconType?: 'ionicons' | 'mci';
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   title: string;
   description: string;
-  actionLabel?: string;
-  onActionPress?: () => void;
-  style?: StyleProp<ViewStyle>;
+  buttonLabel?: string;
+  onButtonPress?: () => void;
 }
 
 export function EmptyState({
   icon,
-  iconType = 'ionicons',
   title,
   description,
-  actionLabel,
-  onActionPress,
-  style,
+  buttonLabel,
+  onButtonPress,
 }: EmptyStateProps) {
   return (
-    <View style={[styles.container, style]}>
-      {/* Decorative Outer Ring */}
-      <View style={styles.iconWrapper}>
-        <View style={styles.iconCircle}>
-          {iconType === 'mci' ? (
-            <MaterialCommunityIcons name={icon as any} size={36} color={HomeTheme.cardGreen} />
-          ) : (
-            <Ionicons name={icon as any} size={36} color={HomeTheme.cardGreen} />
-          )}
-        </View>
+    <View style={styles.container}>
+      <View style={styles.iconCircle}>
+        <MaterialCommunityIcons name={icon} size={36} color={Colors.primary} />
       </View>
-
-      <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.title}>
+      <AppText variant="h3" weight="700" color={Colors.text} style={styles.title}>
         {title}
       </AppText>
-      
-      <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.description}>
+      <AppText variant="bodySmall" color={Colors.textMuted} align="center" style={styles.description}>
         {description}
       </AppText>
-
-      {actionLabel && onActionPress && (
+      {buttonLabel && onButtonPress ? (
         <AppButton
-          title={actionLabel}
-          onPress={onActionPress}
-          variant="outline"
-          size="sm"
+          title={buttonLabel}
+          onPress={onButtonPress}
+          variant="primary"
           style={styles.button}
         />
-      )}
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg,
-    paddingVertical: Spacing.xl + 8,
-    paddingHorizontal: Spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    textAlign: 'center',
-    marginHorizontal: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.12)',
-    shadowColor: '#1A2B4E',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    elevation: 3,
+    padding: Spacing.xl,
+    backgroundColor: 'transparent',
   },
-  iconWrapper: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(46, 125, 50, 0.06)',
+  iconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
   },
-  iconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(46, 125, 50, 0.08)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   title: {
-    fontSize: 16,
-    textAlign: 'center',
     marginBottom: Spacing.xs,
+    textAlign: 'center',
   },
   description: {
-    textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: '85%',
-    marginBottom: Spacing.lg,
+    lineHeight: 18,
+    marginBottom: Spacing.md,
+    maxWidth: 260,
   },
   button: {
-    borderColor: HomeTheme.cardGreen,
-    paddingHorizontal: Spacing.lg,
+    minWidth: 160,
   },
 });

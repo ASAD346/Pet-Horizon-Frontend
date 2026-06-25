@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, TextInput, Switch, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, TextInput, Switch, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { FormSheetColors } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
+
 
 interface BaseInputProps {
   label?: string;
@@ -376,9 +377,13 @@ export function StickyActionFooter({
         disabled={saveDisabled || saving}
         activeOpacity={0.8}
       >
-        <AppText variant="bodySmall" weight="800" color="#FFFFFF">
-          {saveLabel}
-        </AppText>
+        {saving ? (
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        ) : (
+          <AppText variant="bodySmall" weight="800" color="#FFFFFF">
+            {saveLabel}
+          </AppText>
+        )}
       </TouchableOpacity>
     </View>
   );

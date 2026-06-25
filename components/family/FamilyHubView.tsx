@@ -9,7 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { FamilyHubHeader } from '@/components/family/FamilyHubHeader';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { FamilyOverviewCard } from '@/components/family/FamilyOverviewCard';
 import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
 import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
@@ -151,13 +151,13 @@ export function FamilyHubView() {
 
   return (
     <View style={styles.container}>
-      <FamilyHubHeader
+      <ScreenHeader
+        title="Family Hub"
+        variant="white"
         notificationCount={notificationCount}
         onNotificationsPress={onNotificationsPress}
         onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
         showJournal={canViewJournal}
-        isPremium={isPremium}
-        topInset={insets.top}
       />
 
       <ScrollView
