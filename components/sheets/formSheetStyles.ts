@@ -31,7 +31,7 @@ export const formSheetStyles = StyleSheet.create({
     backgroundColor: FormSheetColors.sheetBg,
     borderTopLeftRadius: Radius.xl, // Premium roundness
     borderTopRightRadius: Radius.xl,
-    maxHeight: '88%', // Ensure it doesn't cover top status bar awkwardly
+    maxHeight: '68%', // Compact height to prevent status bar cover
     overflow: 'hidden',
     ...Platform.select({
       ios: {
@@ -71,13 +71,13 @@ export const formSheetStyles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.lg,
     backgroundColor: FormSheetColors.pageBg,
   },
   hero: {
     borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
+    padding: Spacing.sm,
+    marginBottom: Spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
@@ -85,8 +85,8 @@ export const formSheetStyles = StyleSheet.create({
     borderColor: FormSheetColors.sectionBorder,
   },
   heroIconWrap: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: Radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -96,34 +96,21 @@ export const formSheetStyles = StyleSheet.create({
     gap: 2,
   },
   section: {
-    backgroundColor: FormSheetColors.sectionBg,
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: FormSheetColors.sectionBorder,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.02,
-        shadowRadius: 6,
-      },
-      android: { elevation: 1 },
-    }),
+    marginBottom: Spacing.sm,
+    // Removed card background, borders, padding and shadows to eliminate card nesting
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
     paddingBottom: Spacing.xs,
     borderBottomWidth: 1,
     borderBottomColor: FormSheetColors.divider,
   },
   sectionIcon: {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     borderRadius: Radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
@@ -131,14 +118,14 @@ export const formSheetStyles = StyleSheet.create({
   chipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs + 2,
+    paddingVertical: 6,
     borderRadius: Radius.full,
     backgroundColor: FormSheetColors.chipBg,
     borderWidth: 1,
@@ -153,7 +140,8 @@ export const formSheetStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 6,
+    height: 38,
     fontSize: 14,
     color: FormSheetColors.text,
     ...Platform.select({
@@ -171,13 +159,13 @@ export const formSheetStyles = StyleSheet.create({
     borderStyle: 'solid',
     borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
-    minHeight: 42,
+    height: 38,
   },
   suffixInput: {
     flex: 1,
     fontSize: 14,
     color: FormSheetColors.text,
-    paddingVertical: 8,
+    paddingVertical: 6,
     paddingHorizontal: 0,
     margin: 0,
     backgroundColor: 'transparent',
@@ -199,8 +187,8 @@ export const formSheetStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    minHeight: 42,
+    paddingVertical: 6,
+    height: 38,
   },
   switchRow: {
     flexDirection: 'row',
@@ -211,8 +199,8 @@ export const formSheetStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    minHeight: 44,
+    paddingVertical: 4,
+    height: 38,
   },
   twoColRow: {
     flexDirection: 'row',
@@ -222,17 +210,17 @@ export const formSheetStyles = StyleSheet.create({
     flex: 1,
   },
   fieldGap: {
-    marginBottom: Spacing.sm,
+    marginBottom: 6,
   },
   notesInput: {
-    minHeight: 70,
+    height: 56, // reduced from 70
     textAlignVertical: 'top',
-    paddingTop: 10,
+    paddingTop: 6,
   },
   footer: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
     backgroundColor: FormSheetColors.sheetBg,
     borderTopWidth: 1,
     borderTopColor: FormSheetColors.divider,

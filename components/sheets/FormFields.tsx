@@ -2,7 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, TextInput, Switch, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme } from '@/constants/theme';
+import { HomeTheme, Radius } from '@/constants/theme';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
 
@@ -27,26 +27,26 @@ interface FormChipRowProps {
 }
 
 export function FormChipRow({ options, selected, onSelect }: FormChipRowProps) {
-  const { accentColor } = useAppThemeColor();
   return (
-    <View style={[formSheetStyles.chipRow, formSheetStyles.fieldGap]}>
+    <View style={styles.segmentedContainer}>
       {options.map((option) => {
         const isSelected = selected === option.value;
         return (
           <TouchableOpacity
             key={option.value}
             style={[
-              formSheetStyles.chip,
-              isSelected && [
-                formSheetStyles.chipSelected,
-                { backgroundColor: accentColor, borderColor: accentColor },
-              ],
+              styles.segmentButton,
+              isSelected && styles.segmentButtonActive,
             ]}
             onPress={() => onSelect(option.value)}
-            activeOpacity={0.85}
+            activeOpacity={0.9}
           >
-            {isSelected ? <Ionicons name="checkmark-circle" size={16} color={HomeTheme.white} /> : null}
-            <AppText variant="caption" weight="700" color={isSelected ? HomeTheme.white : FormSheetColors.text}>
+            <AppText
+              variant="caption"
+              weight="700"
+              color={isSelected ? FormSheetColors.text : FormSheetColors.label}
+              style={styles.segmentText}
+            >
               {option.label}
             </AppText>
           </TouchableOpacity>
@@ -226,5 +226,32 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     marginBottom: 6,
     marginTop: 0,
+  },
+  segmentedContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E6E8EB',
+    borderRadius: Radius.md,
+    padding: 2,
+    marginBottom: 8,
+    width: '100%',
+  },
+  segmentButton: {
+    flex: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Radius.md - 2,
+  },
+  segmentButtonActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 1.5,
+    elevation: 2,
+  },
+  segmentText: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });

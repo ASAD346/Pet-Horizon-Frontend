@@ -125,7 +125,7 @@ export function FormSheetShell({
                 loading={saving}
                 disabled={saving || saveDisabled}
                 variant="success"
-                size="md"
+                size="sm"
                 style={[formSheetStyles.saveBtn, { backgroundColor: accentColor }]}
                 textStyle={formSheetStyles.saveBtnText}
               />
