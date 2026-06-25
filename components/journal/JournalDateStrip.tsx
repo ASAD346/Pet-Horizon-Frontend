@@ -13,9 +13,10 @@ interface JournalDateStripProps {
   dates: readonly JournalDateItem[];
   selectedId: string;
   onSelect: (id: string) => void;
+  themeColor?: string;
 }
 
-export function JournalDateStrip({ dates, selectedId, onSelect }: JournalDateStripProps) {
+export function JournalDateStrip({ dates, selectedId, onSelect, themeColor }: JournalDateStripProps) {
   return (
     <ScrollView
       horizontal
@@ -30,7 +31,10 @@ export function JournalDateStrip({ dates, selectedId, onSelect }: JournalDateStr
             key={item.id}
             activeOpacity={0.85}
             onPress={() => onSelect(item.id)}
-            style={[styles.card, selected && styles.cardSelected]}
+            style={[
+              styles.card,
+              selected && { backgroundColor: themeColor || JournalTheme.navy, borderColor: themeColor || JournalTheme.navy }
+            ]}
           >
             <AppText
               variant="caption"

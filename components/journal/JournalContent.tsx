@@ -172,6 +172,9 @@ export function JournalContent({ active = true }: JournalContentProps) {
     );
   }
 
+  const isPremium = user?.premiumStatus === 'premium';
+  const themeColor = isPremium ? '#184F2E' : '#5CB35D';
+
   if (loading && entries.length === 0) {
     return <SkeletonJournalScreen />;
   }
@@ -182,7 +185,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.content}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={JournalTheme.navy} />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={themeColor} />
       }
     >
       {error ? (
@@ -206,11 +209,13 @@ export function JournalContent({ active = true }: JournalContentProps) {
         dates={dateStrip}
         selectedId={selectedDateId}
         onSelect={setSelectedDateId}
+        themeColor={themeColor}
       />
       <JournalCategoryChips
         chips={JOURNAL_CATEGORY_CHIPS}
         selected={category}
         onSelect={setCategory}
+        themeColor={themeColor}
       />
       <ActivityTimelineSection
         events={timelineEvents}

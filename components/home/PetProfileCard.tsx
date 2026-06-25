@@ -10,6 +10,7 @@ import { HomeTheme, Spacing } from '../../constants/theme';
 interface PetProfileCardProps {
   name?: string;
   breed?: string;
+  species?: string;
   age?: string;
   gender?: string | null;
   weight?: string;
@@ -21,12 +22,14 @@ interface PetProfileCardProps {
   loading?: boolean;
   isBirthdayToday?: boolean;
   onPress?: () => void;
+  onEditPress?: () => void;
   isPremium?: boolean;
 }
 
 export function PetProfileCard({
   name = 'Your pet',
   breed = '—',
+  species = '—',
   age = '—',
   gender = '—',
   weight = '—',
@@ -38,6 +41,7 @@ export function PetProfileCard({
   loading = false,
   isBirthdayToday = false,
   onPress,
+  onEditPress,
   isPremium = false,
 }: PetProfileCardProps) {
   const displayImage = imageUrl ? { uri: imageUrl } : (imageSource ? imageSource : null);
@@ -89,7 +93,7 @@ export function PetProfileCard({
         {/* Large Decorative Paw Watermark */}
         <MaterialCommunityIcons name="paw" size={72} color="rgba(255, 255, 255, 0.07)" style={styles.watermark} />
 
-        {/* Top-Right Absolute Positioned Premium / Free Pill */}
+        {/* Top-Right Absolute Positioned Premium / Free Pill and Edit Button */}
         <View style={styles.rightSection}>
           {isPremium ? (
             <View style={styles.premiumPill}>
@@ -104,6 +108,18 @@ export function PetProfileCard({
                 FREE
               </AppText>
             </View>
+          )}
+          {onEditPress && (
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onEditPress();
+              }}
+              style={styles.editCardButton}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="pencil" size={13} color="#FFFFFF" />
+            </TouchableOpacity>
           )}
         </View>
 
@@ -148,23 +164,30 @@ export function PetProfileCard({
             <AppText variant="bodySmall" color={HomeTheme.white} style={styles.meta} numberOfLines={1}>
               {isBirthdayToday ? `🎂 Birthday today · ${breed}` : `${breed} · ${age}`}
             </AppText>
-            <View style={styles.tags}>
-              <View style={styles.tag}>
-                <MaterialCommunityIcons name={genderIconName} size={11} color="#FFFFFF" style={{ marginRight: 3 }} />
-                <AppText variant="caption" weight="800" color={HomeTheme.white}>
-                  {safeGender}
-                </AppText>
-              </View>
-            </View>
           </View>
         </View>
 
         <View style={[styles.divider, isPremium && { backgroundColor: 'rgba(212, 160, 23, 0.4)' }]} />
 
         <View style={styles.stats}>
-          <StatColumn label="Plan" value={activity} icon="star-circle-outline" isPremium={isPremium} />
-          <StatColumn label="Weight" value={health} icon="weight-kilogram" isPremium={isPremium} />
-          <StatColumn label="Status" value={mood} icon="heart-pulse" isPremium={isPremium} />
+          <StatColumn 
+            label="Species" 
+            value={species ? species.charAt(0).toUpperCase() + species.slice(1).toLowerCase() : '—'} 
+            icon="paw" 
+            isPremium={isPremium} 
+          />
+          <StatColumn 
+            label="Weight" 
+            value={health} 
+            icon="weight-kilogram" 
+            isPremium={isPremium} 
+          />
+          <StatColumn 
+            label="Gender" 
+            value={safeGender !== '—' ? safeGender.charAt(0).toUpperCase() + safeGender.slice(1).toLowerCase() : '—'} 
+            icon={genderIconName as any} 
+            isPremium={isPremium} 
+          />
         </View>
       </LinearGradient>
     </CardWrapper>
@@ -271,6 +294,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  editCardButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    borderRadius: 14,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
   avatarBadge: {
     position: 'absolute',
     bottom: -1,
@@ -297,6 +330,9 @@ const styles = StyleSheet.create({
     top: 14,
     right: 14,
     zIndex: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   premiumPill: {
     flexDirection: 'row',

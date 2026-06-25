@@ -10,9 +10,10 @@ interface JournalCategoryChipsProps {
   chips: Chip[];
   selected: JournalCategory;
   onSelect: (id: JournalCategory) => void;
+  themeColor?: string;
 }
 
-export function JournalCategoryChips({ chips, selected, onSelect }: JournalCategoryChipsProps) {
+export function JournalCategoryChips({ chips, selected, onSelect, themeColor }: JournalCategoryChipsProps) {
   return (
     <ScrollView
       horizontal
@@ -27,7 +28,10 @@ export function JournalCategoryChips({ chips, selected, onSelect }: JournalCateg
             key={chip.id}
             activeOpacity={0.85}
             onPress={() => onSelect(chip.id)}
-            style={[styles.chip, active && styles.chipActive]}
+            style={[
+              styles.chip,
+              active && { backgroundColor: themeColor || JournalTheme.navy }
+            ]}
           >
             <AppText
               variant="bodySmall"

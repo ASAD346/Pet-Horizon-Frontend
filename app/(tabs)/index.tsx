@@ -200,6 +200,7 @@ export default function HomeScreen() {
     if (profileStats && profileStats.petId === pet?._id) {
       baseProfile = {
         ...profileStats,
+        species: profileStats.species || pet?.species || '—',
         activity: profileStats.plan ? String(profileStats.plan).toUpperCase() : 'FREE',
         health: profileStats.weight != null ? `${profileStats.weight} ${String(profileStats.weightUnit || 'kg').toUpperCase()}` : '—',
         mood: profileStats.isPremium ? 'Premium' : 'Free',
@@ -208,6 +209,7 @@ export default function HomeScreen() {
       const mapped = petToProfileProps(pet);
       baseProfile = {
         ...mapped,
+        species: pet.species || '—',
         activity: isPremium ? 'PREMIUM' : 'FREE',
         health: mapped.weight,
         mood: isPremium ? 'Premium' : 'Free',
@@ -215,6 +217,7 @@ export default function HomeScreen() {
     } else if (profileStats) {
       baseProfile = {
         ...profileStats,
+        species: profileStats.species || '—',
         activity: profileStats.plan ? String(profileStats.plan).toUpperCase() : 'FREE',
         health: profileStats.weight != null ? `${profileStats.weight} ${String(profileStats.weightUnit || 'kg').toUpperCase()}` : '—',
         mood: profileStats.isPremium ? 'Premium' : 'Free',
@@ -429,6 +432,7 @@ export default function HomeScreen() {
           isBirthdayToday={showBirthdayBanner}
           isPremium={isPremium}
           onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
+          onEditPress={pet ? () => router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: pet._id } }) : undefined}
         />
 
         {canView('grooming') ? (
