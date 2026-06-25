@@ -26,6 +26,7 @@ import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useLocalization } from '@/hooks/useLocalization';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 
 interface ExpenseTrackerViewProps {
@@ -47,6 +48,7 @@ export function ExpenseTrackerView({
     canViewJournal,
     accessBannerMessage,
   } = usePetPermissions(token, pet, user?._id);
+  const { formatCurrency } = useLocalization();
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -142,9 +144,9 @@ export function ExpenseTrackerView({
           <>
             <WeeklySpendingCard
               periodLabel={budget.periodLabel}
-              limitLabel={budget.limitLabel}
+              limitLabel={budget.hasBudget && budget.amountLimit !== undefined ? formatCurrency(budget.amountLimit) : 'No budget set'}
               spentPercent={budget.spentPercent}
-              remainingLabel={budget.remainingLabel}
+              remainingLabel={budget.hasBudget && budget.remaining !== undefined ? `${formatCurrency(budget.remaining)} left` : 'Tap Edit Budget'}
               status={budget.status}
               hasBudget={budget.hasBudget}
               loading={budgetLoading || petLoading}

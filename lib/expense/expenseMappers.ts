@@ -17,12 +17,12 @@ export type ExpenseTransaction = {
   title: string;
   subtitle: string;
   amount: string;
+  amountVal: number;
   category: Exclude<ExpenseTrackerCategory, 'all'>;
   materialIcon: MciIcon;
   color: string;
   bg: string;
 };
-
 export const EXPENSE_TRACKER_CATEGORIES: {
   id: ExpenseTrackerCategory;
   label: string;
@@ -94,6 +94,7 @@ export function mapExpenseToTransaction(expense: ApiExpense): ExpenseTransaction
     title,
     subtitle: `${formatExpenseDateLabel(expense.expenseDate)} • ${category.charAt(0).toUpperCase() + category.slice(1)}`,
     amount: `-${formatCurrency(expense.amount)}`,
+    amountVal: expense.amount,
     category,
     materialIcon: style.icon,
     color: style.color,
@@ -125,6 +126,8 @@ export function mapBudgetDisplay(
       hasBudget: false as const,
       budgetId: undefined as string | undefined,
       amountLimit: undefined as number | undefined,
+      remaining: undefined as number | undefined,
+      totalSpent: undefined as number | undefined,
       periodStart: undefined as string | undefined,
       periodEnd: undefined as string | undefined,
     };
@@ -145,6 +148,8 @@ export function mapBudgetDisplay(
     hasBudget: true as const,
     budgetId: budget.budgetId,
     amountLimit: budget.amountLimit,
+    remaining: budget.remaining,
+    totalSpent: budget.totalSpent,
     periodStart: budget.periodStart,
     periodEnd: budget.periodEnd,
   };

@@ -18,6 +18,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ScheduleScreenHeader } from './ScheduleScreenHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
@@ -449,17 +450,15 @@ export function ScheduleSetupView({
                   {schedulesLoading && visibleEntries.length === 0 ? (
                     <ScheduleEntriesSkeleton />
                   ) : visibleEntries.length === 0 ? (
-                    <View style={styles.emptyHintBox}>
-                       <MaterialCommunityIcons
-                        name={sectionMeta.icon}
-                        size={28}
-                        color={brandColor}
-                        style={styles.emptyHintIcon}
-                      />
-                      <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
-                        No {sectionMeta.title.toLowerCase()} yet. Tap below to add your first one.
-                      </AppText>
-                    </View>
+                    <EmptyState
+                      icon={sectionMeta.icon}
+                      iconType="mci"
+                      title={`No ${sectionMeta.title}`}
+                      description={`Keep your pet healthy and happy by logging their ${sectionMeta.title.toLowerCase()} events.`}
+                      actionLabel={canEdit ? sectionMeta.addLabel : undefined}
+                      onActionPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
+                      style={{ marginVertical: Spacing.md }}
+                    />
                   ) : (
                     visibleEntries.map((entry) => {
                       const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
@@ -479,7 +478,7 @@ export function ScheduleSetupView({
                     })
                   )}
 
-                  {canEdit ? (
+                  {canEdit && visibleEntries.length > 0 ? (
                     <TouchableOpacity
                       style={[scheduleFieldStyles.dashedAddBtn, { borderColor: brandColor, marginBottom: 20 }]}
                       onPress={() => openAddEditor(sectionMeta)}

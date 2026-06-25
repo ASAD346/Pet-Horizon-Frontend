@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter, type Href } from 'expo-router';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from '../home/ColorIconBadge';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SkeletonList } from '@/components/ui/skeletons';
 import { homePillCard } from '../home/homeStyles';
+import { useLocalization } from '@/hooks/useLocalization';
+import { EmptyState } from '../ui/EmptyState';
 import type { ExpenseTrackerCategory, ExpenseTransaction } from './expenseTrackerData';
 
 const BRAND_GREEN = '#2E7D32';
@@ -31,6 +34,8 @@ export function RecentTransactionsSection({
   loading,
   isPremium = false,
 }: RecentTransactionsSectionProps) {
+  const router = useRouter();
+  const { formatCurrency } = useLocalization();
   const filtered = useMemo(
     () => filterTransactions(transactions, categoryFilter),
     [transactions, categoryFilter],
@@ -57,12 +62,13 @@ export function RecentTransactionsSection({
       {loading ? (
         <SkeletonList count={3} cardStyle={homePillCard.card} />
       ) : filtered.length === 0 ? (
-        <View style={[styles.emptyCard, { borderWidth: 1, borderColor: cardBorderColor }]}>
-          <Ionicons name="receipt-outline" size={32} color="#CBD5E1" />
-          <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.emptyText}>
-            No expenses yet. Tap + to add your first.
-          </AppText>
-        </View>
+        <EmptyState
+          icon="receipt-outline"
+          title="No Expenses Logged"
+          description="Track your pet's meals, vet visits, and other expenses dynamically by logging transactions."
+          actionLabel="Add Expense"
+          onActionPress={() => router.push('/expense/add' as Href)}
+        />
       ) : (
         filtered.map((item) => (
           <View key={item.id} style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
@@ -89,7 +95,7 @@ export function RecentTransactionsSection({
             {/* Amount + badge */}
             <View style={styles.amountBlock}>
               <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
-                {item.amount}
+                -{formatCurrency(item.amountVal)}
               </AppText>
               <View style={styles.categoryPill}>
                 <AppText variant="caption" weight="700" color={iconColor} style={styles.categoryText}>

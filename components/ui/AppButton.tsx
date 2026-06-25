@@ -27,6 +27,7 @@ interface AppButtonProps {
   icon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
+  accessibilityLabel?: string;
 }
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -41,6 +42,7 @@ export function AppButton({
   icon,
   style,
   textStyle,
+  accessibilityLabel,
 }: AppButtonProps) {
   const scale = useSharedValue(1);
 
@@ -137,6 +139,9 @@ export function AppButton({
       onPressOut={handlePressOut}
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || title}
+      hitSlop={height < 44 ? { top: (44 - height) / 2, bottom: (44 - height) / 2, left: 8, right: 8 } : undefined}
       style={[
         styles.base,
         {

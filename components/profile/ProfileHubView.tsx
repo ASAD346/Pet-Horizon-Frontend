@@ -34,6 +34,7 @@ import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
 import { PrivacyPolicySheet } from './PrivacyPolicySheet';
 import { HelpSupportSheet } from './HelpSupportSheet';
 import { FeedbackSheet } from './FeedbackSheet';
+import { LocalizationSheet } from './LocalizationSheet';
 
 export function ProfileHubView() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export function ProfileHubView() {
   const [privacyVisible, setPrivacyVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
+  const [localizationVisible, setLocalizationVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -340,6 +342,12 @@ export function ProfileHubView() {
             subtitle="Manage hub members"
             onPress={() => router.push('/(tabs)/community')}
           />
+          <ProfileMenuRow
+            icon="globe-outline"
+            title="Localization Settings"
+            subtitle="Currency and measurement units"
+            onPress={() => setLocalizationVisible(true)}
+          />
           {!isPremium ? (
             <ProfileMenuRow
               icon="diamond-outline"
@@ -404,6 +412,7 @@ export function ProfileHubView() {
       <PrivacyPolicySheet visible={privacyVisible} onClose={() => setPrivacyVisible(false)} />
       <HelpSupportSheet visible={helpVisible} onClose={() => setHelpVisible(false)} />
       <FeedbackSheet visible={feedbackVisible} onClose={() => setFeedbackVisible(false)} token={token} />
+      <LocalizationSheet visible={localizationVisible} onClose={() => setLocalizationVisible(false)} />
 
       {/* Confirmation Modals */}
       <AppConfirmModal

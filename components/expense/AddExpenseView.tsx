@@ -21,6 +21,7 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { createExpense } from '@/services/expense/expenseApi';
 import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useLocalization } from '@/hooks/useLocalization';
 
 const BRAND_GREEN = '#2E7D32';
 const BRAND_GREEN_LIGHT = '#43A047';
@@ -46,6 +47,7 @@ export function AddExpenseView({
 }: AddExpenseViewProps) {
   const insets = useSafeAreaInsets();
   const { clearance: tabBarClearance } = useTabBarLayout();
+  const { currency } = useLocalization();
   const footerPadding =
     Math.max(insets.bottom, Spacing.md) + (embeddedInTabs ? tabBarClearance : 0);
   const scrollBottomPadding = embeddedInTabs ? tabBarClearance : Spacing.lg;
@@ -187,7 +189,7 @@ export function AddExpenseView({
                 color={activeField === 'amount' ? BRAND_GREEN : '#94A3B8'}
                 style={styles.currency}
               >
-                $
+                {currency === 'GBP' ? '£' : '$'}
               </AppText>
               <TextInput
                 value={amount}

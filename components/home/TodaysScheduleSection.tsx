@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
+import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
@@ -447,11 +448,12 @@ export function TodaysScheduleSection({
           <ActivityIndicator size="small" color={HomeTheme.green} />
         </View>
       ) : items.length === 0 ? (
-        <View style={[homePillCard.card, styles.emptyCard, { borderWidth: 1, borderColor: cardBorderColor }]}>
-          <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-            No schedules yet. Use Quick Actions to add one.
-          </AppText>
-        </View>
+        <EmptyState
+          icon="calendar-outline"
+          title="Clear Schedule Today"
+          description="No tasks scheduled for today. You can add routines, medication timers, or grooming alerts."
+          style={{ marginVertical: Spacing.xs }}
+        />
       ) : (
         items.map((row) => (
           <ScheduleRowCard

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { AppText } from '../ui/AppText';
+import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
@@ -33,11 +34,12 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
     <View style={styles.section}>
       <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={() => {}} />
       {activities.length === 0 ? (
-        <View style={[homePillCard.card, styles.emptyCard, { borderWidth: 1, borderColor: cardBorderColor }]}>
-          <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
-            No activity yet. Use Quick Actions to log something.
-          </AppText>
-        </View>
+        <EmptyState
+          icon="time-outline"
+          title="No Recent Activity"
+          description="Activities such as walks, meals, medicine doses, and vet visits will appear here once logged."
+          style={{ marginVertical: Spacing.xs }}
+        />
       ) : (
         activities.map((item) => (
           <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
