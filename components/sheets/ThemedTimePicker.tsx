@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Modal, Pressable, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, Pressable, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeModal } from '../ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Radius, Spacing, Palette } from '../../constants/theme';
@@ -60,7 +61,7 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
   const formatNum = (num: number) => String(num).padStart(2, '0');
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           
@@ -185,7 +186,7 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
 
         </Pressable>
       </Pressable>
-    </Modal>
+    </SafeModal>
   );
 }
 

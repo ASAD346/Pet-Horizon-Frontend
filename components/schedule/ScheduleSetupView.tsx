@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -7,7 +7,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Pressable,
 } from 'react-native';
+import { SafeModal } from '@/components/ui/SafeModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
@@ -155,6 +157,8 @@ export function ScheduleSetupView({
   } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<'all' | ScheduleSectionKey>('all');
+  const [fabMenuVisible, setFabMenuVisible] = useState(false);
 
   const groomingVisibleRef = useRef(groomingVisible);
   groomingVisibleRef.current = groomingVisible;
@@ -489,6 +493,74 @@ export function ScheduleSetupView({
       (section.key !== 'grooming' || groomingVisible) && canViewSchedule(section.key),
   );
 
+  const filterChips: { key: 'all' | ScheduleSectionKey; label: string }[] = [
+    { key: 'all', label: 'All' },
+    { key: 'feeding', label: 'Feeding' },
+    { key: 'walk', label: 'Walks' },
+    { key: 'grooming', label: 'Grooming' },
+    { key: 'medicine', label: 'Medicine' },
+    { key: 'vaccination', label: 'Vaccines' },
+  ];
+
+  const filteredChips = filterChips.filter(
+    (chip) => chip.key === 'all' || visibleSections.some((s) => s.key === chip.key)
+  );
+
+  const getEntryTime = (key: ScheduleSectionKey, entry: EditorEntry): Date => {
+    if (key === 'feeding') return (entry as FeedingEntryState).feedingTime ?? new Date();
+    if (key === 'walk') return (entry as WalkEntryState).walkClockTime ?? new Date();
+    if (key === 'medicine') return (entry as MedicineEntryState).medicineTime ?? new Date();
+    if (key === 'vaccination') return (entry as VaccinationEntryState).reminderTime ?? new Date();
+    if (key === 'grooming') {
+      const gDate = (entry as GroomingEntryState).scheduleDate.singleDate || new Date();
+      return gDate;
+    }
+    return new Date();
+  };
+
+  const timelineItems = useMemo(() => {
+    const list: {
+      key: ScheduleSectionKey;
+      entry: EditorEntry;
+      time: Date;
+      title: string;
+      subtitle: string;
+      sectionMeta: ScheduleSectionTheme;
+    }[] = [];
+
+    visibleSections.forEach((sectionMeta) => {
+      if (selectedCategory !== 'all' && selectedCategory !== sectionMeta.key) {
+        return;
+      }
+
+      const sectionState = sections[sectionMeta.key];
+      const visibleEntries = sectionState.entries.filter(
+        (entry: any) =>
+          entry.status !== 'done' &&
+          entry.status !== 'skipped' &&
+          !entry.isComplete &&
+          !(sectionMeta.key === 'grooming' && entry.performedAt),
+      );
+
+      visibleEntries.forEach((entry) => {
+        list.push({
+          key: sectionMeta.key,
+          entry,
+          time: getEntryTime(sectionMeta.key, entry),
+          title: scheduleEntryTitle(sectionMeta.key, entry),
+          subtitle: scheduleEntrySubtitle(sectionMeta.key, entry),
+          sectionMeta,
+        });
+      });
+    });
+
+    return list.sort((a, b) => {
+      const timeA = a.time.getHours() * 60 + a.time.getMinutes();
+      const timeB = b.time.getHours() * 60 + b.time.getMinutes();
+      return timeA - timeB;
+    });
+  }, [sections, visibleSections, selectedCategory]);
+
   const awaitingPet = petLoading && !pet;
 
   const insets = useSafeAreaInsets();
@@ -509,13 +581,46 @@ export function ScheduleSetupView({
       >
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance + 80 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
             Set up feeding, walks, medicine, vaccines, and grooming for your pet.
           </AppText>
+
+          {/* Category Chips Selector */}
+          {pet && canViewAnySchedule && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.chipsContainer}
+              contentContainerStyle={styles.chipsContent}
+            >
+              {filteredChips.map((chip) => {
+                const isSelected = selectedCategory === chip.key;
+                return (
+                  <TouchableOpacity
+                    key={chip.key}
+                    onPress={() => setSelectedCategory(chip.key)}
+                    style={[
+                      styles.chipButton,
+                      isSelected ? { backgroundColor: brandColor, borderColor: brandColor } : { borderColor: Palette.gray[200] },
+                    ]}
+                    activeOpacity={0.8}
+                  >
+                    <AppText
+                      variant="caption"
+                      weight="800"
+                      color={isSelected ? '#FFFFFF' : HomeTheme.textMuted}
+                    >
+                      {chip.label}
+                    </AppText>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          )}
 
           {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
@@ -539,69 +644,124 @@ export function ScheduleSetupView({
               </AppText>
             </View>
           ) : (
-            visibleSections.map((sectionMeta) => {
-              const sectionState = sections[sectionMeta.key];
-              const canEdit = canEditSchedule(sectionMeta.key);
-              const visibleEntries = sectionState.entries.filter(
-                (entry: any) =>
-                  entry.status !== 'done' &&
-                  entry.status !== 'skipped' &&
-                  !entry.isComplete &&
-                  !(sectionMeta.key === 'grooming' && entry.performedAt),
-              );
-              return (
-                <ScheduleSectionCard
-                  key={sectionMeta.key}
-                  section={sectionMeta}
-                >
-                  {schedulesLoading && visibleEntries.length === 0 ? (
-                    <ScheduleEntriesSkeleton />
-                  ) : visibleEntries.length === 0 ? (
-                    <EmptyState
-                      icon={sectionMeta.icon}
-                      title="No schedules configured"
-                      description={`Keep your pet healthy and happy by logging their ${sectionMeta.title.toLowerCase()} events.`}
-                      buttonLabel={canEdit ? sectionMeta.addLabel : undefined}
-                      onButtonPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
-                      buttonVariant="success"
+            <View style={styles.timelineList}>
+              {schedulesLoading && timelineItems.length === 0 ? (
+                <ScheduleEntriesSkeleton />
+              ) : timelineItems.length === 0 ? (
+                <EmptyState
+                  icon={
+                    selectedCategory === 'all'
+                      ? 'calendar-clock-outline'
+                      : SCHEDULE_SECTIONS.find((s) => s.key === selectedCategory)?.icon || 'calendar-clock-outline'
+                  }
+                  title="No schedules configured"
+                  description={
+                    selectedCategory === 'all'
+                      ? "Keep your pet healthy and happy by logging their daily care events."
+                      : `Keep your pet healthy and happy by logging their ${selectedCategory} events.`
+                  }
+                  buttonLabel={
+                    visibleSections.some((s) => (selectedCategory === 'all' || selectedCategory === s.key) && canEditSchedule(s.key))
+                      ? `+ Add ${
+                          selectedCategory === 'all'
+                            ? 'Schedule'
+                            : filterChips.find((c) => c.key === selectedCategory)?.label || 'Schedule'
+                        }`
+                      : undefined
+                  }
+                  onButtonPress={() => {
+                    if (selectedCategory === 'all') {
+                      setFabMenuVisible(true);
+                    } else {
+                      const meta = SCHEDULE_SECTIONS.find((s) => s.key === selectedCategory);
+                      if (meta) openAddEditor(meta);
+                    }
+                  }}
+                  buttonVariant="success"
+                />
+              ) : (
+                timelineItems.map(({ key, entry, title, subtitle, sectionMeta }) => {
+                  const remoteId = scheduleEntryRemoteId(key, entry);
+                  const canEdit = canEditSchedule(key);
+                  return (
+                    <ScheduleEntrySummaryCard
+                      key={entry.id}
+                      title={title}
+                      subtitle={subtitle}
+                      accentColor={brandColor}
+                      accentBg={brandBg}
+                      iconName={sectionMeta.icon}
+                      onEdit={() => openEditEditor(sectionMeta, entry)}
+                      onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
+                      deleting={!!remoteId && deletingId === remoteId}
+                      readOnly={!canEdit}
                     />
-                  ) : (
-                    visibleEntries.map((entry) => {
-                      const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
-                      return (
-                        <ScheduleEntrySummaryCard
-                          key={entry.id}
-                          title={scheduleEntryTitle(sectionMeta.key, entry)}
-                          subtitle={scheduleEntrySubtitle(sectionMeta.key, entry)}
-                          accentColor={brandColor}
-                          accentBg={brandBg}
-                          onEdit={() => openEditEditor(sectionMeta, entry)}
-                          onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
-                          deleting={!!remoteId && deletingId === remoteId}
-                          readOnly={!canEdit}
-                        />
-                      );
-                    })
-                  )}
-
-                  {canEdit && visibleEntries.length > 0 ? (
-                    <TouchableOpacity
-                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: brandColor, marginBottom: 20 }]}
-                      onPress={() => openAddEditor(sectionMeta)}
-                      activeOpacity={0.85}
-                    >
-                      <Ionicons name="add-circle" size={20} color={brandColor} />
-                      <AppText variant="bodySmall" weight="700" color={brandColor}>
-                        {sectionMeta.addLabel}
-                      </AppText>
-                    </TouchableOpacity>
-                  ) : null}
-                </ScheduleSectionCard>
-              );
-            })
+                  );
+                })
+              )}
+            </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Floating Action Button (FAB) */}
+      {pet && canViewAnySchedule && visibleSections.some((s) => canEditSchedule(s.key)) && (
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: brandColor, bottom: tabBarClearance + 20 }]}
+          onPress={() => {
+            if (selectedCategory !== 'all') {
+              const meta = SCHEDULE_SECTIONS.find((s) => s.key === selectedCategory);
+              if (meta) openAddEditor(meta);
+            } else {
+              setFabMenuVisible(true);
+            }
+          }}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
+
+      {/* FAB Category Selector Modal */}
+      <SafeModal
+        visible={fabMenuVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFabMenuVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setFabMenuVisible(false)}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <AppText variant="h3" weight="800" color={HomeTheme.text}>
+                Add Care Schedule
+              </AppText>
+              <Pressable onPress={() => setFabMenuVisible(false)}>
+                <Ionicons name="close" size={24} color={HomeTheme.textMuted} />
+              </Pressable>
+            </View>
+            <View style={styles.modalList}>
+              {visibleSections.filter(s => canEditSchedule(s.key)).map((section) => (
+                <TouchableOpacity
+                   key={section.key}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setFabMenuVisible(false);
+                    openAddEditor(section);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.modalIconWrap, { backgroundColor: brandBg }]}>
+                    <MaterialCommunityIcons name={section.icon} size={22} color={brandColor} />
+                  </View>
+                  <AppText variant="body" weight="700" color={HomeTheme.text}>
+                    {section.title}
+                  </AppText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </Pressable>
+      </SafeModal>
 
       {editor?.section.key === 'feeding' ? (
         <LogFoodSheet
@@ -753,5 +913,78 @@ const styles = StyleSheet.create({
   emptyHintIcon: {
     marginBottom: Spacing.sm,
     opacity: 0.85,
+  },
+  chipsContainer: {
+    marginBottom: Spacing.md,
+    maxHeight: 40,
+  },
+  chipsContent: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.lg,
+  },
+  chipButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  timelineList: {
+    gap: Spacing.xs,
+    paddingBottom: 80,
+  },
+  fab: {
+    position: 'absolute',
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.22,
+    shadowRadius: 5.46,
+    elevation: 9,
+    zIndex: 999,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  modalList: {
+    gap: Spacing.sm,
+  },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F2F5',
+  },
+  modalIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

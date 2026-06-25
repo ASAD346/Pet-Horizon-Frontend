@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { SafeModal } from './SafeModal';
 import { AppButton } from './AppButton';
 import { AppText } from './AppText';
 import { HomeTheme, Radius, Spacing, Palette } from '@/constants/theme';
@@ -70,7 +71,7 @@ export function AppConfirmModal({
   const { iconName, iconColor, iconBg, btnBg, btnText } = getIconAndColors();
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
+    <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={styles.overlay} onPress={onCancel}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
@@ -102,7 +103,7 @@ export function AppConfirmModal({
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+    </SafeModal>
   );
 }
 

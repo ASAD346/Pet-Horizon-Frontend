@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 
@@ -13,6 +14,7 @@ interface ScheduleEntrySummaryCardProps {
   onDelete: () => void;
   deleting?: boolean;
   readOnly?: boolean;
+  iconName?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 }
 
 export function ScheduleEntrySummaryCard({
@@ -24,11 +26,12 @@ export function ScheduleEntrySummaryCard({
   onDelete,
   deleting,
   readOnly = false,
+  iconName = 'clock-outline',
 }: ScheduleEntrySummaryCardProps) {
   return (
     <View style={styles.card}>
       <View style={[styles.iconWrap, { backgroundColor: accentBg }]}>
-        <Ionicons name="time-outline" size={18} color={accentColor} />
+        <MaterialCommunityIcons name={iconName} size={20} color={accentColor} />
       </View>
       <View style={styles.body}>
         <AppText variant="bodySmall" weight="800" color={HomeTheme.text} numberOfLines={1}>
