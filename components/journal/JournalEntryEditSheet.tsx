@@ -1,19 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import { AppButton } from '@/components/ui/AppButton';
-import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
-import { SectionLabel, SheetColors } from '@/components/sheets';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import {
+  FormSheetShell,
+  FormTextInput,
+} from '@/components/sheets';
 import { getErrorMessage } from '@/lib/api/errors';
 import { deleteJournalEntry, updateJournalEntry } from '@/services/journal/journalApi';
 import type { ApiJournalEntry } from '@/types/journal';
@@ -33,7 +24,6 @@ export function JournalEntryEditSheet({
   onClose,
   onSaved,
 }: JournalEntryEditSheetProps) {
-  const insets = useSafeAreaInsets();
   const [note, setNote] = useState('');
   const [activityType, setActivityType] = useState('');
   const [saving, setSaving] = useState(false);
@@ -82,120 +72,61 @@ export function JournalEntryEditSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-          onPress={() => {}}
-        >
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <AppText variant="h3" weight="800" color={SheetColors.title}>
-              Edit Entry
-            </AppText>
-            <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={22} color={HomeTheme.text} />
-            </TouchableOpacity>
-          </View>
+    <FormSheetShell
+      visible={visible}
+      onClose={onClose}
+      title="Edit Entry"
+      icon="book-open-outline"
+      saveLabel="Save Changes"
+      onSave={handleSave}
+      saving={saving}
+      saveDisabled={deleting}
+      error={error}
+      compact
+    >
+      <FormTextInput
+        label="Activity Type"
+        value={activityType}
+        onChangeText={setActivityType}
+        placeholder="feeding, walk, medicine..."
+      />
 
-          {error ? <AuthErrorBanner message={error} /> : null}
+      <FormTextInput
+        label="Note"
+        value={note}
+        onChangeText={setNote}
+        placeholder="What happened?"
+        multiline
+      />
 
-          <SectionLabel text="ACTIVITY TYPE" />
-          <TextInput
-            value={activityType}
-            onChangeText={setActivityType}
-            style={styles.input}
-            placeholder="feeding, walk, medicine..."
-            placeholderTextColor={SheetColors.placeholder}
-          />
-
-          <SectionLabel text="NOTE" />
-          <TextInput
-            value={note}
-            onChangeText={setNote}
-            style={[styles.input, styles.notesInput]}
-            placeholder="What happened?"
-            placeholderTextColor={SheetColors.placeholder}
-            multiline
-            textAlignVertical="top"
-          />
-
-          <AppButton
-            title="Save Changes"
-            onPress={handleSave}
-            loading={saving}
-            disabled={deleting}
-            variant="success"
-            size="md"
-            style={styles.saveBtn}
-          />
-          <AppButton
-            title="Delete Entry"
-            onPress={handleDelete}
-            loading={deleting}
-            disabled={saving}
-            variant="outline"
-            size="md"
-            style={styles.deleteBtn}
-            textStyle={styles.deleteText}
-          />
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <View style={styles.deleteSection}>
+        <AppButton
+          title="Delete Journal Entry"
+          onPress={handleDelete}
+          loading={deleting}
+          disabled={saving}
+          variant="outline"
+          size="sm"
+          style={styles.deleteBtn}
+          textStyle={styles.deleteText}
+        />
+      </View>
+    </FormSheetShell>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: SheetColors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: SheetColors.sheetBg,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D0D0D0',
-    marginBottom: Spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
-  },
-  input: {
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: SheetColors.inputText,
-    marginBottom: Spacing.md,
-  },
-  notesInput: {
-    minHeight: 88,
-  },
-  saveBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    marginBottom: Spacing.sm,
+  deleteSection: {
+    marginTop: 16,
+    paddingHorizontal: 4,
   },
   deleteBtn: {
     width: '100%',
-    borderRadius: Radius.full,
     borderColor: '#E53935',
-    marginBottom: Spacing.sm,
+    borderWidth: 1.5,
   },
   deleteText: {
     color: '#E53935',
+    fontWeight: '700',
   },
 });

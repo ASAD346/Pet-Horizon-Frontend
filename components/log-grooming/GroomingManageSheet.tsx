@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StyleSheet, View } from 'react-native';
 import { AppButton } from '@/components/ui/AppButton';
-import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
-import { SectionLabel, SheetColors } from '@/components/sheets';
+import {
+  FormSheetShell,
+  FormDateInput,
+  FormTextInput,
+} from '@/components/sheets';
 import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
   dateToApiDateString,
-  formatDateLabel,
 } from '@/lib/grooming/groomingForm';
 import {
   deleteGroomingRecord,
@@ -41,7 +32,6 @@ export function GroomingManageSheet({
   onClose,
   onUpdated,
 }: GroomingManageSheetProps) {
-  const insets = useSafeAreaInsets();
   const [notes, setNotes] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -91,70 +81,47 @@ export function GroomingManageSheet({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-          onPress={() => {}}
-        >
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <AppText variant="h3" weight="800" color={SheetColors.title}>
-              Manage Grooming
-            </AppText>
-            <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={22} color={HomeTheme.text} />
-            </TouchableOpacity>
-          </View>
+    <>
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Manage Grooming"
+        subtitle={record?.groomingType ?? 'Edit scheduled task'}
+        icon="content-cut"
+        saveLabel="Save Changes"
+        onSave={handleSave}
+        saving={saving}
+        saveDisabled={deleting}
+        error={error}
+        compact
+      >
+        <FormDateInput
+          label="Scheduled Date"
+          value={scheduledDate ?? new Date()}
+          onPress={() => setPickerVisible(true)}
+        />
 
-          {record ? (
-            <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
-              {record.groomingType}
-            </AppText>
-          ) : null}
+        <FormTextInput
+          label="Notes"
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Optional notes..."
+          multiline
+        />
 
-          {error ? <AuthErrorBanner message={error} /> : null}
-
-          <SectionLabel text="SCHEDULED DATE" />
-          <TouchableOpacity style={styles.dateField} onPress={() => setPickerVisible(true)}>
-            <AppText variant="bodySmall" color={SheetColors.inputText}>
-              {scheduledDate ? formatDateLabel(scheduledDate) : 'Select date'}
-            </AppText>
-            <Ionicons name="calendar-outline" size={18} color={HomeTheme.textMuted} />
-          </TouchableOpacity>
-
-          <SectionLabel text="NOTES" />
-          <TextInput
-            value={notes}
-            onChangeText={setNotes}
-            style={[styles.input, styles.notesInput]}
-            placeholder="Notes"
-            placeholderTextColor={SheetColors.placeholder}
-            multiline
-            textAlignVertical="top"
-          />
-
+        <View style={styles.deleteSection}>
           <AppButton
-            title="Save Changes"
-            onPress={handleSave}
-            loading={saving}
-            disabled={deleting}
-            variant="success"
-            size="md"
-            style={styles.saveBtn}
-          />
-          <AppButton
-            title="Delete Task"
+            title="Delete Grooming Task"
             onPress={handleDelete}
             loading={deleting}
             disabled={saving}
             variant="outline"
-            size="md"
+            size="sm"
             style={styles.deleteBtn}
             textStyle={styles.deleteText}
           />
-        </Pressable>
-      </Pressable>
+        </View>
+      </FormSheetShell>
 
       <ThemedDatePicker
         visible={pickerVisible}
@@ -166,74 +133,22 @@ export function GroomingManageSheet({
           setPickerVisible(false);
         }}
       />
-    </Modal>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: SheetColors.overlay,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: SheetColors.sheetBg,
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#D0D0D0',
-    marginBottom: Spacing.sm,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
-  },
-  subtitle: {
-    marginBottom: Spacing.md,
-  },
-  dateField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    marginBottom: Spacing.md,
-  },
-  input: {
-    backgroundColor: SheetColors.inputBg,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: SheetColors.inputText,
-    marginBottom: Spacing.md,
-  },
-  notesInput: {
-    minHeight: 88,
-  },
-  saveBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    marginBottom: Spacing.sm,
+  deleteSection: {
+    marginTop: 16,
+    paddingHorizontal: 4,
   },
   deleteBtn: {
     width: '100%',
-    borderRadius: Radius.full,
     borderColor: '#E53935',
-    marginBottom: Spacing.sm,
+    borderWidth: 1.5,
   },
   deleteText: {
     color: '#E53935',
+    fontWeight: '700',
   },
 });
