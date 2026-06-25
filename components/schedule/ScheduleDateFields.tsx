@@ -1,19 +1,17 @@
 import React, { useState } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import {
-  FormChipRow,
-  FormPickerField,
-  FormSectionLabel,
-  formSheetStyles,
+  FormSegmentedControl,
+  FormDateInput,
 } from '@/components/sheets';
 import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
-import { formatDateLabel } from '@/lib/grooming/groomingForm';
 import {
   SCHEDULE_DATE_MODE_OPTIONS,
   setScheduleDateMode,
   type ScheduleDateMode,
   type ScheduleDateState,
 } from '@/lib/schedule/scheduleDate';
+import { Spacing } from '@/constants/theme';
 
 interface ScheduleDateFieldsProps {
   value: ScheduleDateState;
@@ -38,40 +36,34 @@ export function ScheduleDateFields({
 
   return (
     <>
-      {showModeLabel ? <FormSectionLabel text="WHEN" /> : null}
-      <FormChipRow
+      <FormSegmentedControl
+        label={showModeLabel ? "When" : undefined}
         options={SCHEDULE_DATE_MODE_OPTIONS}
         selected={value.mode}
         onSelect={(mode) => handleModeChange(mode as ScheduleDateMode)}
-        accentColor={accentColor}
       />
 
       {value.mode === 'single' ? (
-        <>
-          <FormSectionLabel text="DATE" />
-          <FormPickerField
-            label={value.singleDate ? formatDateLabel(value.singleDate) : 'Select date'}
-            icon="calendar-outline"
-            onPress={() => setSinglePickerVisible(true)}
-          />
-        </>
+        <FormDateInput
+          label="Date"
+          value={value.singleDate ?? new Date()}
+          onPress={() => setSinglePickerVisible(true)}
+        />
       ) : null}
 
       {value.mode === 'range' ? (
-        <View style={formSheetStyles.twoColRow}>
-          <View style={formSheetStyles.halfCol}>
-            <FormSectionLabel text="START" />
-            <FormPickerField
-              label={value.startDate ? formatDateLabel(value.startDate) : 'Select date'}
-              icon="calendar-outline"
+        <View style={styles.twoColRow}>
+          <View style={styles.halfCol}>
+            <FormDateInput
+              label="Start Date"
+              value={value.startDate ?? new Date()}
               onPress={() => setStartPickerVisible(true)}
             />
           </View>
-          <View style={formSheetStyles.halfCol}>
-            <FormSectionLabel text="END" />
-            <FormPickerField
-              label={value.endDate ? formatDateLabel(value.endDate) : 'Select date'}
-              icon="calendar-outline"
+          <View style={styles.halfCol}>
+            <FormDateInput
+              label="End Date"
+              value={value.endDate ?? new Date()}
               onPress={() => setEndPickerVisible(true)}
             />
           </View>
@@ -79,14 +71,11 @@ export function ScheduleDateFields({
       ) : null}
 
       {value.mode === 'ongoing' ? (
-        <>
-          <FormSectionLabel text="STARTS ON" />
-          <FormPickerField
-            label={value.startDate ? formatDateLabel(value.startDate) : 'Select date'}
-            icon="calendar-outline"
-            onPress={() => setStartPickerVisible(true)}
-          />
-        </>
+        <FormDateInput
+          label="Starts On"
+          value={value.startDate ?? new Date()}
+          onPress={() => setStartPickerVisible(true)}
+        />
       ) : null}
 
       <ThemedDatePicker
@@ -130,3 +119,13 @@ export function ScheduleDateFields({
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  twoColRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+  },
+  halfCol: {
+    flex: 1,
+  },
+});
