@@ -128,3 +128,21 @@ export async function registerDeviceToken(
     throw error;
   }
 }
+
+export async function deleteAccount(
+  token: string,
+  userId: string,
+): Promise<{ message: string }> {
+  log.info(SCOPE, 'DELETE /users/:id', { userId });
+  try {
+    const data = await apiRequest<{ message: string }>(API_ENDPOINTS.users.byId(userId), {
+      method: 'DELETE',
+      token,
+    });
+    log.ok(SCOPE, 'Account deleted successfully', { userId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Account deletion failed', getErrorMessage(error));
+    throw error;
+  }
+}

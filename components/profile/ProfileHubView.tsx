@@ -18,11 +18,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { Radius, Spacing } from '@/constants/theme';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
-import { fetchUserProfile } from '@/services/users/userApi';
+import { fetchUserProfile, deleteAccount } from '@/services/users/userApi';
 import { fetchPremiumStatus } from '@/services/premium/premiumApi';
 import type { PremiumStatusResponse } from '@/types/premium';
 import { PremiumUpgradeBanner } from './PremiumUpgradeBanner';
 import { PremiumActiveCard } from './PremiumActiveCard';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { ProfileMenuRow, ProfileMenuSection } from './ProfileMenuRow';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
@@ -53,6 +54,9 @@ export function ProfileHubView() {
   const [termsVisible, setTermsVisible] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { shouldBlockUI, markLoaded, reset } = useStaleLoadScope(user?._id ?? null);
 
@@ -93,27 +97,28 @@ export function ProfileHubView() {
     setRefreshing(false);
   }, [reload]);
 
-  const handleLogout = useCallback(async () => {
-    const performLogout = async () => {
+  const handleLogout = useCallback(() => {
+    setLogoutConfirmVisible(true);
+  }, []);
+
+  const handleDeletePress = useCallback(() => {
+    setDeleteConfirmVisible(true);
+  }, []);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!token || !user?._id) return;
+    setDeleting(true);
+    try {
+      await deleteAccount(token, user._id);
+      setDeleteConfirmVisible(false);
       await logout();
       router.replace('/auth/login');
-    };
-
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to log out?')) {
-        void performLogout();
-      }
-    } else {
-      Alert.alert('Log out', 'Are you sure you want to log out?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Log out',
-          style: 'destructive',
-          onPress: performLogout,
-        },
-      ]);
+    } catch (error) {
+      Alert.alert('Error', getErrorMessage(error));
+    } finally {
+      setDeleting(false);
     }
-  }, [logout, router]);
+  }, [token, user?._id, logout, router]);
 
   const displayName = user?.fullName?.trim() || user?.email?.split('@')[0] || 'User';
   const isPremium = premiumStatus?.isPremium ?? user?.premiumStatus === 'premium';
@@ -377,12 +382,47 @@ export function ProfileHubView() {
             Log out
           </AppText>
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.deleteBtn} onPress={handleDeletePress} activeOpacity={0.85}>
+          <Ionicons name="trash-outline" size={20} color="#C62828" />
+          <AppText variant="body" weight="700" color="#C62828">
+            Delete Account
+          </AppText>
+        </TouchableOpacity>
       </Animated.ScrollView>
 
       {/* Legal & Support sheets */}
       <TermsAndConditionsSheet visible={termsVisible} onClose={() => setTermsVisible(false)} />
       <PrivacyPolicySheet visible={privacyVisible} onClose={() => setPrivacyVisible(false)} />
       <HelpSupportSheet visible={helpVisible} onClose={() => setHelpVisible(false)} />
+
+      {/* Confirmation Modals */}
+      <AppConfirmModal
+        visible={logoutConfirmVisible}
+        title="Log out"
+        message="Are you sure you want to log out of your account?"
+        confirmLabel="Log out"
+        cancelLabel="Cancel"
+        variant="warning"
+        onConfirm={async () => {
+          setLogoutConfirmVisible(false);
+          await logout();
+          router.replace('/auth/login');
+        }}
+        onCancel={() => setLogoutConfirmVisible(false)}
+      />
+
+      <AppConfirmModal
+        visible={deleteConfirmVisible}
+        title="Delete Account"
+        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your pet profiles, schedules, and data will be lost forever."
+        confirmLabel="Delete permanently"
+        cancelLabel="Keep account"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirmVisible(false)}
+      />
     </View>
   );
 }
@@ -589,6 +629,16 @@ const styles = StyleSheet.create({
     gap: 8,
     marginHorizontal: 24,
     marginTop: 8,
+    paddingVertical: 14,
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginHorizontal: 24,
+    marginTop: 8,
+    marginBottom: 24,
     paddingVertical: 14,
   },
 });

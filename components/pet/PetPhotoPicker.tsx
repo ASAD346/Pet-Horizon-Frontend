@@ -63,11 +63,26 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
   }, [applyPickedUri]);
 
   const handlePress = useCallback(() => {
+    if (Platform.OS === 'web') {
+      if (imageUri) {
+        const replace = window.confirm('Click OK to choose a new photo, or Cancel to remove the current photo.');
+        if (replace) {
+          void pickFromLibrary();
+        } else {
+          onImageChange?.(null);
+          log.info('AddPet', 'Photo removed');
+        }
+      } else {
+        void pickFromLibrary();
+      }
+      return;
+    }
+
     const options: { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }[] = [
       { text: 'Choose from library', onPress: () => void pickFromLibrary() },
     ];
 
-    if (Platform.OS !== 'web') {
+    if (Platform.OS as string !== 'web') {
       options.unshift({ text: 'Take photo', onPress: () => void pickFromCamera() });
     }
 

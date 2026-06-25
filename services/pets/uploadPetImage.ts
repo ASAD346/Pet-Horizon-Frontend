@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
@@ -28,11 +29,17 @@ export async function uploadPetImage(
   log.info('PetAPI', 'POST /pets/:id/image', { petId });
 
   const formData = new FormData();
-  formData.append('file', {
-    uri: localUri,
-    name: fileNameFromUri(localUri),
-    type: guessMimeType(localUri),
-  } as unknown as Blob);
+  if (Platform.OS === 'web') {
+    const response = await fetch(localUri);
+    const blob = await response.blob();
+    formData.append('file', blob, fileNameFromUri(localUri));
+  } else {
+    formData.append('file', {
+      uri: localUri,
+      name: fileNameFromUri(localUri),
+      type: guessMimeType(localUri),
+    } as unknown as Blob);
+  }
 
   const response = await fetch(url, {
     method: 'POST',

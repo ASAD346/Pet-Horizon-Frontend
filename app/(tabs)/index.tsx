@@ -37,7 +37,7 @@ import { activatePetSession } from '@/lib/pet/activatePetSession';
 import { isBirthdayToday } from '@/lib/pet/birthdayUtils';
 import { dashboardTaskModule } from '@/lib/pet/petPermissionAccess';
 
-import { petToProfileProps } from '@/services/pets/petDisplay';
+import { petToProfileProps, formatPetAge } from '@/services/pets/petDisplay';
 
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 
@@ -222,9 +222,18 @@ export default function HomeScreen() {
     }
 
     if (baseProfile) {
+      let ageStr = baseProfile.birthday ? formatPetAge(baseProfile.birthday) : '—';
+      if (ageStr === '—') {
+        if (baseProfile.age != null) {
+          const ageVal = String(baseProfile.age);
+          ageStr = /^\d+$/.test(ageVal) ? `${ageVal} years` : ageVal;
+        } else {
+          ageStr = '—';
+        }
+      }
       return {
         ...baseProfile,
-        age: baseProfile.age != null ? String(baseProfile.age) : undefined,
+        age: ageStr,
       };
     }
     return null;

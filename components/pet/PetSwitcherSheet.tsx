@@ -96,15 +96,17 @@ export function PetSwitcherSheet({
                       onPress={() => onSelectPet(pet._id)}
                       disabled={busy || active}
                     >
-                      <Image
-                        source={
-                          pet.image
-                            ? { uri: resolveMediaUrl(pet.image) }
-                            : require('../../assets/images/onboarding.png')
-                        }
-                        style={styles.avatar}
-                        cachePolicy="disk"
-                      />
+                      {pet.image ? (
+                        <Image
+                          source={{ uri: resolveMediaUrl(pet.image) }}
+                          style={styles.avatar}
+                          cachePolicy="disk"
+                        />
+                      ) : (
+                        <View style={[styles.avatar, styles.placeholderAvatar]}>
+                          <Ionicons name="paw" size={20} color="#5CB35D" />
+                        </View>
+                      )}
                       <View style={styles.info}>
                         <AppText variant="body" weight="700" color="#1A2B4E">
                           {pet.name}
@@ -209,6 +211,13 @@ const styles = StyleSheet.create({
     height: 46,
     borderRadius: 23,
     marginRight: Spacing.sm,
+  },
+  placeholderAvatar: {
+    backgroundColor: 'rgba(92, 179, 93, 0.08)',
+    borderColor: 'rgba(92, 179, 93, 0.2)',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   info: {
     flex: 1,

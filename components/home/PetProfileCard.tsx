@@ -33,14 +33,14 @@ export function PetProfileCard({
   activity = '—',
   health = '—',
   mood = '—',
-  imageSource = require('../../assets/images/onboarding.png'),
+  imageSource,
   imageUrl,
   loading = false,
   isBirthdayToday = false,
   onPress,
   isPremium = false,
 }: PetProfileCardProps) {
-  const avatarSource = imageUrl ? { uri: imageUrl } : imageSource;
+  const displayImage = imageUrl ? { uri: imageUrl } : (imageSource ? imageSource : null);
   const CardWrapper = onPress ? TouchableOpacity : View;
   const cardProps = onPress ? { onPress, activeOpacity: 0.92 } : {};
 
@@ -109,15 +109,27 @@ export function PetProfileCard({
 
         <View style={styles.top}>
           <View style={styles.avatarContainer}>
-            <Image 
-              source={avatarSource} 
-              style={[
-                styles.avatar, 
-                { borderColor: isPremium ? '#D4A017' : 'rgba(255,255,255,0.95)' }
-              ]} 
-              contentFit="cover" 
-              cachePolicy="disk"
-            />
+            {displayImage ? (
+              <Image 
+                source={displayImage} 
+                style={[
+                  styles.avatar, 
+                  { borderColor: isPremium ? '#D4A017' : 'rgba(255,255,255,0.95)' }
+                ]} 
+                contentFit="cover" 
+                cachePolicy="disk"
+              />
+            ) : (
+              <View 
+                style={[
+                  styles.avatar, 
+                  styles.placeholderAvatar,
+                  { borderColor: isPremium ? '#D4A017' : 'rgba(255,255,255,0.95)' }
+                ]}
+              >
+                <MaterialCommunityIcons name="paw" size={32} color="#FFFFFF" />
+              </View>
+            )}
             <View style={[styles.avatarBadge, { borderColor: isPremium ? '#D4A017' : '#429B46' }]}>
               <MaterialCommunityIcons name="swap-horizontal" size={11} color={badgeIconColor} />
             </View>
@@ -253,6 +265,11 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     borderWidth: 2,
     borderColor: 'rgba(255,255,255,0.95)',
+  },
+  placeholderAvatar: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   avatarBadge: {
     position: 'absolute',
