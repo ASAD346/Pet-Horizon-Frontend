@@ -1,9 +1,10 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
 import { getBirthdayTurningAge } from '@/lib/pet/birthdayUtils';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, Palette } from '@/constants/theme';
 
 interface PetBirthdayBannerProps {
   petName: string;
@@ -20,19 +21,24 @@ export function PetBirthdayBanner({ petName, birthday }: PetBirthdayBannerProps)
         : `turning ${turningAge} today`;
 
   return (
-    <View style={styles.banner}>
+    <LinearGradient
+      colors={['#FFFDF0', '#FFF9E6']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.banner}
+    >
       <View style={styles.iconWrap}>
-        <Ionicons name="gift" size={22} color="#F59E0B" />
+        <Ionicons name="gift" size={20} color={Palette.premium.gold} />
       </View>
       <View style={styles.textWrap}>
-        <AppText variant="body" weight="800" color={HomeTheme.text}>
+        <AppText variant="body" weight="800" color="#856404">
           Happy Birthday, {petName}! 🎉
         </AppText>
-        <AppText variant="bodySmall" color={HomeTheme.textMuted}>
+        <AppText variant="caption" weight="600" color="#9E802B">
           It&apos;s {ageLabel}. Give them extra love today.
         </AppText>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -41,20 +47,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    backgroundColor: '#FFF8E7',
-    borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    borderColor: '#FDE68A',
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 160, 23, 0.25)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md - 2,
+    marginBottom: Spacing.md,
   },
   iconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: '#FEF3C7',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFF3CD',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 160, 23, 0.15)',
   },
   textWrap: {
     flex: 1,

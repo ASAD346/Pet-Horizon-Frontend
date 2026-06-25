@@ -33,6 +33,7 @@ import { useFocusReload, useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
 import { PrivacyPolicySheet } from './PrivacyPolicySheet';
 import { HelpSupportSheet } from './HelpSupportSheet';
+import { FeedbackSheet } from './FeedbackSheet';
 
 export function ProfileHubView() {
   const router = useRouter();
@@ -54,6 +55,7 @@ export function ProfileHubView() {
   const [termsVisible, setTermsVisible] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
   const [helpVisible, setHelpVisible] = useState(false);
+  const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -374,6 +376,12 @@ export function ProfileHubView() {
             subtitle="FAQs and contact info"
             onPress={() => setHelpVisible(true)}
           />
+          <ProfileMenuRow
+            icon="star-outline"
+            title="Rate Us & Feedback"
+            subtitle="Share your thoughts with us"
+            onPress={() => setFeedbackVisible(true)}
+          />
         </ProfileMenuSection>
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
@@ -395,6 +403,7 @@ export function ProfileHubView() {
       <TermsAndConditionsSheet visible={termsVisible} onClose={() => setTermsVisible(false)} />
       <PrivacyPolicySheet visible={privacyVisible} onClose={() => setPrivacyVisible(false)} />
       <HelpSupportSheet visible={helpVisible} onClose={() => setHelpVisible(false)} />
+      <FeedbackSheet visible={feedbackVisible} onClose={() => setFeedbackVisible(false)} token={token} />
 
       {/* Confirmation Modals */}
       <AppConfirmModal

@@ -54,11 +54,11 @@ export function PetProfileCard({
 
   // Deep Forest Emerald gradient for Premium with gold trim, vibrant brand green for Free (same as header)
   const gradientColors = isPremium 
-    ? (['#0E3821', '#184F2E', '#267343'] as const)
-    : (['#3A8F3B', '#5CB35D'] as const);
+    ? (['#0E331E', '#184F2E', '#226D3F'] as const)
+    : (['#2E7D32', '#3D8C40'] as const);
 
-  const shadowColor = isPremium ? '#082113' : '#1B5E20';
-  const borderColor = isPremium ? '#D4A017' : 'rgba(255, 255, 255, 0.16)';
+  const shadowColor = isPremium ? '#081D11' : '#1B5E20';
+  const borderColor = isPremium ? '#D4A017' : 'rgba(255, 255, 255, 0.15)';
 
   // Ensure gender is a safe string before processing
   const safeGender = gender || '—';
@@ -68,8 +68,8 @@ export function PetProfileCard({
     ? 'gender-female' 
     : 'gender-male-female';
 
-  const badgeIconColor = isPremium ? '#184F2E' : '#429B46';
-  const goldColor = '#FFF176';           // bright lemon gold — pops on dark amber
+  const badgeIconColor = isPremium ? '#184F2E' : '#2E7D32';
+  const goldColor = '#D4A017';           // elegant warm gold
   const textAccentColor = isPremium ? '#FFF9E6' : '#FFFFFF';
 
   return (

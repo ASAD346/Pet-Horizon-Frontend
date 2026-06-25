@@ -3,7 +3,6 @@ import {
   View, 
   TextInput, 
   StyleSheet, 
-  Animated, 
   Platform,
   ViewStyle
 } from 'react-native';
@@ -36,19 +35,19 @@ export function AppInput({
   return (
     <View style={[styles.container, style]}>
       <AppText 
-        variant="bodySmall" 
-        weight="600" 
-        color={isFocused ? Palette.primary.base : Palette.gray[600]} 
+        variant="caption" 
+        weight="700" 
+        color={error ? Palette.error : (isFocused ? Palette.primary.base : Palette.gray[600])} 
         style={styles.label}
       >
-        {label}
+        {label.toUpperCase()}
       </AppText>
       <View 
         style={[
           styles.inputContainer,
           { 
             borderColor: error ? Palette.error : (isFocused ? Palette.primary.base : Palette.gray[200]),
-            backgroundColor: isFocused ? Palette.white : Palette.gray[100],
+            backgroundColor: isFocused ? Palette.white : Palette.gray[50],
           }
         ]}
       >
@@ -65,7 +64,7 @@ export function AppInput({
         />
       </View>
       {error && (
-        <AppText variant="caption" color={Palette.error} style={styles.errorText}>
+        <AppText variant="caption" weight="600" color={Palette.error} style={styles.errorText}>
           {error}
         </AppText>
       )}
@@ -75,38 +74,39 @@ export function AppInput({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm + 4,
     width: '100%',
   },
   label: {
-    marginBottom: Spacing.xs,
-    marginLeft: 4,
+    marginBottom: 4,
+    marginLeft: 2,
+    letterSpacing: 0.8,
   },
   inputContainer: {
-    height: 56,
+    height: 48, // Sized compact and premium instead of oversized 56px
     borderRadius: Radius.md,
-    borderWidth: 1.5,
+    borderWidth: 1,
     paddingHorizontal: Spacing.md,
     justifyContent: 'center',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.02,
+        shadowRadius: 2,
       },
       android: {
-        elevation: 2,
+        elevation: 1,
       },
     }),
   },
   input: {
-    fontSize: 16,
+    fontSize: 15,
     color: Palette.gray[900],
-    fontWeight: '500',
+    padding: 0,
   },
   errorText: {
     marginTop: 4,
-    marginLeft: 4,
+    marginLeft: 2,
   },
 });

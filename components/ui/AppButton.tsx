@@ -20,7 +20,7 @@ import { AppText } from './AppText';
 interface AppButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'success' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
@@ -45,8 +45,9 @@ export function AppButton({
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
+    if (disabled || loading) return;
     scale.value = withSpring(0.96);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   const handlePressOut = () => {
@@ -61,13 +62,19 @@ export function AppButton({
     switch (variant) {
       case 'secondary':
         return { 
-          bg: Palette.secondary.base, 
-          text: Palette.secondary.contrast,
+          bg: Palette.primary.light, 
+          text: Palette.primary.base,
           border: 'transparent' 
         };
       case 'success':
         return {
           bg: Palette.success,
+          text: Palette.white,
+          border: 'transparent',
+        };
+      case 'danger':
+        return {
+          bg: Palette.error,
           text: Palette.white,
           border: 'transparent',
         };
@@ -95,19 +102,37 @@ export function AppButton({
 
   const getSizeStyles = () => {
     switch (size) {
-      case 'sm': return { paddingVertical: 8, paddingHorizontal: 16, fontSize: 14 };
-      case 'lg': return { paddingVertical: 18, paddingHorizontal: 32, fontSize: 18 };
+      case 'sm': 
+        return { 
+          height: 38,
+          paddingHorizontal: Spacing.md, 
+          fontSize: 14,
+          weight: '600' as const
+        };
+      case 'lg': 
+        return { 
+          height: 56,
+          paddingHorizontal: Spacing.xl, 
+          fontSize: 17,
+          weight: '700' as const
+        };
       case 'md':
-      default: return { paddingVertical: 14, paddingHorizontal: 24, fontSize: 16 };
+      default: 
+        return { 
+          height: 48,
+          paddingHorizontal: Spacing.lg, 
+          fontSize: 15,
+          weight: '600' as const
+        };
     }
   };
 
   const { bg, text, border } = getVariantStyles();
-  const { paddingVertical, paddingHorizontal } = getSizeStyles();
+  const { height, paddingHorizontal, fontSize, weight } = getSizeStyles();
 
   return (
     <AnimatedTouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.85}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={onPress}
@@ -118,24 +143,30 @@ export function AppButton({
           backgroundColor: bg,
           borderColor: border,
           borderWidth: variant === 'outline' ? 1.5 : 0,
-          paddingVertical,
+          height,
           paddingHorizontal,
-          opacity: disabled ? 0.6 : 1,
+          opacity: disabled ? 0.5 : 1,
         },
         animatedStyle,
         style,
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={text} />
+        <ActivityIndicator size="small" color={text} />
       ) : (
         <View style={styles.content}>
           {icon}
           <AppText
             variant="body"
-            weight="600"
+            weight={weight}
             color={text}
-            style={[styles.text, textStyle]}
+            style={[
+              styles.text,
+              { fontSize },
+              textStyle
+            ]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
           >
             {title}
           </AppText>
@@ -147,16 +178,17 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: Radius.lg,
+    borderRadius: Radius.md, // Consistent modern radius
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    alignSelf: 'stretch',
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
   },
   text: {
     textAlign: 'center',

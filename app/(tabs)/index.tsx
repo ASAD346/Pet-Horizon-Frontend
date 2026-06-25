@@ -422,10 +422,6 @@ export default function HomeScreen() {
       >
         {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
-        {showBirthdayBanner ? (
-          <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
-        ) : null}
-
         <PetProfileCard
           {...(profile ?? {})}
           imageUrl={petImageUrl}
@@ -435,6 +431,10 @@ export default function HomeScreen() {
           onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
           onEditPress={pet ? () => router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: pet._id } }) : undefined}
         />
+
+        {showBirthdayBanner ? (
+          <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
+        ) : null}
 
         {canView('grooming') ? (
         <GroomingAlertsRow

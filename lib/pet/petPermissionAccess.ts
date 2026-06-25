@@ -151,13 +151,6 @@ export function buildPetAccessControls(params: {
   );
 
   let accessBannerMessage: string | null = null;
-  if (!isOwner) {
-    if (isReadOnly && canViewAnySchedule) {
-      accessBannerMessage = 'View-only access — you can see schedules but cannot add or edit.';
-    } else if (!canViewAnySchedule && !canView('journal') && !canView('expenses')) {
-      accessBannerMessage = 'You can view this pet profile. Schedule and wallet access were not shared with you.';
-    }
-  }
 
   return {
     isOwner,

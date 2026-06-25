@@ -130,4 +130,7 @@ export const API_ENDPOINTS = {
     create: '/budget',
     byId: (id: string) => `/budget/${id}`,
   },
+  feedback: {
+    submit: '/feedback',
+  },
 } as const;

@@ -14,7 +14,7 @@ import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { SectionLabel, SheetColors } from '@/components/sheets';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { HomeTheme, Palette, Radius, Spacing } from '@/constants/theme';
 import type { PremiumPlan } from '@/types/premium';
 import { formatPlanPrice } from './profileTheme';
 
@@ -159,7 +159,7 @@ export function SecureCheckoutSheet({
             onPress={handleConfirm}
             loading={loading}
             disabled={!canSubmit || loading}
-            variant="success"
+            variant="primary"
             size="md"
             style={styles.payBtn}
             textStyle={styles.payBtnText}

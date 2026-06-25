@@ -3,20 +3,26 @@ import { Platform } from 'react-native';
 export const Palette = {
   primary: {
     base: '#1A2B4E', // Deep Navy from Logo
-    light: '#E6EBF5',
+    light: '#F0F3FA',
     contrast: '#FFFFFF',
   },
   secondary: {
-    base: '#F48024', // Warm Orange from Paw Icon
-    light: '#FFF4EB',
+    base: '#E67E22', // Warm Organic Amber/Orange
+    light: '#FFF5EB',
     contrast: '#FFFFFF',
   },
-  success: '#5BB060', // The Green from your new image
-  error: '#FF5252',
+  success: '#2E7D32', // Premium Deep Brand Green
+  successLight: '#E8F5E9',
+  error: '#D32F2F', // Clean error red
+  errorLight: '#FFEBEE',
+  warning: '#F57C00',
+  warningLight: '#FFF3E0',
+  info: '#1976D2',
+  infoLight: '#E3F2FD',
   white: '#FFFFFF',
   black: '#121212',
   gray: {
-    50: '#FDFDFD',
+    50: '#FAFAFA',
     100: '#F5F5F5',
     200: '#EEEEEE',
     300: '#E0E0E0',
@@ -26,6 +32,13 @@ export const Palette = {
     700: '#616161',
     800: '#424242',
     900: '#212121',
+  },
+  // Premium Gold Accents
+  premium: {
+    gold: '#D4A017',
+    goldLight: '#FFFDF0',
+    emerald: '#184F2E',
+    emeraldLight: '#E8F6EE',
   }
 };
 
@@ -58,7 +71,7 @@ export const Colors = {
   },
 };
 
-/** Platform font stacks used by template screens (e.g. explore) */
+/** Platform font stacks used by template screens */
 export const Fonts = Platform.select({
   ios: {
     sans: 'system-ui',
@@ -81,6 +94,7 @@ export const Fonts = Platform.select({
 });
 
 export const Spacing = {
+  xxs: 2,
   xs: 4,
   sm: 8,
   md: 16,
@@ -90,49 +104,51 @@ export const Spacing = {
 };
 
 export const Radius = {
+  xs: 4,
   sm: 8,
   md: 12,
-  lg: 20,
-  xl: 30,
+  lg: 16,
+  xl: 24,
+  xxl: 32,
   full: 999,
 };
 
 /** Login screen design tokens (matches Pet Horizon mockup) */
 export const LoginTheme = {
-  green: '#5CB35D',
-  greenDark: '#4A9E4B',
-  charcoal: '#3A3A3A',
-  inputBg: '#DCDCDC',
-  inputPlaceholder: '#6B6B6B',
-  tagline: '#9E9E9E',
-  petLabel: '#B0B0B0',
+  green: '#2E7D32',
+  greenDark: '#1B5E20',
+  charcoal: '#212121',
+  inputBg: '#F5F5F5',
+  inputPlaceholder: '#757575',
+  tagline: '#757575',
+  petLabel: '#9E9E9E',
   brandPet: '#7BA3C4',
   brandHorizon: '#1A2B4E',
-  screenBg: '#F5F6F8',
-  dividerLine: '#5CB35D',
-  buttonShadow: '#3D7A3E',
-  footerText: '#FFFFFF',
+  screenBg: '#FAFAFA',
+  dividerLine: '#E0E0E0',
+  buttonShadow: '#1B5E20',
+  footerText: '#616161',
 } as const;
 
 /** Home dashboard design tokens */
 export const HomeTheme = {
   background: '#F5F6F8',
-  cardGreen: '#5CB35D',
-  cardGreenDark: '#4A9E4B',
-  warningBg: '#FEF9D7',
-  warningAccent: '#F0C419',
-  infoBg: '#E8F4FD',
-  infoAccent: '#5B9BD5',
-  teal: '#4DB6AC',
+  cardGreen: '#2E7D32',
+  cardGreenDark: '#1B5E20',
+  warningBg: '#FFFDE7',
+  warningAccent: '#F57C00',
+  infoBg: '#E3F2FD',
+  infoAccent: '#1976D2',
+  teal: '#00695C',
   surface: '#FFFFFF',
-  surfaceMuted: '#EBEBEB',
-  text: '#1A1A1A',
-  textMuted: '#757575',
-  green: '#5CB35D',
+  surfaceMuted: '#F5F5F5',
+  text: '#212121',
+  textMuted: '#616161',
+  green: '#2E7D32',
   white: '#FFFFFF',
-  badgeRed: '#E53935',
-  dividerOnGreen: 'rgba(255,255,255,0.35)',
-  tagOnGreen: 'rgba(255,255,255,0.25)',
+  badgeRed: '#D32F2F',
+  dividerOnGreen: 'rgba(255,255,255,0.2)',
+  tagOnGreen: 'rgba(255,255,255,0.15)',
 } as const;
 
 /** Pet Journal screen design tokens */
@@ -140,20 +156,20 @@ export const JournalTheme = {
   background: '#F5F6F8',
   surface: '#FFFFFF',
   navy: '#1A2B4E',
-  text: '#1A1A1A',
-  textMuted: '#757575',
+  text: '#212121',
+  textMuted: '#616161',
   textLight: '#9E9E9E',
-  border: '#E8E8E8',
-  chipBg: '#F0F0F0',
+  border: '#EEEEEE',
+  chipBg: '#F5F5F5',
   timelineLine: '#E0E0E0',
-  food: '#E57373',
+  food: '#E53935',
   foodBg: '#FFEBEE',
-  walk: '#F5A623',
-  walkBg: '#FFF8E1',
-  medicine: '#5B9BD5',
+  walk: '#F57C00',
+  walkBg: '#FFF3E0',
+  medicine: '#1E88E5',
   medicineBg: '#E3F2FD',
-  grooming: '#E91E8C',
+  grooming: '#D81B60',
   groomingBg: '#FCE4F0',
-  completed: '#5CB35D',
+  completed: '#2E7D32',
   photoPlaceholder: '#EEEEEE',
 } as const;

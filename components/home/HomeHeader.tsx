@@ -50,10 +50,10 @@ export function HomeHeader({
 
   // Vibrant brand green for Free, luxurious dark emerald for Premium
   const gradientColors = isPremium
-    ? (['#0E3821', '#184F2E', '#267343'] as const)
-    : (['#3A8F3B', '#5CB35D'] as const);
+    ? (['#0E331E', '#184F2E', '#226D3F'] as const)
+    : (['#2E7D32', '#3D8C40'] as const);
 
-  const shadowColor = isPremium ? '#082113' : '#1B5E20';
+  const shadowColor = isPremium ? '#081D11' : '#1B5E20';
 
   return (
     <View style={[styles.wrapper, { shadowColor }]}>
@@ -82,7 +82,7 @@ export function HomeHeader({
                   </AppText>
                 </View>
               </View>
-
+ 
               {/* Left: greeting + date chip */}
               <View style={styles.textBlock}>
                 <AppText
@@ -95,7 +95,7 @@ export function HomeHeader({
                   {greeting}
                 </AppText>
                 <View style={[styles.dateChip, isPremium && { borderColor: 'rgba(212, 160, 23, 0.35)', backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}>
-                  <MaterialCommunityIcons name="calendar-today" size={10} color={isPremium ? '#FFF176' : '#FFFFFF'} />
+                  <MaterialCommunityIcons name="calendar-today" size={10} color={isPremium ? '#D4A017' : '#FFFFFF'} />
                   <AppText
                     variant="caption"
                     weight="800"

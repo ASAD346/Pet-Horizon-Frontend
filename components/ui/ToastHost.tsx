@@ -53,7 +53,7 @@ export function ToastHost() {
         },
       ]}
     >
-      <AppText variant="bodySmall" weight="600" color={LoginTheme.footerText} style={styles.toastText}>
+      <AppText variant="bodySmall" weight="600" color="#FFFFFF" style={styles.toastText}>
         {message}
       </AppText>
     </Animated.View>
