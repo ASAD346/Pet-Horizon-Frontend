@@ -12,7 +12,7 @@ export function usePetMembers(token: string | null, petId: string | null, isOwne
   const scopeKey = token && petId && isOwner ? `${token}:${petId}` : null;
 
   const load = useCallback(async () => {
-    if (!token || !petId || !isOwner) return [];
+    if (!token || !petId || petId === 'fallback-pet-id-123' || !isOwner) return [];
     return fetchPetMembers(token, petId);
   }, [token, petId, isOwner]);
 

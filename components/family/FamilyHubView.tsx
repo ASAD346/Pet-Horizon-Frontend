@@ -95,7 +95,7 @@ export function FamilyHubView() {
   }, [user, isOwner, members, guestMembers]);
 
   const loadGuestAccess = useCallback(async () => {
-    if (!token || !pet?._id || isOwner || !user) {
+    if (!token || !pet?._id || pet._id === 'fallback-pet-id-123' || isOwner || !user) {
       resetGuestScope();
       setGuestMembers([]);
       return;
@@ -127,7 +127,7 @@ export function FamilyHubView() {
 
   useEffect(() => {
     const loadDefaultInvite = async () => {
-      if (!token || !pet?._id || !isOwner || !isPremium) return;
+      if (!token || !pet?._id || pet._id === 'fallback-pet-id-123' || !isOwner || !isPremium) return;
       try {
         const data = await generatePetInvite(token, {
           petId: pet._id,
