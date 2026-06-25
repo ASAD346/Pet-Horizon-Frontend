@@ -19,6 +19,7 @@ export interface ApiPet {
   image?: string | null;
   ownerUserId?: string | null;
   familyId?: string | null;
+  disabledCategories?: string[];
 }
 
 export interface CreatePetRequest {
@@ -41,6 +42,7 @@ export interface UpdatePetRequest {
   weight?: number;
   weightUnit?: string;
   image?: string | null;
+  disabledCategories?: string[];
 }
 
 export interface SetActivePetResponse {

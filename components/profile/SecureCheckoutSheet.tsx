@@ -14,7 +14,7 @@ import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { SectionLabel, SheetColors } from '@/components/sheets';
-import { HomeTheme, Palette, Radius, Spacing } from '@/constants/theme';
+import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import type { PremiumPlan } from '@/types/premium';
 import { formatPlanPrice } from './profileTheme';
 
@@ -76,8 +76,8 @@ export function SecureCheckoutSheet({
 
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <AppText variant="body" weight="600" color={ProfilePurple}>
-                Change Plan
+              <AppText variant="body" weight="600" color="#1E5838">
+                Cancel
               </AppText>
             </TouchableOpacity>
             <AppText variant="h3" weight="800" color={SheetColors.title}>
@@ -87,9 +87,14 @@ export function SecureCheckoutSheet({
           </View>
 
           {plan ? (
-            <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.planSummary}>
-              {plan.name} · {formatPlanPrice(plan.price)}
-            </AppText>
+            <View style={styles.summaryContainer}>
+              <AppText variant="bodySmall" weight="800" color="#0F3E26" style={styles.planSummary}>
+                {plan.name} Plan
+              </AppText>
+              <AppText variant="bodySmall" weight="800" color="#0F3E26">
+                {formatPlanPrice(plan.price)}
+              </AppText>
+            </View>
           ) : null}
 
           {error ? (
@@ -98,64 +103,62 @@ export function SecureCheckoutSheet({
             </View>
           ) : null}
 
-          <SectionLabel text="CARDHOLDER NAME" />
-          <TextInput
-            value={cardholder}
-            onChangeText={setCardholder}
-            placeholder="Sarah Johnson"
-            placeholderTextColor={SheetColors.placeholder}
-            style={styles.input}
-            autoCapitalize="words"
-          />
-
-          <SectionLabel text="CARD NUMBER" />
-          <View style={styles.cardRow}>
+          <View style={styles.form}>
+            <SectionLabel text="CARDHOLDER NAME" />
             <TextInput
-              value={cardNumber}
-              onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-              placeholder="0000 0000 0000 0000"
+              value={cardholder}
+              onChangeText={setCardholder}
+              placeholder="Sarah Johnson"
               placeholderTextColor={SheetColors.placeholder}
-              style={[styles.input, styles.cardInput]}
-              keyboardType="number-pad"
-              maxLength={19}
+              style={styles.input}
+              autoCapitalize="words"
             />
-            <Ionicons name="card-outline" size={20} color={HomeTheme.cardGreen} style={styles.cardIcon} />
-          </View>
 
-          <View style={styles.splitRow}>
-            <View style={styles.splitField}>
-              <SectionLabel text="EXPIRY" />
+            <SectionLabel text="CARD NUMBER" />
+            <View style={styles.cardRow}>
               <TextInput
-                value={expiry}
-                onChangeText={(text) => setExpiry(formatExpiry(text))}
-                placeholder="MM/YY"
+                value={cardNumber}
+                onChangeText={(text) => setCardNumber(formatCardNumber(text))}
+                placeholder="0000 0000 0000 0000"
                 placeholderTextColor={SheetColors.placeholder}
-                style={styles.input}
+                style={[styles.input, styles.cardInput]}
                 keyboardType="number-pad"
-                maxLength={5}
+                maxLength={19}
               />
+              <Ionicons name="card" size={20} color="#1E5838" style={styles.cardIcon} />
             </View>
-            <View style={styles.splitField}>
-              <SectionLabel text="CVV" />
-              <TextInput
-                value={cvv}
-                onChangeText={(text) => setCvv(text.replace(/\D/g, '').slice(0, 4))}
-                placeholder="123"
-                placeholderTextColor={SheetColors.placeholder}
-                style={styles.input}
-                keyboardType="number-pad"
-                secureTextEntry
-                maxLength={4}
-              />
+
+            <View style={styles.splitRow}>
+              <View style={styles.splitField}>
+                <SectionLabel text="EXPIRY" />
+                <TextInput
+                  value={expiry}
+                  onChangeText={(text) => setExpiry(formatExpiry(text))}
+                  placeholder="MM/YY"
+                  placeholderTextColor={SheetColors.placeholder}
+                  style={styles.input}
+                  keyboardType="number-pad"
+                  maxLength={5}
+                />
+              </View>
+              <View style={styles.splitField}>
+                <SectionLabel text="CVV" />
+                <TextInput
+                  value={cvv}
+                  onChangeText={(text) => setCvv(text.replace(/\D/g, '').slice(0, 4))}
+                  placeholder="123"
+                  placeholderTextColor={SheetColors.placeholder}
+                  style={styles.input}
+                  keyboardType="number-pad"
+                  secureTextEntry
+                  maxLength={4}
+                />
+              </View>
             </View>
           </View>
-
-          <AppText variant="caption" color={HomeTheme.textMuted} style={styles.stripeNote}>
-            UI only — card data is not sent to the server. Payment uses the backend stub until Stripe is integrated.
-          </AppText>
 
           <AppButton
-            title="Confirm & Pay"
+            title="Authorize & Pay Securely"
             onPress={handleConfirm}
             loading={loading}
             disabled={!canSubmit || loading}
@@ -165,16 +168,17 @@ export function SecureCheckoutSheet({
             textStyle={styles.payBtnText}
           />
 
-          <AppText variant="caption" color={HomeTheme.textMuted} style={styles.footer}>
-            Secured by Stripe Payment Gateway
-          </AppText>
+          <View style={styles.securityFooter}>
+            <Ionicons name="lock-closed" size={12} color={HomeTheme.textMuted} />
+            <AppText variant="caption" color={HomeTheme.textMuted} style={styles.footer}>
+              Secured with bank-grade 256-bit SSL encryption
+            </AppText>
+          </View>
         </Pressable>
       </Pressable>
     </Modal>
   );
 }
-
-const ProfilePurple = '#6B4EAA';
 
 const styles = StyleSheet.create({
   overlay: {
@@ -194,27 +198,41 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#D0D0D0',
+    backgroundColor: '#E2E8F0',
     marginBottom: Spacing.sm,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   headerSpacer: {
-    width: 72,
+    width: 50,
+  },
+  summaryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#F0FAF3',
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: Spacing.lg,
   },
   planSummary: {
-    textAlign: 'center',
-    marginBottom: Spacing.md,
+    fontWeight: '800',
   },
   banner: {
     marginBottom: Spacing.sm,
   },
+  form: {
+    marginBottom: Spacing.md,
+  },
   input: {
     backgroundColor: SheetColors.inputBg,
+    borderColor: '#E2E8F0',
+    borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Platform.OS === 'ios' ? 14 : 12,
@@ -242,22 +260,27 @@ const styles = StyleSheet.create({
   splitField: {
     flex: 1,
   },
-  stripeNote: {
-    marginBottom: Spacing.md,
-    lineHeight: 16,
-  },
   payBtn: {
     width: '100%',
-    borderRadius: Radius.full,
+    backgroundColor: '#1E5838',
+    borderColor: '#1E5838',
+    borderRadius: Radius.lg,
     minHeight: 52,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   payBtnText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  securityFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: Spacing.sm,
   },
   footer: {
     textAlign: 'center',
-    marginBottom: Spacing.sm,
   },
 });

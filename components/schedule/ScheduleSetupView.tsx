@@ -13,7 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { HomeTheme, Radius, Spacing, Palette } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ScheduleScreenHeader } from './ScheduleScreenHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -63,6 +63,7 @@ import type {
 } from '@/lib/schedule/types';
 import { fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
+import { updatePet } from '@/services/pets/petApi';
 import type { GroomingTypeOption } from '@/types/grooming';
 import { ScheduleSectionCard } from './ScheduleSectionCard';
 import { ScheduleEntrySummaryCard } from './ScheduleEntrySummaryCard';
@@ -108,7 +109,7 @@ export function ScheduleSetupView({
 }: ScheduleSetupViewProps) {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { token, user } = useAuth();
-  const { pet, loading: petLoading } = useActivePet(token);
+  const { pet, loading: petLoading, reload: reloadActivePet } = useActivePet(token);
   const { unreadCount } = useNotifications(token);
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -248,8 +249,14 @@ export function ScheduleSetupView({
         );
 
         if (schedulesResult.status === 'fulfilled') {
-          setSections(schedulesResult.value);
-          setCachedSchedules(petId, schedulesResult.value);
+          const loaded = schedulesResult.value;
+          const disabled = pet?.disabledCategories || [];
+          const keys: ScheduleSectionKey[] = ['feeding', 'walk', 'medicine', 'vaccination', 'grooming'];
+          keys.forEach((k) => {
+            loaded[k].enabled = !disabled.includes(k);
+          });
+          setSections(loaded);
+          setCachedSchedules(petId, loaded);
         } else if (!cached) {
           setFormError('Unable to load saved schedules.');
         }
@@ -263,15 +270,41 @@ export function ScheduleSetupView({
     return () => {
       cancelled = true;
     };
-  }, [token, pet?._id, pet?.species, petLoading, applyFeatureOptions]);
+  }, [token, pet?._id, pet?.species, petLoading, applyFeatureOptions, pet?.disabledCategories]);
 
-  const toggleSection = (key: ScheduleSectionKey, enabled: boolean) => {
+  const toggleSection = async (key: ScheduleSectionKey, enabled: boolean) => {
+    if (!token || !pet?._id) return;
+
+    const currentDisabled = pet.disabledCategories || [];
+    let newDisabled = [...currentDisabled];
+    if (enabled) {
+      newDisabled = newDisabled.filter((c) => c !== key);
+    } else {
+      if (!newDisabled.includes(key)) {
+        newDisabled.push(key);
+      }
+    }
+
     setSections((prev) => ({
       ...prev,
       [key]: { ...prev[key], enabled },
     }));
     setFormSuccess(null);
     setFormError(null);
+
+    try {
+      await updatePet(token, pet._id, { disabledCategories: newDisabled });
+      await reloadActivePet(true);
+      queryClient.invalidateQueries({ queryKey: ['activePet', token] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
+      queryClient.invalidateQueries({ queryKey: ['pets', token] });
+    } catch (e) {
+      setSections((prev) => ({
+        ...prev,
+        [key]: { ...prev[key], enabled: !enabled },
+      }));
+      showToast(e instanceof Error ? e.message : 'Failed to update schedule status.');
+    }
   };
 
   const createEntryForSection = (key: ScheduleSectionKey): EditorEntry => {
@@ -379,8 +412,8 @@ export function ScheduleSetupView({
   const awaitingPet = petLoading && !pet;
 
   const isPremium = user?.premiumStatus === 'premium';
-  const brandColor = isPremium ? '#184F2E' : '#3A8F3B';
-  const brandBg = isPremium ? '#E8F5E9' : '#EEF8EE';
+  const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
+  const brandBg = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
   const insets = useSafeAreaInsets();
 
   return (
@@ -445,6 +478,7 @@ export function ScheduleSetupView({
                   section={sectionMeta}
                   enabled={sectionState.enabled}
                   onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
+                  onAddPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
                   canEdit={canEdit}
                 >
                   {schedulesLoading && visibleEntries.length === 0 ? (
@@ -452,12 +486,10 @@ export function ScheduleSetupView({
                   ) : visibleEntries.length === 0 ? (
                     <EmptyState
                       icon={sectionMeta.icon}
-                      iconType="mci"
-                      title={`No ${sectionMeta.title}`}
+                      title="No schedules configured"
                       description={`Keep your pet healthy and happy by logging their ${sectionMeta.title.toLowerCase()} events.`}
-                      actionLabel={canEdit ? sectionMeta.addLabel : undefined}
-                      onActionPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
-                      style={{ marginVertical: Spacing.md }}
+                      buttonLabel={canEdit ? sectionMeta.addLabel : undefined}
+                      onButtonPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
                     />
                   ) : (
                     visibleEntries.map((entry) => {

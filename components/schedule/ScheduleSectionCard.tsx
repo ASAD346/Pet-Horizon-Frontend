@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Switch, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, Switch, StyleSheet, TouchableOpacity } from 'react-native';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme } from '@/constants/theme';
+import { HomeTheme, Palette } from '@/constants/theme';
 import { scheduleFieldStyles } from './scheduleStyles';
 import { type ScheduleSectionTheme } from './scheduleTheme';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +11,7 @@ interface ScheduleSectionCardProps {
   section: ScheduleSectionTheme;
   enabled: boolean;
   onToggle: (value: boolean) => void;
+  onAddPress?: () => void;
   canEdit?: boolean;
   children?: React.ReactNode;
 }
@@ -19,13 +20,14 @@ export function ScheduleSectionCard({
   section,
   enabled,
   onToggle,
+  onAddPress,
   canEdit = true,
   children,
 }: ScheduleSectionCardProps) {
   const { user } = useAuth();
   const isPremium = user?.premiumStatus === 'premium';
-  const brandColor = isPremium ? '#184F2E' : '#3A8F3B';
-  const brandBg = isPremium ? '#E8F5E9' : '#EEF8EE';
+  const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
+  const brandBg = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
 
   return (
     <View style={scheduleFieldStyles.sectionCard}>
@@ -40,6 +42,15 @@ export function ScheduleSectionCard({
             {section.title}
           </AppText>
         </View>
+        {canEdit && onAddPress && (
+          <TouchableOpacity
+            style={styles.headerAddBtn}
+            onPress={onAddPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="add-circle-outline" size={24} color={brandColor} />
+          </TouchableOpacity>
+        )}
         <Switch
           value={enabled}
           onValueChange={onToggle}
@@ -61,5 +72,9 @@ export function ScheduleSectionCard({
 const styles = StyleSheet.create({
   titleBlock: {
     flex: 1,
+  },
+  headerAddBtn: {
+    padding: 6,
+    marginRight: 8,
   },
 });
