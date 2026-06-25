@@ -8,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
@@ -21,7 +21,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { SheetOptionPicker } from '@/components/sheets';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
 import { EditBudgetSheet } from './EditBudgetSheet';
 import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
@@ -41,6 +41,7 @@ export function ExpenseTrackerView({
   onNotificationsPress,
 }: ExpenseTrackerViewProps) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
@@ -109,13 +110,15 @@ export function ExpenseTrackerView({
 
   return (
     <View style={styles.safeArea}>
-      <ScreenHeader
-        title="Expenses"
-        variant="white"
+      <ExpenseTrackerHeader
         notificationCount={unreadCount}
         onJournalPress={canViewJournal ? onJournalPress : undefined}
         onNotificationsPress={onNotificationsPress}
         showJournal={canViewJournal}
+        isPremium={isPremium}
+        topInset={insets.top}
+        selectedMonthLabel={selectedMonthLabel}
+        onDatePress={() => setMonthPickerVisible(true)}
       />
 
       <ScrollView
@@ -126,19 +129,6 @@ export function ExpenseTrackerView({
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
         }
       >
-        {canViewExpenses && (
-          <View style={styles.monthSelectorRow}>
-            <AppText variant="caption" color={Colors.textMuted} weight="700">
-              SHOWING EXPENSES FOR:
-            </AppText>
-            <TouchableOpacity onPress={() => setMonthPickerVisible(true)} style={styles.monthButton}>
-              <AppText variant="caption" weight="800" color={Colors.primary}>
-                {selectedMonthLabel.toUpperCase()}
-              </AppText>
-              <Ionicons name="chevron-down" size={14} color={Colors.primary} />
-            </TouchableOpacity>
-          </View>
-        )}
 
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from Home to track expenses." />

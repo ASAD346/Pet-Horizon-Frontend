@@ -16,7 +16,7 @@ const MODULE_LABELS: Record<string, string> = {
   medical: 'Medical',
 };
 
-const AVATAR_COLORS = ['#F48024', '#5CB35D', '#5B9BD5', '#E91E8C', '#673AB7', '#4DB6AC'];
+const AVATAR_COLORS = ['#2E7D32', '#5CB35D', '#5B9BD5', '#E91E8C', '#673AB7', '#4DB6AC'];
 
 export function formatJoinCode(token: string): string {
   const clean = token.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();

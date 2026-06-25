@@ -15,7 +15,6 @@ import { InviteQrCode } from '@/components/family/InviteQrCode';
 import {
   FormSheetShell,
   FormSection,
-  FormToggleRow,
 } from '@/components/sheets';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonQRBox } from '@/components/ui/skeletons';
@@ -91,7 +90,7 @@ export function InviteFamilySheet({
       setInvite(null);
       setError(getErrorMessage(err));
     } finally {
-      if (requestIdRef.current !== requestId) {
+      if (requestIdRef.current === requestId) {
         setLoading(false);
       }
     }
@@ -197,7 +196,7 @@ export function InviteFamilySheet({
       onClose={onClose}
       title="Invite Family Member"
       subtitle="Share access with caregivers"
-      icon="people-outline"
+      icon="account-group-outline"
       saveLabel="Send Invitation"
       onSave={handleShare}
       saving={loading}
@@ -206,18 +205,48 @@ export function InviteFamilySheet({
       compact
     >
       <FormSection title="Permissions">
-        {INVITE_PERMISSION_OPTIONS.map((option) => {
-          const enabled = modules.includes(option.id);
-          return (
-            <FormToggleRow
-              key={option.id}
-              label={option.label}
-              value={enabled}
-              onValueChange={() => toggleModule(option.id)}
-              icon={option.icon}
-            />
-          );
-        })}
+        <View style={styles.gridContainer}>
+          {INVITE_PERMISSION_OPTIONS.map((option) => {
+            const enabled = modules.includes(option.id);
+            const activeColor = isPremium ? '#184F2E' : '#3A8F3B';
+            const activeBg = isPremium ? '#F4F9F4' : '#EEF8EE';
+            const borderColor = enabled ? activeColor : 'rgba(0, 0, 0, 0.08)';
+            const backgroundColor = enabled ? activeBg : '#FFFFFF';
+            const textColor = enabled ? activeColor : HomeTheme.text;
+            const iconColor = enabled ? activeColor : '#64748B';
+
+            return (
+              <TouchableOpacity
+                key={option.id}
+                style={[
+                  styles.permissionChip,
+                  {
+                    borderColor,
+                    backgroundColor,
+                  },
+                ]}
+                onPress={() => toggleModule(option.id)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name={option.icon} size={16} color={iconColor} />
+                <AppText
+                  variant="caption"
+                  weight="800"
+                  color={textColor}
+                  style={styles.chipText}
+                  numberOfLines={1}
+                >
+                  {option.label}
+                </AppText>
+                {enabled ? (
+                  <View style={[styles.checkmarkCircle, { backgroundColor: activeColor }]}>
+                    <Ionicons name="checkmark" size={10} color="#FFFFFF" />
+                  </View>
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       </FormSection>
 
       <FormSection title="Invitation Link">
@@ -355,5 +384,43 @@ const styles = StyleSheet.create({
   qrCaption: {
     textAlign: 'center',
     marginBottom: Spacing.lg,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginTop: Spacing.xs,
+  },
+  permissionChip: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 12,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    position: 'relative',
+    gap: Spacing.xs,
+    minHeight: 48,
+  },
+  chipText: {
+    flex: 1,
+    fontSize: 11,
+  },
+  checkmarkCircle: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
 });
