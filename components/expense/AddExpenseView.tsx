@@ -4,65 +4,59 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  TouchableOpacity,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { AppButton } from '../ui/AppButton';
-import { AuthErrorBanner } from '../auth/AuthErrorBanner';
 import { SheetColors } from '../sheets/sheetUi';
 import { Radius, Spacing } from '../../constants/theme';
 import { API_EXPENSE_CATEGORIES } from '@/lib/expense/expenseMappers';
 import { getErrorMessage } from '@/lib/api/errors';
 import { createExpense } from '@/services/expense/expenseApi';
 import { ExpenseCategoryChips } from './ExpenseCategoryChips';
-import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useLocalization } from '@/hooks/useLocalization';
+import { FormSheetShell, FormSection, FormSelectInput, SheetOptionPicker } from '../sheets';
 
 const BRAND_GREEN = '#2E7D32';
-const BRAND_GREEN_LIGHT = '#43A047';
 
 interface AddExpenseViewProps {
+  visible: boolean;
   petId?: string | null;
   token?: string | null;
-  onClose?: () => void;
-  onJournalPress?: () => void;
+  onClose: () => void;
   onSaved?: () => void;
-  embeddedInTabs?: boolean;
   isPremium?: boolean;
 }
 
 export function AddExpenseView({
+  visible,
   petId,
   token,
   onClose,
-  onJournalPress,
   onSaved,
-  embeddedInTabs = false,
   isPremium = false,
 }: AddExpenseViewProps) {
-  const insets = useSafeAreaInsets();
-  const { clearance: tabBarClearance } = useTabBarLayout();
   const { currency } = useLocalization();
-  const footerPadding =
-    Math.max(insets.bottom, Spacing.md) + (embeddedInTabs ? tabBarClearance : 0);
-  const scrollBottomPadding = embeddedInTabs ? tabBarClearance : Spacing.lg;
 
   const [category, setCategory] = useState('Food');
+  const [pickerVisible, setPickerVisible] = useState(false);
   const [amount, setAmount] = useState('');
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Focus tracking for premium input states
+  // Focus tracking for input states
   const [activeField, setActiveField] = useState<'amount' | 'merchant' | 'note' | null>(null);
 
   const categoryLabels = API_EXPENSE_CATEGORIES.map((item) => item.label);
+
+  const dropdownOptions = React.useMemo(() => {
+    return API_EXPENSE_CATEGORIES.map((item) => ({
+      value: item.label,
+      label: item.label,
+    }));
+  }, []);
 
   const handleSubmit = async () => {
     if (!petId || !token) {
@@ -85,11 +79,7 @@ export function AddExpenseView({
         amount: value,
         note: [merchant.trim(), note.trim()].filter(Boolean).join(' — ') || undefined,
       });
-      if (onSaved) {
-        onSaved();
-      } else {
-        onClose?.();
-      }
+      onSaved?.();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -98,125 +88,60 @@ export function AddExpenseView({
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <FormSheetShell
+      visible={visible}
+      onClose={onClose}
+      title="Add Expense"
+      subtitle="Track your pet's spending"
+      icon="plus-circle-outline"
+      saveLabel="Add Expense"
+      onSave={handleSubmit}
+      saving={saving}
+      saveDisabled={saving || !amount}
+      error={error}
+      compact
     >
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Premium gradient header */}
-        <LinearGradient
-          colors={
-            isPremium
-              ? (['#0E3821', '#184F2E', '#267343'] as const)
-              : (['#3A8F3B', '#5CB35D'] as const)
-          }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerRow}>
-            <View style={styles.headerLeft}>
-              <View style={styles.headerIconBadge}>
-                <MaterialCommunityIcons name="plus-circle-outline" size={20} color="#FFFFFF" />
-              </View>
-              <View>
-                <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
-                  Add Expense
-                </AppText>
-                <AppText variant="caption" color="rgba(255,255,255,0.75)">
-                  Track your pet&apos;s spending
-                </AppText>
-              </View>
-            </View>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Category */}
+        <FormSection title="Category">
+          <FormSelectInput
+            valueLabel={category}
+            onPress={() => setPickerVisible(true)}
+          />
+        </FormSection>
 
-            <TouchableOpacity
-              onPress={onClose}
-              hitSlop={12}
-              style={styles.closeButton}
-              accessibilityLabel="Close"
+        {/* Amount */}
+        <FormSection title="Amount">
+          <View style={[styles.amountField, activeField === 'amount' && styles.inputActive]}>
+            <AppText
+              variant="h2"
+              weight="800"
+              color={activeField === 'amount' ? BRAND_GREEN : '#94A3B8'}
+              style={styles.currency}
             >
-              <Ionicons name="close" size={20} color="rgba(255,255,255,0.85)" />
-            </TouchableOpacity>
-          </View>
-          {/* Accent line */}
-          <View style={styles.headerDivider} />
-        </LinearGradient>
-
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: scrollBottomPadding }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {error ? (
-            <View style={styles.errorWrapper}>
-              <AuthErrorBanner message={error} />
-            </View>
-          ) : null}
-
-          {/* Category */}
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <View style={styles.labelDot} />
-              <AppText variant="caption" weight="800" color="#64748B" style={styles.labelText}>
-                CATEGORY
-              </AppText>
-            </View>
-            <ExpenseCategoryChips
-              categories={categoryLabels}
-              selected={category}
-              onSelect={setCategory}
+              {currency === 'GBP' ? '£' : '$'}
+            </AppText>
+            <TextInput
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              style={styles.amountInput}
+              placeholder="0.00"
+              placeholderTextColor={SheetColors.placeholder}
+              onFocus={() => setActiveField('amount')}
+              onBlur={() => setActiveField(null)}
             />
           </View>
+        </FormSection>
 
-          {/* Amount */}
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <View style={[styles.labelDot, activeField === 'amount' && styles.labelDotActive]} />
-              <AppText
-                variant="caption"
-                weight="800"
-                color={activeField === 'amount' ? BRAND_GREEN : '#64748B'}
-                style={styles.labelText}
-              >
-                AMOUNT
-              </AppText>
-            </View>
-            <View style={[styles.amountField, activeField === 'amount' && styles.inputActive]}>
-              <AppText
-                variant="h2"
-                weight="800"
-                color={activeField === 'amount' ? BRAND_GREEN : '#94A3B8'}
-                style={styles.currency}
-              >
-                {currency === 'GBP' ? '£' : '$'}
-              </AppText>
-              <TextInput
-                value={amount}
-                onChangeText={setAmount}
-                keyboardType="decimal-pad"
-                style={styles.amountInput}
-                placeholder="0.00"
-                placeholderTextColor={SheetColors.placeholder}
-                onFocus={() => setActiveField('amount')}
-                onBlur={() => setActiveField(null)}
-              />
-            </View>
-          </View>
-
-          {/* Merchant */}
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <View style={[styles.labelDot, activeField === 'merchant' && styles.labelDotActive]} />
-              <AppText
-                variant="caption"
-                weight="800"
-                color={activeField === 'merchant' ? BRAND_GREEN : '#64748B'}
-                style={styles.labelText}
-              >
-                MERCHANT
-              </AppText>
-            </View>
+        {/* Details (Merchant & Notes) */}
+        <FormSection title="Details">
+          <View style={styles.detailsGroup}>
             <View style={[styles.regularField, activeField === 'merchant' && styles.inputActive]}>
               <Ionicons
                 name="storefront-outline"
@@ -233,25 +158,11 @@ export function AddExpenseView({
                 onBlur={() => setActiveField(null)}
               />
             </View>
-          </View>
 
-          {/* Note */}
-          <View style={styles.fieldGroup}>
-            <View style={styles.labelRow}>
-              <View style={[styles.labelDot, activeField === 'note' && styles.labelDotActive]} />
-              <AppText
-                variant="caption"
-                weight="800"
-                color={activeField === 'note' ? BRAND_GREEN : '#64748B'}
-                style={styles.labelText}
-              >
-                NOTE <AppText variant="caption" color="#94A3B8">(OPTIONAL)</AppText>
-              </AppText>
-            </View>
             <TextInput
               value={note}
               onChangeText={setNote}
-              placeholder="Add a quick note..."
+              placeholder="Add notes (optional)..."
               placeholderTextColor={SheetColors.placeholder}
               style={[styles.noteInput, activeField === 'note' && styles.inputActive]}
               multiline
@@ -260,109 +171,30 @@ export function AddExpenseView({
               onBlur={() => setActiveField(null)}
             />
           </View>
-        </ScrollView>
+        </FormSection>
+      </ScrollView>
 
-        {/* Footer CTA */}
-        <View style={[styles.footer, { paddingBottom: footerPadding }]}>
-          <AppButton
-            title="Add Expense"
-            onPress={handleSubmit}
-            loading={saving}
-            variant="success"
-            size="lg"
-            style={styles.submitBtn}
-            textStyle={styles.submitText}
-          />
-        </View>
-      </View>
-    </KeyboardAvoidingView>
+      <SheetOptionPicker
+        visible={pickerVisible}
+        title="Select Category"
+        options={dropdownOptions}
+        selectedValue={category}
+        onClose={() => setPickerVisible(false)}
+        onSelect={(value) => {
+          setCategory(value);
+          setPickerVisible(false);
+        }}
+      />
+    </FormSheetShell>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: {
-    flex: 1,
-    backgroundColor: '#F8FAF8',
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAF8',
-  },
-  headerGradient: {
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: 0,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.md,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    flex: 1,
-  },
-  headerIconBadge: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  closeButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-  },
-  errorWrapper: {
-    marginBottom: Spacing.md,
-  },
-  fieldGroup: {
-    marginBottom: Spacing.lg,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.xs,
-    paddingLeft: 2,
-  },
-  labelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#CBD5E1',
-  },
-  labelDotActive: {
-    backgroundColor: BRAND_GREEN,
-  },
-  labelText: {
-    fontSize: 11,
-    letterSpacing: 0.8,
+    paddingBottom: Spacing.lg,
   },
   amountField: {
     flexDirection: 'row',
@@ -372,19 +204,22 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 16 : 12,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
     gap: Spacing.xs,
   },
   currency: {
-    fontSize: 26,
-    lineHeight: 34,
+    fontSize: 24,
+    lineHeight: 30,
   },
   amountInput: {
     flex: 1,
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
     color: '#1A1A1A',
     padding: 0,
+  },
+  detailsGroup: {
+    gap: Spacing.md,
   },
   regularField: {
     flexDirection: 'row',
@@ -394,13 +229,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     gap: Spacing.sm,
-    minHeight: 48,
+    minHeight: 44,
   },
   regularInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '500',
     color: '#1A1A1A',
     padding: 0,
@@ -412,7 +247,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    minHeight: 100,
+    minHeight: 80,
     fontSize: 14,
     fontWeight: '500',
     color: '#1A1A1A',
@@ -423,35 +258,10 @@ const styles = StyleSheet.create({
       ios: {
         shadowColor: BRAND_GREEN,
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
       },
-      android: { elevation: 2 },
+      android: { elevation: 1 },
     }),
-  },
-  footer: {
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E2E8F0',
-    backgroundColor: '#F8FAF8',
-  },
-  submitBtn: {
-    borderRadius: Radius.full,
-    width: '100%',
-    minHeight: 52,
-    ...Platform.select({
-      ios: {
-        shadowColor: BRAND_GREEN,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-      },
-      android: { elevation: 4 },
-    }),
-  },
-  submitText: {
-    fontSize: 17,
-    fontWeight: '800',
   },
 });

@@ -28,6 +28,7 @@ export default function AddExpenseScreen() {
 
   return (
     <AddExpenseView
+      visible={true}
       petId={pet?._id ?? null}
       token={token}
       isPremium={isPremium}

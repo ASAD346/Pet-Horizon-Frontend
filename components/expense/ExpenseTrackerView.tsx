@@ -23,6 +23,7 @@ import { SheetOptionPicker } from '@/components/sheets';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
 import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
 import { EditBudgetSheet } from './EditBudgetSheet';
+import { AddExpenseView } from './AddExpenseView';
 import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
@@ -94,6 +95,7 @@ export function ExpenseTrackerView({
   const [refreshing, setRefreshing] = useState(false);
   const [budgetSheetVisible, setBudgetSheetVisible] = useState(false);
   const [isNewBudget, setIsNewBudget] = useState(false);
+  const [addExpenseVisible, setAddExpenseVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -179,7 +181,7 @@ export function ExpenseTrackerView({
         <TouchableOpacity
           style={[styles.fab, { bottom: tabBarClearance + Spacing.sm }]}
           activeOpacity={0.9}
-          onPress={() => router.push('/expense/add' as Href)}
+          onPress={() => setAddExpenseVisible(true)}
         >
           <Ionicons name="add" size={28} color={HomeTheme.white} />
         </TouchableOpacity>
@@ -187,24 +189,39 @@ export function ExpenseTrackerView({
 
       {pet && canEditExpenses ? (
         <EditBudgetSheet
-        visible={budgetSheetVisible}
-        petId={pet?._id ?? null}
-        token={token}
-        budgetId={isNewBudget ? undefined : budget.budgetId}
-        currentLimit={isNewBudget ? undefined : budget.amountLimit}
-        periodType={periodType}
-        isPremium={isPremium}
-        periodStart={isNewBudget ? undefined : budget.periodStart}
-        periodEnd={isNewBudget ? undefined : budget.periodEnd}
-        onClose={() => setBudgetSheetVisible(false)}
-        onSaved={(savedPeriod) => {
-          if (savedPeriod) {
-            setPeriodType(savedPeriod);
-          }
-          reloadBudget();
-          reloadExpenses();
-        }}
-      />
+          visible={budgetSheetVisible}
+          petId={pet?._id ?? null}
+          token={token}
+          budgetId={isNewBudget ? undefined : budget.budgetId}
+          currentLimit={isNewBudget ? undefined : budget.amountLimit}
+          periodType={periodType}
+          isPremium={isPremium}
+          periodStart={isNewBudget ? undefined : budget.periodStart}
+          periodEnd={isNewBudget ? undefined : budget.periodEnd}
+          onClose={() => setBudgetSheetVisible(false)}
+          onSaved={(savedPeriod) => {
+            if (savedPeriod) {
+              setPeriodType(savedPeriod);
+            }
+            reloadBudget();
+            reloadExpenses();
+          }}
+        />
+      ) : null}
+
+      {pet && canEditExpenses ? (
+        <AddExpenseView
+          visible={addExpenseVisible}
+          petId={pet?._id ?? null}
+          token={token}
+          isPremium={isPremium}
+          onClose={() => setAddExpenseVisible(false)}
+          onSaved={() => {
+            setAddExpenseVisible(false);
+            reloadExpenses();
+            reloadBudget();
+          }}
+        />
       ) : null}
 
       <SheetOptionPicker
