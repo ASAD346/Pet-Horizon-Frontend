@@ -12,6 +12,7 @@ interface EmptyStateProps {
   description: string;
   buttonLabel?: string;
   onButtonPress?: () => void;
+  buttonVariant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline' | 'ghost';
 }
 
 export function EmptyState({
@@ -20,6 +21,7 @@ export function EmptyState({
   description,
   buttonLabel,
   onButtonPress,
+  buttonVariant = 'primary',
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
@@ -36,7 +38,7 @@ export function EmptyState({
         <AppButton
           title={buttonLabel}
           onPress={onButtonPress}
-          variant="primary"
+          variant={buttonVariant}
           style={styles.button}
         />
       ) : null}

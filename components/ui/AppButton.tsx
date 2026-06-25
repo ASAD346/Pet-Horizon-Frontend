@@ -83,13 +83,13 @@ export function AppButton({
       case 'outline':
         return { 
           bg: 'transparent', 
-          text: Palette.primary.base, 
-          border: Palette.primary.base 
+          text: Palette.gray[700], 
+          border: Palette.gray[300] 
         };
       case 'ghost':
         return { 
           bg: 'transparent', 
-          text: Palette.primary.base, 
+          text: Palette.gray[600], 
           border: 'transparent' 
         };
       case 'primary':

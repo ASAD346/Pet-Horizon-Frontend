@@ -30,6 +30,8 @@ interface LogGroomingSheetProps {
   token: string | null;
   onSaved?: () => void;
   initialEntry?: GroomingEntryState | null;
+  typeOptions?: GroomingTypeOption[];
+  groomingVisible?: boolean;
 }
 
 export function LogGroomingSheet({
@@ -39,6 +41,8 @@ export function LogGroomingSheet({
   token,
   onSaved,
   initialEntry,
+  typeOptions: propsTypeOptions,
+  groomingVisible: propsGroomingVisible = true,
 }: LogGroomingSheetProps) {
   const [typeOptions, setTypeOptions] = useState<GroomingTypeOption[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
@@ -57,6 +61,17 @@ export function LogGroomingSheet({
   const [error, setError] = useState<string | null>(null);
 
   const loadTypes = useCallback(async () => {
+    if (propsTypeOptions?.length) {
+      setTypeOptions(propsTypeOptions);
+      setGroomingVisible(propsGroomingVisible);
+      setEntry((prev) => ({
+        ...prev,
+        groomingType: prev.groomingType || (propsTypeOptions[0]?.value ?? ''),
+      }));
+      setLoadingTypes(false);
+      return;
+    }
+
     if (!petId || !token) {
       setTypeOptions([]);
       setGroomingVisible(true);
@@ -78,7 +93,7 @@ export function LogGroomingSheet({
     } finally {
       setLoadingTypes(false);
     }
-  }, [petId, token]);
+  }, [petId, token, propsTypeOptions, propsGroomingVisible]);
 
   const resetForm = useCallback(() => {
     if (initialEntry) {

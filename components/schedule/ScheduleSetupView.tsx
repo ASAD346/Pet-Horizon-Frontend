@@ -447,7 +447,27 @@ export function ScheduleSetupView({
     try {
       console.log('[handleDeleteEntry] Calling deleteScheduleEntry API...');
       await deleteScheduleEntry(token, key, remoteId);
-      console.log('[handleDeleteEntry] API succeeded. Invalidating queries and reloading...');
+      console.log('[handleDeleteEntry] Success. Updating cache...');
+      
+      // Optimistically remove from dashboard todaySchedules & upcomingTasks
+      queryClient.setQueryData(['dashboard', pet._id], (prev: any) => {
+        if (!prev) return prev;
+        const newTodaySchedules = { ...prev.todaySchedules };
+        if (newTodaySchedules[key]) {
+          newTodaySchedules[key] = newTodaySchedules[key].filter(
+            (item: any) => item._id !== remoteId && item.id !== remoteId
+          );
+        }
+        const newUpcomingTasks = (prev.upcomingTasks || []).filter(
+          (task: any) => task.id !== remoteId && task._id !== remoteId
+        );
+        return {
+          ...prev,
+          todaySchedules: newTodaySchedules,
+          upcomingTasks: newUpcomingTasks,
+        };
+      });
+
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       showToast('Schedule deleted.');
       // Reload in background to sync server state (no loading flash)
@@ -533,8 +553,6 @@ export function ScheduleSetupView({
                 <ScheduleSectionCard
                   key={sectionMeta.key}
                   section={sectionMeta}
-                  onAddPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
-                  canEdit={canEdit}
                 >
                   {schedulesLoading && visibleEntries.length === 0 ? (
                     <ScheduleEntriesSkeleton />
@@ -545,6 +563,7 @@ export function ScheduleSetupView({
                       description={`Keep your pet healthy and happy by logging their ${sectionMeta.title.toLowerCase()} events.`}
                       buttonLabel={canEdit ? sectionMeta.addLabel : undefined}
                       onButtonPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
+                      buttonVariant="success"
                     />
                   ) : (
                     visibleEntries.map((entry) => {
@@ -589,6 +608,8 @@ export function ScheduleSetupView({
           visible
           petId={pet?._id ?? null}
           token={token}
+          mealTypeOptions={mealTypeOptions}
+          unitOptions={unitOptions}
           initialEntry={editor.entry as FeedingEntryState}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });
@@ -645,6 +666,8 @@ export function ScheduleSetupView({
           visible
           petId={pet?._id ?? null}
           token={token}
+          typeOptions={groomingTypeOptions}
+          groomingVisible={groomingVisible}
           initialEntry={editor.entry as GroomingEntryState}
           onSaved={() => {
             queryClient.invalidateQueries({ queryKey: ['dashboard', pet?._id] });

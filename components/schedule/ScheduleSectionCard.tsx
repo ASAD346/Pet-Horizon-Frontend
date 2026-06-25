@@ -49,15 +49,6 @@ export function ScheduleSectionCard({
             {section.title}
           </AppText>
         </View>
-        {canEdit && onAddPress && (
-          <TouchableOpacity
-            style={styles.headerAddBtn}
-            onPress={onAddPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="add-circle-outline" size={24} color={brandColor} />
-          </TouchableOpacity>
-        )}
       </View>
       {children ? (
         <View style={[scheduleFieldStyles.sectionBody, { backgroundColor: '#F8FAF8', paddingBottom: 28 }]}>

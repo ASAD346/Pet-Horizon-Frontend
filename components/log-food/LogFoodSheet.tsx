@@ -32,6 +32,8 @@ interface LogFoodSheetProps {
   token: string | null;
   onSaved?: () => void;
   initialEntry?: FeedingEntryState | null;
+  mealTypeOptions?: { value: string; label: string }[];
+  unitOptions?: { value: string; label: string }[];
 }
 
 export function LogFoodSheet({
@@ -41,6 +43,8 @@ export function LogFoodSheet({
   token,
   onSaved,
   initialEntry,
+  mealTypeOptions: propsMealTypeOptions,
+  unitOptions: propsUnitOptions,
 }: LogFoodSheetProps) {
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
@@ -80,6 +84,18 @@ export function LogFoodSheet({
   }, [initialEntry]);
 
   const loadSpeciesFeatures = useCallback(async () => {
+    if (propsMealTypeOptions?.length && propsUnitOptions?.length) {
+      setMealTypeOptions(propsMealTypeOptions);
+      setUnitOptions(propsUnitOptions);
+      setEntry((prev) => ({
+        ...prev,
+        mealType: prev.mealType || (propsMealTypeOptions[0]?.value ?? ''),
+        unit: prev.unit || propsUnitOptions[0]?.value || '',
+      }));
+      setFeaturesLoading(false);
+      return;
+    }
+
     if (!petId || !token) {
       setMealTypeOptions([]);
       setUnitOptions([]);
@@ -113,7 +129,7 @@ export function LogFoodSheet({
     } finally {
       setFeaturesLoading(false);
     }
-  }, [petId, token]);
+  }, [petId, token, propsMealTypeOptions, propsUnitOptions]);
 
   useEffect(() => {
     if (visible) {
