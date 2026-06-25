@@ -218,7 +218,7 @@ export function ScheduleSetupView({
   useFocusReload(focusReload, Boolean(token && pet?._id));
 
   useEffect(() => {
-    if (!token || !pet?._id) {
+    if (!token || !pet?._id || pet._id === 'fallback-pet-id-123') {
       if (!petLoading) {
         setSections(createInitialScheduleState());
         setMealTypeOptions([]);

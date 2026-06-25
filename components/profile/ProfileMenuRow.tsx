@@ -11,13 +11,22 @@ interface ProfileMenuRowProps {
   title: string;
   subtitle: string;
   onPress: () => void;
+  iconColor?: string;
+  iconBg?: string;
 }
 
-export function ProfileMenuRow({ icon, title, subtitle, onPress }: ProfileMenuRowProps) {
+export function ProfileMenuRow({
+  icon,
+  title,
+  subtitle,
+  onPress,
+  iconColor = '#2E7D32',
+  iconBg = 'rgba(46, 125, 50, 0.08)',
+}: ProfileMenuRowProps) {
   return (
     <TouchableOpacity style={[homePillCard.card, styles.row]} onPress={onPress} activeOpacity={0.85}>
-      <View style={styles.iconWrap}>
-        <Ionicons name={icon} size={20} color="#2E7D32" />
+      <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={20} color={iconColor} />
       </View>
       <View style={styles.textBlock}>
         <AppText variant="body" weight="700" color={ProfileTheme.text}>

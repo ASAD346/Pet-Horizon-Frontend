@@ -392,19 +392,24 @@ export function ProfileHubView() {
           />
         </ProfileMenuSection>
 
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
-          <Ionicons name="log-out-outline" size={20} color="#C62828" />
-          <AppText variant="body" weight="700" color="#C62828">
-            Log out
-          </AppText>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDeletePress} activeOpacity={0.85}>
-          <Ionicons name="trash-outline" size={20} color="#C62828" />
-          <AppText variant="body" weight="700" color="#C62828">
-            Delete Account
-          </AppText>
-        </TouchableOpacity>
+        <ProfileMenuSection title="ACTIONS">
+          <ProfileMenuRow
+            icon="log-out-outline"
+            title="Sign Out"
+            subtitle="Log out of your active session"
+            onPress={handleLogout}
+            iconColor="#FBBC05"
+            iconBg="rgba(251, 188, 5, 0.08)"
+          />
+          <ProfileMenuRow
+            icon="trash-outline"
+            title="Delete Account"
+            subtitle="Permanently erase your data and profile"
+            onPress={handleDeletePress}
+            iconColor="#EA4335"
+            iconBg="rgba(234, 67, 53, 0.08)"
+          />
+        </ProfileMenuSection>
       </Animated.ScrollView>
 
       {/* Legal & Support sheets */}

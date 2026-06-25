@@ -40,7 +40,7 @@ export function usePetPermissions(
   const { shouldBlockUI, markLoaded } = useStaleLoadScope(scopeKey);
 
   const reload = useCallback(async () => {
-    if (!token || !pet?._id) {
+    if (!token || !pet?._id || pet._id === 'fallback-pet-id-123') {
       setPermissions(null);
       setLoading(false);
       setError(null);
@@ -64,7 +64,7 @@ export function usePetPermissions(
   }, [token, pet?._id, shouldBlockUI, markLoaded]);
 
   useEffect(() => {
-    if (!scopeKey) {
+    if (!scopeKey || pet?._id === 'fallback-pet-id-123') {
       setPermissions(null);
       setLoading(false);
       setError(null);

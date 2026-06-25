@@ -23,6 +23,7 @@ import { usePetMembers } from '@/hooks/usePetMembers';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { LogJournalSheet } from '@/components/journal';
 import { generatePetInvite } from '@/services/family/familyApi';
+import { fetchPremiumStatus } from '@/services/premium/premiumApi';
 import {
   buildFamilyMembersList,
   buildGuestMemberDisplay,
@@ -65,12 +66,23 @@ export function FamilyHubView() {
   const { shouldBlockUI: shouldBlockGuestUI, markLoaded: markGuestLoaded, reset: resetGuestScope } =
     useStaleLoadScope(guestScopeKey);
 
+  const [dbPremium, setDbPremium] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchPremiumStatus(token)
+      .then((res) => {
+        setDbPremium(res.isPremium);
+      })
+      .catch(() => {});
+  }, [token]);
+
   const manageableMemberIds = useMemo(
     () => members.map((member) => member.userId._id),
     [members],
   );
 
-  const isPremium = user?.premiumStatus === 'premium';
+  const isPremium = dbPremium ?? (user?.premiumStatus === 'premium');
   const canInvite = Boolean(pet?._id && token && isOwner && isPremium);
 
   const familyName = pet?.name ? `${pet.name}'s Family 🐾` : 'Your Family';
@@ -132,9 +144,17 @@ export function FamilyHubView() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
+    try {
+      if (token) {
+        const res = await fetchPremiumStatus(token);
+        setDbPremium(res.isPremium);
+      }
+    } catch {
+      // ignore
+    }
     await Promise.all([reloadPet(), reloadMembers(), loadGuestAccess()]);
     setRefreshing(false);
-  }, [reloadPet, reloadMembers, loadGuestAccess]);
+  }, [token, reloadPet, reloadMembers, loadGuestAccess]);
 
   const handleShareCode = useCallback(async () => {
     if (!invite) return;
