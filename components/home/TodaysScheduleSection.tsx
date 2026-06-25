@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
+import { SkeletonScheduleSections } from '@/components/ui/skeletons';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
@@ -193,6 +194,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
 }: ScheduleRowCardProps) {
   const [completeBusy, setCompleteBusy] = useState(false);
   const [skipBusy, setSkipBusy] = useState(false);
+  const clickedRef = useRef(false);
 
   const isDone = rowIsDone(row);
   const isSkipped = rowIsSkipped(row);
@@ -212,24 +214,28 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   );
 
   const handleComplete = async () => {
-    if (!onComplete) return;
+    if (!onComplete || clickedRef.current) return;
+    clickedRef.current = true;
     setCompleteBusy(true);
     try {
       await onComplete(rowId(row));
     } catch (e: any) {
       Alert.alert('Action Failed', e?.message || 'Could not complete the schedule.');
+      clickedRef.current = false;
     } finally {
       setCompleteBusy(false);
     }
   };
 
   const handleSkip = async () => {
-    if (!onSkipFeeding) return;
+    if (!onSkipFeeding || clickedRef.current) return;
+    clickedRef.current = true;
     setSkipBusy(true);
     try {
       await onSkipFeeding(rowId(row));
     } catch (e: any) {
       Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
+      clickedRef.current = false;
     } finally {
       setSkipBusy(false);
     }
@@ -444,16 +450,15 @@ export function TodaysScheduleSection({
       <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
 
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="small" color={HomeTheme.green} />
-        </View>
+        <SkeletonScheduleSections count={2} />
       ) : items.length === 0 ? (
-        <EmptyState
-          icon="calendar-outline"
-          title="Clear Schedule Today"
-          description="No tasks scheduled for today. You can add routines, medication timers, or grooming alerts."
-          style={{ marginVertical: Spacing.xs }}
-        />
+        <View style={{ marginVertical: Spacing.xs }}>
+          <EmptyState
+            icon="calendar-outline"
+            title="Clear Schedule Today"
+            description="No tasks scheduled for today. You can add routines, medication timers, or grooming alerts."
+          />
+        </View>
       ) : (
         items.map((row) => (
           <ScheduleRowCard

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { AppText } from '../ui/AppText';
+import { Skeleton } from '@/components/ui/skeletons';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
@@ -135,8 +136,9 @@ export const UpNextSection = React.memo(function UpNextSection({
     <View style={styles.section}>
       <SectionHeader title="Up Next" />
       {loading ? (
-        <View style={styles.loader}>
-          <ActivityIndicator size="small" color={HomeTheme.green} />
+        <View style={{ flexDirection: 'row', gap: 12, paddingHorizontal: Spacing.lg }}>
+          <Skeleton width={180} height={90} borderRadius={Radius.md} />
+          <Skeleton width={180} height={90} borderRadius={Radius.md} />
         </View>
       ) : (
         <ScrollView

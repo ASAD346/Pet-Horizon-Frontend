@@ -10,9 +10,11 @@ import {
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppBrandModal } from '@/components/ui/AppBrandModal';
-import { AppButton } from '@/components/ui/AppButton';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { AppCard } from '@/components/ui/AppCard';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,28 +29,31 @@ import {
 } from '@/services/premium/premiumApi';
 import { fetchUserProfile } from '@/services/users/userApi';
 import type { PremiumPlan } from '@/types/premium';
-import { ProfileScreenHeader } from './ProfileScreenHeader';
 import { SecureCheckoutSheet } from './SecureCheckoutSheet';
 import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
 import {
-  ProfileTheme,
   formatPlanPrice,
   planPeriodLabel,
 } from './profileTheme';
 import { SkeletonPremiumPlans } from '@/components/ui/skeletons';
+import { Colors } from '@/constants/colors';
+import { Spacing } from '@/constants/spacing';
+import { Radius } from '@/constants/radius';
+import { Shadows } from '@/constants/shadows';
 
 const FALLBACK_HERO = require('../../assets/images/onboarding.png');
 
 const FEATURES = [
-  { icon: 'paw' as const, label: 'Unlimited Pets' },
-  { icon: 'notifications' as const, label: 'Smart Reminders' },
-  { icon: 'stats-chart' as const, label: 'Pro Stats' },
+  { icon: 'paw-outline' as const, label: 'Unlimited Pets', desc: 'Add all your family pets' },
+  { icon: 'notifications-outline' as const, label: 'Smart Reminders', desc: 'Custom care alerts' },
+  { icon: 'bar-chart-outline' as const, label: 'Pro Analytics', desc: 'Health & expense graphs' },
 ];
 
 const ALLOWED_PLAN_IDS = new Set(['monthly', 'yearly']);
 
 export function PremiumHubContent() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { token, user, setSession } = useAuth();
   const { pet } = useActivePet(token);
   const [plans, setPlans] = useState<PremiumPlan[]>([]);
@@ -132,24 +137,28 @@ export function PremiumHubContent() {
     return (
       <TouchableOpacity
         key={plan.planId}
-        style={[styles.planCard, selected && styles.planCardSelected, popular && styles.planPopular]}
+        style={[
+          styles.planCard,
+          selected && styles.planCardSelected,
+          popular && styles.planPopular,
+        ]}
         onPress={() => setSelectedPlanId(plan.planId)}
         activeOpacity={0.9}
       >
-        {popular ? (
+        {popular && (
           <View style={styles.popularBadge}>
-            <AppText variant="caption" weight="700" color="#F0C419">
-              POPULAR
+            <AppText variant="caption" weight="800" color="#FFFFFF" style={styles.popularText}>
+              BEST VALUE
             </AppText>
           </View>
-        ) : null}
-        <AppText variant="body" weight="700" color={ProfileTheme.text}>
-          {plan.name}
+        )}
+        <AppText variant="caption" weight="800" color={selected ? Colors.primary : Colors.textMuted}>
+          {plan.name.toUpperCase()}
         </AppText>
-        <AppText variant="h3" weight="800" color={ProfileTheme.text} style={styles.planPrice}>
+        <AppText variant="h2" weight="800" color={Colors.text} style={styles.planPrice}>
           {formatPlanPrice(plan.price)}
         </AppText>
-        <AppText variant="caption" color={ProfileTheme.textMuted}>
+        <AppText variant="caption" color={Colors.textMuted}>
           {planPeriodLabel(plan.planId, plan.periodDays)}
         </AppText>
       </TouchableOpacity>
@@ -158,11 +167,18 @@ export function PremiumHubContent() {
 
   return (
     <View style={styles.container}>
-      <Image source={heroSource} style={styles.hero} contentFit="cover" />
+      <View style={styles.heroContainer}>
+        <Image source={heroSource} style={styles.hero} contentFit="cover" />
+        <View style={styles.overlay} />
+      </View>
 
-      <SafeAreaView style={styles.safeTop} edges={['top']}>
-        <ProfileScreenHeader title="" onBack={() => router.back()} />
-      </SafeAreaView>
+      <TouchableOpacity
+        style={[styles.backBtn, { top: Math.max(insets.top, Spacing.sm) }]}
+        onPress={() => router.back()}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+      </TouchableOpacity>
 
       <View style={styles.sheet}>
         <ScrollView
@@ -170,21 +186,31 @@ export function PremiumHubContent() {
           bounces={false}
           contentContainerStyle={styles.sheetContent}
         >
-          <AppText variant="caption" weight="700" color={ProfileTheme.green} style={styles.kicker}>
-            PREMIUM HUB
-          </AppText>
-          <AppText variant="h2" weight="800" color={ProfileTheme.text} style={styles.title}>
-            Unlock Full Potential
-          </AppText>
+          <View style={styles.headerBlock}>
+            <StatusBadge status="premium" style={styles.premiumBadge} />
+            <AppText variant="h1" weight="800" color={Colors.text} style={styles.title}>
+              Unlock Full Potential
+            </AppText>
+            <AppText variant="bodySmall" color={Colors.textMuted} style={styles.subtitle}>
+              Take care of your pets like a pro with premium features.
+            </AppText>
+          </View>
 
-          <View style={styles.featureRow}>
+          <View style={styles.featuresBlock}>
             {FEATURES.map((feature) => (
-              <View key={feature.label} style={styles.featureItem}>
-                <Ionicons name={feature.icon} size={18} color={ProfileTheme.green} />
-                <AppText variant="caption" weight="600" color={ProfileTheme.textMuted}>
-                  {feature.label}
-                </AppText>
-              </View>
+              <AppCard key={feature.label} style={styles.featureItem}>
+                <View style={styles.featureIconContainer}>
+                  <Ionicons name={feature.icon} size={20} color={Colors.primary} />
+                </View>
+                <View style={styles.featureTextContainer}>
+                  <AppText variant="bodySmall" weight="700" color={Colors.text}>
+                    {feature.label}
+                  </AppText>
+                  <AppText variant="caption" color={Colors.textMuted}>
+                    {feature.desc}
+                  </AppText>
+                </View>
+              </AppCard>
             ))}
           </View>
 
@@ -205,31 +231,23 @@ export function PremiumHubContent() {
             </>
           )}
 
-          <AppButton
+          <PrimaryButton
             title={isPremium ? 'Premium Active' : 'Start 7-Day Free Trial'}
             onPress={handleStartTrial}
             disabled={loading || isPremium || !selectedPlan}
-            variant="success"
-            size="md"
             style={styles.ctaBtn}
-            textStyle={styles.ctaText}
-            icon={
-              !isPremium ? (
-                <Ionicons name="arrow-forward" size={18} color={ProfileTheme.surface} />
-              ) : undefined
-            }
           />
 
           <View style={styles.disclaimerRow}>
-            <AppText variant="caption" color={ProfileTheme.textMuted}>
+            <AppText variant="caption" color={Colors.textMuted}>
               Cancel anytime.{' '}
             </AppText>
             <Pressable onPress={() => setTermsVisible(true)} hitSlop={6}>
-              <AppText variant="caption" weight="700" color={ProfileTheme.green} style={styles.link}>
+              <AppText variant="caption" weight="800" color={Colors.primary} style={styles.link}>
                 Terms & Conditions
               </AppText>
             </Pressable>
-            <AppText variant="caption" color={ProfileTheme.textMuted}>
+            <AppText variant="caption" color={Colors.textMuted}>
               {' '}
               apply.
             </AppText>
@@ -265,100 +283,130 @@ export function PremiumHubContent() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: ProfileTheme.background,
+    backgroundColor: Colors.background,
+  },
+  heroContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '36%',
   },
   hero: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '34%',
+    width: '100%',
+    height: '100%',
   },
-  safeTop: {
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.25)',
+  },
+  backBtn: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    left: Spacing.lg,
+    width: 40,
+    height: 40,
+    borderRadius: Radius.full,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
   sheet: {
     flex: 1,
-    marginTop: '30%',
-    backgroundColor: ProfileTheme.surface,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    marginTop: '32%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
     overflow: 'hidden',
+    ...Shadows.lg,
   },
   sheetContent: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 24,
-    flexGrow: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
-  kicker: {
-    letterSpacing: 1,
-    marginBottom: 4,
+  headerBlock: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  premiumBadge: {
+    marginBottom: Spacing.xs,
   },
   title: {
-    marginBottom: 14,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
   },
-  featureRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+  subtitle: {
+    textAlign: 'center',
+  },
+  featuresBlock: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.lg,
   },
   featureItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    flex: 1,
+    gap: Spacing.md,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
-  loader: {
-    marginVertical: 16,
+  featureIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.sm,
+    backgroundColor: Colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureTextContainer: {
+    flex: 1,
   },
   planRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    gap: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   planCard: {
     flex: 1,
-    backgroundColor: ProfileTheme.background,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.md,
+    padding: Spacing.md,
     borderWidth: 1.5,
-    borderColor: ProfileTheme.border,
+    borderColor: Colors.border,
+    position: 'relative',
+    ...Shadows.sm,
   },
   planCardSelected: {
-    borderColor: ProfileTheme.green,
-    backgroundColor: '#F1FAF1',
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
   },
   planPopular: {
-    borderColor: ProfileTheme.green,
+    borderColor: Colors.primary,
   },
   popularBadge: {
     position: 'absolute',
     top: -10,
     alignSelf: 'center',
-    backgroundColor: '#FFF8E1',
-    borderRadius: 999,
-    paddingHorizontal: 10,
+    backgroundColor: Colors.primary,
+    borderRadius: Radius.full,
+    paddingHorizontal: 8,
     paddingVertical: 2,
   },
+  popularText: {
+    fontSize: 8,
+    letterSpacing: 0.5,
+  },
   planPrice: {
-    marginTop: 8,
+    marginTop: Spacing.xs,
+    marginBottom: 2,
   },
   banner: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   ctaBtn: {
-    width: '100%',
-    borderRadius: 999,
-    minHeight: 52,
-    marginTop: 4,
-    marginBottom: 10,
-  },
-  ctaText: {
-    fontSize: 16,
-    fontWeight: '700',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   disclaimerRow: {
     flexDirection: 'row',
