@@ -286,8 +286,8 @@ const ScheduleCard = React.memo(function ScheduleCard({
     <View style={styles.card}>
       <View style={[styles.cardStripe, { backgroundColor: accent }]} />
       <View style={styles.cardBody}>
-        <View style={[styles.iconBox, { backgroundColor: kind.bg }]}>
-          <MaterialCommunityIcons name={icon} size={20} color={kind.color} />
+        <View style={[styles.iconBox, { backgroundColor: brandBg }]}>
+          <MaterialCommunityIcons name={icon} size={20} color={brandColor} />
         </View>
         <View style={styles.cardText}>
           <View style={styles.cardTopRow}>

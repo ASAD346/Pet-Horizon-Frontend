@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Platform,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -14,8 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { AppText } from '@/components/ui/AppText';
-import { DateFilterBar, type DatePreset, type DateRange } from '@/components/ui/DateFilterBar';
-import { Spacing, Radius, Palette } from '@/constants/theme';
+import { getPresetRange, type DatePreset, type DateRange } from '@/components/ui/DateFilterBar';
+import { Spacing, Radius, Palette, HomeTheme } from '@/constants/theme';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
@@ -32,43 +33,52 @@ interface DateSection {
   data: ApiJournalEntry[];
 }
 
-// ─── Color Maps ────────────────────────────────────────────────────────────────
+// ─── Unified Theme-based Category Colors & Icons ────────────────────────────────
+
+const AMBER  = Palette.warning;         // '#F57C00'
+const RED    = Palette.error;           // '#D32F2F'
+const RED_L  = Palette.errorLight;      // '#FFEBEE'
+const PURPLE = '#7C3AED';
+const TEAL   = HomeTheme.teal;          // '#00695C'
 
 const CATEGORY_COLORS: Record<string, { color: string; bg: string }> = {
-  food:        { color: '#D97706', bg: '#FEF3C7' },
-  walk:        { color: '#2563EB', bg: '#DBEAFE' },
-  medicine:    { color: '#7C3AED', bg: '#EDE9FE' },
-  grooming:    { color: '#0D9488', bg: '#CCFBF1' },
-  vaccination: { color: '#DB2777', bg: '#FCE7F3' },
-  general:     { color: '#4B5563', bg: '#F3F4F6' },
+  food:        { color: AMBER,        bg: Palette.warningLight },
+  walk:        { color: Palette.info, bg: Palette.infoLight },
+  medicine:    { color: PURPLE,       bg: '#EDE9FE' },
+  grooming:    { color: TEAL,         bg: '#E0F2F1' },
+  vaccination: { color: '#DB2777',    bg: '#FCE7F3' },
+  general:     { color: Palette.gray[600], bg: Palette.gray[100] },
 };
 
-// ─── Filter options ─────────────────────────────────────────────────────────────
+// ─── Options & Mappings ────────────────────────────────────────────────────────
 
-const TYPE_OPTIONS: { label: string; value: ActivityType }[] = [
-  { label: 'All',          value: 'all'        },
-  { label: '🍽 Feeding',   value: 'Feeding'    },
-  { label: '🐕 Walks',     value: 'Walk'       },
-  { label: '💊 Medicine',  value: 'Medicine'   },
-  { label: '✂️ Grooming',  value: 'Grooming'   },
-  { label: '💉 Vaccine',   value: 'Vaccination'},
+const STATUS_OPTIONS: { label: string; value: ActivityStatus; activeColor: string }[] = [
+  { label: 'All',       value: 'all',       activeColor: 'brand' as any },
+  { label: 'Completed', value: 'completed', activeColor: Palette.success },
+  { label: 'Skipped',   value: 'skipped',   activeColor: RED },
 ];
 
-const STATUS_OPTIONS: { label: string; value: ActivityStatus; color: string }[] = [
-  { label: 'All Status',  value: 'all',       color: '#1A2B4E' },
-  { label: '✓ Completed', value: 'completed', color: '#059669' },
-  { label: '✗ Skipped',   value: 'skipped',   color: '#DC2626' },
+const TYPE_OPTIONS: { label: string; value: ActivityType; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }[] = [
+  { label: 'All Types',  value: 'all',        icon: 'view-list' },
+  { label: 'Feeding',    value: 'Feeding',    icon: 'silverware-fork-knife' },
+  { label: 'Walks',      value: 'Walk',       icon: 'walk' },
+  { label: 'Medicine',   value: 'Medicine',   icon: 'pill' },
+  { label: 'Grooming',   value: 'Grooming',   icon: 'content-cut' },
+  { label: 'Vaccines',   value: 'Vaccination',icon: 'needle' },
 ];
 
-const DATE_PRESETS = [
-  { label: 'All Time', value: 'all' as DatePreset },
-  { label: 'Today',    value: 'today' as DatePreset },
-  { label: '7 Days',   value: 'last7' as DatePreset },
-  { label: '30 Days',  value: 'last30' as DatePreset },
-  { label: 'Custom',   value: 'custom' as DatePreset },
-];
+const DATE_LABELS: Record<DatePreset, string> = {
+  all:       'All Time',
+  today:     'Today',
+  yesterday: 'Yesterday',
+  last7:     '7 Days',
+  last30:    '30 Days',
+  custom:    'Custom',
+};
 
-// ─── Date grouping helpers ──────────────────────────────────────────────────────
+const DATE_PRESETS: DatePreset[] = ['all', 'today', 'yesterday', 'last7', 'last30'];
+
+// ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function getDateKey(dateStr: string): string {
   const d = new Date(dateStr);
@@ -106,7 +116,6 @@ function groupByDate(items: ApiJournalEntry[]): DateSection[] {
     );
     sections.push({ title: getSectionTitle(sorted[0].createdAt), data: sorted });
   }
-  // Sort sections newest-first
   sections.sort((a, b) => {
     const aTs = new Date(a.data[0].createdAt).getTime();
     const bTs = new Date(b.data[0].createdAt).getTime();
@@ -119,11 +128,118 @@ function isEntrySkipped(entry: ApiJournalEntry): boolean {
   return (entry.note || '').toLowerCase().startsWith('skipped');
 }
 
+// ─── Type Dropdown Bottom Sheet ────────────────────────────────────────────────
+
+function TypeSheet({
+  visible,
+  selected,
+  brandColor,
+  brandBg,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  selected: ActivityType;
+  brandColor: string;
+  brandBg: string;
+  onSelect: (v: ActivityType) => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={sheet.overlay} activeOpacity={1} onPress={onClose} />
+      <View style={sheet.panel}>
+        <View style={sheet.handle} />
+        <AppText variant="bodySmall" weight="700" color={HomeTheme.text} style={sheet.sheetTitle}>
+          Filter by Activity
+        </AppText>
+        {TYPE_OPTIONS.map((opt) => {
+          const active = opt.value === selected;
+          const category = mapActivityTypeToCategory(opt.value);
+          const kind = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.general;
+          return (
+            <TouchableOpacity
+              key={opt.value}
+              onPress={() => { onSelect(opt.value); onClose(); }}
+              activeOpacity={0.75}
+              style={[sheet.row, active && { backgroundColor: brandBg }]}
+            >
+              <View style={[sheet.rowIcon, { backgroundColor: active ? brandBg : kind.bg }]}>
+                <MaterialCommunityIcons name={opt.icon} size={18} color={active ? brandColor : kind.color} />
+              </View>
+              <AppText variant="body" weight={active ? '700' : '500'} color={active ? brandColor : HomeTheme.text}>
+                {opt.label}
+              </AppText>
+              {active ? <Ionicons name="checkmark" size={18} color={brandColor} style={{ marginLeft: 'auto' as any }} /> : null}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </Modal>
+  );
+}
+
+// ─── Date Dropdown Bottom Sheet ────────────────────────────────────────────────
+
+function DateSheet({
+  visible,
+  selected,
+  brandColor,
+  brandBg,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  selected: DatePreset;
+  brandColor: string;
+  brandBg: string;
+  onSelect: (preset: DatePreset, range: DateRange) => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <TouchableOpacity style={sheet.overlay} activeOpacity={1} onPress={onClose} />
+      <View style={sheet.panel}>
+        <View style={sheet.handle} />
+        <AppText variant="bodySmall" weight="700" color={HomeTheme.text} style={sheet.sheetTitle}>
+          Date Range
+        </AppText>
+        {DATE_PRESETS.map((preset) => {
+          const active = preset === selected;
+          return (
+            <TouchableOpacity
+              key={preset}
+              onPress={() => { onSelect(preset, getPresetRange(preset)); onClose(); }}
+              activeOpacity={0.75}
+              style={[sheet.row, active && { backgroundColor: brandBg }]}
+            >
+              <View style={[sheet.rowIcon, { backgroundColor: active ? brandBg : Palette.gray[100] }]}>
+                <Ionicons name="calendar-outline" size={18} color={active ? brandColor : Palette.gray[500]} />
+              </View>
+              <AppText variant="body" weight={active ? '700' : '500'} color={active ? brandColor : HomeTheme.text}>
+                {DATE_LABELS[preset]}
+              </AppText>
+              {active ? <Ionicons name="checkmark" size={18} color={brandColor} style={{ marginLeft: 'auto' as any }} /> : null}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </Modal>
+  );
+}
+
 // ─── Activity Card ─────────────────────────────────────────────────────────────
 
-const ActivityCard = React.memo(function ActivityCard({ entry }: { entry: ApiJournalEntry }) {
+const ActivityCard = React.memo(function ActivityCard({
+  entry,
+  brandColor,
+  brandBg,
+}: {
+  entry: ApiJournalEntry;
+  brandColor: string;
+  brandBg: string;
+}) {
   const category = mapActivityTypeToCategory(entry.activityType);
-  const { color, bg } = CATEGORY_COLORS[category] ?? CATEGORY_COLORS.general;
   const icon = categoryToMaterialIcon(category) as React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   const skipped = isEntrySkipped(entry);
 
@@ -133,25 +249,25 @@ const ActivityCard = React.memo(function ActivityCard({ entry }: { entry: ApiJou
   let noteText = (entry.note || '').trim();
   if (noteText.length > 0) noteText = noteText.charAt(0).toUpperCase() + noteText.slice(1);
 
-  const statusColor = skipped ? '#DC2626' : '#059669';
-  const statusBg = skipped ? '#FEE2E2' : '#D1FAE5';
-  const statusLabel = skipped ? 'SKIPPED' : 'DONE';
+  const statusColor = skipped ? RED : Palette.success;
+  const statusBg = skipped ? RED_L : Palette.successLight;
+  const statusLabel = skipped ? 'SKIPPED' : 'COMPLETED';
 
   return (
     <View style={styles.card}>
-      {/* Left color stripe */}
-      <View style={[styles.cardStripe, { backgroundColor: color }]} />
+      {/* Left stripe corresponds to status (Completed = green, Skipped = red) */}
+      <View style={[styles.cardStripe, { backgroundColor: statusColor }]} />
 
       <View style={styles.cardBody}>
-        {/* Icon */}
-        <View style={[styles.iconBox, { backgroundColor: bg }]}>
-          <MaterialCommunityIcons name={icon} size={22} color={color} />
+        {/* Brand themed icon box */}
+        <View style={[styles.iconBox, { backgroundColor: brandBg }]}>
+          <MaterialCommunityIcons name={icon} size={20} color={brandColor} />
         </View>
 
-        {/* Text */}
+        {/* Text and Badges */}
         <View style={styles.cardText}>
           <View style={styles.cardTitleRow}>
-            <AppText variant="body" weight="700" color="#1A1A2E" style={styles.cardTitle} numberOfLines={1}>
+            <AppText variant="bodySmall" weight="700" color={HomeTheme.text} style={styles.cardTitle} numberOfLines={1}>
               {entry.activityType || 'Activity'}
             </AppText>
             <View style={[styles.badge, { backgroundColor: statusBg }]}>
@@ -161,15 +277,17 @@ const ActivityCard = React.memo(function ActivityCard({ entry }: { entry: ApiJou
             </View>
           </View>
 
+          {/* Subtitle / Note */}
           {noteText ? (
-            <AppText variant="caption" color="#6B7280" numberOfLines={2} style={styles.noteText}>
+            <AppText variant="caption" color={Palette.gray[600]} numberOfLines={2} style={styles.noteText}>
               {noteText}
             </AppText>
           ) : null}
 
+          {/* Time row */}
           <View style={styles.timeRow}>
-            <Ionicons name="time-outline" size={11} color="#9CA3AF" />
-            <AppText variant="caption" color="#9CA3AF" style={styles.timeText}>{timeStr}</AppText>
+            <Ionicons name="time-outline" size={11} color={Palette.gray[400]} />
+            <AppText variant="caption" color={Palette.gray[500]} style={styles.timeText}>{timeStr}</AppText>
           </View>
         </View>
       </View>
@@ -183,11 +301,11 @@ const SectionDateHeader = React.memo(function SectionDateHeader({ title }: { tit
   const isToday = title === 'Today';
   return (
     <View style={styles.sectionHeader}>
-      <View style={[styles.sectionDot, { backgroundColor: isToday ? '#2E7D32' : '#D1D5DB' }]} />
+      <View style={[styles.sectionDot, { backgroundColor: isToday ? Palette.success : Palette.gray[300] }]} />
       <AppText
         variant="bodySmall"
         weight="700"
-        color={isToday ? '#2E7D32' : '#6B7280'}
+        color={isToday ? Palette.success : Palette.gray[600]}
         style={styles.sectionTitle}
       >
         {title}
@@ -197,69 +315,34 @@ const SectionDateHeader = React.memo(function SectionDateHeader({ title }: { tit
   );
 });
 
-// ─── Filter Chips ──────────────────────────────────────────────────────────────
-
-function FilterRow<T extends string>({
-  options,
-  selected,
-  onChange,
-  accentColor = '#2E7D32',
-}: {
-  options: { label: string; value: T; color?: string }[];
-  selected: T;
-  onChange: (v: T) => void;
-  accentColor?: string;
-}) {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipRow}>
-      {options.map((opt) => {
-        const active = opt.value === selected;
-        const accent = opt.color ?? accentColor;
-        return (
-          <TouchableOpacity
-            key={opt.value}
-            onPress={() => onChange(opt.value)}
-            activeOpacity={0.75}
-            style={[
-              styles.filterChip,
-              active
-                ? { backgroundColor: accent, borderColor: accent }
-                : { backgroundColor: '#F5F5F5', borderColor: '#E5E5E5' },
-            ]}
-          >
-            <AppText
-              variant="caption"
-              weight={active ? '700' : '500'}
-              color={active ? '#FFFFFF' : '#616161'}
-              style={styles.chipText}
-            >
-              {opt.label}
-            </AppText>
-          </TouchableOpacity>
-        );
-      })}
-    </ScrollView>
-  );
-}
-
 // ─── Empty State ───────────────────────────────────────────────────────────────
 
-function ActivityEmptyState({ onReset, hasFilters }: { onReset: () => void; hasFilters: boolean }) {
+function ActivityEmptyState({
+  onReset,
+  hasFilters,
+  brandColor,
+  brandBg,
+}: {
+  onReset: () => void;
+  hasFilters: boolean;
+  brandColor: string;
+  brandBg: string;
+}) {
   return (
     <View style={styles.emptyWrap}>
-      <View style={styles.emptyIconCircle}>
-        <MaterialCommunityIcons name="clipboard-text-clock-outline" size={40} color="#2E7D32" />
+      <View style={[styles.emptyIconCircle, { backgroundColor: brandBg }]}>
+        <MaterialCommunityIcons name="clipboard-text-clock-outline" size={38} color={brandColor} />
       </View>
-      <AppText variant="h3" weight="700" color="#1A1A2E" style={styles.emptyTitle}>
+      <AppText variant="h3" weight="700" color={HomeTheme.text} style={styles.emptyTitle}>
         No Activities Found
       </AppText>
-      <AppText variant="bodySmall" color="#6B7280" align="center" style={styles.emptyDesc}>
+      <AppText variant="bodySmall" color={Palette.gray[600]} align="center" style={styles.emptyDesc}>
         {hasFilters
           ? 'No activities match the selected filters.'
           : 'Completed pet care activities will appear here once logged.'}
       </AppText>
       {hasFilters ? (
-        <TouchableOpacity onPress={onReset} style={styles.resetBtn} activeOpacity={0.8}>
+        <TouchableOpacity onPress={onReset} style={[styles.resetBtn, { backgroundColor: brandColor }]} activeOpacity={0.8}>
           <AppText variant="bodySmall" weight="700" color="#FFFFFF">Reset Filters</AppText>
         </TouchableOpacity>
       ) : null}
@@ -273,13 +356,20 @@ export default function ActivityHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { clearance: tabBarClearance } = useTabBarLayout();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { pet } = useActivePet(token);
+
+  // Free vs Premium brand color mapping
+  const isPremium = user?.premiumStatus === 'premium';
+  const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
+  const brandBg    = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
 
   const [type, setType] = useState<ActivityType>('all');
   const [status, setStatus] = useState<ActivityStatus>('all');
   const [datePreset, setDatePreset] = useState<DatePreset>('all');
   const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
+  const [typeSheetOpen, setTypeSheetOpen] = useState(false);
+  const [dateSheetOpen, setDateSheetOpen] = useState(false);
 
   const filters: ActivityHistoryFilters = { type, status, datePreset, customRange };
 
@@ -305,8 +395,8 @@ export default function ActivityHistoryScreen() {
   const sections = useMemo(() => groupByDate(items), [items]);
 
   const renderItem = useCallback(({ item }: { item: ApiJournalEntry }) => (
-    <ActivityCard entry={item} />
-  ), []);
+    <ActivityCard entry={item} brandColor={brandColor} brandBg={brandBg} />
+  ), [brandColor, brandBg]);
 
   const renderSectionHeader = useCallback(({ section }: { section: DateSection }) => (
     <SectionDateHeader title={section.title} />
@@ -314,40 +404,8 @@ export default function ActivityHistoryScreen() {
 
   const keyExtractor = useCallback((item: ApiJournalEntry) => item._id, []);
 
-  const FilterHeader = useMemo(() => (
-    <View style={styles.filterSection}>
-      <View style={styles.filterBlock}>
-        <AppText variant="caption" weight="700" color="#9CA3AF" style={styles.filterSectionLabel}>
-          ACTIVITY TYPE
-        </AppText>
-        <FilterRow options={TYPE_OPTIONS} selected={type} onChange={setType} />
-      </View>
-
-      <View style={styles.filterBlock}>
-        <AppText variant="caption" weight="700" color="#9CA3AF" style={styles.filterSectionLabel}>
-          STATUS
-        </AppText>
-        <FilterRow
-          options={STATUS_OPTIONS}
-          selected={status}
-          onChange={setStatus}
-          accentColor="#1A2B4E"
-        />
-      </View>
-
-      <View style={styles.filterBlock}>
-        <AppText variant="caption" weight="700" color="#9CA3AF" style={styles.filterSectionLabel}>
-          DATE RANGE
-        </AppText>
-        <DateFilterBar
-          selected={datePreset}
-          customRange={customRange}
-          onChange={handleDateChange}
-          presets={DATE_PRESETS}
-        />
-      </View>
-    </View>
-  ), [type, status, datePreset, customRange, handleDateChange]);
+  const activeTypeName = TYPE_OPTIONS.find((t) => t.value === type)?.label ?? 'Type';
+  const activeDateName = DATE_LABELS[datePreset] ?? 'Date';
 
   return (
     <View style={styles.root}>
@@ -357,6 +415,108 @@ export default function ActivityHistoryScreen() {
         onBack={() => router.back()}
       />
 
+      {/* Single-row filters header */}
+      <View style={styles.filterHeaderWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContent}
+        >
+          {/* Status pills */}
+          {STATUS_OPTIONS.map((opt) => {
+            const active = status === opt.value;
+            const activeColor = opt.activeColor === 'brand' ? brandColor : opt.activeColor;
+            const activeBg = opt.activeColor === 'brand' ? brandBg : `${opt.activeColor}15`;
+
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                activeOpacity={0.8}
+                onPress={() => setStatus(opt.value)}
+                style={[
+                  styles.filterPill,
+                  active
+                    ? { backgroundColor: activeColor, borderColor: activeColor }
+                    : { backgroundColor: '#FFF', borderColor: Palette.gray[200] },
+                ]}
+              >
+                <AppText
+                  variant="caption"
+                  weight={active ? '700' : '600'}
+                  color={active ? '#FFF' : Palette.gray[700]}
+                >
+                  {opt.label}
+                </AppText>
+              </TouchableOpacity>
+            );
+          })}
+
+          <View style={styles.filterDivider} />
+
+          {/* Type dropdown */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setTypeSheetOpen(true)}
+            style={[
+              styles.dropdownButton,
+              type !== 'all' && { backgroundColor: brandBg, borderColor: brandColor },
+            ]}
+          >
+            <AppText
+              variant="caption"
+              weight={type !== 'all' ? '700' : '600'}
+              color={type !== 'all' ? brandColor : Palette.gray[700]}
+            >
+              {activeTypeName}
+            </AppText>
+            <Ionicons
+              name="chevron-down"
+              size={12}
+              color={type !== 'all' ? brandColor : Palette.gray[500]}
+              style={{ marginLeft: 4 }}
+            />
+          </TouchableOpacity>
+
+          {/* Date Range dropdown */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={() => setDateSheetOpen(true)}
+            style={[
+              styles.dropdownButton,
+              datePreset !== 'all' && { backgroundColor: brandBg, borderColor: brandColor },
+            ]}
+          >
+            <AppText
+              variant="caption"
+              weight={datePreset !== 'all' ? '700' : '600'}
+              color={datePreset !== 'all' ? brandColor : Palette.gray[700]}
+            >
+              {activeDateName}
+            </AppText>
+            <Ionicons
+              name="chevron-down"
+              size={12}
+              color={datePreset !== 'all' ? brandColor : Palette.gray[500]}
+              style={{ marginLeft: 4 }}
+            />
+          </TouchableOpacity>
+
+          {/* Clear button */}
+          {hasFilters && (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={resetFilters}
+              style={styles.clearFiltersBtn}
+            >
+              <Ionicons name="close-circle" size={16} color={brandColor} />
+              <AppText variant="caption" weight="700" color={brandColor}>
+                Clear
+              </AppText>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </View>
+
       <SectionList
         sections={sections}
         keyExtractor={keyExtractor}
@@ -365,13 +525,12 @@ export default function ActivityHistoryScreen() {
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View>
-            {FilterHeader}
-            {/* Summary row */}
+            {/* Summary count row */}
             {!isLoading && items.length > 0 ? (
               <View style={styles.summaryRow}>
-                <View style={styles.summaryBadge}>
-                  <MaterialCommunityIcons name="history" size={13} color="#2E7D32" />
-                  <AppText variant="caption" weight="700" color="#2E7D32" style={styles.summaryText}>
+                <View style={[styles.summaryBadge, { backgroundColor: brandBg }]}>
+                  <MaterialCommunityIcons name="history" size={13} color={brandColor} />
+                  <AppText variant="caption" weight="700" color={brandColor} style={styles.summaryText}>
                     {items.length} {items.length === 1 ? 'activity' : 'activities'}
                     {hasFilters ? ' (filtered)' : ''}
                   </AppText>
@@ -390,22 +549,46 @@ export default function ActivityHistoryScreen() {
         ListFooterComponent={
           isLoading && items.length > 0 ? (
             <View style={styles.footerLoader}>
-              <ActivityIndicator size="small" color={Palette.success} />
+              <ActivityIndicator size="small" color={brandColor} />
             </View>
           ) : null
         }
         ListEmptyComponent={
           isLoading ? (
             <View style={styles.centerLoader}>
-              <ActivityIndicator size="large" color={Palette.success} />
-              <AppText variant="bodySmall" color="#9CA3AF" style={{ marginTop: Spacing.sm }}>
+              <ActivityIndicator size="large" color={brandColor} />
+              <AppText variant="bodySmall" color={Palette.gray[400]} style={{ marginTop: Spacing.sm }}>
                 Loading activities…
               </AppText>
             </View>
           ) : (
-            <ActivityEmptyState onReset={resetFilters} hasFilters={hasFilters} />
+            <ActivityEmptyState
+              onReset={resetFilters}
+              hasFilters={hasFilters}
+              brandColor={brandColor}
+              brandBg={brandBg}
+            />
           )
         }
+      />
+
+      {/* Sheets */}
+      <TypeSheet
+        visible={typeSheetOpen}
+        selected={type}
+        brandColor={brandColor}
+        brandBg={brandBg}
+        onSelect={setType}
+        onClose={() => setTypeSheetOpen(false)}
+      />
+
+      <DateSheet
+        visible={dateSheetOpen}
+        selected={datePreset}
+        brandColor={brandColor}
+        brandBg={brandBg}
+        onSelect={handleDateChange}
+        onClose={() => setDateSheetOpen(false)}
       />
     </View>
   );
@@ -414,32 +597,105 @@ export default function ActivityHistoryScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const CARD_SHADOW = Platform.select({
-  ios: { shadowColor: '#1A2B4E', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8 },
+  ios: { shadowColor: '#1A2B4E', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
   android: { elevation: 2 },
+});
+
+const sheet = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  panel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: Spacing.sm,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    paddingHorizontal: Spacing.md,
+  },
+  handle: {
+    width: 38,
+    height: 4,
+    backgroundColor: Palette.gray[300],
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: Spacing.md,
+  },
+  sheetTitle: {
+    marginBottom: Spacing.md,
+    fontSize: 14,
+    letterSpacing: 0.2,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: Radius.md,
+    marginBottom: 4,
+  },
+  rowIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
 });
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#F5F6F8' },
 
-  // ── Filter section ────────────────────────────────────────────
-  filterSection: {
+  // ── Single-row filters header ─────────────────────────────────
+  filterHeaderWrap: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderColor: '#F0F0F0',
-    paddingBottom: Spacing.xs,
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6 },
-      android: { elevation: 2 },
-    }),
+    borderColor: '#EAEAEA',
+    paddingVertical: 8,
   },
-  filterBlock: { paddingHorizontal: Spacing.md, paddingTop: Spacing.sm },
-  filterSectionLabel: { letterSpacing: 0.7, marginBottom: 5, fontSize: 10 },
-  chipRow: { flexDirection: 'row', gap: 6, paddingBottom: 4, paddingHorizontal: 2 },
-  filterChip: {
-    paddingHorizontal: 12, paddingVertical: 7,
-    borderRadius: Radius.full, borderWidth: 1.5,
+  filterScrollContent: {
+    paddingHorizontal: Spacing.md,
+    alignItems: 'center',
+    gap: 8,
   },
-  chipText: { fontSize: 12 },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Palette.gray[200],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterDivider: {
+    width: 1,
+    height: 18,
+    backgroundColor: Palette.gray[300],
+    marginHorizontal: 4,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: Palette.gray[200],
+    backgroundColor: '#FFFFFF',
+  },
+  clearFiltersBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingLeft: 6,
+    paddingRight: 4,
+  },
 
   // ── Summary row ──────────────────────────────────────────────
   summaryRow: {
@@ -452,7 +708,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     alignSelf: 'flex-start',
-    backgroundColor: '#E8F5E9',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: Radius.full,
@@ -494,7 +749,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     ...CARD_SHADOW,
   },
-  cardStripe: { width: 4 },
+  cardStripe: { width: 5 },
   cardBody: {
     flex: 1,
     flexDirection: 'row',
@@ -524,14 +779,13 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 9, letterSpacing: 0.5 },
   noteText: { lineHeight: 17 },
-  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  timeRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   timeText: { fontSize: 11 },
 
   // ── Empty / loader ───────────────────────────────────────────
   emptyWrap: { alignItems: 'center', paddingHorizontal: Spacing.xl, paddingTop: Spacing.xxl },
   emptyIconCircle: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: '#E8F5E9',
     alignItems: 'center', justifyContent: 'center',
     marginBottom: Spacing.md,
   },
@@ -539,7 +793,7 @@ const styles = StyleSheet.create({
   emptyDesc: { lineHeight: 20, marginBottom: Spacing.lg, maxWidth: 260, textAlign: 'center' },
   resetBtn: {
     paddingHorizontal: Spacing.xl, paddingVertical: 12,
-    borderRadius: Radius.full, backgroundColor: '#2E7D32',
+    borderRadius: Radius.full,
   },
   footerLoader: { paddingVertical: Spacing.lg, alignItems: 'center' },
   centerLoader: { paddingVertical: Spacing.xxl, alignItems: 'center' },
