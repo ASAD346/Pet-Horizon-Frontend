@@ -48,22 +48,12 @@ export function HomeHeader({
   // Extract initial for avatar badge
   const userInitial = userName.trim().charAt(0).toUpperCase();
 
-  // Vibrant brand green for Free, luxurious dark emerald for Premium
-  const gradientColors = isPremium
-    ? (['#0E331E', '#184F2E', '#226D3F'] as const)
-    : (['#2E7D32', '#3D8C40'] as const);
-
-  const shadowColor = isPremium ? '#081D11' : '#1B5E20';
-
   return (
-    <View style={[styles.wrapper, { shadowColor }]}>
+    <View style={styles.wrapper}>
       <View style={styles.curveClipper}>
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
           style={[
-            styles.gradient,
+            styles.headerBody,
             {
               paddingTop: topInset + 14,
               paddingLeft: safeLeft,
@@ -75,9 +65,9 @@ export function HomeHeader({
           <View style={styles.row}>
             <View style={styles.leftContainer}>
               {/* User Initial Double-Ring Avatar Badge */}
-              <View style={[styles.avatarOuterRing, isPremium && { borderColor: 'rgba(212, 160, 23, 0.45)' }]}>
-                <View style={styles.avatarInnerContainer}>
-                  <AppText weight="800" style={styles.avatarText}>
+              <View style={[styles.avatarOuterRing, isPremium ? { borderColor: '#D4A017' } : { borderColor: 'rgba(0,0,0,0.08)' }]}>
+                <View style={[styles.avatarInnerContainer, isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.08)' } : { backgroundColor: '#F1F5F9' }]}>
+                  <AppText weight="800" style={[styles.avatarText, isPremium ? { color: '#D4A017' } : { color: '#1C1F24' }]}>
                     {userInitial}
                   </AppText>
                 </View>
@@ -88,18 +78,18 @@ export function HomeHeader({
                 <AppText
                   variant="bodySmall"
                   weight="800"
-                  color="#FFFFFF"
+                  color="#1C1F24"
                   style={styles.greetingText}
                   numberOfLines={1}
                 >
                   {greeting}
                 </AppText>
-                <View style={[styles.dateChip, isPremium && { borderColor: 'rgba(212, 160, 23, 0.35)', backgroundColor: 'rgba(255, 255, 255, 0.08)' }]}>
-                  <MaterialCommunityIcons name="calendar-today" size={10} color={isPremium ? '#D4A017' : '#FFFFFF'} />
+                <View style={[styles.dateChip, isPremium ? { borderColor: 'rgba(212, 160, 23, 0.35)', backgroundColor: 'rgba(212, 160, 23, 0.04)' } : { borderColor: 'rgba(0,0,0,0.06)', backgroundColor: '#F8FAF8' }]}>
+                  <MaterialCommunityIcons name="calendar-today" size={10} color={isPremium ? '#D4A017' : '#2E7D32'} />
                   <AppText
                     variant="caption"
                     weight="800"
-                    color="#FFFFFF"
+                    color={isPremium ? '#D4A017' : '#2E7D32'}
                     style={styles.dateText}
                     numberOfLines={1}
                   >
@@ -115,13 +105,13 @@ export function HomeHeader({
               onJournalPress={onJournalPress}
               onNotificationsPress={onNotificationsPress}
               showJournal={showJournal}
-              dark
+              dark={false}
             />
           </View>
 
           {/* Ultra-thin bottom accent line */}
-          <View style={[styles.divider, isPremium && { backgroundColor: 'rgba(212, 160, 23, 0.3)' }]} />
-        </LinearGradient>
+          <View style={[styles.divider, isPremium ? { backgroundColor: '#D4A017' } : { backgroundColor: 'rgba(0,0,0,0.06)' }]} />
+        </View>
       </View>
     </View>
   );
@@ -135,25 +125,26 @@ const styles = StyleSheet.create({
     overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
       },
-      android: { elevation: 6 },
+      android: { elevation: 3 },
     }),
   },
   curveClipper: {
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
     overflow: 'hidden',
-    backgroundColor: '#F1F7F1', // Solid background color is required on Android to trigger border radius clipping on child views
+    backgroundColor: '#FFFFFF',
   },
-  gradient: {
-    // paddingTop / paddingLeft / paddingRight set inline
+  headerBody: {
     paddingBottom: 0,
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
   },
   row: {
     flexDirection: 'row',
@@ -172,7 +163,6 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.45)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -180,12 +170,10 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarText: {
-    color: '#FFFFFF',
     fontSize: 16,
     lineHeight: 20,
   },
@@ -202,12 +190,10 @@ const styles = StyleSheet.create({
   dateChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     alignSelf: 'flex-start',
     marginTop: 3,
   },
@@ -218,7 +204,5 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    opacity: 1,
   },
 });

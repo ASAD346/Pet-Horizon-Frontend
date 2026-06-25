@@ -25,13 +25,13 @@ export function AppText({
 
   const getVariantStyle = (): TextStyle => {
     switch (variant) {
-      case 'h1': return { fontSize: 32, fontWeight: weight || '700', lineHeight: 40 };
-      case 'h2': return { fontSize: 24, fontWeight: weight || '700', lineHeight: 32 };
-      case 'h3': return { fontSize: 20, fontWeight: weight || '600', lineHeight: 28 };
-      case 'bodySmall': return { fontSize: 14, lineHeight: 20 };
-      case 'caption': return { fontSize: 12, lineHeight: 16 };
+      case 'h1': return { fontSize: 28, fontWeight: weight || '700', lineHeight: 34, letterSpacing: -0.5 };
+      case 'h2': return { fontSize: 22, fontWeight: weight || '700', lineHeight: 28, letterSpacing: -0.3 };
+      case 'h3': return { fontSize: 18, fontWeight: weight || '600', lineHeight: 24, letterSpacing: -0.2 };
+      case 'bodySmall': return { fontSize: 13, lineHeight: 18 };
+      case 'caption': return { fontSize: 11, lineHeight: 15, letterSpacing: 0.1 };
       case 'body':
-      default: return { fontSize: 16, lineHeight: 24 };
+      default: return { fontSize: 15, lineHeight: 22, letterSpacing: -0.1 };
     }
   };
 

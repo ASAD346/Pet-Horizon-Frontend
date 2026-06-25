@@ -243,14 +243,14 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   return (
     <View style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
       {isDone ? (
-        <ColorIconBadge color={iconColor} completed size={44} iconSize={24} shape="circle" />
+        <ColorIconBadge color={iconColor} completed size={36} iconSize={18} shape="circle" />
       ) : (
         <ColorIconBadge
           color={iconColor}
           backgroundColor={iconBg}
           materialIcon={rowIcon(row)}
-          size={44}
-          iconSize={22}
+          size={36}
+          iconSize={18}
         />
       )}
       <View style={styles.textBlock}>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '../ui/AppText';
@@ -26,24 +25,15 @@ export function FamilyHubHeader({
 }: FamilyHubHeaderProps) {
   const insets = useSafeAreaInsets();
 
-  // Mirror HomeHeader: premium = dark emerald, free = vibrant brand green
-  const gradientColors = isPremium
-    ? (['#0E3821', '#184F2E', '#267343'] as const)
-    : (['#3A8F3B', '#5CB35D'] as const);
-
-  const shadowColor = isPremium ? '#082113' : '#1B5E20';
   const safeLeft = Math.max(insets.left, Spacing.lg);
   const safeRight = Math.max(insets.right, Spacing.lg);
 
   return (
-    <View style={[styles.wrapper, { shadowColor }]}>
+    <View style={styles.wrapper}>
       <View style={styles.curveClipper}>
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+        <View
           style={[
-            styles.gradient,
+            styles.headerBody,
             {
               paddingTop: topInset + 14,
               paddingLeft: safeLeft,
@@ -51,21 +41,22 @@ export function FamilyHubHeader({
             },
           ]}
         >
-          {/* Decorative background rings */}
-          <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <View style={styles.bgRing1} />
-            <View style={styles.bgRing2} />
-          </View>
-
           <View style={styles.row}>
             {/* Left: family/people icon badge + text */}
             <View style={styles.leftContainer}>
               <View style={[
                 styles.iconOuterRing,
-                isPremium && { borderColor: 'rgba(212, 160, 23, 0.45)' }
+                isPremium ? { borderColor: '#D4A017' } : { borderColor: 'rgba(0,0,0,0.08)' }
               ]}>
-                <View style={styles.iconInnerContainer}>
-                  <MaterialCommunityIcons name="account-group-outline" size={18} color="#FFFFFF" />
+                <View style={[
+                  styles.iconInnerContainer,
+                  isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.08)' } : { backgroundColor: '#F1F5F9' }
+                ]}>
+                  <MaterialCommunityIcons 
+                    name="account-group-outline" 
+                    size={18} 
+                    color={isPremium ? '#D4A017' : '#1C1F24'} 
+                  />
                 </View>
               </View>
 
@@ -73,7 +64,7 @@ export function FamilyHubHeader({
                 <AppText
                   variant="bodySmall"
                   weight="800"
-                  color="#FFFFFF"
+                  color="#1C1F24"
                   style={styles.title}
                   numberOfLines={1}
                 >
@@ -81,12 +72,20 @@ export function FamilyHubHeader({
                 </AppText>
                 <View style={[
                   styles.eyebrowChip,
-                  isPremium && {
+                  isPremium ? {
                     borderColor: 'rgba(212, 160, 23, 0.35)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    backgroundColor: 'rgba(212, 160, 23, 0.04)',
+                  } : {
+                    borderColor: 'rgba(0,0,0,0.06)',
+                    backgroundColor: '#F8FAF8',
                   },
                 ]}>
-                  <AppText variant="caption" weight="800" color="#FFFFFF" style={styles.eyebrowText}>
+                  <AppText 
+                    variant="caption" 
+                    weight="800" 
+                    color={isPremium ? '#D4A017' : '#2E7D32'} 
+                    style={styles.eyebrowText}
+                  >
                     COLLABORATE
                   </AppText>
                 </View>
@@ -99,16 +98,16 @@ export function FamilyHubHeader({
               onNotificationsPress={onNotificationsPress}
               onJournalPress={onJournalPress}
               showJournal={showJournal}
-              dark
+              dark={false}
             />
           </View>
 
           {/* Bottom accent line */}
           <View style={[
             styles.divider,
-            isPremium && { backgroundColor: 'rgba(212, 160, 23, 0.3)' },
+            isPremium ? { backgroundColor: '#D4A017' } : { backgroundColor: 'rgba(0,0,0,0.06)' },
           ]} />
-        </LinearGradient>
+        </View>
       </View>
     </View>
   );
@@ -122,42 +121,26 @@ const styles = StyleSheet.create({
     overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
       },
-      android: { elevation: 6 },
+      android: { elevation: 3 },
     }),
   },
   curveClipper: {
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
     overflow: 'hidden',
-    backgroundColor: '#F1F7F1',
+    backgroundColor: '#FFFFFF',
   },
-  gradient: {
+  headerBody: {
     paddingBottom: 0,
     borderBottomLeftRadius: 26,
     borderBottomRightRadius: 26,
     overflow: 'hidden',
-  },
-  bgRing1: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    top: -60,
-    right: -40,
-  },
-  bgRing2: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    bottom: -40,
-    left: -20,
+    backgroundColor: '#FFFFFF',
   },
   row: {
     flexDirection: 'row',
@@ -176,7 +159,6 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.45)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -184,7 +166,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.22)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -201,12 +182,10 @@ const styles = StyleSheet.create({
   eyebrowChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
     alignSelf: 'flex-start',
     marginTop: 3,
   },
@@ -217,6 +196,5 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
   },
 });

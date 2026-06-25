@@ -124,20 +124,21 @@ export function FamilyOverviewCard({
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md,
     borderRadius: Radius.xl,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.25,
-        shadowRadius: 12,
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
       },
-      android: { elevation: 6 },
+      android: { elevation: 3 },
     }),
   },
   card: {
     borderRadius: Radius.xl,
-    padding: Spacing.lg,
+    padding: Spacing.md,
     overflow: 'hidden',
   },
   bgRing1: {
@@ -160,41 +161,41 @@ const styles = StyleSheet.create({
   },
   proBadge: {
     position: 'absolute',
-    top: Spacing.md,
-    right: Spacing.md,
+    top: Spacing.xs,
+    right: Spacing.xs,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: 'rgba(255, 255, 255, 0.16)',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: Radius.full,
   },
   proStar: {
     marginTop: -1,
   },
   proText: {
-    fontSize: 10,
+    fontSize: 9,
     letterSpacing: 0.8,
     fontWeight: '800',
   },
   familyName: {
-    marginTop: Spacing.xs,
-    marginBottom: 4,
-    fontSize: 20,
+    marginTop: 0,
+    marginBottom: 2,
+    fontSize: 18,
   },
   stats: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   codeBox: {
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.sm,
     borderWidth: 1,
   },
   codeTextBlock: {
@@ -202,15 +203,17 @@ const styles = StyleSheet.create({
   },
   codeLabel: {
     letterSpacing: 1,
-    marginBottom: 4,
-    fontSize: 10,
+    marginBottom: 2,
+    fontSize: 9,
   },
   codeValue: {
     letterSpacing: 1.5,
+    fontSize: 16,
+    lineHeight: 20,
   },
   shareBtn: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     borderRadius: Radius.md,
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
@@ -219,7 +222,7 @@ const styles = StyleSheet.create({
   inviteBtn: {
     width: '100%',
     borderRadius: Radius.full,
-    minHeight: 52,
+    minHeight: 40,
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.25)',
@@ -229,7 +232,7 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212,160,23,0.4)',
   },
   inviteBtnText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
   },
 });

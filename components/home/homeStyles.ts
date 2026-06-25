@@ -17,12 +17,12 @@ export const homePillCard = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 10,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
     marginHorizontal: 4, // prevents Android shadow clipping
-    minHeight: 74,
+    minHeight: 56,
     ...homeCardShadow,
   },
 });

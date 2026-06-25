@@ -22,18 +22,12 @@ type TabIconProps = {
 function TabIcon({ focused, activeIcon, inactiveIcon }: TabIconProps) {
   return (
     <View style={styles.tabSlot}>
-      {focused ? (
-        <LinearGradient
-          colors={['#3A8F3B', '#5CB35D']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.tabCircleActive}
-        >
-          <Ionicons name={activeIcon} size={TAB_ICON_SIZE} color={HomeTheme.white} />
-        </LinearGradient>
-      ) : (
-        <Ionicons name={inactiveIcon} size={TAB_INACTIVE_ICON_SIZE} color="#7A869A" />
-      )}
+      <Ionicons
+        name={focused ? activeIcon : inactiveIcon}
+        size={24}
+        color={focused ? '#2E7D32' : '#94A3B8'}
+      />
+      {focused ? <View style={styles.activeDot} /> : null}
     </View>
   );
 }
@@ -123,9 +117,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    backgroundColor: HomeTheme.surface,
-    borderWidth: 1.2,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.04)',
     paddingHorizontal: 8,
     paddingTop: 0,
     paddingBottom: 0,
@@ -134,11 +128,11 @@ const styles = StyleSheet.create({
       ios: {
         shadowColor: '#1A2B4E',
         shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
       },
       android: {
-        elevation: 8,
+        elevation: 6,
       },
     }),
   },
@@ -167,23 +161,15 @@ const styles = StyleSheet.create({
     height: TAB_SLOT_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
   },
-  tabCircleActive: {
-    width: TAB_SLOT_SIZE,
-    height: TAB_SLOT_SIZE,
-    borderRadius: TAB_SLOT_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#3A8F3B',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.35,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#2E7D32',
+    marginTop: 4,
+    position: 'absolute',
+    bottom: 2,
   },
 });

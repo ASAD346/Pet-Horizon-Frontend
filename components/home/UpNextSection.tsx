@@ -86,8 +86,8 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
         color={iconColor}
         backgroundColor={iconBg}
         materialIcon={dashboardTaskIcon(task)}
-        size={46}
-        iconSize={22}
+        size={36}
+        iconSize={18}
       />
       <View style={styles.textBlock}>
         <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
