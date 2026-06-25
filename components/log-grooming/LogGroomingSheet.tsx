@@ -105,6 +105,7 @@ export function LogGroomingSheet({
   const { showToast } = useToast();
 
   const handleSave = async () => {
+    if (saving) return;
     if (!petId || !token) {
       setError('Add a pet before saving a grooming task.');
       return;

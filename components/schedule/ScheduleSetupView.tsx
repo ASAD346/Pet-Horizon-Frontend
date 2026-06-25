@@ -308,7 +308,7 @@ export function ScheduleSetupView({
   };
 
   const handleEditorSave = async () => {
-    if (!editor || !token || !pet?._id) return;
+    if (!editor || !token || !pet?._id || editorSaving) return;
 
     setEditorSaving(true);
     setEditorError(null);
@@ -349,7 +349,7 @@ export function ScheduleSetupView({
   };
 
   const handleDeleteEntry = async (key: ScheduleSectionKey, remoteId: string) => {
-    if (!token || !pet?._id) return;
+    if (!token || !pet?._id || deletingId === remoteId) return;
 
     setDeletingId(remoteId);
     setFormError(null);

@@ -125,6 +125,7 @@ export function LogFoodSheet({
   const { showToast } = useToast();
 
   const handleSave = async () => {
+    if (saving) return;
     if (!petId || !token) {
       setError('Add a pet before saving a feeding schedule.');
       return;
