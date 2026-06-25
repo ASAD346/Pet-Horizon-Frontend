@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { SafeModal } from './SafeModal';
 import { Image } from 'expo-image';
 import { AppButton } from './AppButton';
 import { AppText } from './AppText';
@@ -25,7 +26,7 @@ export function AppBrandModal({
   const handleClose = onClose ?? onConfirm;
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+    <SafeModal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <Pressable style={styles.overlay} onPress={handleClose}>
         <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
           <View style={styles.logoWrap}>
@@ -53,7 +54,7 @@ export function AppBrandModal({
           />
         </Pressable>
       </Pressable>
-    </Modal>
+    </SafeModal>
   );
 }
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeModal } from '@/components/ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
@@ -29,7 +30,7 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
   ];
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
@@ -76,7 +77,7 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
                       </View>
                     </View>
                     {selected && (
-                      <Ionicons name="checkmark-circle" size={22} color={Palette.primary.base} />
+                      <Ionicons name="checkmark-circle" size={22} color={Palette.success} />
                     )}
                   </TouchableOpacity>
                 );
@@ -108,7 +109,7 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
                       </View>
                     </View>
                     {selected && (
-                      <Ionicons name="checkmark-circle" size={22} color={Palette.primary.base} />
+                      <Ionicons name="checkmark-circle" size={22} color={Palette.success} />
                     )}
                   </TouchableOpacity>
                 );
@@ -118,7 +119,7 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </SafeModal>
   );
 }
 
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Palette.gray[200],
   },
   rowSelected: {
-    backgroundColor: Palette.primary.light,
+    backgroundColor: Palette.successLight,
   },
   rowLeft: {
     flexDirection: 'row',
@@ -209,6 +210,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   symbolBadgeSelected: {
-    backgroundColor: Palette.primary.base,
+    backgroundColor: Palette.success,
   },
 });

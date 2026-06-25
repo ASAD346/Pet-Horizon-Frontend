@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeModal } from '@/components/ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
@@ -43,7 +44,7 @@ export function PrivacyPolicySheet({ visible, onClose }: PrivacyPolicySheetProps
   const insets = useSafeAreaInsets();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
@@ -74,7 +75,7 @@ export function PrivacyPolicySheet({ visible, onClose }: PrivacyPolicySheetProps
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </SafeModal>
   );
 }
 

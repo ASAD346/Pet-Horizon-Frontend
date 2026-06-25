@@ -1,12 +1,12 @@
 import React from 'react';
 import {
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
   View,
 } from 'react-native';
+import { SafeModal } from '@/components/ui/SafeModal';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -57,7 +57,7 @@ export function FormSheetShell({
   const { accentColor, accentBg, gradientColors } = useAppThemeColor();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         style={formSheetStyles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -132,6 +132,6 @@ export function FormSheetShell({
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
-    </Modal>
+    </SafeModal>
   );
 }

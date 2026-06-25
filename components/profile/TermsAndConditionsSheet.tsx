@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeModal } from '@/components/ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
@@ -11,11 +12,6 @@ const SECTIONS = [
     title: 'Subscription & billing',
     body:
       'Premium subscriptions are billed in advance on a monthly or yearly basis. Prices shown in the app are before applicable taxes. Your payment method is charged at the start of each billing period.',
-  },
-  {
-    title: 'Free trial',
-    body:
-      'If a free trial is offered, you will not be charged until the trial ends. Cancel before the trial ends to avoid being charged for the selected plan.',
   },
   {
     title: 'Auto-renewal',
@@ -48,7 +44,7 @@ export function TermsAndConditionsSheet({ visible, onClose }: TermsAndConditions
   const insets = useSafeAreaInsets();
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
@@ -80,7 +76,7 @@ export function TermsAndConditionsSheet({ visible, onClose }: TermsAndConditions
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </SafeModal>
   );
 }
 

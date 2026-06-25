@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, TouchableOpacity, View, Linking, Alert } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TouchableOpacity, View, Linking, Alert } from 'react-native';
+import { SafeModal } from '@/components/ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
@@ -45,7 +46,7 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
@@ -112,7 +113,7 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </SafeModal>
   );
 }
 
