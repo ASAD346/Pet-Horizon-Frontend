@@ -25,13 +25,15 @@ function dashboardTaskCaption(task: DashboardTask): string {
   return 'Upcoming';
 }
 
-function dashboardTaskIcon(task: DashboardTask): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' {
+function dashboardTaskIcon(task: DashboardTask): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' | 'shower' {
   const category = task.category?.toLowerCase() ?? '';
+  const title = task.title?.toLowerCase() ?? '';
   if (category === 'feeding' || category === 'food') return 'silverware-fork-knife';
   if (category === 'walk' || category === 'walks') return 'walk';
   if (category === 'medicine') return 'pill';
   if (category === 'vaccination') return 'needle';
-  if (task.source === 'grooming') return 'content-cut';
+  if (title.includes('bath') || title.includes('shower') || title.includes('wash')) return 'shower';
+  if (task.source === 'grooming' || category === 'grooming') return 'content-cut';
   return 'silverware-fork-knife';
 }
 
@@ -63,7 +65,7 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
   const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
 
   const handlePress = async () => {
-    if (!onLog) return;
+    if (!onLog || busy) return;
     setBusy(true);
     try {
       await onLog(task.id);
@@ -74,8 +76,12 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
     }
   };
 
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
+
   return (
-    <View style={[homePillCard.card, styles.card]}>
+    <View style={[homePillCard.card, styles.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
       <ColorIconBadge
         color={iconColor}
         backgroundColor={iconBg}
@@ -85,7 +91,7 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
       />
       <View style={styles.textBlock}>
         <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-          {task.title}
+          {task.title ? task.title.charAt(0).toUpperCase() + task.title.slice(1) : ''}
         </AppText>
         <AppText variant="caption" color={HomeTheme.textMuted}>
           {dashboardTaskCaption(task)}
@@ -93,7 +99,7 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
       </View>
       {onLog ? (
         <TouchableOpacity
-          style={styles.logBtn}
+          style={[styles.logBtn, { backgroundColor: iconColor }]}
           activeOpacity={0.85}
           disabled={busy}
           onPress={handlePress}

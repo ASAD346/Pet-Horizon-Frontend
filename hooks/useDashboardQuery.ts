@@ -141,6 +141,16 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     return item ? (item.title || item.name || fallback) : fallback;
   };
 
+  const removeCacheUpcomingTask = (prev: any, taskId: string): any => {
+    if (!prev || !prev.upcomingTasks) return prev;
+    return {
+      ...prev,
+      upcomingTasks: (prev.upcomingTasks as any[]).filter(
+        (task) => task.id !== taskId && task._id !== taskId
+      ),
+    };
+  };
+
   // 1. Feeding Complete Mutation
   const completeFeedingMutation = useMutation({
     mutationFn: (scheduleId: string) => completeFeedingSchedule(token!, scheduleId, { status: 'done' }),
@@ -148,7 +158,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       queryClient.setQueryData(['dashboard', petId], (prev: any) => {
-        const updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'done');
+        let updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'done');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         const itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
         return addCacheRecentActivity(updated, 'Feeding', `completed ${itemTitle}`);
       });
@@ -171,7 +182,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       queryClient.setQueryData(['dashboard', petId], (prev: any) => {
-        const updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'skipped');
+        let updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'skipped');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         const itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
         return addCacheRecentActivity(updated, 'Feeding', `skipped ${itemTitle}`);
       });
@@ -194,7 +206,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       queryClient.setQueryData(['dashboard', petId], (prev: any) => {
-        const updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'done');
+        let updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'done');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         const itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
         return addCacheRecentActivity(updated, 'Walk', `completed ${itemTitle}`);
       });
@@ -217,7 +230,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       queryClient.setQueryData(['dashboard', petId], (prev: any) => {
-        const updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'done');
+        let updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'done');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         const itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
         return addCacheRecentActivity(updated, 'Medicine', `completed ${itemTitle}`);
       });
@@ -240,7 +254,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       queryClient.setQueryData(['dashboard', petId], (prev: any) => {
-        const updated = updateCacheScheduleStatus(prev, 'grooming', recordId, 'done');
+        let updated = updateCacheScheduleStatus(prev, 'grooming', recordId, 'done');
+        updated = removeCacheUpcomingTask(updated, recordId);
         const itemTitle = findItemTitle(prev, 'grooming', recordId, 'Grooming');
         return addCacheRecentActivity(updated, 'Grooming', `completed ${itemTitle}`);
       });
@@ -263,7 +278,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       queryClient.setQueryData(['dashboard', petId], (prev: any) => {
-        const updated = updateCacheScheduleStatus(prev, 'vaccination', scheduleId, 'done');
+        let updated = updateCacheScheduleStatus(prev, 'vaccination', scheduleId, 'done');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         const itemTitle = findItemTitle(prev, 'vaccination', scheduleId, 'Vaccination');
         return addCacheRecentActivity(updated, 'Vaccination', `completed ${itemTitle}`);
       });

@@ -481,7 +481,6 @@ export default function HomeScreen() {
           groomingRecords={visibleGroomingRecords}
           vaccinationSchedules={visibleVaccinationSchedules}
           loading={scheduleLoading}
-          isFetching={dashboardFetching}
           feedingActionId={undefined}
           walkActionId={undefined}
           medicineActionId={undefined}
@@ -497,7 +496,7 @@ export default function HomeScreen() {
           isPremium={isPremium}
         />
 
-        <RecentActivitySection activities={recentActivities} isPremium={isPremium} isFetching={dashboardFetching} />
+        <RecentActivitySection activities={recentActivities} isPremium={isPremium} />
       </ScrollView>
 
         <LogFoodSheet

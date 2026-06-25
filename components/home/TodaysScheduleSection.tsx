@@ -58,7 +58,6 @@ interface TodaysScheduleSectionProps {
   groomingRecords?: GroomingRecord[];
   vaccinationSchedules?: VaccinationScheduleItem[];
   loading?: boolean;
-  isFetching?: boolean;
   feedingActionId?: string | null;
   walkActionId?: string | null;
   medicineActionId?: string | null;
@@ -414,7 +413,6 @@ export function TodaysScheduleSection({
   groomingRecords = [],
   vaccinationSchedules = [],
   loading = false,
-  isFetching = false,
   onCompleteFeeding,
   onSkipFeeding,
   onCompleteWalk,
@@ -442,7 +440,7 @@ export function TodaysScheduleSection({
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} showLoading={isFetching} />
+      <SectionHeader title="Today's Schedule" actionLabel="SEE ALL" onActionPress={() => {}} />
 
       {loading ? (
         <View style={styles.loader}>

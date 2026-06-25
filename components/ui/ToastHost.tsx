@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: Spacing.lg,
     right: Spacing.lg,
-    backgroundColor: LoginTheme.charcoal,
+    backgroundColor: '#2E7D32',
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 2,
