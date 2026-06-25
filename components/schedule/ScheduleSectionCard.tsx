@@ -35,13 +35,13 @@ export function ScheduleSectionCard({
         <View
           style={[
             scheduleFieldStyles.sectionIconWrap,
-            { backgroundColor: enabled ? brandBg : '#F0F0F0' },
+            { backgroundColor: enabled ? section.bg : '#F0F0F0' },
           ]}
         >
           <MaterialCommunityIcons
             name={section.icon}
             size={22}
-            color={enabled ? brandColor : '#A0AEC0'}
+            color={enabled ? section.color : '#A0AEC0'}
           />
         </View>
         <View style={styles.titleBlock}>
@@ -64,14 +64,14 @@ export function ScheduleSectionCard({
             onPress={onAddPress}
             activeOpacity={0.7}
           >
-            <Ionicons name="add-circle-outline" size={24} color={brandColor} />
+            <Ionicons name="add-circle-outline" size={24} color={section.color} />
           </TouchableOpacity>
         )}
         <Switch
           value={enabled}
           onValueChange={onToggle}
           disabled={!canEdit}
-          trackColor={{ false: '#E2E8F0', true: brandColor }}
+          trackColor={{ false: '#E2E8F0', true: section.color }}
           thumbColor={HomeTheme.white}
           ios_backgroundColor="#E2E8F0"
         />

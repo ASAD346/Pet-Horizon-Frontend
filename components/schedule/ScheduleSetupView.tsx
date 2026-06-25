@@ -547,8 +547,8 @@ export function ScheduleSetupView({
                           key={entry.id}
                           title={scheduleEntryTitle(sectionMeta.key, entry)}
                           subtitle={scheduleEntrySubtitle(sectionMeta.key, entry)}
-                          accentColor={brandColor}
-                          accentBg={brandBg}
+                          accentColor={sectionMeta.color}
+                          accentBg={sectionMeta.bg}
                           onEdit={() => openEditEditor(sectionMeta, entry)}
                           onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
                           deleting={!!remoteId && deletingId === remoteId}
@@ -560,12 +560,12 @@ export function ScheduleSetupView({
 
                   {canEdit && visibleEntries.length > 0 ? (
                     <TouchableOpacity
-                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: brandColor, marginBottom: 20 }]}
+                      style={[scheduleFieldStyles.dashedAddBtn, { borderColor: sectionMeta.color, marginBottom: 20 }]}
                       onPress={() => openAddEditor(sectionMeta)}
                       activeOpacity={0.85}
                     >
-                      <Ionicons name="add-circle" size={20} color={brandColor} />
-                      <AppText variant="bodySmall" weight="700" color={brandColor}>
+                      <Ionicons name="add-circle" size={20} color={sectionMeta.color} />
+                      <AppText variant="bodySmall" weight="700" color={sectionMeta.color}>
                         {sectionMeta.addLabel}
                       </AppText>
                     </TouchableOpacity>
@@ -653,7 +653,7 @@ export function ScheduleSetupView({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F6F8',
+    backgroundColor: '#F1F7F1',
   },
   flex: {
     flex: 1,
