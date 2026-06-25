@@ -9,8 +9,6 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ScheduleSectionCardProps {
   section: ScheduleSectionTheme;
-  enabled: boolean;
-  onToggle: (value: boolean) => void;
   onAddPress?: () => void;
   canEdit?: boolean;
   children?: React.ReactNode;
@@ -18,8 +16,6 @@ interface ScheduleSectionCardProps {
 
 export function ScheduleSectionCard({
   section,
-  enabled,
-  onToggle,
   onAddPress,
   canEdit = true,
   children,
@@ -35,48 +31,35 @@ export function ScheduleSectionCard({
         <View
           style={[
             scheduleFieldStyles.sectionIconWrap,
-            { backgroundColor: enabled ? section.bg : '#F0F0F0' },
+            { backgroundColor: brandBg },
           ]}
         >
           <MaterialCommunityIcons
             name={section.icon}
             size={22}
-            color={enabled ? section.color : '#A0AEC0'}
+            color={brandColor}
           />
         </View>
         <View style={styles.titleBlock}>
           <AppText
             variant="bodySmall"
             weight="800"
-            color={enabled ? HomeTheme.text : '#A0AEC0'}
+            color={HomeTheme.text}
           >
             {section.title}
           </AppText>
-          {!enabled && (
-            <AppText variant="caption" color="#A0AEC0" style={styles.disabledHint}>
-              Disabled — toggle to enable
-            </AppText>
-          )}
         </View>
-        {canEdit && onAddPress && enabled && (
+        {canEdit && onAddPress && (
           <TouchableOpacity
             style={styles.headerAddBtn}
             onPress={onAddPress}
             activeOpacity={0.7}
           >
-            <Ionicons name="add-circle-outline" size={24} color={section.color} />
+            <Ionicons name="add-circle-outline" size={24} color={brandColor} />
           </TouchableOpacity>
         )}
-        <Switch
-          value={enabled}
-          onValueChange={onToggle}
-          disabled={!canEdit}
-          trackColor={{ false: '#E2E8F0', true: section.color }}
-          thumbColor={HomeTheme.white}
-          ios_backgroundColor="#E2E8F0"
-        />
       </View>
-      {enabled && children ? (
+      {children ? (
         <View style={[scheduleFieldStyles.sectionBody, { backgroundColor: '#F8FAF8', paddingBottom: 28 }]}>
           {children}
         </View>

@@ -42,6 +42,7 @@ import {
 } from '@/lib/schedule/defaults';
 import { deleteScheduleEntry } from '@/lib/schedule/deleteScheduleEntry';
 import { loadExistingSchedules } from '@/lib/schedule/loadSchedules';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import {
   getCachedSchedules,
   setCachedSchedules,
@@ -142,6 +143,12 @@ export function ScheduleSetupView({
   const [editorSaving, setEditorSaving] = useState(false);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [pendingDeleteInfo, setPendingDeleteInfo] = useState<{
+    sectionMeta: ScheduleSectionTheme;
+    remoteId: string;
+    entry: EditorEntry;
+  } | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
@@ -344,7 +351,6 @@ export function ScheduleSetupView({
   const openAddEditor = (sectionMeta: ScheduleSectionTheme) => {
     setEditorError(null);
     setFormSuccess(null);
-    toggleSection(sectionMeta.key, true);
     setEditor({
       mode: 'add',
       section: sectionMeta,
@@ -394,20 +400,14 @@ export function ScheduleSetupView({
 
   const confirmDeleteEntry = (sectionMeta: ScheduleSectionTheme, entry: EditorEntry) => {
     const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
-    if (!remoteId || !token) return;
+    console.log('[confirmDeleteEntry] key:', sectionMeta.key, 'remoteId:', remoteId, 'hasToken:', !!token);
+    if (!remoteId || !token) {
+      console.warn('[confirmDeleteEntry] Aborted. remoteId or token missing.');
+      return;
+    }
 
-    Alert.alert(
-      'Delete Schedule?',
-      'This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => void handleDeleteEntry(sectionMeta.key, remoteId, entry),
-        },
-      ],
-    );
+    setPendingDeleteInfo({ sectionMeta, remoteId, entry });
+    setDeleteModalVisible(true);
   };
 
   const handleDeleteEntry = async (
@@ -415,7 +415,11 @@ export function ScheduleSetupView({
     remoteId: string,
     entry: EditorEntry,
   ) => {
-    if (!token || !pet?._id || deletingId === remoteId) return;
+    console.log('[handleDeleteEntry] key:', key, 'remoteId:', remoteId, 'petId:', pet?._id, 'deletingId:', deletingId);
+    if (!token || !pet?._id || deletingId === remoteId) {
+      console.warn('[handleDeleteEntry] Aborted due to missing token/petId or already deleting.');
+      return;
+    }
 
     setDeletingId(remoteId);
     setFormError(null);
@@ -423,6 +427,7 @@ export function ScheduleSetupView({
 
     // Optimistic UI removal — immediately hide the entry before the API call
     const removedEntryId = entry.id;
+    console.log('[handleDeleteEntry] Optimistically removing entry ID:', removedEntryId);
     setSections((prev) => {
       const section = prev[key];
       return {
@@ -436,12 +441,15 @@ export function ScheduleSetupView({
     });
 
     try {
+      console.log('[handleDeleteEntry] Calling deleteScheduleEntry API...');
       await deleteScheduleEntry(token, key, remoteId);
+      console.log('[handleDeleteEntry] API succeeded. Invalidating queries and reloading...');
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       showToast('Schedule deleted.');
       // Reload in background to sync server state (no loading flash)
       void reloadSchedules(pet._id, { silent: true });
     } catch (e) {
+      console.error('[handleDeleteEntry] API failed:', e);
       // Rollback optimistic removal on failure
       const err = e instanceof Error ? e.message : 'Unable to delete schedule.';
       setFormError(err);
@@ -524,8 +532,6 @@ export function ScheduleSetupView({
                 <ScheduleSectionCard
                   key={sectionMeta.key}
                   section={sectionMeta}
-                  enabled={sectionState.enabled}
-                  onToggle={(enabled) => toggleSection(sectionMeta.key, enabled)}
                   onAddPress={canEdit ? () => openAddEditor(sectionMeta) : undefined}
                   canEdit={canEdit}
                 >
@@ -646,6 +652,30 @@ export function ScheduleSetupView({
           onClose={closeEditor}
         />
       ) : null}
+
+      <AppConfirmModal
+        visible={deleteModalVisible}
+        title="Delete Schedule?"
+        message="Are you sure you want to delete this schedule? This action cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="danger"
+        onConfirm={async () => {
+          if (pendingDeleteInfo) {
+            setDeleteModalVisible(false);
+            await handleDeleteEntry(
+              pendingDeleteInfo.sectionMeta.key,
+              pendingDeleteInfo.remoteId,
+              pendingDeleteInfo.entry,
+            );
+            setPendingDeleteInfo(null);
+          }
+        }}
+        onCancel={() => {
+          setDeleteModalVisible(false);
+          setPendingDeleteInfo(null);
+        }}
+      />
     </View>
   );
 }
