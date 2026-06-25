@@ -93,6 +93,8 @@ interface EditorState {
 interface ScheduleSetupViewProps {
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
+  /** Called after a successful toggle so the parent can force-reload pet state */
+  onPetReload?: () => void;
 }
 
 function ScheduleEntriesSkeleton() {
@@ -107,6 +109,7 @@ function ScheduleEntriesSkeleton() {
 export function ScheduleSetupView({
   onJournalPress,
   onNotificationsPress,
+  onPetReload,
 }: ScheduleSetupViewProps) {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { token, user } = useAuth();
@@ -311,10 +314,12 @@ export function ScheduleSetupView({
     try {
       const updatedPet = await updatePet(token, pet._id, { disabledCategories: newDisabled });
 
-      // Update the cache directly so any subsequent focusReload uses the
-      // correct disabledCategories without triggering a cascading reload
-      // that would fight the optimistic toggle.
+      // Update the in-memory + AsyncStorage cache with fresh pet data
       setActivePetCache(token, updatedPet);
+
+      // Force parent to re-read the updated pet from cache so focusReload
+      // uses the correct disabledCategories on the next screen visit
+      onPetReload?.();
 
       // Invalidate dashboard so Today's Schedule & counts reflect the change
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
@@ -391,35 +396,57 @@ export function ScheduleSetupView({
     const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
     if (!remoteId || !token) return;
 
-    const title = scheduleEntryTitle(sectionMeta.key, entry);
-
-    Alert.alert('Delete schedule', `Remove "${title}"? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => void handleDeleteEntry(sectionMeta.key, remoteId),
-      },
-    ]);
+    Alert.alert(
+      'Delete Schedule?',
+      'This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => void handleDeleteEntry(sectionMeta.key, remoteId, entry),
+        },
+      ],
+    );
   };
 
-  const handleDeleteEntry = async (key: ScheduleSectionKey, remoteId: string) => {
+  const handleDeleteEntry = async (
+    key: ScheduleSectionKey,
+    remoteId: string,
+    entry: EditorEntry,
+  ) => {
     if (!token || !pet?._id || deletingId === remoteId) return;
 
     setDeletingId(remoteId);
     setFormError(null);
     setFormSuccess(null);
 
+    // Optimistic UI removal — immediately hide the entry before the API call
+    const removedEntryId = entry.id;
+    setSections((prev) => {
+      const section = prev[key];
+      return {
+        ...prev,
+        [key]: {
+          ...section,
+          // Filter by local entry.id (generated client-side UUID, always unique)
+          entries: (section.entries as EditorEntry[]).filter((e) => e.id !== removedEntryId),
+        },
+      };
+    });
+
     try {
       await deleteScheduleEntry(token, key, remoteId);
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
-      setFormSuccess('Schedule deleted.');
       showToast('Schedule deleted.');
-      await reloadSchedules(pet._id);
+      // Reload in background to sync server state (no loading flash)
+      void reloadSchedules(pet._id, { silent: true });
     } catch (e) {
+      // Rollback optimistic removal on failure
       const err = e instanceof Error ? e.message : 'Unable to delete schedule.';
       setFormError(err);
       showToast(err);
+      void reloadSchedules(pet._id, { silent: true });
     } finally {
       setDeletingId(null);
     }

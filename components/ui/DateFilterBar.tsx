@@ -9,7 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { AppText } from './AppText';
-import { Spacing, Radius } from '@/constants/theme';
+import { Spacing, Radius, Palette } from '@/constants/theme';
 
 export type DatePreset = 'all' | 'today' | 'yesterday' | 'last7' | 'last30' | 'custom';
 
@@ -84,7 +84,7 @@ export function DateFilterBar({
   selected,
   customRange,
   onChange,
-  accentColor = '#2E7D32',
+  accentColor = Palette.primary.base,
   presets = DEFAULT_PRESETS,
 }: DateFilterBarProps) {
   const [showModal, setShowModal] = useState(false);
@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full, borderWidth: 1.5,
     alignItems: 'center', justifyContent: 'center',
   },
-  inactive: { backgroundColor: '#F5F5F5', borderColor: '#E0E0E0' },
+  inactive: { backgroundColor: Palette.gray[50], borderColor: Palette.gray[200] },
   chipLabel: { fontSize: 12, letterSpacing: 0.2 },
   overlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',

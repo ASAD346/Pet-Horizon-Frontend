@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { DatePreset, DateRange } from '@/components/ui/DateFilterBar';
 import { getPresetRange } from '@/components/ui/DateFilterBar';
@@ -6,7 +6,7 @@ import type { ActivityType, ActivityStatus } from '@/services/journal/activityHi
 import { fetchActivityHistory } from '@/services/journal/activityHistoryApi';
 import type { ApiJournalEntry } from '@/types/journal';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30;
 
 export interface ActivityHistoryFilters {
   type: ActivityType;
@@ -20,18 +20,13 @@ function toIso(date: Date): string {
 }
 
 function isEntrySkipped(entry: ApiJournalEntry): boolean {
-  const note = (entry.note || '').toLowerCase();
-  return note.startsWith('skipped');
+  return (entry.note || '').toLowerCase().startsWith('skipped');
 }
 
 function applyClientFilters(
   items: ApiJournalEntry[],
   filters: ActivityHistoryFilters,
 ): ApiJournalEntry[] {
-  const range = getPresetRange(filters.datePreset, filters.customRange);
-  const start = range.startDate.getTime();
-  const end = range.endDate.getTime();
-
   return items.filter((item) => {
     // Type filter
     if (filters.type !== 'all') {
@@ -41,12 +36,16 @@ function applyClientFilters(
     }
 
     // Status filter
-    if (filters.status === 'skipped' && !isEntrySkipped(item)) return false;
-    if (filters.status === 'completed' && isEntrySkipped(item)) return false;
+    const skipped = isEntrySkipped(item);
+    if (filters.status === 'skipped' && !skipped) return false;
+    if (filters.status === 'completed' && skipped) return false;
 
-    // Date filter
-    const ts = new Date(item.createdAt).getTime();
-    if (ts < start || ts > end) return false;
+    // Date filter — skip entirely for 'all' preset
+    if (filters.datePreset !== 'all') {
+      const range = getPresetRange(filters.datePreset, filters.customRange);
+      const ts = new Date(item.createdAt).getTime();
+      if (ts < range.startDate.getTime() || ts > range.endDate.getTime()) return false;
+    }
 
     return true;
   });
@@ -59,18 +58,22 @@ export function useActivityHistory(
 ) {
   const [page, setPage] = useState(1);
 
-  const range = getPresetRange(filters.datePreset, filters.customRange);
+  const range = filters.datePreset !== 'all'
+    ? getPresetRange(filters.datePreset, filters.customRange)
+    : null;
 
   const query = useQuery({
-    queryKey: ['activityHistory', petId, filters.type, filters.status, filters.datePreset, filters.customRange, page],
+    queryKey: ['activityHistory', petId, filters.type, filters.status, filters.datePreset, page,
+      filters.customRange?.startDate?.toISOString(), filters.customRange?.endDate?.toISOString()],
     queryFn: async () => {
       if (!token || !petId) return null;
       return fetchActivityHistory(token, {
         petId,
         type: filters.type,
         status: filters.status,
-        startDate: toIso(range.startDate),
-        endDate: toIso(range.endDate),
+        // For 'all' preset, don't send date params → server returns everything
+        startDate: range ? toIso(range.startDate) : undefined,
+        endDate: range ? toIso(range.endDate) : undefined,
         page,
         limit: PAGE_SIZE,
       });
@@ -79,9 +82,10 @@ export function useActivityHistory(
     staleTime: 1000 * 60 * 2,
   });
 
-  // Apply client-side filtering as a safety net (in case server ignores some params)
+  // Apply client-side filtering as safety net
   const rawItems: ApiJournalEntry[] = query.data?.items ?? [];
-  const items = applyClientFilters(rawItems, filters);
+  const items = useMemo(() => applyClientFilters(rawItems, filters), [rawItems, filters]);
+
   const total = query.data?.total ?? 0;
   const hasMore = query.data?.hasMore ?? false;
 
