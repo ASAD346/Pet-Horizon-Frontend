@@ -19,9 +19,14 @@ export interface RecentActivityItem {
 interface RecentActivitySectionProps {
   activities?: RecentActivityItem[];
   isPremium?: boolean;
+  isFetching?: boolean;
 }
 
-export const RecentActivitySection = React.memo(function RecentActivitySection({ activities = [], isPremium = false }: RecentActivitySectionProps) {
+export const RecentActivitySection = React.memo(function RecentActivitySection({ 
+  activities = [], 
+  isPremium = false,
+  isFetching = false,
+}: RecentActivitySectionProps) {
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border
@@ -31,7 +36,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
 
   return (
     <View style={styles.section}>
-      <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={() => {}} />
+      <SectionHeader title="Recent Activity" actionLabel="SEE ALL" onActionPress={() => {}} showLoading={isFetching} />
       {activities.length === 0 ? (
         <View style={[homePillCard.card, styles.emptyCard, { borderWidth: 1, borderColor: cardBorderColor }]}>
           <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center">
