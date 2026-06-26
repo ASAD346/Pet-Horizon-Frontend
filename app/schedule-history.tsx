@@ -19,6 +19,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { AppText } from '@/components/ui/AppText';
 import { getPresetRange, type DatePreset, type DateRange } from '@/components/ui/DateFilterBar';
 import { Spacing, Radius, Palette, HomeTheme } from '@/constants/theme';
+import { SkeletonScheduleSections } from '@/components/ui/skeletons';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
@@ -620,11 +621,8 @@ export default function ScheduleHistoryScreen() {
         }
         ListEmptyComponent={
           isLoading ? (
-            <View style={styles.centerLoader}>
-              <ActivityIndicator size="large" color={brandColor} />
-              <AppText variant="bodySmall" color={Palette.gray[500]} style={{ marginTop: Spacing.sm }}>
-                Loading…
-              </AppText>
+            <View style={{ flex: 1, padding: Spacing.md }}>
+              <SkeletonScheduleSections />
             </View>
           ) : (
             <EmptyState onReset={resetFilters} hasFilters={hasFilters} brandColor={brandColor} brandBg={brandBg} />
