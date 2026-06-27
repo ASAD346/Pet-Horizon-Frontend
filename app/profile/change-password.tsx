@@ -242,11 +242,22 @@ const styles = StyleSheet.create({
   formCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.xl,
     marginBottom: Spacing.lg,
-    ...homeCardShadow,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+      },
+      android: {
+        elevation: 3,
+      }
+    })
   },
   labelContainer: {
     flexDirection: 'row',
@@ -271,13 +282,13 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
     borderRadius: Radius.md,
     marginBottom: Spacing.lg,
     paddingHorizontal: Spacing.md,
-    minHeight: 48,
+    height: 50,
   },
   inputContainerActive: {
     borderColor: '#2E7D32',
@@ -306,12 +317,14 @@ const styles = StyleSheet.create({
   },
   toggleButton: {
     paddingLeft: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   submitBtn: {
     width: '100%',
     borderRadius: Radius.full,
-    minHeight: 52,
+    height: 52,
     marginTop: Spacing.sm,
     ...Platform.select({
       ios: {
