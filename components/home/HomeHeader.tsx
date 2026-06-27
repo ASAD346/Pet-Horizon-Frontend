@@ -25,7 +25,7 @@ function getGreeting(userName: string): string {
   if (hours >= 5 && hours < 12) return `Good morning, ${name} 👋`;
   if (hours >= 12 && hours < 17) return `Good afternoon, ${name} 👋`;
   if (hours >= 17 && hours < 22) return `Good evening, ${name} 👋`;
-  return `Hello, ${name} 👋`;
+  return `Good night, ${name} 🌙`;
 }
 
 export function HomeHeader({
