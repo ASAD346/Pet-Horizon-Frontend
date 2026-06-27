@@ -64,7 +64,7 @@ import {
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
-import { SkeletonScreenLayout } from '@/components/ui/skeletons';
+import { SkeletonDashboard } from '@/components/ui/skeletons';
 import type { GroomingRecord } from '@/types/grooming';
 
 
@@ -393,7 +393,7 @@ export default function HomeScreen() {
           isPremium={isPremium}
         />
         <View style={styles.skeletonArea}>
-          <SkeletonScreenLayout />
+          <SkeletonDashboard />
         </View>
       </View>
     );

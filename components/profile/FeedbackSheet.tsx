@@ -58,7 +58,7 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
     >
       <View style={styles.infoContainer}>
         <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.description}>
-          Your feedback helps us make PetHorizon better for pets and their parents in the US, UK, Australia, and Canada.
+          Your feedback helps us make Pet Horizon better for pets and their parents in the US, UK, Australia, and Canada.
         </AppText>
       </View>
 

@@ -15,6 +15,11 @@ export {
   SkeletonScheduleSections,
   SkeletonScreenLayout,
   SkeletonWeeklySpendingCard,
+  SkeletonDashboard,
+  SkeletonScheduleSetup,
+  SkeletonProfileHub,
+  SkeletonFamilyHub,
+  SkeletonExpenseTracker,
 } from './presets';
 
 export { Skeleton, SkeletonCircle, SkeletonList, SkeletonRow } from '@/components/ui/Skeleton';

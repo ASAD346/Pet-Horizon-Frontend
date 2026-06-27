@@ -29,6 +29,7 @@ import type { ExpenseTrackerCategory } from './expenseTrackerData';
 import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
+import { SkeletonExpenseTracker } from '@/components/ui/skeletons';
 
 interface ExpenseTrackerViewProps {
   onJournalPress?: () => void;
@@ -122,6 +123,10 @@ export function ExpenseTrackerView({
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
         }
       >
+
+        {petLoading && !pet ? (
+          <SkeletonExpenseTracker />
+        ) : null}
 
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from Home to track expenses." />

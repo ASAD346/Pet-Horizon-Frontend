@@ -15,7 +15,7 @@ import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
 import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
 import { MembersListSection } from '@/components/family/MembersListSection';
 import { HomeTheme, Spacing } from '@/constants/theme';
-import { SkeletonFamilyOverviewCard } from '@/components/ui/skeletons';
+import { SkeletonFamilyHub } from '@/components/ui/skeletons';
 import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
@@ -193,7 +193,7 @@ export function FamilyHubView() {
       >
         {petLoading && !pet ? (
           <View style={styles.skeletonWrap}>
-            <SkeletonFamilyOverviewCard />
+            <SkeletonFamilyHub />
           </View>
         ) : null}
 

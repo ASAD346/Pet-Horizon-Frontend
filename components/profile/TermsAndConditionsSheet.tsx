@@ -9,27 +9,27 @@ import { ProfileTheme } from './profileTheme';
 
 const SECTIONS = [
   {
-    title: 'Subscription & billing',
+    title: 'Subscription & Billing',
     body:
       'Premium subscriptions are billed in advance on a monthly or yearly basis. Prices shown in the app are before applicable taxes. Your payment method is charged at the start of each billing period.',
   },
   {
-    title: 'Auto-renewal',
+    title: 'Auto-Renewal',
     body:
       'Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Renewal charges use the same payment method on file.',
   },
   {
-    title: 'Cancellation & refunds',
+    title: 'Cancellation & Refunds',
     body:
       'You may cancel anytime from Billing & Subscription in My Hub. Cancellation takes effect at the end of the current billing period. Refunds are handled according to platform store policies unless required otherwise by law.',
   },
   {
-    title: 'Premium features',
+    title: 'Premium Features',
     body:
       'Premium unlocks additional pets, advanced stats, and enhanced reminders. Feature availability may change as the product evolves; core care tracking remains available on free accounts.',
   },
   {
-    title: 'Privacy',
+    title: 'Privacy Policy',
     body:
       'We use your account and pet data to provide scheduling, reminders, and subscription services. We do not sell personal data. Contact support for data or account deletion requests.',
   },

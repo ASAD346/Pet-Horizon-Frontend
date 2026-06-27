@@ -17,7 +17,7 @@ function formatDetail(detail?: LogDetail): string {
 
 function write(scope: string, message: string, detail?: LogDetail) {
   if (!__DEV__) return;
-  console.warn(`[PetHorizon] ${scope}: ${message}${formatDetail(detail)}`);
+  console.warn(`[Pet Horizon] ${scope}: ${message}${formatDetail(detail)}`);
 }
 
 export const log = {

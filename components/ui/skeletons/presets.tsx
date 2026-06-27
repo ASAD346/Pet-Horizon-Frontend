@@ -218,6 +218,93 @@ export function SkeletonCodeBlock() {
 export function SkeletonQRBox() {
   return <Skeleton width={160} height={160} borderRadius={Radius.md} />;
 }
+export function SkeletonDashboard() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.screenHeader}>
+        <SkeletonCircle size={40} />
+        <Skeleton width="45%" height={18} />
+        <SkeletonCircle size={40} />
+      </View>
+      <SkeletonPetProfileCard />
+      <View style={styles.gapMd} />
+      <Skeleton width="35%" height={14} style={styles.gapSm} />
+      <View style={styles.gapSm} />
+      <SkeletonChipGrid count={6} />
+      <View style={styles.gapMd} />
+      <Skeleton width="40%" height={14} style={styles.gapSm} />
+      <View style={styles.gapSm} />
+      <SkeletonScheduleSections count={2} />
+    </View>
+  );
+}
+
+export function SkeletonScheduleSetup() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.screenHeader}>
+        <SkeletonCircle size={40} />
+        <Skeleton width="40%" height={18} />
+        <SkeletonCircle size={40} />
+      </View>
+      <View style={[styles.chipRow, { marginBottom: Spacing.md }]}>
+        <Skeleton width={80} height={32} borderRadius={Radius.full} />
+        <Skeleton width={80} height={32} borderRadius={Radius.full} />
+        <Skeleton width={80} height={32} borderRadius={Radius.full} />
+      </View>
+      <SkeletonList count={3} cardStyle={styles.scheduleCard} />
+    </View>
+  );
+}
+
+export function SkeletonProfileHub() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.screenHeader}>
+        <View style={{ width: 40 }} />
+        <Skeleton width="30%" height={18} />
+        <View style={{ width: 40 }} />
+      </View>
+      <SkeletonProfileUserCard />
+      <View style={styles.gapMd} />
+      <SkeletonList count={5} />
+    </View>
+  );
+}
+
+export function SkeletonFamilyHub() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.screenHeader}>
+        <SkeletonCircle size={40} />
+        <Skeleton width="45%" height={18} />
+        <View style={{ width: 40 }} />
+      </View>
+      <SkeletonFamilyOverviewCard />
+      <View style={styles.gapMd} />
+      <Skeleton width="35%" height={14} style={styles.gapSm} />
+      <View style={styles.gapSm} />
+      <SkeletonList count={2} />
+    </View>
+  );
+}
+
+export function SkeletonExpenseTracker() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.screenHeader}>
+        <SkeletonCircle size={40} />
+        <Skeleton width="40%" height={18} />
+        <SkeletonCircle size={40} />
+      </View>
+      <SkeletonWeeklySpendingCard />
+      <View style={styles.gapMd} />
+      <Skeleton width="45%" height={14} style={styles.gapSm} />
+      <View style={styles.gapSm} />
+      <SkeletonList count={3} />
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   screen: {
