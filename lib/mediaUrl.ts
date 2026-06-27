@@ -6,6 +6,14 @@ export function resolveMediaUrl(path?: string | null): string | undefined {
   if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('file://')) {
     return path;
   }
+  
   const origin = API_BASE_URL.replace(/\/v1\/?$/, '');
-  return `${origin}${path.startsWith('/') ? path : `/${path}`}`;
+  let relativePath = path;
+  if (relativePath.startsWith('/uploads/')) {
+    relativePath = `/v1${relativePath}`;
+  } else if (relativePath.startsWith('uploads/')) {
+    relativePath = `/v1/${relativePath}`;
+  }
+  
+  return `${origin}${relativePath.startsWith('/') ? relativePath : `/${relativePath}`}`;
 }

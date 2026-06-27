@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { DatePreset, DateRange } from '@/components/ui/DateFilterBar';
 import { getPresetRange } from '@/components/ui/DateFilterBar';
@@ -40,8 +40,8 @@ function toIso(date: Date): string {
 
 function resolveStatus(item: any): ScheduleHistoryItem['status'] {
   if (item.isActive === false) return 'disabled';
-  if (item.status === 'done' || item.isComplete === true || item.completedAt) return 'done';
   if (item.status === 'skipped') return 'skipped';
+  if (item.status === 'done' || item.isComplete === true || item.completedAt) return 'done';
   return 'pending';
 }
 
@@ -123,7 +123,12 @@ export function useScheduleHistory(
   filters: ScheduleHistoryFilters,
 ) {
   const [page, setPage] = useState(1);
-  const serverFailed = useRef(false);
+  const [serverFailed, setServerFailed] = useState(false);
+
+  useEffect(() => {
+    setServerFailed(false);
+    setPage(1);
+  }, [token, petId]);
 
   const range = getPresetRange(filters.datePreset, filters.customRange);
 
@@ -144,7 +149,7 @@ export function useScheduleHistory(
           limit: PAGE_SIZE,
         });
       } catch {
-        serverFailed.current = true;
+        setServerFailed(true);
         return null;
       }
     },
@@ -174,12 +179,12 @@ export function useScheduleHistory(
         ...normaliseSchedules(safe(grooming), 'grooming'),
       ];
     },
-    enabled: Boolean(token && petId && serverFailed.current),
+    enabled: Boolean(token && petId && serverFailed),
     staleTime: 1000 * 60 * 2,
   });
 
   const isLoading =
-    serverQuery.isLoading || (serverFailed.current && fallbackQuery.isLoading);
+    serverQuery.isLoading || (serverFailed && fallbackQuery.isLoading);
 
   // Compute stats and paginated items
   const { items, stats, total, hasMore } = useMemo(() => {
