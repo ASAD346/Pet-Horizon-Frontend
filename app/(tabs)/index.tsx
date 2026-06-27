@@ -115,6 +115,21 @@ export default function HomeScreen() {
     accessBannerMessage,
   } = usePetPermissions(token, pet, user?._id);
 
+  const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
+    token,
+    pet?._id ?? user?.activePetId,
+    user?._id,
+  );
+
+  const [targetPetId, setTargetPetId] = useState<string | null | undefined>(pet?._id);
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  useEffect(() => {
+    if (pet?._id && !switchingId) {
+      setTargetPetId(pet._id);
+    }
+  }, [pet?._id, switchingId]);
+
   const {
     data: dashboardData,
     isLoading: dashboardLoading,
@@ -126,13 +141,7 @@ export default function HomeScreen() {
     completeMedicine,
     completeGrooming,
     completeVaccination,
-  } = useDashboardQuery(token, pet?._id);
-
-  const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
-    token,
-    pet?._id ?? user?.activePetId,
-    user?._id,
-  );
+  } = useDashboardQuery(token, targetPetId, isSwitching);
 
   const { showToast } = useToast();
 
@@ -324,7 +333,6 @@ export default function HomeScreen() {
     setGroomingManageRecord(record);
     setGroomingManageVisible(true);
   }, [groomingRecords]);
-
   const handleSwitchPet = useCallback(async (petId: string) => {
     if (!token || petId === pet?._id) {
       setPetSwitcherVisible(false);
@@ -333,6 +341,10 @@ export default function HomeScreen() {
     
     // Close switcher sheet instantly for snappy UX
     setPetSwitcherVisible(false);
+    
+    // SYNC RESET: Instantly wipe the dashboard UI state so skeletons appear
+    setTargetPetId(petId);
+    setIsSwitching(true);
     
     try {
       if (user) {
@@ -350,6 +362,8 @@ export default function HomeScreen() {
     } catch (err) {
       log.fail('Home', 'Switch pet failed', getErrorMessage(err));
       Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
+    } finally {
+      setIsSwitching(false);
     }
   }, [token, pet?._id, user, setSession, reloadPet, reloadPets, refetchDashboard]);
 

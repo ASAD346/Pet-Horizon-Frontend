@@ -10,7 +10,7 @@ import { completeGroomingRecord } from '@/services/grooming/groomingApi';
 import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
 import { useToast } from '@/hooks/useToast';
 
-export function useDashboardQuery(token: string | null, petId: string | null | undefined) {
+export function useDashboardQuery(token: string | null, petId: string | null | undefined, isSwitching: boolean = false) {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [cachedData, setCachedData] = useState<UnifiedDashboardData | undefined>(undefined);
@@ -60,7 +60,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       console.log('[useDashboardQuery] Fetching dashboard from API...');
       return fetchUnifiedDashboard(token!);
     },
-    enabled: Boolean(token && petId && petId !== 'fallback-pet-id-123'),
+    enabled: Boolean(token && petId && petId !== 'fallback-pet-id-123' && !isSwitching),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -85,7 +85,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   }
 
   const currentCachedData = cachedPetId === petId ? cachedData : undefined;
-  const isLoading = query.isLoading && !currentCachedData;
+  const isLoading = (query.isLoading && !currentCachedData) || isSwitching;
   const isFetching = query.isFetching;
   const error = query.error;
   const data = query.data || currentCachedData;
