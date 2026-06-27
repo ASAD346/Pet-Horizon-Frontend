@@ -81,6 +81,7 @@ interface ThemedDatePickerProps {
   maximumDate?: Date;
   onClose: () => void;
   onConfirm: (date: Date) => void;
+  useNativeModal?: boolean;
 }
 
 export function ThemedDatePicker({
@@ -91,6 +92,7 @@ export function ThemedDatePicker({
   maximumDate,
   onClose,
   onConfirm,
+  useNativeModal = false,
 }: ThemedDatePickerProps) {
   const { accentColor } = useAppThemeColor();
   const [viewYear, setViewYear] = useState(value.getFullYear());
@@ -152,8 +154,9 @@ export function ThemedDatePicker({
     }
   };
 
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+  if (!visible) return null;
+
+  const content = (
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           <View style={styles.sheetHeader}>
@@ -328,7 +331,20 @@ export function ThemedDatePicker({
           </View>
         </Pressable>
       </Pressable>
-    </Modal>
+  );
+
+  if (useNativeModal) {
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        {content}
+      </Modal>
+    );
+  }
+
+  return (
+    <View style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+      {content}
+    </View>
   );
 }
 
@@ -338,6 +354,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(26, 43, 78, 0.4)',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
+    zIndex: 9999,
+    elevation: 24,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   sheet: {
     backgroundColor: '#FFFFFF',
@@ -349,7 +372,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 24,
+    zIndex: 9999,
   },
   sheetHeader: {
     flexDirection: 'row',

@@ -11,12 +11,13 @@ interface ThemedTimePickerProps {
   value: Date;
   onClose: () => void;
   onConfirm: (date: Date) => void;
+  useNativeModal?: boolean;
 }
 
 const HOURS = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
-export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedTimePickerProps) {
+export function ThemedTimePicker({ visible, value, onClose, onConfirm, useNativeModal = false }: ThemedTimePickerProps) {
   const { accentColor } = useAppThemeColor();
   
   const [selectedHour, setSelectedHour] = useState(12);
@@ -60,8 +61,9 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
 
   const formatNum = (num: number) => String(num).padStart(2, '0');
 
-  return (
-    <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+  if (!visible) return null;
+
+  const content = (
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           
@@ -186,7 +188,20 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm }: ThemedT
 
         </Pressable>
       </Pressable>
-    </SafeModal>
+  );
+
+  if (useNativeModal) {
+    return (
+      <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        {content}
+      </SafeModal>
+    );
+  }
+
+  return (
+    <View style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+      {content}
+    </View>
   );
 }
 
@@ -196,6 +211,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(26, 43, 78, 0.4)',
     justifyContent: 'center',
     paddingHorizontal: Spacing.md,
+    zIndex: 9999,
+    elevation: 24,
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
   sheet: {
     backgroundColor: '#FFFFFF',
@@ -207,7 +229,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 24,
+    zIndex: 9999,
   },
   sheetHeader: {
     flexDirection: 'row',
