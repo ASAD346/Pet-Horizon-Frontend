@@ -6,6 +6,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '../ui/AppText';
 import { HeaderActionButtons } from '../ui/HeaderActionButtons';
 import { Spacing } from '../../constants/theme';
+import { Image, Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/hooks/useAuth';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 interface HomeHeaderProps {
   userName?: string;
@@ -38,6 +42,11 @@ export function HomeHeader({
   topInset = 0,
   isPremium = false,
 }: HomeHeaderProps) {
+  const { user } = useAuth();
+  const router = useRouter();
+  const rawImage = user?.profileImage;
+  const userImage = rawImage ? resolveMediaUrl(rawImage) : null;
+
   const greeting = getGreeting(userName);
   const insets = useSafeAreaInsets();
 
@@ -76,14 +85,21 @@ export function HomeHeader({
 
           <View style={styles.row}>
             <View style={styles.leftContainer}>
-              {/* User Initial Double-Ring Avatar Badge */}
-              <View style={[styles.avatarOuterRing, isPremium ? { borderColor: '#D4A017' } : { borderColor: 'rgba(255,255,255,0.45)' }]}>
-                <View style={[styles.avatarInnerContainer, isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.18)' } : { backgroundColor: 'rgba(255,255,255,0.22)' }]}>
-                  <AppText weight="800" style={[styles.avatarText, isPremium ? { color: '#FFF176' } : { color: '#FFFFFF' }]}>
-                    {userInitial}
-                  </AppText>
+              {/* User Avatar Action */}
+              <Pressable
+                onPress={() => router.push('/profile')}
+                style={[styles.avatarOuterRing, isPremium ? { borderColor: '#D4A017' } : { borderColor: 'rgba(255,255,255,0.45)' }]}
+              >
+                <View style={[styles.avatarInnerContainer, isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.18)' } : { backgroundColor: 'rgba(255,255,255,0.22)' }, userImage ? { backgroundColor: 'transparent' } : {}]}>
+                  {userImage ? (
+                    <Image source={{ uri: userImage }} style={styles.avatarImage} />
+                  ) : (
+                    <AppText weight="800" style={[styles.avatarText, isPremium ? { color: '#FFF176' } : { color: '#FFFFFF' }]}>
+                      {userInitial}
+                    </AppText>
+                  )}
                 </View>
-              </View>
+              </Pressable>
 
               {/* Left: greeting + date chip */}
               <View style={styles.textBlock}>
@@ -200,6 +216,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 18,
   },
   avatarText: {
     fontSize: 16,
