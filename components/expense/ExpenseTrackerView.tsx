@@ -1,4 +1,17 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
+import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { SheetOptionPicker } from '@/components/sheets';
+import { useActivePet } from '@/hooks/useActivePet';
+import { useAuth } from '@/hooks/useAuth';
+import { useBudget } from '@/hooks/useBudget';
+import { useExpenses } from '@/hooks/useExpenses';
+import { useLocalization } from '@/hooks/useLocalization';
+import { useNotifications } from '@/hooks/useNotifications';
+import { usePetPermissions } from '@/hooks/usePetPermissions';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
   Platform,
   RefreshControl,
@@ -7,30 +20,15 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter, type Href, useFocusEffect } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
-import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
-import { useAuth } from '@/hooks/useAuth';
-import { useActivePet } from '@/hooks/useActivePet';
-import { useBudget } from '@/hooks/useBudget';
-import { useExpenses } from '@/hooks/useExpenses';
-import { useNotifications } from '@/hooks/useNotifications';
-import { usePetPermissions } from '@/hooks/usePetPermissions';
-import { SheetOptionPicker } from '@/components/sheets';
-import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
-import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
-import { EditBudgetSheet } from './EditBudgetSheet';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { AddExpenseView } from './AddExpenseView';
+import { EditBudgetSheet } from './EditBudgetSheet';
+import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
 import type { ExpenseTrackerCategory } from './expenseTrackerData';
+import { ExpenseTrackerHeader } from './ExpenseTrackerHeader';
 import { RecentTransactionsSection } from './RecentTransactionsSection';
 import { WeeklySpendingCard } from './WeeklySpendingCard';
-import { useTabBarLayout } from '@/hooks/useTabBarLayout';
-import { useLocalization } from '@/hooks/useLocalization';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
-import { Colors } from '@/constants/colors';
 
 interface ExpenseTrackerViewProps {
   onJournalPress?: () => void;
@@ -96,13 +94,6 @@ export function ExpenseTrackerView({
   const [budgetSheetVisible, setBudgetSheetVisible] = useState(false);
   const [isNewBudget, setIsNewBudget] = useState(false);
   const [addExpenseVisible, setAddExpenseVisible] = useState(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      void reloadExpenses(true);
-      void reloadBudget(true);
-    }, [reloadExpenses, reloadBudget])
-  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
