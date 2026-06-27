@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TextInput,
   Platform,
+  Pressable,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
@@ -47,6 +48,10 @@ export function AddExpenseView({
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Refs to correctly manage focus targets
+  const amountRef = useRef<TextInput>(null);
+  const merchantRef = useRef<TextInput>(null);
 
   // Focus tracking for input states
   const [activeField, setActiveField] = useState<'amount' | 'merchant' | 'note' | null>(null);
@@ -124,7 +129,10 @@ export function AddExpenseView({
 
         {/* Amount */}
         <FormSection title="Amount">
-          <View style={[styles.amountField, activeField === 'amount' && styles.inputActive]}>
+          <Pressable 
+            onPress={() => amountRef.current?.focus()}
+            style={[styles.amountField, activeField === 'amount' && styles.inputActive]}
+          >
             <AppText
               variant="h2"
               weight="800"
@@ -134,6 +142,7 @@ export function AddExpenseView({
               {currency === 'GBP' ? '£' : '$'}
             </AppText>
             <TextInput
+              ref={amountRef}
               value={amount}
               onChangeText={setAmount}
               keyboardType="decimal-pad"
@@ -143,19 +152,23 @@ export function AddExpenseView({
               onFocus={() => setActiveField('amount')}
               onBlur={() => setActiveField(null)}
             />
-          </View>
+          </Pressable>
         </FormSection>
 
         {/* Details (Merchant & Notes) */}
         <FormSection title="Details">
           <View style={styles.detailsGroup}>
-            <View style={[styles.regularField, activeField === 'merchant' && styles.inputActive]}>
+            <Pressable 
+              onPress={() => merchantRef.current?.focus()}
+              style={[styles.regularField, activeField === 'merchant' && styles.inputActive]}
+            >
               <Ionicons
                 name="storefront-outline"
                 size={18}
                 color={activeField === 'merchant' ? BRAND_GREEN : '#94A3B8'}
               />
               <TextInput
+                ref={merchantRef}
                 value={merchant}
                 onChangeText={setMerchant}
                 style={styles.regularInput}
@@ -164,7 +177,7 @@ export function AddExpenseView({
                 onFocus={() => setActiveField('merchant')}
                 onBlur={() => setActiveField(null)}
               />
-            </View>
+            </Pressable>
 
             <TextInput
               value={note}

@@ -22,6 +22,7 @@ import { FormSheetShell } from '../sheets';
 import { FeedingEntryCard } from '../schedule/entries/FeedingEntryCard';
 import type { FeedingEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
+import { getPetPermissionCache } from '@/lib/pet/petPermissionCache';
 
 const FOOD_THEME = LOG_SHEET_THEMES.food;
 
@@ -103,6 +104,25 @@ export function LogFoodSheet({
         petId,
         hasToken: Boolean(token),
       });
+      return;
+    }
+
+    // Try reading from permission cache first for instant loading
+    const cacheKey = `${token}:${petId}`;
+    const cachedPermissions = getPetPermissionCache(cacheKey);
+    if (cachedPermissions) {
+      const features = cachedPermissions.speciesFeatures;
+      const mealOptions = mealTypeOptionsForSpecies(features?.mealTypes ?? []);
+      const unitOpts = unitOptionsForSpecies(features?.inventoryUnits ?? []);
+
+      setMealTypeOptions(mealOptions);
+      setUnitOptions(unitOpts);
+      setEntry((prev) => ({
+        ...prev,
+        mealType: prev.mealType || (mealOptions[0]?.value ?? ''),
+        unit: prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []),
+      }));
+      setFeaturesLoading(false);
       return;
     }
 

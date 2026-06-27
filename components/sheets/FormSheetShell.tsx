@@ -28,8 +28,8 @@ interface FormSheetShellProps {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   accentColor?: string;
   accentBg?: string;
-  saveLabel: string;
-  onSave: () => void;
+  saveLabel?: string;
+  onSave?: () => void;
   saving?: boolean;
   saveDisabled?: boolean;
   error?: string | null;
@@ -122,13 +122,15 @@ export function FormSheetShell({
               {children}
             </ScrollView>
 
-            <StickyActionFooter
-              onSave={onSave}
-              saveLabel={saveLabel}
-              saving={saving}
-              saveDisabled={saveDisabled}
-              accentColor={accentColor}
-            />
+            {onSave && saveLabel ? (
+              <StickyActionFooter
+                onSave={onSave}
+                saveLabel={saveLabel}
+                saving={saving}
+                saveDisabled={saveDisabled}
+                accentColor={accentColor}
+              />
+            ) : null}
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>

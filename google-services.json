@@ -14,7 +14,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "162625002184-j28egm3lo9ugaeem48pp0enuc32snv82.apps.googleusercontent.com",
+          "client_id": "162625002184-h3q2anibl9f98l04s5pjpfh16t01hg44.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anonymous.PetHorizon",
+            "certificate_hash": "753d9c07b047a188bf324d645b227b6a80f30165"
+          }
+        },
+        {
+          "client_id": "162625002184-jgchdof16dl3otkkfto07ap9549itj50.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.anonymous.PetHorizon",
@@ -22,7 +30,7 @@
           }
         },
         {
-          "client_id": "162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com",
+          "client_id": "162625002184-l2gck6jqt4qovmr9e1f6b1h8cntafvjt.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

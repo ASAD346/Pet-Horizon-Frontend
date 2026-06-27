@@ -7,6 +7,7 @@ import { Radius, Spacing, Palette } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
 import { submitFeedback } from '@/services/feedback/feedbackApi';
 import { FormSheetShell, FormTextInput } from '../sheets';
+import { AppButton } from '@/components/ui/AppButton';
 
 interface FeedbackSheetProps {
   visible: boolean;
@@ -49,11 +50,8 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
       onClose={onClose}
       title="Share Feedback"
       icon="heart-outline"
-      accentColor={ProfileTheme.purple}
-      accentBg="#F5F3FF"
-      saveLabel="Submit Feedback"
-      onSave={handleSubmit}
-      saving={submitting}
+      accentColor={ProfileTheme.green}
+      accentBg="rgba(46, 125, 50, 0.08)"
       compact
     >
       <View style={styles.infoContainer}>
@@ -95,6 +93,15 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
         onChangeText={setComment}
         placeholder="What can we improve? What do you love most about Pet Horizon?"
         multiline
+      />
+
+      <AppButton
+        title="Submit Feedback"
+        onPress={handleSubmit}
+        loading={submitting}
+        variant="success"
+        size="md"
+        style={{ marginTop: Spacing.md }}
       />
     </FormSheetShell>
   );

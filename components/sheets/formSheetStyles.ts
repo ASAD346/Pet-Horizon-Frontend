@@ -31,7 +31,7 @@ export const formSheetStyles = StyleSheet.create({
     backgroundColor: FormSheetColors.sheetBg,
     borderTopLeftRadius: Radius.xl, // Premium roundness
     borderTopRightRadius: Radius.xl,
-    maxHeight: '68%', // Compact height to prevent status bar cover
+    maxHeight: '90%', // Increased from 68% to prevent content from being cut off
     overflow: 'hidden',
     ...Platform.select({
       ios: {

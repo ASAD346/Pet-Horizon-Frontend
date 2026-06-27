@@ -9,7 +9,7 @@ import {
   createDefaultScheduleDate,
   validateScheduleDate,
 } from '@/lib/schedule/scheduleDate';
-import { createGroomingRecord, fetchGroomingTypes } from '@/services/grooming/groomingApi';
+import { createGroomingRecord, fetchGroomingTypes, groomingTypesCache } from '@/services/grooming/groomingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/useToast';
@@ -77,6 +77,21 @@ export function LogGroomingSheet({
       setGroomingVisible(true);
       return;
     }
+
+    // Try reading from cache first for instant loading
+    const cacheKey = `${token}:${petId}`;
+    if (groomingTypesCache[cacheKey]) {
+      const data = groomingTypesCache[cacheKey];
+      setGroomingVisible(data.groomingVisible);
+      setTypeOptions(data.types ?? []);
+      setEntry((prev) => ({
+        ...prev,
+        groomingType: prev.groomingType || (data.types?.[0]?.value ?? ''),
+      }));
+      setLoadingTypes(false);
+      return;
+    }
+
     setLoadingTypes(true);
     setError(null);
     try {

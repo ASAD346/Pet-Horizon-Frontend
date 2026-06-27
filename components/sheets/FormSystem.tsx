@@ -363,7 +363,7 @@ export function StickyActionFooter({
       style={[
         styles.stickyFooter,
         {
-          paddingBottom: Math.max(insets.bottom, 12),
+          paddingBottom: Math.max(insets.bottom, 20),
         },
       ]}
     >

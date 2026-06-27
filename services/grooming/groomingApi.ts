@@ -12,10 +12,18 @@ import type {
 
 const SCOPE = 'GroomingAPI';
 
+// Simple in-memory cache for grooming types to avoid network round-trips on every sheet open
+export const groomingTypesCache: Record<string, GroomingTypesResponse> = {};
+
 export async function fetchGroomingTypes(
   token: string,
   petId: string,
 ): Promise<GroomingTypesResponse> {
+  const cacheKey = `${token}:${petId}`;
+  if (groomingTypesCache[cacheKey]) {
+    return groomingTypesCache[cacheKey];
+  }
+
   log.info(SCOPE, 'GET /grooming/types', { petId });
   try {
     const data = await apiRequest<GroomingTypesResponse>(
@@ -23,6 +31,7 @@ export async function fetchGroomingTypes(
       { token },
     );
     log.ok(SCOPE, 'Grooming types loaded', { count: data.types?.length ?? 0 });
+    groomingTypesCache[cacheKey] = data;
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Load grooming types failed', getErrorMessage(error));
