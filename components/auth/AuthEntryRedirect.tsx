@@ -112,7 +112,7 @@ export function AuthEntryLoader() {
             Pet Horizon
           </AppText>
           <AppText variant="bodySmall" weight="700" color="rgba(255,255,255,0.75)" style={styles.brandSubtitle}>
-            PREMIUM PET CARE COMPANION
+            Where every paw finds its path
           </AppText>
         </Animated.View>
       </View>
