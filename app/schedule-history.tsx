@@ -261,10 +261,12 @@ function EmptyState({ onReset, hasFilters, brandColor }: { onReset: () => void; 
         <Ionicons name="calendar-outline" size={32} color="#9CA3AF" />
       </View>
       <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.emptyTitle}>
-        No Records Found
+        {hasFilters ? 'No Matches Found' : 'No History Yet'}
       </AppText>
       <AppText variant="bodySmall" color={Palette.gray[400]} style={styles.emptyDesc}>
-        {hasFilters ? 'No activities match the filters selected. Try resetting them.' : 'No schedules have been logged yet.'}
+        {hasFilters
+          ? 'None of your care logs match the selected filters. Try adjusting or clearing them.'
+          : 'Once your pet has scheduled activities, they will appear here as a complete care log.'}
       </AppText>
       {hasFilters ? (
         <TouchableOpacity onPress={onReset} style={[styles.clearBtn, { backgroundColor: brandColor }]} activeOpacity={0.85}>

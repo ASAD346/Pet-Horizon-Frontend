@@ -317,10 +317,12 @@ function ActivityEmptyState({ onReset, hasFilters, brandColor }: { onReset: () =
         <Ionicons name="clipboard-outline" size={32} color="#9CA3AF" />
       </View>
       <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.emptyTitle}>
-        No Activities Found
+        {hasFilters ? 'No Matches Found' : 'No Activity Yet'}
       </AppText>
       <AppText variant="bodySmall" color={Palette.gray[400]} style={styles.emptyDesc}>
-        {hasFilters ? 'No activities match the filters selected. Try resetting them.' : 'No completed activities have been logged yet.'}
+        {hasFilters
+          ? 'None of your logged activities match the selected filters. Try adjusting or clearing them.'
+          : 'Logged pet care activities — feedings, walks, medication, and more — will appear here.'}
       </AppText>
       {hasFilters ? (
         <TouchableOpacity onPress={onReset} style={[styles.clearBtn, { backgroundColor: brandColor }]} activeOpacity={0.85}>

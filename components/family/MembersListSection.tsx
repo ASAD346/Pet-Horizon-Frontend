@@ -43,17 +43,27 @@ export function MembersListSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-          Members
+          Care Team
         </AppText>
         <View style={[styles.activeBadge, { backgroundColor: isPremium ? '#E8F5E9' : '#EEF8EE' }]}>
           <AppText variant="caption" weight="800" color={themeGreen}>
-            {activeCount} ACTIVE
+            {activeCount} {activeCount === 1 ? 'MEMBER' : 'MEMBERS'}
           </AppText>
         </View>
       </View>
 
       {loading ? (
         <SkeletonList count={3} cardStyle={styles.memberCard} />
+      ) : members.length === 0 ? (
+        <View style={styles.emptyMembersCard}>
+          <Ionicons name="people-outline" size={28} color={themeGreen} style={{ opacity: 0.6 }} />
+          <AppText variant="bodySmall" weight="700" color={HomeTheme.text} style={styles.emptyMembersTitle}>
+            No members yet
+          </AppText>
+          <AppText variant="caption" color={HomeTheme.textMuted} style={styles.emptyMembersDesc}>
+            Invite family members or caregivers to help manage your pet's daily routine.
+          </AppText>
+        </View>
       ) : (
         members.map((member) => {
           const canManage = manageableIds.includes(member.id);
