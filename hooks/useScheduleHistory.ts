@@ -242,6 +242,6 @@ export function useScheduleHistory(
     error: serverQuery.error ?? fallbackQuery.error,
     loadMore,
     resetPage,
-    refetch: serverFailed.current ? fallbackQuery.refetch : serverQuery.refetch,
+    refetch: serverFailed ? fallbackQuery.refetch : serverQuery.refetch,
   };
 }

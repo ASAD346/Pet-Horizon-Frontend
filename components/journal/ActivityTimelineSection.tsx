@@ -1,11 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { ColorIconBadge } from '../home/ColorIconBadge';
-import { JournalTheme, Radius, Spacing } from '../../constants/theme';
+import { JournalTheme, Radius, Spacing, Palette } from '../../constants/theme';
 import type { JournalCategory, TimelineEvent } from './journalData';
-import { getCategoryStyle } from './journalData';
 
 interface ActivityTimelineSectionProps {
   events: TimelineEvent[];
@@ -27,51 +25,49 @@ function TimelineRow({
   isLast: boolean;
   onPress?: (eventId: string) => void;
 }) {
-  const { color, bg } = getCategoryStyle(event.category);
   const completed = event.status === 'completed';
 
   return (
     <View style={styles.row}>
-      <AppText variant="caption" weight="600" color={JournalTheme.textMuted} style={styles.time}>
+      {/* Time column */}
+      <AppText variant="caption" weight="700" color="#9CA3AF" style={styles.time}>
         {event.time}
       </AppText>
 
+      {/* Timeline line and outer ring */}
       <View style={styles.timelineCol}>
-        <View style={[styles.dot, { backgroundColor: completed ? JournalTheme.completed : color }]} />
+        <View style={[styles.dotOuter, { borderColor: completed ? '#16A34A' : '#9CA3AF' }]}>
+          <View style={[styles.dotInner, { backgroundColor: completed ? '#16A34A' : '#9CA3AF' }]} />
+        </View>
         {!isLast ? <View style={styles.line} /> : null}
       </View>
 
+      {/* Modern, minimalist border-only card */}
       <TouchableOpacity
         style={styles.card}
         activeOpacity={onPress ? 0.85 : 1}
         disabled={!onPress}
         onPress={() => onPress?.(event.id)}
       >
-        <ColorIconBadge
-          color={color}
-          backgroundColor={bg}
-          materialIcon={event.materialIcon}
-          size={44}
-          iconSize={22}
-          shape="rounded"
-        />
+        <View style={styles.iconContainer}>
+          <MaterialCommunityIcons name={event.materialIcon} size={18} color="#4B5563" />
+        </View>
         <View style={styles.cardText}>
-          <AppText variant="bodySmall" weight="800" color={JournalTheme.text}>
+          <AppText variant="bodySmall" weight="700" color="#111827">
             {event.title}
           </AppText>
-          <AppText
-            variant="caption"
-            weight="600"
-            color={completed ? JournalTheme.completed : JournalTheme.textMuted}
-          >
-            {completed ? 'Completed' : 'Scheduled'}
+          <AppText variant="caption" color="#9CA3AF" style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3 }}>
+            {event.category}
           </AppText>
         </View>
-        {completed ? (
-          <View style={styles.checkCircle}>
-            <Ionicons name="checkmark" size={18} color={JournalTheme.surface} />
-          </View>
-        ) : null}
+        
+        {/* Right side status indicator */}
+        <View style={styles.statusCol}>
+          <View style={[styles.statusDot, { backgroundColor: completed ? '#16A34A' : '#2563EB' }]} />
+          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : '#2563EB'} style={styles.statusText}>
+            {completed ? 'COMPLETED' : 'SCHEDULED'}
+          </AppText>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -90,10 +86,10 @@ export function ActivityTimelineSection({
   return (
     <View style={styles.section}>
       <View style={styles.header}>
-        <AppText variant="body" weight="800" color={JournalTheme.text} style={styles.headerTitle}>
+        <AppText variant="body" weight="800" color="#111827" style={styles.headerTitle}>
           Activity Timeline
         </AppText>
-        <AppText variant="bodySmall" color={JournalTheme.textMuted}>
+        <AppText variant="caption" weight="700" color="#9CA3AF">
           {filtered.length} Events
         </AppText>
       </View>
@@ -101,8 +97,8 @@ export function ActivityTimelineSection({
       <View style={styles.list}>
         {filtered.length === 0 ? (
           <View style={styles.empty}>
-            <AppText variant="bodySmall" color={JournalTheme.textMuted}>
-              No journal entries for this day yet. Complete a feeding, walk, or grooming task to log activity here.
+            <AppText variant="bodySmall" color="#9CA3AF" style={{ textAlign: 'center', lineHeight: 18 }}>
+              No activities logged for this day. Completed items will automatically sync in this feed.
             </AppText>
           </View>
         ) : (
@@ -120,16 +116,6 @@ export function ActivityTimelineSection({
   );
 }
 
-const cardShadow = Platform.select({
-  ios: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-  },
-  android: { elevation: 2 },
-});
-
 const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing.lg,
@@ -139,70 +125,105 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.md,
+    paddingHorizontal: 2,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 16,
   },
   list: {
     gap: Spacing.sm,
   },
   empty: {
-    backgroundColor: JournalTheme.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
     borderWidth: 1,
-    borderColor: JournalTheme.border,
+    borderColor: '#E5E7EB',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   time: {
-    width: 68,
-    paddingTop: 14,
+    width: 60,
+    paddingTop: 15,
     fontSize: 11,
+    textAlign: 'right',
+    paddingRight: 10,
   },
   timelineCol: {
-    width: 20,
+    width: 24,
     alignItems: 'center',
-    marginRight: Spacing.sm,
+    marginRight: Spacing.xs,
   },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginTop: 18,
-    zIndex: 1,
+  dotOuter: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 15,
+    backgroundColor: '#FFFFFF',
+    zIndex: 2,
+  },
+  dotInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   line: {
     position: 'absolute',
     top: 28,
-    bottom: -Spacing.sm,
-    width: 2,
-    backgroundColor: JournalTheme.timelineLine,
-    left: 9,
+    bottom: -12,
+    width: 1,
+    backgroundColor: '#E5E7EB',
+    left: 11,
+    zIndex: 1,
   },
+  
+  // Clean Revolut style card
   card: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: JournalTheme.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.sm + 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: Spacing.sm + 1,
     marginBottom: Spacing.xs,
-    ...cardShadow,
+    ...Platform.select({
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 3 },
+      android: { elevation: 1 },
+    }),
+  },
+  iconContainer: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardText: {
     flex: 1,
     marginLeft: Spacing.sm,
-    gap: 2,
+    gap: 1,
   },
-  checkCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: JournalTheme.completed,
+  statusCol: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
+    marginLeft: Spacing.xs,
+  },
+  statusDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  statusText: {
+    fontSize: 8,
+    letterSpacing: 0.4,
   },
 });
