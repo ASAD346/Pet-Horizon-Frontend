@@ -74,11 +74,9 @@ export function LogMedicineSheet({
         notes: '',
       });
     }
-    setError(null);
   }, [initialEntry]);
-
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
 
   useEffect(() => {
     if (visible) {
@@ -86,48 +84,45 @@ export function LogMedicineSheet({
     }
   }, [visible, resetForm]);
 
-  const { showToast } = useToast();
-
   const handleSave = async () => {
     if (saving) return;
     if (!petId || !token) {
-      setError('Add a pet before saving a medicine schedule.');
+      showErrorToast('Add a pet before saving a medicine schedule.');
       return;
     }
 
     const name = entry.medicineName.trim();
     if (!name) {
-      setError('Enter a medicine name.');
+      showErrorToast('Enter a medicine name.');
       return;
     }
 
     const dose = buildDoseString(entry.doseAmount, entry.doseForm);
     if (!dose) {
-      setError('Enter a valid dose amount.');
+      showErrorToast('Enter a valid dose amount.');
       return;
     }
 
     if (entry.frequency === 'weekly' && entry.daysOfWeek.length === 0) {
-      setError('Select at least one day for a weekly schedule.');
+      showErrorToast('Select at least one day for a weekly schedule.');
       return;
     }
 
     const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
-      setError(dateError);
+      showErrorToast(dateError);
       return;
     }
 
     const pills = parseTotalPills(entry.totalPills);
     if (pills === null) {
-      setError('Enter a valid total quantity.');
+      showErrorToast('Enter a valid total quantity.');
       return;
     }
 
     const timeHHmm = dateToTimeHHmm(entry.medicineTime);
 
     setSaving(true);
-    setError(null);
     try {
       await saveScheduleEntry(token, petId, 'medicine', entry);
       const isEdit = Boolean(entry.scheduleId);
@@ -141,7 +136,7 @@ export function LogMedicineSheet({
       onSaved?.();
       onClose();
     } catch (e) {
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -158,7 +153,6 @@ export function LogMedicineSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Medicine'}
       onSave={handleSave}
       saving={saving}
-      error={error}
       compact
     >
       <MedicineEntryCard

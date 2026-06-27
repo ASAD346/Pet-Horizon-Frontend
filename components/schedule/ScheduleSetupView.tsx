@@ -13,8 +13,6 @@ import { SafeModal } from '@/components/ui/SafeModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
-import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { HomeTheme, Radius, Spacing, Palette } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ScheduleScreenHeader } from './ScheduleScreenHeader';
@@ -124,7 +122,7 @@ export function ScheduleSetupView({
   const petRef = useRef(pet);
   petRef.current = pet;
   const queryClient = useQueryClient();
-  const { showToast } = useToast();
+  const { showToast, showErrorToast } = useToast();
   const {
     canViewSchedule,
     canEditSchedule,
@@ -156,8 +154,6 @@ export function ScheduleSetupView({
     remoteId: string;
     entry: EditorEntry;
   } | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<'all' | ScheduleSectionKey>('all');
   const [fabMenuVisible, setFabMenuVisible] = useState(false);
 
@@ -196,9 +192,8 @@ export function ScheduleSetupView({
         });
         setSections(loaded);
         setCachedSchedules(petId, loaded);
-        setFormError(null);
       } catch (e) {
-        setFormError(e instanceof Error ? e.message : 'Unable to load schedules.');
+        showErrorToast(e instanceof Error ? e.message : 'Unable to load schedules.');
       } finally {
         setSchedulesLoading(false);
       }
@@ -292,7 +287,7 @@ export function ScheduleSetupView({
           setSections(loaded);
           setCachedSchedules(petId, loaded);
         } else if (!cached) {
-          setFormError('Unable to load saved schedules.');
+          showErrorToast('Unable to load saved schedules.');
         }
       } finally {
         if (!cancelled) {
@@ -324,8 +319,6 @@ export function ScheduleSetupView({
       ...prev,
       [key]: { ...prev[key], enabled },
     }));
-    setFormSuccess(null);
-    setFormError(null);
 
     try {
       const updatedPet = await updatePet(token, pet._id, { disabledCategories: newDisabled });
@@ -359,7 +352,6 @@ export function ScheduleSetupView({
 
   const openAddEditor = (sectionMeta: ScheduleSectionTheme) => {
     setEditorError(null);
-    setFormSuccess(null);
     setEditor({
       mode: 'add',
       section: sectionMeta,
@@ -395,7 +387,6 @@ export function ScheduleSetupView({
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       setEditor(null);
       const msg = editor.mode === 'add' ? 'Schedule added successfully.' : 'Schedule updated successfully.';
-      setFormSuccess(msg);
       showToast(msg);
       await reloadSchedules(pet._id);
     } catch (e) {
@@ -431,8 +422,6 @@ export function ScheduleSetupView({
     }
 
     setDeletingId(remoteId);
-    setFormError(null);
-    setFormSuccess(null);
 
     // Optimistic UI removal — immediately hide the entry before the API call
     const removedEntryId = entry.id;
@@ -481,8 +470,7 @@ export function ScheduleSetupView({
       console.error('[handleDeleteEntry] API failed:', e);
       // Rollback optimistic removal on failure
       const err = e instanceof Error ? e.message : 'Unable to delete schedule.';
-      setFormError(err);
-      showToast(err);
+      showErrorToast(err);
       void reloadSchedules(pet._id, { silent: true });
     } finally {
       setDeletingId(null);
@@ -623,10 +611,7 @@ export function ScheduleSetupView({
             </ScrollView>
           )}
 
-          {accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
-
-          {formSuccess ? <AuthInfoBanner message={formSuccess} /> : null}
-          {formError ? <AuthErrorBanner message={formError} /> : null}
+          {accessBannerMessage ? <View style={{ marginVertical: 12, padding: 12, backgroundColor: '#E3F2FD', borderRadius: 8 }}><AppText variant="caption">{accessBannerMessage}</AppText></View> : null}
 
           {awaitingPet ? (
             <View style={styles.awaitingPet}>

@@ -13,14 +13,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { PetPhotoPicker } from '@/components/pet';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme } from '@/components/profile/profileTheme';
 import { SectionLabel, SheetColors } from '@/components/sheets';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
@@ -45,7 +45,7 @@ export default function EditProfileScreen() {
   const [emailChangePending, setEmailChangePending] = useState(false);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
 
   // Active input state for gorgeous focus effects
   const [activeField, setActiveField] = useState<'name' | 'email' | 'otp' | null>(null);
@@ -60,18 +60,17 @@ export default function EditProfileScreen() {
 
   const handleSave = useCallback(async () => {
     if (!token || !user?._id) {
-      setError('Please log in again.');
+      showErrorToast('Please log in again.');
       return;
     }
 
     const trimmedName = fullName.trim();
     if (!trimmedName) {
-      setError('Full name is required.');
+      showErrorToast('Full name is required.');
       return;
     }
 
     setSaving(true);
-    setError(null);
 
     try {
       let nextUser = user;
@@ -92,7 +91,6 @@ export default function EditProfileScreen() {
         const response = await requestEmailChange(token, email.trim());
         setEmailChangePending(true);
         setDevOtpHint(response.devOtp ? `Dev code: ${response.devOtp}` : null);
-        setError(null);
         Alert.alert(
           'Verify new email',
           `${response.message}${response.devOtp ? `\n\nDev code: ${response.devOtp}` : ''}`,
@@ -112,11 +110,10 @@ export default function EditProfileScreen() {
       }
 
       await setSession({ token, user: nextUser });
-      Alert.alert('Profile updated', 'Your changes have been saved.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      showToast('Profile updated successfully!');
+      router.back();
     } catch (err) {
-      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -165,8 +162,6 @@ export default function EditProfileScreen() {
               Tap the circular badge above to upload or take a new picture
             </AppText>
           </View>
-
-          {error ? <View style={styles.banner}><AuthErrorBanner message={error} /></View> : null}
           {devOtpHint ? <View style={styles.banner}><AuthInfoBanner message={devOtpHint} /></View> : null}
 
           {/* Form container */}

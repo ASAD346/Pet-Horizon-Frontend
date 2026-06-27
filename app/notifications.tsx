@@ -10,8 +10,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonNotificationList } from '@/components/ui/skeletons';
@@ -21,6 +21,13 @@ export default function NotificationsScreen() {
   const { token } = useAuth();
   const { items, loading, error, reload, markRead, markAllRead, remove } = useNotifications(token);
   const [refreshing, setRefreshing] = React.useState(false);
+  const { showErrorToast } = useToast();
+
+  React.useEffect(() => {
+    if (error) {
+      showErrorToast(error);
+    }
+  }, [error, showErrorToast]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -43,12 +50,6 @@ export default function NotificationsScreen() {
           </AppText>
         </TouchableOpacity>
       </View>
-
-      {error ? (
-        <View style={styles.banner}>
-          <AuthErrorBanner message={error} />
-        </View>
-      ) : null}
 
       {loading && items.length === 0 ? (
         <SkeletonNotificationList />

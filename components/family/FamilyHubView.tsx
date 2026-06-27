@@ -7,8 +7,8 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useToast } from '@/hooks/useToast';
 import { FamilyHubHeader } from './FamilyHubHeader';
 import { FamilyOverviewCard } from '@/components/family/FamilyOverviewCard';
 import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
@@ -50,6 +50,13 @@ export function FamilyHubView() {
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
   const { members, loading: membersLoading, error: membersError, reload: reloadMembers } =
     usePetMembers(token, pet?._id ?? null, isOwner);
+  const { showErrorToast } = useToast();
+
+  useEffect(() => {
+    if (membersError) {
+      showErrorToast(membersError);
+    }
+  }, [membersError, showErrorToast]);
 
   const { canViewJournal, ownerName } = usePetPermissions(token, pet, user?._id);
   const [journalVisible, setJournalVisible] = useState(false);
@@ -214,12 +221,6 @@ export function FamilyHubView() {
         {pet && !isOwner ? (
           <View style={styles.bannerWrap}>
             <AuthInfoBanner message="Only the pet owner can invite members and manage family access." />
-          </View>
-        ) : null}
-
-        {membersError ? (
-          <View style={styles.bannerWrap}>
-            <AuthErrorBanner message={membersError} />
           </View>
         ) : null}
 

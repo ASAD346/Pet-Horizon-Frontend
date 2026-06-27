@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import {
   BirthdayField,
   BreedSelector,
@@ -27,6 +26,7 @@ import {
   WeightUnit,
 } from '@/components/pet';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import { LoginTheme, Palette, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
@@ -53,6 +53,7 @@ export default function RegisterPetScreen() {
   const isEditMode = params.mode === 'edit' && Boolean(params.petId);
   const editPetId = Array.isArray(params.petId) ? params.petId[0] : params.petId;
   const { token, user, setSession } = useAuth();
+  const { showToast, showErrorToast } = useToast();
 
   const [speciesList, setSpeciesList] = useState<string[]>([]);
   const [breeds, setBreeds] = useState<string[]>([]);
@@ -68,14 +69,12 @@ export default function RegisterPetScreen() {
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RegisterPetFieldErrors>({});
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [hasEditPermission, setHasEditPermission] = useState(true);
   const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
-    setFormError(null);
     setFieldErrors({});
   }, []);
 
@@ -83,7 +82,7 @@ export default function RegisterPetScreen() {
     if (!token) {
       setSpeciesLoading(false);
       log.fail('AddPet', 'Not authenticated');
-      setFormError('Please log in to register a pet.');
+      showErrorToast('Please log in to register a pet.');
       return;
     }
 
@@ -101,7 +100,7 @@ export default function RegisterPetScreen() {
         }
       } catch (error) {
         if (mounted) {
-          setFormError(getErrorMessage(error, 'Unable to load species.'));
+          showErrorToast(getErrorMessage(error, 'Unable to load species.'));
         }
       } finally {
         if (mounted) {
@@ -136,7 +135,7 @@ export default function RegisterPetScreen() {
         if (mounted) {
           setBreeds([]);
           setBreed('');
-          setFormError(getErrorMessage(error, 'Unable to load breeds.'));
+          showErrorToast(getErrorMessage(error, 'Unable to load breeds.'));
         }
       } finally {
         if (mounted) {
@@ -176,7 +175,7 @@ export default function RegisterPetScreen() {
           setHasEditPermission(false);
         }
       } catch (error) {
-        if (mounted) setFormError(getErrorMessage(error));
+        if (mounted) showErrorToast(getErrorMessage(error));
       }
     })();
 
@@ -205,7 +204,7 @@ export default function RegisterPetScreen() {
 
     if (!token) {
       log.fail('AddPet', 'Submit blocked — no token');
-      setFormError('Please log in to register a pet.');
+      showErrorToast('Please log in to register a pet.');
       isSubmitting.current = false;
       return;
     }
@@ -272,6 +271,8 @@ export default function RegisterPetScreen() {
 
       log.ok('AddPet', 'Done — navigating', { petId: pet._id, isAddMode, isEditMode });
 
+      showToast(isEditMode ? 'Pet profile updated' : 'Pet added successfully');
+
       if (isEditMode || isAddMode) {
         router.back();
       } else {
@@ -279,7 +280,7 @@ export default function RegisterPetScreen() {
       }
     } catch (error) {
       log.fail('AddPet', 'Submit failed', getErrorMessage(error));
-      setFormError(getErrorMessage(error, 'Unable to add your pet. Please try again.'));
+      showErrorToast(getErrorMessage(error, 'Unable to add your pet. Please try again.'));
     } finally {
       setLoading(false);
       isSubmitting.current = false;
@@ -320,7 +321,7 @@ export default function RegisterPetScreen() {
       }
       router.replace('/(tabs)');
     } catch (error) {
-      setFormError(getErrorMessage(error));
+      showErrorToast(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -359,7 +360,6 @@ export default function RegisterPetScreen() {
                   </AppText>
                 </View>
               )}
-              {formError ? <AuthErrorBanner message={formError} /> : null}
 
               <View pointerEvents={hasEditPermission ? 'auto' : 'none'} style={!hasEditPermission && { opacity: 0.6 }}>
                 <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />

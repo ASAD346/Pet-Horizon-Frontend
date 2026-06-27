@@ -61,7 +61,7 @@ export function LogVaccinationSheet({
   });
 
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
   const [history, setHistory] = useState<VaccinationHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -97,7 +97,6 @@ export function LogVaccinationSheet({
         notes: '',
       });
     }
-    setError(null);
   }, [initialEntry]);
 
   useEffect(() => {
@@ -107,26 +106,23 @@ export function LogVaccinationSheet({
     }
   }, [visible, resetForm, loadHistory]);
 
-  const { showToast } = useToast();
-
   const handleSave = async () => {
     if (saving) return;
     if (!petId || !token) {
-      setError('Add a pet before saving a vaccination.');
+      showErrorToast('Add a pet before saving a vaccination.');
       return;
     }
     if (!entry.vaccineName.trim()) {
-      setError('Enter a vaccine name.');
+      showErrorToast('Enter a vaccine name.');
       return;
     }
     const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
-      setError(dateError);
+      showErrorToast(dateError);
       return;
     }
 
     setSaving(true);
-    setError(null);
     try {
       await saveScheduleEntry(token, petId, 'vaccination', entry);
       const isEdit = Boolean(entry.scheduleId);
@@ -138,7 +134,7 @@ export function LogVaccinationSheet({
       await loadHistory();
       onClose();
     } catch (e) {
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -156,7 +152,6 @@ export function LogVaccinationSheet({
       onSave={handleSave}
       saving={saving}
       saveDisabled={!entry.vaccineName.trim()}
-      error={error}
       compact
     >
       <VaccinationEntryCard

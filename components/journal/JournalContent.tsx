@@ -7,8 +7,8 @@ import {
   View,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useJournalEntries } from '@/hooks/useJournalEntries';
@@ -57,6 +57,13 @@ export function JournalContent({ active = true }: JournalContentProps) {
     pet?._id ?? null,
     active && Boolean(pet?._id),
   );
+  const { showErrorToast } = useToast();
+
+  useEffect(() => {
+    if (error) {
+      showErrorToast(error);
+    }
+  }, [error, showErrorToast]);
 
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
   const [selectedDateId, setSelectedDateId] = useState(() => toDateKey(new Date()));
@@ -150,7 +157,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
       await uploadJournalImage(token, target._id, result.assets[0].uri);
       await reload();
     } catch (err) {
-      Alert.alert('Upload failed', getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
     } finally {
       setUploadingPhoto(false);
     }
@@ -188,12 +195,6 @@ export function JournalContent({ active = true }: JournalContentProps) {
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={themeColor} />
       }
     >
-      {error ? (
-        <View style={styles.messageWrap}>
-          <AuthErrorBanner message={error} />
-        </View>
-      ) : null}
-
       {accessBannerMessage ? (
         <View style={styles.messageWrap}>
           <AuthInfoBanner message={accessBannerMessage} />

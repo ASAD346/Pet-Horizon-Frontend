@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme, formatPlanPrice } from '@/components/profile/profileTheme';
@@ -21,6 +20,7 @@ import { SectionLabel, SheetColors } from '@/components/sheets';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonBillingHistory } from '@/components/ui/skeletons';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
   cancelPremium,
@@ -41,8 +41,7 @@ export default function BillingScreen() {
   const [loading, setLoading] = useState(true);
   const [savingMethod, setSavingMethod] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
 
   // Focus state for the text input
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -50,7 +49,6 @@ export default function BillingScreen() {
   const reload = useCallback(async () => {
     if (!token) return;
     setLoading(true);
-    setError(null);
     try {
       const [premiumStatus, invoiceList] = await Promise.all([
         fetchPremiumStatus(token),
@@ -59,7 +57,7 @@ export default function BillingScreen() {
       setStatus(premiumStatus);
       setInvoices(invoiceList);
     } catch (err) {
-      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -81,13 +79,12 @@ export default function BillingScreen() {
           style: 'destructive',
           onPress: async () => {
             setCancelling(true);
-            setError(null);
             try {
               const result = await cancelPremium(token);
-              setInfo(result.message);
+              showToast(result.message);
               await reload();
             } catch (err) {
-              setError(getErrorMessage(err));
+              showErrorToast(getErrorMessage(err));
             } finally {
               setCancelling(false);
             }
@@ -99,16 +96,15 @@ export default function BillingScreen() {
 
   const handleUpdateMethod = async () => {
     if (!token || !paymentMethodId.trim()) {
-      setError('Enter a payment method ID.');
+      showErrorToast('Enter a payment method ID.');
       return;
     }
     setSavingMethod(true);
-    setError(null);
     try {
       const result = await updatePaymentMethod(token, paymentMethodId.trim());
-      setInfo(result.message);
+      showToast(result.message);
     } catch (err) {
-      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
     } finally {
       setSavingMethod(false);
     }
@@ -124,9 +120,6 @@ export default function BillingScreen() {
       <ProfileScreenHeader title="Billing" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {error ? <View style={styles.banner}><AuthErrorBanner message={error} /></View> : null}
-        {info ? <View style={styles.banner}><AuthInfoBanner message={info} /></View> : null}
-
         {/* Current plan stylized card */}
         <View style={styles.ticketCard}>
           <LinearGradient

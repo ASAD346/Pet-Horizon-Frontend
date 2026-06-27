@@ -1,5 +1,5 @@
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useToast } from '@/hooks/useToast';
 import { SheetOptionPicker } from '@/components/sheets';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +11,7 @@ import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Platform,
   RefreshControl,
@@ -87,6 +87,14 @@ export function ExpenseTrackerView({
     token,
     pet?._id,
   );
+  const { showErrorToast } = useToast();
+
+  useEffect(() => {
+    if (error) {
+      showErrorToast(error);
+    }
+  }, [error, showErrorToast]);
+
   const { unreadCount } = useNotifications(token);
   const isPremium = user?.premiumStatus === 'premium';
   const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
@@ -140,8 +148,6 @@ export function ExpenseTrackerView({
         {accessBannerMessage && canViewExpenses ? (
           <AuthInfoBanner message={accessBannerMessage} />
         ) : null}
-
-        {error ? <AuthErrorBanner message={error} /> : null}
 
         {canViewExpenses ? (
           <>

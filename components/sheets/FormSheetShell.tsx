@@ -13,7 +13,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { FormSheetHero } from './FormSheetHero';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
@@ -32,7 +31,6 @@ interface FormSheetShellProps {
   onSave?: () => void;
   saving?: boolean;
   saveDisabled?: boolean;
-  error?: string | null;
   compact?: boolean;
   children: React.ReactNode;
 }
@@ -49,7 +47,6 @@ export function FormSheetShell({
   onSave,
   saving,
   saveDisabled,
-  error,
   compact = false,
   children,
 }: FormSheetShellProps) {
@@ -116,8 +113,6 @@ export function FormSheetShell({
                   subtitle={subtitle}
                 />
               ) : null}
-
-              {error ? <AuthErrorBanner message={error} /> : null}
 
               {children}
             </ScrollView>

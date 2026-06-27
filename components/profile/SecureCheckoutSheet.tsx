@@ -14,7 +14,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { SectionLabel, SheetColors } from '@/components/sheets';
 import { Radius, Spacing } from '@/constants/theme';
 import type { PremiumPlan } from '@/types/premium';
@@ -26,7 +25,6 @@ interface SecureCheckoutSheetProps {
   onClose: () => void;
   onConfirm: () => Promise<void>;
   loading?: boolean;
-  error?: string | null;
 }
 
 export function SecureCheckoutSheet({
@@ -35,7 +33,6 @@ export function SecureCheckoutSheet({
   onClose,
   onConfirm,
   loading,
-  error,
 }: SecureCheckoutSheetProps) {
   const insets = useSafeAreaInsets();
   const [cardholder, setCardholder] = useState('');
@@ -185,13 +182,6 @@ export function SecureCheckoutSheet({
                   <AppText variant="body" weight="800" color="#1E5838">
                     {formatPlanPrice(plan.price)}
                   </AppText>
-                </View>
-              ) : null}
-
-              {/* ── Error Banner ─────────────────────────────────── */}
-              {error ? (
-                <View style={styles.errorBanner}>
-                  <AuthErrorBanner message={error} />
                 </View>
               ) : null}
 

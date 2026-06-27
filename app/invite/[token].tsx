@@ -10,8 +10,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonInviteCard } from '@/components/ui/skeletons';
@@ -32,25 +32,24 @@ export default function InviteAcceptScreen() {
   const [info, setInfo] = useState<InviteInfoResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showErrorToast } = useToast();
 
   const loadInfo = useCallback(async () => {
     if (!inviteToken) {
-      setError('Invalid invitation link.');
+      showErrorToast('Invalid invitation link.');
       setLoading(false);
       return;
     }
     setLoading(true);
-    setError(null);
     try {
       const data = await fetchInviteInfo(inviteToken);
       setInfo(data);
     } catch (err) {
-      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [inviteToken]);
+  }, [inviteToken, showErrorToast]);
 
   useEffect(() => {
     loadInfo();
@@ -65,13 +64,12 @@ export default function InviteAcceptScreen() {
     }
 
     if (info && !info.valid) {
-      setError('This invitation is no longer valid.');
+      showErrorToast('This invitation is no longer valid.');
       return;
     }
 
     if (!authToken) return;
     setAccepting(true);
-    setError(null);
     try {
       const result = await acceptPetInvite(authToken, inviteToken);
       const joinedPetId = result.petId ?? info?.pet?.petId;
@@ -90,7 +88,7 @@ export default function InviteAcceptScreen() {
         { text: 'OK', onPress: () => router.replace('/(tabs)') },
       ]);
     } catch (err) {
-      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
     } finally {
       setAccepting(false);
     }
@@ -110,8 +108,6 @@ export default function InviteAcceptScreen() {
         <AppText variant="h2" weight="800" color={HomeTheme.text} style={styles.title}>
           Family Invitation
         </AppText>
-
-        {error ? <AuthErrorBanner message={error} /> : null}
 
         {info ? (
           <>

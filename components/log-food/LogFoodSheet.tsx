@@ -55,7 +55,7 @@ export function LogFoodSheet({
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [featuresLoading, setFeaturesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
 
   const [entry, setEntry] = useState<FeedingEntryState>(() => ({
     id: 'draft',
@@ -85,7 +85,6 @@ export function LogFoodSheet({
         notes: '',
       });
     }
-    setError(null);
   }, [initialEntry]);
 
   const loadSpeciesFeatures = useCallback(async () => {
@@ -131,7 +130,6 @@ export function LogFoodSheet({
     }
 
     setFeaturesLoading(true);
-    setError(null);
     try {
       const perms = await fetchPetPermissions(token, petId);
       const features = perms.speciesFeatures;
@@ -148,12 +146,12 @@ export function LogFoodSheet({
     } catch (e) {
       setMealTypeOptions([]);
       setUnitOptions([]);
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
       log.fail('LogFood', 'Load species features failed', getErrorMessage(e));
     } finally {
       setFeaturesLoading(false);
     }
-  }, [petId, token, propsMealTypeOptions, propsUnitOptions]);
+  }, [petId, token, propsMealTypeOptions, propsUnitOptions, showErrorToast]);
 
   useEffect(() => {
     if (visible) {
@@ -162,36 +160,33 @@ export function LogFoodSheet({
     }
   }, [visible, resetForm, loadSpeciesFeatures]);
 
-  const { showToast } = useToast();
-
   const handleSave = async () => {
     if (saving) return;
     if (!petId || !token) {
-      setError('Add a pet before saving a feeding schedule.');
+      showErrorToast('Add a pet before saving a feeding schedule.');
       return;
     }
     if (!entry.mealType) {
-      setError('Select a meal type.');
+      showErrorToast('Select a meal type.');
       return;
     }
     if (!entry.unit) {
-      setError('Select a unit.');
+      showErrorToast('Select a unit.');
       return;
     }
     if (!entry.amount.trim()) {
-      setError('Enter an amount.');
+      showErrorToast('Enter an amount.');
       return;
     }
     const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
-      setError(dateError);
+      showErrorToast(dateError);
       return;
     }
 
     const timeHHmm = dateToTimeHHmm(entry.feedingTime);
 
     setSaving(true);
-    setError(null);
     try {
       await saveScheduleEntry(token, petId, 'feeding', entry);
       const isEdit = Boolean(entry.scheduleId);
@@ -200,7 +195,7 @@ export function LogFoodSheet({
       onSaved?.();
       onClose();
     } catch (e) {
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -218,7 +213,6 @@ export function LogFoodSheet({
       onSave={handleSave}
       saving={saving}
       saveDisabled={featuresLoading || !entry.mealType || !entry.unit || !hasPermission}
-      error={error}
       compact
     >
       {!hasPermission && (

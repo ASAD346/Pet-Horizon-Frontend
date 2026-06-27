@@ -66,11 +66,9 @@ export function LogWalkSheet({
         notes: '',
       });
     }
-    setError(null);
   }, [initialEntry]);
-
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
 
   useEffect(() => {
     if (visible) {
@@ -78,30 +76,27 @@ export function LogWalkSheet({
     }
   }, [visible, resetForm]);
 
-  const { showToast } = useToast();
-
   const handleSave = async () => {
     if (saving) return;
     if (!petId || !token) {
-      setError('Add a pet before saving a walk schedule.');
+      showErrorToast('Add a pet before saving a walk schedule.');
       return;
     }
 
     const durationMinutes = parseDurationMinutes(entry.duration);
     if (durationMinutes === null) {
-      setError('Enter a valid duration in minutes.');
+      showErrorToast('Enter a valid duration in minutes.');
       return;
     }
     const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
-      setError(dateError);
+      showErrorToast(dateError);
       return;
     }
 
     const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
 
     setSaving(true);
-    setError(null);
     try {
       await saveScheduleEntry(token, petId, 'walk', entry);
       const isEdit = Boolean(entry.scheduleId);
@@ -110,7 +105,7 @@ export function LogWalkSheet({
       onSaved?.();
       onClose();
     } catch (e) {
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -127,7 +122,6 @@ export function LogWalkSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Walk'}
       onSave={handleSave}
       saving={saving}
-      error={error}
       compact
     >
       <WalkEntryCard

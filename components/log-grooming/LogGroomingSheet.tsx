@@ -58,7 +58,7 @@ export function LogGroomingSheet({
     notes: '',
   });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { showToast, showErrorToast } = useToast();
 
   const loadTypes = useCallback(async () => {
     if (propsTypeOptions?.length) {
@@ -93,7 +93,6 @@ export function LogGroomingSheet({
     }
 
     setLoadingTypes(true);
-    setError(null);
     try {
       const data = await fetchGroomingTypes(token, petId);
       setGroomingVisible(data.groomingVisible);
@@ -104,11 +103,11 @@ export function LogGroomingSheet({
       }));
     } catch (e) {
       setTypeOptions([]);
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
     } finally {
       setLoadingTypes(false);
     }
-  }, [petId, token, propsTypeOptions, propsGroomingVisible]);
+  }, [petId, token, propsTypeOptions, propsGroomingVisible, showErrorToast]);
 
   const resetForm = useCallback(() => {
     if (initialEntry) {
@@ -122,7 +121,6 @@ export function LogGroomingSheet({
         notes: '',
       });
     }
-    setError(null);
   }, [initialEntry]);
 
   useEffect(() => {
@@ -132,30 +130,27 @@ export function LogGroomingSheet({
     }
   }, [visible, resetForm, loadTypes]);
 
-  const { showToast } = useToast();
-
   const handleSave = async () => {
     if (saving) return;
     if (!petId || !token) {
-      setError('Add a pet before saving a grooming task.');
+      showErrorToast('Add a pet before saving a grooming task.');
       return;
     }
     if (!groomingVisible) {
-      setError('Grooming is not available for this pet species.');
+      showErrorToast('Grooming is not available for this pet species.');
       return;
     }
     if (!entry.groomingType) {
-      setError('Select a grooming type.');
+      showErrorToast('Select a grooming type.');
       return;
     }
     const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
-      setError(dateError);
+      showErrorToast(dateError);
       return;
     }
 
     setSaving(true);
-    setError(null);
     try {
       await saveScheduleEntry(token, petId, 'grooming', entry, { groomingVisible });
       const isEdit = Boolean(entry.recordId);
@@ -166,7 +161,7 @@ export function LogGroomingSheet({
       onSaved?.();
       onClose();
     } catch (e) {
-      setError(getErrorMessage(e));
+      showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);
     }
@@ -184,7 +179,6 @@ export function LogGroomingSheet({
       onSave={handleSave}
       saving={saving}
       saveDisabled={loadingTypes || !groomingVisible || !entry.groomingType}
-      error={error}
       compact
     >
       {loadingTypes ? (
