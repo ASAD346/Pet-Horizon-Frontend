@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -60,5 +60,14 @@ export function useActivePet(token: string | null) {
 
   useFocusReload(reload, Boolean(token));
 
+  useEffect(() => {
+    setPet(getActivePetCache(token) || null);
+    setLoading(Boolean(token && !activePetCacheLoaded(token)));
+    if (token) {
+      void reload(true);
+    }
+  }, [token, reload]);
+
   return { pet, loading, reload };
 }
+

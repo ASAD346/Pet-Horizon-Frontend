@@ -95,6 +95,12 @@ export function ProfileHubView() {
 
   useFocusReload(reload, Boolean(token && user?._id));
 
+  React.useEffect(() => {
+    if (token && user?._id) {
+      void reload();
+    }
+  }, [token, user?._id, reload]);
+
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await reload();

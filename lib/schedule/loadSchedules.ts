@@ -12,13 +12,13 @@ export async function loadExistingSchedules(
   options: { groomingVisible?: boolean; disabledCategories?: string[] } = {},
 ): Promise<ScheduleSectionsState> {
   const [feeding, walk, medicine, vaccination, grooming] = await Promise.all([
-    fetchFeedingSchedules(token, petId),
-    fetchWalkSchedules(token, petId),
-    fetchMedicineSchedules(token, petId),
-    fetchVaccinationSchedules(token, petId),
+    fetchFeedingSchedules(token, petId).catch(() => []),
+    fetchWalkSchedules(token, petId).catch(() => []),
+    fetchMedicineSchedules(token, petId).catch(() => []),
+    fetchVaccinationSchedules(token, petId).catch(() => []),
     options.groomingVisible === false
       ? Promise.resolve([])
-      : fetchGroomingRecords(token, petId),
+      : fetchGroomingRecords(token, petId).catch(() => []),
   ]);
 
   return buildScheduleSectionsState(

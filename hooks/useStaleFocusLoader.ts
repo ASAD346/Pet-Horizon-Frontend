@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useFocusReload, useStaleLoadScope } from './useStaleLoadScope';
 
 interface StaleFocusLoaderOptions<T> {
@@ -75,10 +75,21 @@ export function useStaleFocusLoader<T>({
     shouldBlockUI,
   ]);
 
+  useEffect(() => {
+    if (enabled && scopeKey) {
+      void reload(true);
+    } else {
+      reset();
+      onClearRef.current();
+      setLoadingRef.current(false);
+    }
+  }, [scopeKey, enabled, reload, reset]);
+
   if (focusReload) {
     useFocusReload(reload, enabled);
   }
 
   return reload;
 }
+
 
