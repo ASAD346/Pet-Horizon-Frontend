@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, Animated, Platform, Image } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -160,6 +161,11 @@ export function AuthEntryLoader() {
 
     return () => clearTimeout(halo2Timer);
   }, [logoScale, logoOpacity, haloScale1, haloOpacity1, haloScale2, haloOpacity2, progressAnim, contentFade]);
+
+  useEffect(() => {
+    // Dissolve the native flat green splash screen immediately because our custom UI is now mounted.
+    void SplashScreen.hideAsync();
+  }, []);
 
   // Interpolate progress translateX
   const progressTranslateX = progressAnim.interpolate({
