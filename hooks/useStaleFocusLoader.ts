@@ -41,11 +41,23 @@ export function useStaleFocusLoader<T>({
   const setLoadingRef = useRef(setLoading);
   setLoadingRef.current = setLoading;
 
+  const lastLoadedRef = useRef<number>(0);
+
+  useEffect(() => {
+    lastLoadedRef.current = 0;
+  }, [scopeKey]);
+
   const reload = useCallback(async (force = false) => {
     if (!enabled) {
       reset();
       onClearRef.current();
       setLoadingRef.current(false);
+      return;
+    }
+
+    // Throttling: If focus reload (not forced) and loaded within last 30 seconds, skip to avoid flashing UI
+    const now = Date.now();
+    if (!force && lastLoadedRef.current && (now - lastLoadedRef.current < 30000)) {
       return;
     }
 
@@ -61,6 +73,7 @@ export function useStaleFocusLoader<T>({
     try {
       const data = await loadRef.current();
       onSuccessRef.current(data);
+      lastLoadedRef.current = Date.now();
       markLoaded();
     } catch (error) {
       onErrorRef.current?.(error, block);
