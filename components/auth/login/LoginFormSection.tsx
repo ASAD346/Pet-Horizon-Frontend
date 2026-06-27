@@ -12,6 +12,8 @@ interface LoginFormSectionProps {
   loading: boolean;
   formError?: string | null;
   fieldErrors?: { email?: string; password?: string };
+  rememberMe: boolean;
+  onRememberMeChange: (val: boolean) => void;
   onEmailChange: (text: string) => void;
   onPasswordChange: (text: string) => void;
   onLogin: () => void;
@@ -26,6 +28,8 @@ export function LoginFormSection({
   password,
   loading,
   fieldErrors,
+  rememberMe,
+  onRememberMeChange,
   onEmailChange,
   onPasswordChange,
   onLogin,
@@ -80,11 +84,22 @@ export function LoginFormSection({
         </TouchableOpacity>
       ) : null}
 
-      <TouchableOpacity style={styles.forgotPassword} onPress={onForgotPassword}>
-        <AppText variant="bodySmall" color="#5CB35D" weight="700">
-          Forgot Password?
-        </AppText>
-      </TouchableOpacity>
+      <View style={styles.actionsRow}>
+        <TouchableOpacity style={styles.checkboxContainer} onPress={() => onRememberMeChange(!rememberMe)} activeOpacity={0.7}>
+          <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
+            {rememberMe ? <Ionicons name="checkmark" size={14} color="#FFFFFF" /> : null}
+          </View>
+          <AppText variant="bodySmall" color={Palette.gray[600]} weight="600">
+            Remember me
+          </AppText>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onForgotPassword}>
+          <AppText variant="bodySmall" color="#5CB35D" weight="700">
+            Forgot Password?
+          </AppText>
+        </TouchableOpacity>
+      </View>
 
       <AppButton
         title="Login"
@@ -135,14 +150,34 @@ const styles = StyleSheet.create({
     color: Palette.gray[500],
   },
   verifyRow: {
-    marginBottom: Spacing.sm,
-    marginTop: -Spacing.xs,
     alignSelf: 'flex-start',
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
     marginBottom: Spacing.md,
-    marginTop: -Spacing.xs,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.xs,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxActive: {
+    backgroundColor: '#114227',
+    borderColor: '#114227',
   },
   loginButton: {
     width: '100%',
