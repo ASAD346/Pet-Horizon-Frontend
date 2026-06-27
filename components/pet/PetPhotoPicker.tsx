@@ -1,10 +1,12 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { log } from '@/lib/log';
 import { LoginTheme } from '../../constants/theme';
+import { AppText } from '@/components/ui/AppText';
+import { PhotoPickerBottomSheet } from '@/components/shared/PhotoPickerBottomSheet';
 
 interface PetPhotoPickerProps {
   imageUri?: string | null;
@@ -12,6 +14,8 @@ interface PetPhotoPickerProps {
 }
 
 export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps) {
+  const [isModalVisible, setModalVisible] = useState(false);
+
   const applyPickedUri = useCallback(
     (uri: string) => {
       onImageChange?.(uri);
@@ -78,29 +82,8 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
       return;
     }
 
-    const options: { text: string; onPress?: () => void; style?: 'cancel' | 'destructive' }[] = [
-      { text: 'Choose from library', onPress: () => void pickFromLibrary() },
-    ];
-
-    if (Platform.OS as string !== 'web') {
-      options.unshift({ text: 'Take photo', onPress: () => void pickFromCamera() });
-    }
-
-    if (imageUri) {
-      options.push({
-        text: 'Remove photo',
-        style: 'destructive',
-        onPress: () => {
-          onImageChange?.(null);
-          log.info('AddPet', 'Photo removed');
-        },
-      });
-    }
-
-    options.push({ text: 'Cancel', style: 'cancel' });
-
-    Alert.alert('Pet photo', 'Add a picture for your pet', options);
-  }, [imageUri, onImageChange, pickFromCamera, pickFromLibrary]);
+    setModalVisible(true);
+  }, [imageUri, onImageChange, pickFromLibrary]);
 
   return (
     <View style={styles.wrapper}>
@@ -114,6 +97,17 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
           <Ionicons name={imageUri ? 'pencil' : 'add'} size={14} color={LoginTheme.footerText} />
         </View>
       </TouchableOpacity>
+
+      <PhotoPickerBottomSheet
+        isVisible={isModalVisible}
+        onClose={() => setModalVisible(false)}
+        onTakePhoto={() => void pickFromCamera()}
+        onChooseFromLibrary={() => void pickFromLibrary()}
+        onRemovePhoto={imageUri ? () => {
+          onImageChange?.(null);
+          log.info('AddPet', 'Photo removed');
+        } : null}
+      />
     </View>
   );
 }
@@ -148,9 +142,7 @@ const styles = StyleSheet.create({
     height: 26,
     borderRadius: 13,
     backgroundColor: '#5CB35D',
-    alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#F1F7F1',
+    alignItems: 'center',
   },
 });
