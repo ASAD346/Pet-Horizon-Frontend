@@ -76,6 +76,7 @@ export function buildGuestMemberDisplay(
   user: ApiUser,
   allowedModules: string[],
   accessLevel: string,
+  hostName?: string | null,
 ): FamilyMemberDisplay {
   const subtitle =
     accessLevel === 'admin' ? 'ADMIN 👑' : formatAllowedModules(allowedModules);
@@ -86,6 +87,7 @@ export function buildGuestMemberDisplay(
     subtitle,
     isAdmin: accessLevel === 'admin',
     avatarColor: AVATAR_COLORS[1],
+    hostBadge: hostName ? `Joined via ${hostName}'s invitation` : 'Joined via Invitation',
   };
 }
 

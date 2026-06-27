@@ -68,4 +68,5 @@ export interface FamilyMemberDisplay {
   subtitle: string;
   isAdmin: boolean;
   avatarColor: string;
+  hostBadge?: string;
 }

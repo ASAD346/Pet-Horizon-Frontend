@@ -29,6 +29,7 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { usePets } from '@/hooks/usePets';
 import { useDashboardQuery } from '@/hooks/useDashboardQuery';
+import { useToast } from '@/hooks/useToast';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
 
 import { resolveMediaUrl } from '@/lib/mediaUrl';
@@ -130,6 +131,8 @@ export default function HomeScreen() {
     pet?._id ?? user?.activePetId,
     user?._id,
   );
+
+  const { showToast } = useToast();
 
   useFocusEffect(
     useCallback(() => {
@@ -321,20 +324,32 @@ export default function HomeScreen() {
   }, [groomingRecords]);
 
   const handleSwitchPet = useCallback(async (petId: string) => {
-    if (!token) return;
-    await switchPet(petId);
-    if (user) {
-      await activatePetSession({
-        token,
-        petId,
-        user,
-        setSession,
-      });
+    if (!token || petId === pet?._id) {
+      setPetSwitcherVisible(false);
+      return;
     }
-    await reloadPet();
-    await reloadPets();
+    
+    // Close switcher sheet instantly for snappy UX
     setPetSwitcherVisible(false);
-  }, [token, switchPet, user, setSession, reloadPet, reloadPets]);
+    
+    try {
+      if (user) {
+        await activatePetSession({
+          token,
+          petId,
+          user,
+          setSession,
+        });
+      }
+      // Trigger updates in parallel without blocking the main thread
+      void reloadPet();
+      void reloadPets();
+      void refetchDashboard();
+    } catch (err) {
+      log.fail('Home', 'Switch pet failed', getErrorMessage(err));
+      Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
+    }
+  }, [token, pet?._id, user, setSession, reloadPet, reloadPets, refetchDashboard]);
 
   const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {
@@ -462,6 +477,9 @@ export default function HomeScreen() {
           canView={canView}
           canEdit={canEdit}
           isPremium={isPremium}
+          onPermissionDenied={(actionLabel) => {
+            showToast(`You do not have permission to edit ${actionLabel.toLowerCase()}.`);
+          }}
         />
 
         <UpNextSection

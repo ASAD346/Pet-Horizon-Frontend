@@ -12,6 +12,8 @@ interface MembersListSectionProps {
   manageableIds?: string[];
   onMemberSettingsPress?: (memberId: string) => void;
   isPremium?: boolean;
+  isOwner?: boolean;
+  hostName?: string | null;
 }
 
 function MemberAvatar({ color }: { color: string }) {
@@ -30,6 +32,8 @@ export function MembersListSection({
   manageableIds = [],
   onMemberSettingsPress,
   isPremium = false,
+  isOwner = true,
+  hostName = null,
 }: MembersListSectionProps) {
   const activeCount = members.length;
 
@@ -43,7 +47,7 @@ export function MembersListSection({
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
         <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-          Care Team
+          Care Team {!isOwner ? '(Guest Access)' : ''}
         </AppText>
         <View style={[styles.activeBadge, { backgroundColor: isPremium ? '#E8F5E9' : '#EEF8EE' }]}>
           <AppText variant="caption" weight="800" color={themeGreen}>
@@ -51,6 +55,15 @@ export function MembersListSection({
           </AppText>
         </View>
       </View>
+
+      {!isOwner && (
+        <View style={styles.guestInfoBanner}>
+          <Ionicons name="information-circle-outline" size={16} color={themeGreen} style={{ marginRight: 6 }} />
+          <AppText variant="caption" weight="700" color={themeGreen} style={styles.guestInfoText}>
+            You have guest editing access. Contact {hostName || 'the owner'} to manage permissions.
+          </AppText>
+        </View>
+      )}
 
       {loading ? (
         <SkeletonList count={3} cardStyle={styles.memberCard} />
@@ -85,6 +98,15 @@ export function MembersListSection({
                 <AppText variant="caption" weight="500" color={HomeTheme.textMuted} numberOfLines={1}>
                   {member.subtitle}
                 </AppText>
+
+                {member.hostBadge ? (
+                  <View style={styles.hostBadgeRow}>
+                    <Ionicons name="link-outline" size={10} color={themeGreen} style={{ marginRight: 3 }} />
+                    <AppText variant="caption" weight="800" color={themeGreen} style={styles.hostBadgeText}>
+                      {member.hostBadge}
+                    </AppText>
+                  </View>
+                ) : null}
               </View>
 
               <View style={styles.rightActionRow}>
@@ -231,5 +253,28 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     maxWidth: 250,
     marginTop: 2,
+  },
+  guestInfoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EEF8EE',
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(92, 179, 93, 0.2)',
+  },
+  guestInfoText: {
+    flex: 1,
+    lineHeight: 15,
+  },
+  hostBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  hostBadgeText: {
+    fontSize: 9,
   },
 });

@@ -108,6 +108,7 @@ export interface PetAccessControls {
   canViewExpenses: boolean;
   canEditExpenses: boolean;
   accessBannerMessage: string | null;
+  ownerName: string | null;
 }
 
 export function buildPetAccessControls(params: {
@@ -123,6 +124,7 @@ export function buildPetAccessControls(params: {
   const lockedModules = normalizeLockedModules(permissions?.lockedModules);
   const remoteHidden = permissions?.speciesFeatures?.hiddenModules;
   const isReadOnly = !isOwner && !canEditAccessLevel(accessLevel);
+  const ownerName = permissions?.ownerName ?? null;
 
   const canView = (moduleId: AppModuleId): boolean => {
     if (!isSpeciesModuleVisible(moduleId, species, remoteHidden)) return false;
@@ -169,6 +171,7 @@ export function buildPetAccessControls(params: {
     canViewExpenses: canView('expenses'),
     canEditExpenses: canEdit('expenses'),
     accessBannerMessage,
+    ownerName,
   };
 }
 

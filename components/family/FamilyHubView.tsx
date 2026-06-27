@@ -51,7 +51,7 @@ export function FamilyHubView() {
   const { members, loading: membersLoading, error: membersError, reload: reloadMembers } =
     usePetMembers(token, pet?._id ?? null, isOwner);
 
-  const { canViewJournal } = usePetPermissions(token, pet, user?._id);
+  const { canViewJournal, ownerName } = usePetPermissions(token, pet, user?._id);
   const [journalVisible, setJournalVisible] = useState(false);
 
   const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
@@ -85,8 +85,10 @@ export function FamilyHubView() {
   const isPremium = dbPremium ?? (user?.premiumStatus === 'premium');
   const canInvite = Boolean(pet?._id && token && isOwner && isPremium);
 
-  const userName = user?.name?.split(' ')[0] ?? user?.name ?? null;
-  const familyName = userName ? `${userName}'s Family` : 'Your Family';
+  const userName = user?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? null;
+  const familyName = isOwner
+    ? (userName ? `${userName}'s Family` : 'Your Family')
+    : (ownerName ? `${ownerName}'s Family` : 'Shared Family');
   const displayMembers = useMemo(() => {
     if (!user) return [];
     if (isOwner) {
@@ -108,19 +110,24 @@ export function FamilyHubView() {
     try {
       const perms = await fetchPetPermissions(token, pet._id);
       setGuestMembers([
-        buildGuestMemberDisplay(user, perms.allowedModules ?? [], perms.accessLevel),
+        buildGuestMemberDisplay(
+          user,
+          perms.allowedModules ?? [],
+          perms.accessLevel,
+          perms.ownerName || ownerName,
+        ),
       ]);
       markGuestLoaded();
     } catch {
       if (block) {
         setGuestMembers([
-          buildGuestMemberDisplay(user, [], 'readonly'),
+          buildGuestMemberDisplay(user, [], 'readonly', ownerName),
         ]);
       }
     } finally {
       setGuestLoading(false);
     }
-  }, [token, pet?._id, isOwner, user, shouldBlockGuestUI, markGuestLoaded, resetGuestScope]);
+  }, [token, pet?._id, isOwner, user, shouldBlockGuestUI, markGuestLoaded, resetGuestScope, ownerName]);
 
   useEffect(() => {
     loadGuestAccess();
@@ -242,6 +249,8 @@ export function FamilyHubView() {
               loading={(membersLoading && isOwner) || (guestLoading && !isOwner)}
               manageableIds={isOwner ? manageableMemberIds : []}
               isPremium={isPremium}
+              isOwner={isOwner}
+              hostName={ownerName}
               onMemberSettingsPress={(memberId) => {
                 const row = members.find((member) => member.userId._id === memberId);
                 if (row) {

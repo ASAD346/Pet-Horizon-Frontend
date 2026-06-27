@@ -61,6 +61,7 @@ interface QuickActionsSectionProps {
   canView?: (moduleId: AppModuleId) => boolean;
   canEdit?: (moduleId: AppModuleId) => boolean;
   isPremium?: boolean;
+  onPermissionDenied?: (actionLabel: string) => void;
 }
 
 const ACTION_HANDLERS: Record<
@@ -84,6 +85,7 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
   canView,
   canEdit,
   isPremium = false,
+  onPermissionDenied,
 }: QuickActionsSectionProps) {
   const handlers = {
     onLogFoodPress,
@@ -94,11 +96,9 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
   };
 
   const visibleActions = ACTIONS.filter((action) => {
+    // Hide species-incompatible modules (e.g. Grooming for species that don't support it)
     if (action.label === 'Grooming' && !groomingVisible) return false;
-    const moduleId = QUICK_ACTION_MODULES[action.label];
-    if (!moduleId) return true;
-    if (canEdit) return canEdit(moduleId);
-    if (canView) return canView(moduleId);
+    // Keep modules visible regardless of edit/view permissions (they will be disabled)
     return true;
   });
 
@@ -149,37 +149,53 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
         {visibleActions.map((action) => {
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
+          const moduleId = QUICK_ACTION_MODULES[action.label];
+          
+          // Disable if the user lacks edit permission
+          const isDisabled = moduleId ? (canEdit ? !canEdit(moduleId) : false) : false;
 
           return (
             <TouchableOpacity
               key={action.label}
-              activeOpacity={0.8}
-              onPress={() => handlePress(onPress)}
-              style={styles.cardWrapper}
+              activeOpacity={isDisabled ? 0.95 : 0.8}
+              onPress={() => {
+                if (isDisabled) {
+                  if (onPermissionDenied) {
+                    onPermissionDenied(action.label);
+                  }
+                } else if (onPress) {
+                  handlePress(onPress);
+                }
+              }}
+              style={[styles.cardWrapper, isDisabled && { opacity: 0.55 }]}
             >
               <LinearGradient
                 colors={cardColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={[styles.tileCard, { borderColor: cardBorderColor }]}
+                style={[styles.tileCard, { borderColor: isDisabled ? 'rgba(0,0,0,0.08)' : cardBorderColor }]}
               >
-                {/* Header elements: Icon container on left, plus icon on right */}
+                {/* Header elements: Icon container on left, plus/lock icon on right */}
                 <View style={styles.cardHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: iconCircleBg }]}>
-                    <MaterialCommunityIcons name={action.icon} size={16} color={cardTint} />
+                  <View style={[styles.iconCircle, { backgroundColor: isDisabled ? 'rgba(0,0,0,0.04)' : iconCircleBg }]}>
+                    <MaterialCommunityIcons name={action.icon} size={16} color={isDisabled ? 'rgba(0,0,0,0.4)' : cardTint} />
                   </View>
-                  <View style={[styles.plusButton, { backgroundColor: cardPlusBg }]}>
-                    <Feather name="plus" size={10} color={plusIconColor} style={styles.plusIcon} />
+                  <View style={[styles.plusButton, { backgroundColor: isDisabled ? 'rgba(0,0,0,0.06)' : cardPlusBg }]}>
+                    {isDisabled ? (
+                      <Feather name="lock" size={9} color="rgba(0,0,0,0.5)" style={styles.plusIcon} />
+                    ) : (
+                      <Feather name="plus" size={10} color={plusIconColor} style={styles.plusIcon} />
+                    )}
                   </View>
                 </View>
 
                 {/* Footer elements: Action title and subtext */}
                 <View style={styles.textContainer}>
-                  <AppText variant="bodySmall" weight="800" color={cardTint} style={styles.label}>
+                  <AppText variant="bodySmall" weight="800" color={isDisabled ? 'rgba(0,0,0,0.5)' : cardTint} style={styles.label}>
                     {action.displayLabel}
                   </AppText>
-                  <AppText variant="caption" weight="500" color={cardTint} style={styles.subLabel}>
-                    {action.subText}
+                  <AppText variant="caption" weight="500" color={isDisabled ? 'rgba(0,0,0,0.35)' : cardTint} style={styles.subLabel}>
+                    {isDisabled ? 'Restricted' : action.subText}
                   </AppText>
                 </View>
               </LinearGradient>

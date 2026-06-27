@@ -68,4 +68,5 @@ export interface PetPermissionsResponse {
   allowedModules: string[];
   lockedModules: string[];
   speciesFeatures: SpeciesFeatures;
+  ownerName?: string;
 }
