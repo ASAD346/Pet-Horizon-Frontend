@@ -388,31 +388,6 @@ export function ScheduleSetupView({
     setEditorSaving(true);
     setEditorError(null);
 
-    const now = new Date();
-    const scheduledTimeObj = getEntryTime(editor.section.key, editor.entry);
-    const scheduleDateState = (editor.entry as any).scheduleDate as ScheduleDateState | undefined;
-    
-    if (scheduleDateState) {
-      const referenceDate = scheduleDateState.mode === 'single' ? scheduleDateState.singleDate : scheduleDateState.startDate;
-      if (referenceDate) {
-        const combinedDateTime = new Date(referenceDate);
-        combinedDateTime.setHours(
-          scheduledTimeObj.getHours(),
-          scheduledTimeObj.getMinutes(),
-          0,
-          0
-        );
-        
-        if (combinedDateTime < now) {
-          const err = 'Cannot schedule an activity in the past.';
-          setEditorError(err);
-          showToast(err);
-          setEditorSaving(false);
-          return;
-        }
-      }
-    }
-
     try {
       await saveScheduleEntry(token, pet._id, editor.section.key, editor.entry, {
         groomingVisible,

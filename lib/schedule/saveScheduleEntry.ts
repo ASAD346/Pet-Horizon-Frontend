@@ -48,6 +48,30 @@ export async function saveScheduleEntry(
     | GroomingEntryState,
   options: { groomingVisible?: boolean } = {},
 ): Promise<void> {
+  const scheduleDateState = (entry as any).scheduleDate;
+  if (scheduleDateState) {
+    const referenceDate = scheduleDateState.mode === 'single' ? scheduleDateState.singleDate : scheduleDateState.startDate;
+    if (referenceDate) {
+      let timeDate = new Date();
+      if (key === 'feeding') timeDate = (entry as FeedingEntryState).feedingTime;
+      else if (key === 'walk') timeDate = (entry as WalkEntryState).walkClockTime;
+      else if (key === 'medicine') timeDate = (entry as MedicineEntryState).medicineTime;
+      else if (key === 'vaccination') timeDate = (entry as VaccinationEntryState).reminderTime;
+      else if (key === 'grooming') {
+        const gDate = (entry as GroomingEntryState).scheduleDate?.singleDate;
+        if (gDate) timeDate = new Date(gDate);
+      }
+
+      if (timeDate) {
+        const combined = new Date(referenceDate);
+        combined.setHours(timeDate.getHours(), timeDate.getMinutes(), 0, 0);
+        if (combined < new Date()) {
+          throw new Error('Cannot schedule an activity in the past.');
+        }
+      }
+    }
+  }
+
   switch (key) {
     case 'feeding':
       await saveFeedingEntry(token, petId, entry as FeedingEntryState);
