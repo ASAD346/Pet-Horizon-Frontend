@@ -1,12 +1,4 @@
-import React, { useMemo, useState, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { AppText } from '../ui/AppText';
-import { EmptyState } from '../ui/EmptyState';
 import { SkeletonScheduleSections } from '@/components/ui/skeletons';
-import { ColorIconBadge } from './ColorIconBadge';
-import { SectionHeader } from './SectionHeader';
-import { homePillCard } from './homeStyles';
 import {
   feedingScheduleColors,
   feedingScheduleSubtitle,
@@ -27,24 +19,32 @@ import {
   sortMedicineByTime,
 } from '@/lib/medicine/medicineDisplay';
 import {
-  sortWalkByTime,
-  walkScheduleColors,
-  walkScheduleSubtitle,
-  walkScheduleTitle,
-} from '@/lib/walk/walkDisplay';
-import {
   vaccinationDueTodayOrOverdue,
   vaccinationScheduleColors,
   vaccinationScheduleSubtitle,
   vaccinationScheduleTitle,
   vaccinationSortKey,
 } from '@/lib/vaccination/vaccinationDisplay';
+import {
+  sortWalkByTime,
+  walkScheduleColors,
+  walkScheduleSubtitle,
+  walkScheduleTitle,
+} from '@/lib/walk/walkDisplay';
 import type { FeedingScheduleItem } from '@/types/feeding';
 import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
-import { HomeTheme, Spacing, Radius } from '../../constants/theme';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { AppText } from '../ui/AppText';
+import { EmptyState } from '../ui/EmptyState';
+import { ColorIconBadge } from './ColorIconBadge';
+import { SectionHeader } from './SectionHeader';
+import { homePillCard } from './homeStyles';
 
 type ScheduleRow =
   | { kind: 'feeding'; item: FeedingScheduleItem }
@@ -383,7 +383,7 @@ function isScheduleActiveToday(row: ScheduleRow): boolean {
   if (scheduleType === 'single' || !scheduleType) {
     const explicitDateStr = item.date || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
     const explicitDate = parseDateString(explicitDateStr);
-    
+
     if (explicitDate) {
       return explicitDate.getTime() === today.getTime();
     }

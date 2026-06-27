@@ -586,7 +586,7 @@ export function ScheduleSetupView({
           keyboardShouldPersistTaps="handled"
         >
           <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
-            Set up feeding, walks, medicine, vaccines, and grooming for your pet.
+            Build your pet's daily care routine — feeding, walks, medicine, vaccines, and grooming.
           </AppText>
 
           {/* Category Chips Selector */}
@@ -634,7 +634,7 @@ export function ScheduleSetupView({
           ) : !pet ? (
             <View style={styles.emptyBox}>
               <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-                Add a pet from Home to set up care schedules.
+                Add a pet from the Home tab to start building their care schedule.
               </AppText>
             </View>
           ) : !canViewAnySchedule ? (
@@ -654,19 +654,17 @@ export function ScheduleSetupView({
                       ? 'calendar-clock-outline'
                       : SCHEDULE_SECTIONS.find((s) => s.key === selectedCategory)?.icon || 'calendar-clock-outline'
                   }
-                  title="No schedules configured"
+                  title="No care routines yet"
                   description={
                     selectedCategory === 'all'
-                      ? "Keep your pet healthy and happy by logging their daily care events."
-                      : `Keep your pet healthy and happy by logging their ${selectedCategory} events.`
+                      ? "Create feeding, walking, grooming, or medication schedules to keep your pet healthy and organised."
+                      : `No ${filterChips.find((c) => c.key === selectedCategory)?.label?.toLowerCase() ?? selectedCategory} routines set up yet. Add one to get started.`
                   }
                   buttonLabel={
                     visibleSections.some((s) => (selectedCategory === 'all' || selectedCategory === s.key) && canEditSchedule(s.key))
-                      ? `+ Add ${
-                          selectedCategory === 'all'
-                            ? 'Schedule'
-                            : filterChips.find((c) => c.key === selectedCategory)?.label || 'Schedule'
-                        }`
+                      ? selectedCategory === 'all'
+                        ? 'Create First Schedule'
+                        : `Add ${filterChips.find((c) => c.key === selectedCategory)?.label ?? 'Schedule'}`
                       : undefined
                   }
                   onButtonPress={() => {

@@ -101,13 +101,17 @@ export function FamilyOverviewCard({
               <View style={styles.codeBox}>
                 <View style={styles.codeTextBlock}>
                   <AppText variant="caption" weight="800" color={isPremium ? '#FFF9E6' : 'rgba(255, 255, 255, 0.7)'} style={styles.codeLabel}>
-                    JOIN CODE
+                    INVITATION CODE
                   </AppText>
                   {loadingInvite ? (
                     <SkeletonCodeBlock />
-                  ) : (
+                  ) : joinCode ? (
                     <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.codeValue}>
-                      {joinCode ?? '--------'}
+                      {joinCode}
+                    </AppText>
+                  ) : (
+                    <AppText variant="bodySmall" color="rgba(255,255,255,0.6)" style={styles.codeEmptyText}>
+                      No invite code generated yet
                     </AppText>
                   )}
                 </View>
@@ -247,6 +251,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     fontSize: 16,
     lineHeight: 20,
+  },
+  codeEmptyText: {
+    fontSize: 12,
+    lineHeight: 17,
+    opacity: 0.85,
+    marginTop: 2,
   },
   shareBtn: {
     width: 36,

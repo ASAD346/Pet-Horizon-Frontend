@@ -159,7 +159,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   if (!petLoading && !pet) {
     return (
       <View style={styles.messageWrap}>
-        <AuthInfoBanner message="Add a pet from Home to view your activity journal." />
+        <AuthInfoBanner message="Add a pet from the Home tab to start viewing their activity journal." />
       </View>
     );
   }
@@ -167,7 +167,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   if (!petLoading && pet && !canViewJournal) {
     return (
       <View style={styles.messageWrap}>
-        <AuthInfoBanner message="Journal access was not shared for this pet." />
+        <AuthInfoBanner message="You don't have journal access for this pet. Ask the owner to update your permissions." />
       </View>
     );
   }

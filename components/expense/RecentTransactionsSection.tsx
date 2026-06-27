@@ -64,10 +64,12 @@ export function RecentTransactionsSection({
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="receipt-outline"
-          title="No Expenses Logged"
-          description="Track your pet's meals, vet visits, and other expenses dynamically by logging transactions."
-          actionLabel="Add Expense"
-          onActionPress={() => router.push('/expense/add' as Href)}
+          title="No expenses yet"
+          description={categoryFilter === 'all'
+            ? "Start tracking your pet's costs — vet visits, food, grooming, and more. Staying on budget has never been easier."
+            : `No ${categoryFilter} expenses recorded this month. Add one to start tracking.`}
+          buttonLabel="Log First Expense"
+          onButtonPress={() => router.push('/expense/add' as Href)}
         />
       ) : (
         filtered.map((item) => (

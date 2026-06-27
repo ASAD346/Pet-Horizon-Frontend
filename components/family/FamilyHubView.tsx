@@ -85,7 +85,8 @@ export function FamilyHubView() {
   const isPremium = dbPremium ?? (user?.premiumStatus === 'premium');
   const canInvite = Boolean(pet?._id && token && isOwner && isPremium);
 
-  const familyName = pet?.name ? `${pet.name}'s Family 🐾` : 'Your Family';
+  const userName = user?.name?.split(' ')[0] ?? user?.name ?? null;
+  const familyName = userName ? `${userName}'s Family` : 'Your Family';
   const displayMembers = useMemo(() => {
     if (!user) return [];
     if (isOwner) {
@@ -199,7 +200,7 @@ export function FamilyHubView() {
 
         {!petLoading && !pet ? (
           <View style={styles.bannerWrap}>
-            <AuthInfoBanner message="Add a pet from Home to manage your family hub and invite caregivers." />
+            <AuthInfoBanner message="Add a pet from the Home tab to set up your Family Hub and invite caregivers." />
           </View>
         ) : null}
 
@@ -232,7 +233,7 @@ export function FamilyHubView() {
 
             {!isPremium && isOwner ? (
               <View style={styles.bannerWrap}>
-                <AuthInfoBanner message="Upgrade to Pro to generate invite links and add family members." />
+                <AuthInfoBanner message="Upgrade to Premium to generate invite links and add family members to care for your pet." />
               </View>
             ) : null}
 

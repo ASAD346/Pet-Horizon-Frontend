@@ -58,7 +58,7 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
     >
       <View style={styles.infoContainer}>
         <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.description}>
-          Your feedback helps us make Pet Horizon better for pets and their parents in the US, UK, Australia, and Canada.
+          We're always improving Pet Horizon. Share your ideas, suggestions, or report an issue. We'd love to hear from you.
         </AppText>
       </View>
 
@@ -90,10 +90,10 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
       </View>
 
       <FormTextInput
-        label="YOUR COMMENTS (OPTIONAL)"
+        label="YOUR THOUGHTS (OPTIONAL)"
         value={comment}
         onChangeText={setComment}
-        placeholder="What can we improve? What features do you love?"
+        placeholder="What can we improve? What do you love most about Pet Horizon?"
         multiline
       />
     </FormSheetShell>

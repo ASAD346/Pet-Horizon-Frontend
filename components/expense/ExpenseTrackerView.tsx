@@ -129,11 +129,11 @@ export function ExpenseTrackerView({
         ) : null}
 
         {!petLoading && !pet ? (
-          <AuthInfoBanner message="Add a pet from Home to track expenses." />
+          <AuthInfoBanner message="Add a pet from the Home tab to start tracking their expenses and budget." />
         ) : null}
 
         {pet && !canViewExpenses ? (
-          <AuthInfoBanner message="Expense access was not shared for this pet." />
+          <AuthInfoBanner message="You don't have access to this pet's expenses. Ask the owner to update your permissions." />
         ) : null}
 
         {accessBannerMessage && canViewExpenses ? (

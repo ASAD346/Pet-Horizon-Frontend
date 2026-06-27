@@ -63,8 +63,8 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
         <View style={{ marginVertical: Spacing.xs }}>
           <EmptyState
             icon="lightning-bolt-outline"
-            title="No activity yet today"
-            description="Completed pet care activities will appear here."
+            title="Nothing logged yet today"
+            description="Mark a feeding, walk, or medication as done and it will show up here."
           />
         </View>
       ) : (
