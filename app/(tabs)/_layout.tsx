@@ -61,7 +61,7 @@ export default function TabLayout() {
         tabBarItemStyle: styles.tabBarItem,
         tabBarIconStyle: styles.tabBarIcon,
         tabBarLabelStyle: styles.tabBarLabel,
-        lazy: false,
+        lazy: true,
       }}>
       <Tabs.Screen
         name="index"

@@ -17,23 +17,29 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // Load merged placeholder data from AsyncStorage when petId changes
   useEffect(() => {
-    if (!petId) {
+    if (!petId || petId === 'fallback-pet-id-123') {
       setCachedData(undefined);
       return;
     }
     const loadCache = async () => {
       try {
-        const [profile, schedules, tasks, notifications, activities] = await Promise.all([
+        const [profile, schedules, tasks, notifications, activities, timestamp] = await Promise.all([
           AsyncStorage.getItem(`@pet_profile_cache_${petId}`),
           AsyncStorage.getItem(`@today_schedule_cache_${petId}`),
           AsyncStorage.getItem(`@upcoming_tasks_cache_${petId}`),
           AsyncStorage.getItem(`@notifications_cache_${petId}`),
           AsyncStorage.getItem(`@recent_activities_cache_${petId}`),
+          AsyncStorage.getItem(`@today_schedule_cache_timestamp_${petId}`),
         ]);
+
+        const todayString = new Date().toDateString();
+        const isCacheValid = timestamp === todayString;
 
         setCachedData({
           activePet: profile ? JSON.parse(profile) : null,
-          todaySchedules: schedules ? JSON.parse(schedules) : { feeding: [], walk: [], medicine: [], grooming: [], vaccination: [] },
+          todaySchedules: (schedules && isCacheValid) 
+            ? JSON.parse(schedules) 
+            : { feeding: [], walk: [], medicine: [], grooming: [], vaccination: [] },
           upcomingTasks: tasks ? JSON.parse(tasks) : [],
           notifications: notifications ? JSON.parse(notifications) : { unreadCount: 0, list: [] },
           recentActivities: activities ? JSON.parse(activities) : [],
@@ -51,7 +57,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       console.log('[useDashboardQuery] Fetching dashboard from API...');
       return fetchUnifiedDashboard(token!);
     },
-    enabled: Boolean(token && petId),
+    enabled: Boolean(token && petId && petId !== 'fallback-pet-id-123'),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -66,6 +72,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
         data.upcomingTasks ? AsyncStorage.setItem(`@upcoming_tasks_cache_${petId}`, JSON.stringify(data.upcomingTasks)) : Promise.resolve(),
         data.notifications ? AsyncStorage.setItem(`@notifications_cache_${petId}`, JSON.stringify(data.notifications)) : Promise.resolve(),
         data.recentActivities ? AsyncStorage.setItem(`@recent_activities_cache_${petId}`, JSON.stringify(data.recentActivities)) : Promise.resolve(),
+        AsyncStorage.setItem(`@today_schedule_cache_timestamp_${petId}`, new Date().toDateString()),
       ]);
     }
   }, [query.data, petId]);
