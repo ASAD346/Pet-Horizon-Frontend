@@ -153,19 +153,19 @@ function adjustDateForTimezone(date: Date): Date {
 
 export function buildScheduleDatePayload(state: ScheduleDateState): ScheduleDateApiFields {
   if (state.mode === 'single' && state.singleDate) {
-    const date = dateToApiDateString(adjustDateForTimezone(state.singleDate));
+    const date = dateToApiDateString(state.singleDate);
     return { date, scheduleDate: date };
   }
 
   if (state.mode === 'range' && state.startDate && state.endDate) {
     return {
-      startDate: dateToApiDateString(adjustDateForTimezone(state.startDate)),
-      endDate: dateToApiDateString(adjustDateForTimezone(state.endDate)),
+      startDate: dateToApiDateString(state.startDate),
+      endDate: dateToApiDateString(state.endDate),
     };
   }
 
   if (state.mode === 'ongoing' && state.startDate) {
-    return { startDate: dateToApiDateString(adjustDateForTimezone(state.startDate)) };
+    return { startDate: dateToApiDateString(state.startDate) };
   }
 
   return {};
