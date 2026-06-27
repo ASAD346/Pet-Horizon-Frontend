@@ -35,6 +35,7 @@ import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, 
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { isPetOwner } from '@/lib/family/formatters';
 import { uploadPetImage } from '@/services/pets/uploadPetImage';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 import {
   hasRegisterPetFieldErrors,
   validateRegisterPetForm,
@@ -166,6 +167,9 @@ export default function RegisterPetScreen() {
         if (existing.weight != null) setWeight(String(existing.weight));
         if (existing.weightUnit === 'lbs' || existing.weightUnit === 'kg') {
           setWeightUnit(existing.weightUnit);
+        }
+        if (existing.image) {
+          setPhotoUri(resolveMediaUrl(existing.image) ?? null);
         }
 
         if (!isPetOwner(existing.ownerUserId, user?._id)) {
