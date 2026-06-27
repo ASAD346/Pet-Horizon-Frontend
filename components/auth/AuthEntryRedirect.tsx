@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { StyleSheet, View, Animated, Platform } from 'react-native';
+import { StyleSheet, View, Animated, Platform, Image } from 'react-native';
 import { useRouter, type Href } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Application from 'expo-application';
+import Constants from 'expo-constants';
 
 import { useAuth } from '@/hooks/useAuth';
 import { HomeTheme, Spacing, Radius } from '@/constants/theme';
@@ -32,12 +33,21 @@ export function AuthEntryLoader() {
   const insets = useSafeAreaInsets();
   
   // Animation hooks for breathing logo
-  const logoScale = useRef(new Animated.Value(0.9)).current;
-  const logoOpacity = useRef(new Animated.Value(0.6)).current;
+  const logoScale = useRef(new Animated.Value(0.92)).current;
+  const logoOpacity = useRef(new Animated.Value(0.75)).current;
   const contentFade = useRef(new Animated.Value(0)).current;
 
-  const appVersion = Application.nativeApplicationVersion ?? '1.0.0';
-  const buildVersion = Application.nativeBuildVersion ?? '1';
+  // Pulse halo animation values
+  const haloScale1 = useRef(new Animated.Value(1)).current;
+  const haloOpacity1 = useRef(new Animated.Value(0.4)).current;
+  const haloScale2 = useRef(new Animated.Value(1)).current;
+  const haloOpacity2 = useRef(new Animated.Value(0.4)).current;
+
+  // Progress loader animation
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  const appVersion = Constants.expoConfig?.version ?? Application.nativeApplicationVersion ?? '1.0.0';
+  const buildVersion = Constants.expoConfig?.android?.versionCode?.toString() ?? Application.nativeBuildVersion ?? '1';
 
   useEffect(() => {
     // Breathing logo scale and opacity loop
@@ -45,29 +55,100 @@ export function AuthEntryLoader() {
       Animated.sequence([
         Animated.parallel([
           Animated.timing(logoScale, {
-            toValue: 1.05,
-            duration: 1500,
+            toValue: 1.04,
+            duration: 1800,
             useNativeDriver: true,
           }),
           Animated.timing(logoOpacity, {
             toValue: 1.0,
-            duration: 1500,
+            duration: 1800,
             useNativeDriver: true,
           }),
         ]),
         Animated.parallel([
           Animated.timing(logoScale, {
-            toValue: 0.9,
-            duration: 1500,
+            toValue: 0.92,
+            duration: 1800,
             useNativeDriver: true,
           }),
           Animated.timing(logoOpacity, {
-            toValue: 0.6,
-            duration: 1500,
+            toValue: 0.75,
+            duration: 1800,
             useNativeDriver: true,
           }),
         ]),
       ])
+    ).start();
+
+    // Pulse halo 1 loop
+    Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(haloScale1, {
+            toValue: 1.8,
+            duration: 2400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(haloOpacity1, {
+            toValue: 0,
+            duration: 2400,
+            useNativeDriver: true,
+          }),
+        ]),
+        Animated.parallel([
+          Animated.timing(haloScale1, {
+            toValue: 1.0,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+          Animated.timing(haloOpacity1, {
+            toValue: 0.4,
+            duration: 0,
+            useNativeDriver: true,
+          }),
+        ]),
+      ])
+    ).start();
+
+    // Pulse halo 2 loop with offset delay
+    let halo2Timer = setTimeout(() => {
+      Animated.loop(
+        Animated.sequence([
+          Animated.parallel([
+            Animated.timing(haloScale2, {
+              toValue: 1.8,
+              duration: 2400,
+              useNativeDriver: true,
+            }),
+            Animated.timing(haloOpacity2, {
+              toValue: 0,
+              duration: 2400,
+              useNativeDriver: true,
+            }),
+          ]),
+          Animated.parallel([
+            Animated.timing(haloScale2, {
+              toValue: 1.0,
+              duration: 0,
+              useNativeDriver: true,
+            }),
+            Animated.timing(haloOpacity2, {
+              toValue: 0.4,
+              duration: 0,
+              useNativeDriver: true,
+            }),
+          ]),
+        ])
+      ).start();
+    }, 1200);
+
+    // Indeterminate progress loading bar
+    Animated.loop(
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 1600,
+        useNativeDriver: true,
+      })
     ).start();
 
     // Fade in text contents
@@ -76,11 +157,19 @@ export function AuthEntryLoader() {
       duration: 800,
       useNativeDriver: true,
     }).start();
-  }, [logoScale, logoOpacity, contentFade]);
+
+    return () => clearTimeout(halo2Timer);
+  }, [logoScale, logoOpacity, haloScale1, haloOpacity1, haloScale2, haloOpacity2, progressAnim, contentFade]);
+
+  // Interpolate progress translateX
+  const progressTranslateX = progressAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [-60, 60],
+  });
 
   return (
     <LinearGradient
-      colors={['#184F2E', '#267343'] as const}
+      colors={['#103F23', '#1B5B34'] as const}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}
       style={styles.container}
@@ -91,36 +180,72 @@ export function AuthEntryLoader() {
         <View style={styles.bgRing2} />
       </View>
 
-      {/* Main branded content */}
-      <View style={styles.contentWrap}>
-        <Animated.View
-          style={[
-            styles.logoRing,
-            {
-              transform: [{ scale: logoScale }],
-              opacity: logoOpacity,
-            },
-          ]}
-        >
-          <View style={styles.logoInner}>
-            <MaterialCommunityIcons name="paw" size={44} color="#184F2E" />
-          </View>
-        </Animated.View>
+      {/* Glassmorphic Central Branding Card */}
+      <Animated.View style={[styles.glassCard, { opacity: contentFade }]}>
+        <View style={styles.logoContainer}>
+          {/* Pulsing halos behind the logo */}
+          <Animated.View
+            style={[
+              styles.haloRing,
+              {
+                transform: [{ scale: haloScale1 }],
+                opacity: haloOpacity1,
+              },
+            ]}
+          />
+          <Animated.View
+            style={[
+              styles.haloRing,
+              {
+                transform: [{ scale: haloScale2 }],
+                opacity: haloOpacity2,
+              },
+            ]}
+          />
 
-        <Animated.View style={[styles.textWrap, { opacity: contentFade }]}>
+          {/* Main Breathing Logo Ring */}
+          <Animated.View
+            style={[
+              styles.logoRing,
+              {
+                transform: [{ scale: logoScale }],
+                opacity: logoOpacity,
+              },
+            ]}
+          >
+            <View style={styles.logoInner}>
+              <Image
+                source={require('../../assets/images/applogo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
+            </View>
+          </Animated.View>
+        </View>
+
+        <View style={styles.textWrap}>
           <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.brandTitle}>
             Pet Horizon
           </AppText>
-          <AppText variant="bodySmall" weight="700" color="rgba(255,255,255,0.75)" style={styles.brandSubtitle}>
-            Where every paw finds its path
+          <AppText variant="bodySmall" weight="700" color="rgba(255,255,255,0.7)" style={styles.brandSubtitle}>
+            WHERE EVERY PAW FINDS ITS PATH
           </AppText>
-        </Animated.View>
-      </View>
+        </View>
+      </Animated.View>
 
-      {/* Modern Loader & Version Indicator at the bottom */}
+      {/* Modern Horizontal Loader & Version Indicator at the bottom */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, Spacing.lg) }]}>
-        <Animated.View style={[styles.loaderBar, { opacity: contentFade }]} />
-        <AppText variant="caption" weight="800" color="rgba(255,255,255,0.5)" style={styles.versionLabel}>
+        <Animated.View style={[styles.loaderTrack, { opacity: contentFade }]}>
+          <Animated.View
+            style={[
+              styles.loaderBar,
+              {
+                transform: [{ translateX: progressTranslateX }],
+              },
+            ]}
+          />
+        </Animated.View>
+        <AppText variant="caption" weight="800" color="rgba(255,255,255,0.4)" style={styles.versionLabel}>
           v{appVersion} ({buildVersion})
         </AppText>
       </View>
@@ -139,8 +264,8 @@ const styles = StyleSheet.create({
     width: 320,
     height: 320,
     borderRadius: 160,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    top: '15%',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    top: '10%',
     left: -80,
   },
   bgRing2: {
@@ -148,56 +273,95 @@ const styles = StyleSheet.create({
     width: 240,
     height: 240,
     borderRadius: 120,
-    backgroundColor: 'rgba(255, 255, 255, 0.02)',
-    bottom: '20%',
+    backgroundColor: 'rgba(255, 255, 255, 0.015)',
+    bottom: '15%',
     right: -60,
   },
-  contentWrap: {
+  glassCard: {
+    paddingVertical: Spacing.xl * 1.5,
+    paddingHorizontal: Spacing.xl * 1.5,
+    borderRadius: Radius.lg * 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.lg,
-  },
-  logoRing: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: '80%',
+    maxWidth: 320,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.12,
+        shadowRadius: 24,
       },
       android: {
-        elevation: 6,
+        elevation: 3,
+      },
+    }),
+  },
+  logoContainer: {
+    width: 140,
+    height: 140,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  haloRing: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  logoRing: {
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 4,
       },
     }),
   },
   logoInner: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 74,
+    height: 74,
+    borderRadius: 37,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  logoImage: {
+    width: 52,
+    height: 52,
+  },
   textWrap: {
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   brandTitle: {
-    fontSize: 32,
-    lineHeight: 38,
+    fontSize: 34,
+    lineHeight: 40,
     color: '#FFFFFF',
     letterSpacing: -0.5,
   },
   brandSubtitle: {
-    fontSize: 10,
-    letterSpacing: 1.5,
+    fontSize: 9,
+    letterSpacing: 2.0,
+    textAlign: 'center',
   },
   footer: {
     position: 'absolute',
@@ -205,14 +369,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
   },
-  loaderBar: {
-    width: 32,
+  loaderTrack: {
+    width: 100,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: 'rgba(255,255,255,0.4)',
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    overflow: 'hidden',
+  },
+  loaderBar: {
+    width: 40,
+    height: '100%',
+    borderRadius: 1.5,
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
   },
   versionLabel: {
-    fontSize: 11,
+    fontSize: 10,
     letterSpacing: 0.5,
   },
 });

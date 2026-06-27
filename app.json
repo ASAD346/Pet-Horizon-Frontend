@@ -82,9 +82,9 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 180,
           "resizeMode": "contain",
-          "backgroundColor": "#FFF9F5",
+          "backgroundColor": "#184F2E",
           "dark": {
-            "backgroundColor": "#FFF9F5"
+            "backgroundColor": "#184F2E"
           }
         }
       ],
