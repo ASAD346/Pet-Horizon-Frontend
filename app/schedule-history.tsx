@@ -14,8 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { AppText } from '@/components/ui/AppText';
 import { getPresetRange, type DatePreset, type DateRange } from '@/components/ui/DateFilterBar';
 import { Spacing, Radius, Palette, HomeTheme } from '@/constants/theme';
@@ -31,27 +31,24 @@ import type {
 } from '@/services/schedules/scheduleHistoryApi';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 
-// ─── Color Palette ────────────────────────────────────────────────────────────
-const AMBER  = '#D97706';
+// ─── Brand Colors & Mappings ──────────────────────────────────────────────────
 const RED    = '#DC2626';
-const PURPLE = '#7C3AED';
-const TEAL   = '#0F766E';
 const GREEN  = '#16A34A';
 
 const KIND_CONFIG: Record<string, { color: string; bg: string; icon: any }> = {
-  feeding:     { color: AMBER,        bg: '#FEF3C7', icon: 'silverware-fork-knife' },
-  walk:        { color: '#2563EB',    bg: '#DBEAFE', icon: 'walk' },
-  medicine:    { color: PURPLE,       bg: '#F3E8FF', icon: 'pill' },
-  grooming:    { color: TEAL,         bg: '#CCFBF1', icon: 'content-cut' },
-  vaccination: { color: '#DB2777',    bg: '#FCE7F3', icon: 'needle' },
+  feeding:     { color: '#E57373', bg: '#FFEBEE', icon: 'silverware-fork-knife' },
+  walk:        { color: '#F5A623', bg: '#FFF8E1', icon: 'walk' },
+  medicine:    { color: '#5B9BD5', bg: '#E3F2FD', icon: 'pill' },
+  grooming:    { color: '#E91E8C', bg: '#FCE4F0', icon: 'content-cut' },
+  vaccination: { color: '#673AB7', bg: '#EDE7F6', icon: 'needle' },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string }> = {
-  pending:  { label: 'Pending',   color: AMBER,             dot: AMBER },
-  done:     { label: 'Completed', color: GREEN,             dot: GREEN },
-  skipped:  { label: 'Skipped',   color: RED,               dot: RED },
+  pending:  { label: 'Pending',   color: '#F5A623', dot: '#F5A623' },
+  done:     { label: 'Completed', color: GREEN,     dot: GREEN },
+  skipped:  { label: 'Skipped',   color: RED,       dot: RED },
   disabled: { label: 'Disabled',  color: Palette.gray[500], dot: Palette.gray[400] },
-  upcoming: { label: 'Upcoming',  color: PURPLE,            dot: PURPLE },
+  upcoming: { label: 'Upcoming',  color: '#673AB7', dot: '#673AB7' },
 };
 
 const DATE_LABELS: Record<DatePreset, string> = {
@@ -151,7 +148,6 @@ function FilterSheet({
           <View style={sheet.gridRow}>
             {(['all', 'feeding', 'walk', 'medicine', 'grooming', 'vaccination'] as const).map((t) => {
               const active = tempType === t;
-              const config = KIND_CONFIG[t];
               return (
                 <TouchableOpacity
                   key={t}
@@ -208,9 +204,9 @@ const ScheduleCard = React.memo(function ScheduleCard({ item }: { item: Schedule
   return (
     <View style={styles.card}>
       <View style={styles.cardLeft}>
-        {/* Soft, clean monochromatic circle container */}
-        <View style={styles.iconContainer}>
-          <MaterialCommunityIcons name={config.icon} size={18} color="#4B5563" />
+        {/* Colorful icon container matching app standards */}
+        <View style={[styles.iconContainer, { backgroundColor: config.bg }]}>
+          <MaterialCommunityIcons name={config.icon} size={18} color={config.color} />
         </View>
         
         <View style={styles.cardInfo}>
@@ -219,7 +215,7 @@ const ScheduleCard = React.memo(function ScheduleCard({ item }: { item: Schedule
           </AppText>
           
           <View style={styles.metaRow}>
-            <AppText variant="caption" weight="700" color={Palette.gray[400]} style={styles.kindLabel}>
+            <AppText variant="caption" weight="800" color={config.color} style={styles.kindLabel}>
               {item.kind.toUpperCase()}
             </AppText>
             {timeLabel && (
@@ -280,8 +276,15 @@ export default function ScheduleHistoryScreen() {
   const { pet } = useActivePet(token);
 
   const isPremium = user?.premiumStatus === 'premium';
+  
+  // High-fidelity header gradient
+  const headerColors = isPremium 
+    ? (['#0E331E', '#184F2E', '#226D3F'] as const)
+    : (['#2E7D32', '#3D8C40'] as const);
+
   const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
   const brandBg    = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
+  const screenBg   = isPremium ? '#F4F8F6' : '#F5F6F8';
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -326,8 +329,24 @@ export default function ScheduleHistoryScreen() {
   const keyExtractor = useCallback((item: ScheduleHistoryItem) => item._id, []);
 
   return (
-    <View style={styles.root}>
-      <ScreenHeader title="History" variant="white" onBack={() => router.back()} />
+    <View style={[styles.root, { backgroundColor: screenBg }]}>
+      {/* Premium Linear Gradient Branded Header matching the dashboard header */}
+      <LinearGradient
+        colors={headerColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.headerContainer, { paddingTop: Math.max(insets.top, Spacing.sm) }]}
+      >
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
+            History
+          </AppText>
+          <View style={{ width: 40 }} />
+        </View>
+      </LinearGradient>
 
       {/* ── Search & Filter Options Row ── */}
       <View style={styles.topFilterBar}>
@@ -438,8 +457,33 @@ export default function ScheduleHistoryScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#FAFAFB' },
+  root: { flex: 1 },
   
+  headerContainer: {
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    height: 48,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: -Spacing.xs,
+  },
+  headerTitle: {
+    flex: 1,
+    fontSize: 20,
+    lineHeight: 26,
+    textAlign: 'center',
+  },
+
   topFilterBar: {
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -503,7 +547,6 @@ const styles = StyleSheet.create({
 
   listContent: { paddingHorizontal: Spacing.md, paddingTop: Spacing.md },
   
-  // Clean, border-only Revolut style listing card
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -529,7 +572,6 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },

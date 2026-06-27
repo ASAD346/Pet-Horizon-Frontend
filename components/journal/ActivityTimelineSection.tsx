@@ -2,8 +2,9 @@ import React, { useMemo } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
-import { JournalTheme, Radius, Spacing, Palette } from '../../constants/theme';
+import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import type { JournalCategory, TimelineEvent } from './journalData';
+import { getCategoryStyle } from './journalData';
 
 interface ActivityTimelineSectionProps {
   events: TimelineEvent[];
@@ -25,6 +26,7 @@ function TimelineRow({
   isLast: boolean;
   onPress?: (eventId: string) => void;
 }) {
+  const { color, bg } = getCategoryStyle(event.category);
   const completed = event.status === 'completed';
 
   return (
@@ -36,8 +38,8 @@ function TimelineRow({
 
       {/* Timeline line and outer ring */}
       <View style={styles.timelineCol}>
-        <View style={[styles.dotOuter, { borderColor: completed ? '#16A34A' : '#9CA3AF' }]}>
-          <View style={[styles.dotInner, { backgroundColor: completed ? '#16A34A' : '#9CA3AF' }]} />
+        <View style={[styles.dotOuter, { borderColor: completed ? '#16A34A' : color }]}>
+          <View style={[styles.dotInner, { backgroundColor: completed ? '#16A34A' : color }]} />
         </View>
         {!isLast ? <View style={styles.line} /> : null}
       </View>
@@ -49,22 +51,22 @@ function TimelineRow({
         disabled={!onPress}
         onPress={() => onPress?.(event.id)}
       >
-        <View style={styles.iconContainer}>
-          <MaterialCommunityIcons name={event.materialIcon} size={18} color="#4B5563" />
+        <View style={[styles.iconContainer, { backgroundColor: bg }]}>
+          <MaterialCommunityIcons name={event.materialIcon} size={18} color={color} />
         </View>
         <View style={styles.cardText}>
           <AppText variant="bodySmall" weight="700" color="#111827">
             {event.title}
           </AppText>
-          <AppText variant="caption" color="#9CA3AF" style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3 }}>
+          <AppText variant="caption" color={color} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
             {event.category}
           </AppText>
         </View>
         
         {/* Right side status indicator */}
         <View style={styles.statusCol}>
-          <View style={[styles.statusDot, { backgroundColor: completed ? '#16A34A' : '#2563EB' }]} />
-          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : '#2563EB'} style={styles.statusText}>
+          <View style={[styles.statusDot, { backgroundColor: completed ? '#16A34A' : color }]} />
+          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : color} style={styles.statusText}>
             {completed ? 'COMPLETED' : 'SCHEDULED'}
           </AppText>
         </View>
@@ -182,7 +184,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   
-  // Clean Revolut style card
   card: {
     flex: 1,
     flexDirection: 'row',
@@ -202,7 +203,6 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
     justifyContent: 'center',
   },
