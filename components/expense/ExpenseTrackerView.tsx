@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { HomeTheme, Radius, Spacing, Palette } from '../../constants/theme';
 import { AddExpenseView } from './AddExpenseView';
 import { EditBudgetSheet } from './EditBudgetSheet';
 import { ExpenseCategoryTiles } from './ExpenseCategoryTiles';
@@ -89,6 +89,7 @@ export function ExpenseTrackerView({
   );
   const { unreadCount } = useNotifications(token);
   const isPremium = user?.premiumStatus === 'premium';
+  const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
 
   const [category, setCategory] = useState<ExpenseTrackerCategory>('all');
   const [refreshing, setRefreshing] = useState(false);
@@ -175,8 +176,8 @@ export function ExpenseTrackerView({
 
       {pet && canEditExpenses ? (
         <TouchableOpacity
-          style={[styles.fab, { bottom: tabBarClearance + Spacing.sm }]}
-          activeOpacity={0.9}
+          style={[styles.fab, { backgroundColor: brandColor, bottom: tabBarClearance + 20 }]}
+          activeOpacity={0.95}
           onPress={() => setAddExpenseVisible(true)}
         >
           <Ionicons name="add" size={28} color={HomeTheme.white} />
@@ -264,19 +265,19 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    right: Spacing.lg,
+    right: 20,
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#2E7D32',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 999,
     ...Platform.select({
       ios: {
-        shadowColor: '#1B5E20',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.35,
-        shadowRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.22,
+        shadowRadius: 5.5,
       },
       android: { elevation: 8 },
     }),
