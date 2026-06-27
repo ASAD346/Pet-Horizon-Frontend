@@ -50,7 +50,7 @@ const CATEGORY_STYLE: Record<
 };
 
 export function normalizeExpenseCategory(category: string): Exclude<ExpenseTrackerCategory, 'all'> {
-  const value = category.toLowerCase();
+  const value = (category || '').toLowerCase();
   if (value === 'food') return 'food';
   if (value === 'vet') return 'vet';
   if (value === 'grooming') return 'grooming';
@@ -59,15 +59,18 @@ export function normalizeExpenseCategory(category: string): Exclude<ExpenseTrack
 }
 
 export function formatCurrency(amount: number, currency = 'USD'): string {
+  const val = Number(amount) || 0;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
-  }).format(amount);
+  }).format(val);
 }
 
 export function formatExpenseDateLabel(iso: string): string {
+  if (!iso) return 'Unknown Date';
   const date = new Date(iso);
+  if (isNaN(date.getTime())) return 'Invalid Date';
   const now = new Date();
   const sameDay =
     date.getFullYear() === now.getFullYear() &&

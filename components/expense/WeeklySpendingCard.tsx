@@ -42,7 +42,7 @@ export function WeeklySpendingCard({
   periodEnd,
 }: WeeklySpendingCardProps) {
   const isOver = status === 'Over budget';
-  const clampedPercent = Math.min(spentPercent, 100);
+  const clampedPercent = Math.min(Number(spentPercent) || 0, 100);
 
   const gradientColors = isPremium ? PREM_GRAD : FREE_GRAD;
   const shadowColor = isPremium ? PREM_SHADOW : FREE_SHADOW;
@@ -50,7 +50,7 @@ export function WeeklySpendingCard({
   // Premium uses gold accent for the chip border and progress bar
   const progressColor = isOver ? '#EF9A9A' : (isPremium ? '#FFF176' : '#A5D6A7');
 
-  const isExpired = periodEnd ? new Date(periodEnd) < new Date() : false;
+  const isExpired = periodEnd ? new Date(periodEnd).getTime() < Date.now() : false;
 
   let editButtonLabel = 'Edit Budget';
   if (isExpired) {
