@@ -109,9 +109,10 @@ export function AddExpenseView({
       >
         {/* Category */}
         <FormSection title="Category">
-          <FormSelectInput
-            valueLabel={category}
-            onPress={() => setPickerVisible(true)}
+          <ExpenseCategoryChips
+            categories={categoryLabels}
+            selected={category}
+            onSelect={setCategory}
           />
         </FormSection>
 
@@ -173,18 +174,6 @@ export function AddExpenseView({
           </View>
         </FormSection>
       </ScrollView>
-
-      <SheetOptionPicker
-        visible={pickerVisible}
-        title="Select Category"
-        options={dropdownOptions}
-        selectedValue={category}
-        onClose={() => setPickerVisible(false)}
-        onSelect={(value) => {
-          setCategory(value);
-          setPickerVisible(false);
-        }}
-      />
     </FormSheetShell>
   );
 }

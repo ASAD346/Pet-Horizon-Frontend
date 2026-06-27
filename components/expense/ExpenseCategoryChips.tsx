@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SheetColors } from '../sheets/sheetUi';
@@ -16,7 +16,11 @@ export function ExpenseCategoryChips({
   onSelect,
 }: ExpenseCategoryChipsProps) {
   return (
-    <View style={styles.wrap}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContent}
+    >
       {categories.map((category) => {
         const active = category === selected;
         return (
@@ -36,15 +40,16 @@ export function ExpenseCategoryChips({
           </TouchableOpacity>
         );
       })}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
+  scrollContent: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
     gap: Spacing.sm,
+    paddingRight: Spacing.lg,
   },
   chip: {
     paddingHorizontal: Spacing.md,
@@ -53,6 +58,6 @@ const styles = StyleSheet.create({
     backgroundColor: SheetColors.chipBg,
   },
   chipActive: {
-    backgroundColor: HomeTheme.green,
+    backgroundColor: '#2E7D32', // Matches Form BRAND_GREEN
   },
 });
