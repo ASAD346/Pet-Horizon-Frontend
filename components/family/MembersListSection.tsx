@@ -213,4 +213,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyMembersCard: {
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.xs,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.1)',
+  },
+  emptyMembersTitle: {
+    marginTop: 4,
+  },
+  emptyMembersDesc: {
+    textAlign: 'center',
+    lineHeight: 17,
+    maxWidth: 250,
+    marginTop: 2,
+  },
 });
