@@ -25,6 +25,7 @@ interface SheetOptionPickerProps {
   selectedValue: string;
   onClose: () => void;
   onSelect: (value: string) => void;
+  useNativeModal?: boolean;
 }
 
 export function SheetOptionPicker({
@@ -34,50 +35,65 @@ export function SheetOptionPicker({
   selectedValue,
   onClose,
   onSelect,
+  useNativeModal = true,
 }: SheetOptionPickerProps) {
-  return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-          <View style={styles.header}>
-            <AppText variant="body" weight="800" color={SheetColors.title}>
-              {title}
-            </AppText>
-            <TouchableOpacity onPress={onClose} hitSlop={12}>
-              <Ionicons name="close" size={22} color={SheetColors.chipText} />
-            </TouchableOpacity>
-          </View>
+  if (!visible) return null;
 
-          <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
-            {options.map((option) => {
-              const selected = option.value === selectedValue;
-              return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[styles.row, selected && styles.rowSelected]}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    onSelect(option.value);
-                    onClose();
-                  }}
+  const content = (
+    <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <View style={styles.header}>
+          <AppText variant="body" weight="800" color={SheetColors.title}>
+            {title}
+          </AppText>
+          <TouchableOpacity onPress={onClose} hitSlop={12}>
+            <Ionicons name="close" size={22} color={SheetColors.chipText} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
+          {options.map((option) => {
+            const selected = option.value === selectedValue;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                style={[styles.row, selected && styles.rowSelected]}
+                activeOpacity={0.85}
+                onPress={() => {
+                  onSelect(option.value);
+                  onClose();
+                }}
+              >
+                <AppText
+                  variant="bodySmall"
+                  weight={selected ? '700' : '600'}
+                  color={selected ? HomeTheme.green : SheetColors.inputText}
                 >
-                  <AppText
-                    variant="bodySmall"
-                    weight={selected ? '700' : '600'}
-                    color={selected ? HomeTheme.green : SheetColors.inputText}
-                  >
-                    {option.label}
-                  </AppText>
-                  {selected ? (
-                    <Ionicons name="checkmark" size={20} color={HomeTheme.green} />
-                  ) : null}
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </Pressable>
+                  {option.label}
+                </AppText>
+                {selected ? (
+                  <Ionicons name="checkmark" size={20} color={HomeTheme.green} />
+                ) : null}
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </Pressable>
-    </Modal>
+    </Pressable>
+  );
+
+  if (useNativeModal) {
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        {content}
+      </Modal>
+    );
+  }
+
+  return (
+    <View style={StyleSheet.absoluteFillObject}>
+      {content}
+    </View>
   );
 }
 
@@ -93,10 +109,15 @@ const sheetShadow = Platform.select({
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: SheetColors.overlay,
     justifyContent: 'center',
     paddingHorizontal: Spacing.lg,
+    zIndex: 99999,
   },
   sheet: {
     backgroundColor: SheetColors.sheetBg,

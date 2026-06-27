@@ -251,6 +251,7 @@ export function FeedingSchedulePanel({
         selectedValue={String(shared.reminderMinutes ?? DEFAULT_REMINDER_MINUTES)}
         onClose={() => setReminderPickerVisible(false)}
         onSelect={(value) => syncAllReminderSettings({ reminderMinutes: Number(value) })}
+        useNativeModal={false}
       />
     </View>
   );

@@ -80,6 +80,7 @@ export function FeedingEntryCard({
         selectedValue={String(entry.reminderMinutes)}
         onClose={() => setReminderPickerVisible(false)}
         onSelect={(value) => onChange({ ...entry, reminderMinutes: Number(value) })}
+        useNativeModal={false}
       />
       <SheetOptionPicker
         visible={unitPickerVisible}
@@ -91,6 +92,7 @@ export function FeedingEntryCard({
           onChange({ ...entry, unit: value });
           setUnitPickerVisible(false);
         }}
+        useNativeModal={false}
       />
     </>
   );

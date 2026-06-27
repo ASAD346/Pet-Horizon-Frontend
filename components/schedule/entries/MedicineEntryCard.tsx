@@ -83,6 +83,7 @@ export function MedicineEntryCard({
         selectedValue={String(entry.reminderMinutes)}
         onClose={() => setReminderPickerVisible(false)}
         onSelect={(value) => onChange({ ...entry, reminderMinutes: Number(value) })}
+        useNativeModal={false}
       />
     </>
   );
