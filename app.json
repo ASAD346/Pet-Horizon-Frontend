@@ -118,7 +118,12 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
+      "router": {
+        "origin": "https://pethorizon.app"
+      },
+      "eas": {
+        "projectId": "8d8e5611-f18f-49c3-8ef2-7d28919801f8"
+      }
     }
   }
 }
