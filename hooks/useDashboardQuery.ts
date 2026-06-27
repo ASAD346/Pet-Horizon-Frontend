@@ -14,11 +14,13 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [cachedData, setCachedData] = useState<UnifiedDashboardData | undefined>(undefined);
+  const [cachedPetId, setCachedPetId] = useState<string | null>(null);
 
   // Load merged placeholder data from AsyncStorage when petId changes
   useEffect(() => {
     if (!petId || petId === 'fallback-pet-id-123') {
       setCachedData(undefined);
+      setCachedPetId(null);
       return;
     }
     const loadCache = async () => {
@@ -44,6 +46,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
           notifications: notifications ? JSON.parse(notifications) : { unreadCount: 0, list: [] },
           recentActivities: activities ? JSON.parse(activities) : [],
         });
+        setCachedPetId(petId);
       } catch (e) {
         // Fail silently
       }
@@ -81,10 +84,11 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     console.error('[useDashboardQuery] Query error:', query.error);
   }
 
-  const isLoading = query.isLoading && !cachedData;
+  const currentCachedData = cachedPetId === petId ? cachedData : undefined;
+  const isLoading = query.isLoading && !currentCachedData;
   const isFetching = query.isFetching;
   const error = query.error;
-  const data = query.data || cachedData;
+  const data = query.data || currentCachedData;
 
   const refetch = useCallback(async () => {
     return query.refetch();

@@ -5,6 +5,8 @@ import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { log } from '@/lib/log';
+import { getErrorMessage } from '@/lib/api/errors';
 
 import {
     HomeHeader,
@@ -342,7 +344,7 @@ export default function HomeScreen() {
         });
       }
       // Trigger updates in parallel without blocking the main thread
-      void reloadPet();
+      void reloadPet(true);
       void reloadPets();
       void refetchDashboard();
     } catch (err) {
@@ -532,6 +534,7 @@ export default function HomeScreen() {
           onSaved={() => {
             void refetchDashboard();
           }}
+          hasPermission={canEdit('feeding')}
         />
 
         <LogWalkSheet

@@ -16,7 +16,9 @@ import {
 } from '@/lib/schedule/scheduleDate';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import React, { useCallback, useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { useToast } from '@/hooks/useToast';
+import { AppText } from '@/components/ui/AppText';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
 import { FormSheetShell } from '../sheets';
 import { FeedingEntryCard } from '../schedule/entries/FeedingEntryCard';
@@ -35,6 +37,7 @@ interface LogFoodSheetProps {
   initialEntry?: FeedingEntryState | null;
   mealTypeOptions?: { value: string; label: string }[];
   unitOptions?: { value: string; label: string }[];
+  hasPermission?: boolean;
 }
 
 export function LogFoodSheet({
@@ -46,6 +49,7 @@ export function LogFoodSheet({
   initialEntry,
   mealTypeOptions: propsMealTypeOptions,
   unitOptions: propsUnitOptions,
+  hasPermission = true,
 }: LogFoodSheetProps) {
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
@@ -213,26 +217,35 @@ export function LogFoodSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Feeding'}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={featuresLoading || !entry.mealType || !entry.unit}
+      saveDisabled={featuresLoading || !entry.mealType || !entry.unit || !hasPermission}
       error={error}
       compact
     >
-      {featuresLoading ? (
-        <SkeletonChipGrid count={4} />
-      ) : (
-        <FeedingEntryCard
-          entry={entry}
-          index={0}
-          accentColor={FOOD_THEME.color}
-          accentBg={FOOD_THEME.bg}
-          mealTypeOptions={mealTypeOptions}
-          unitOptions={unitOptions}
-          canRemove={false}
-          embeddedInSheet
-          onChange={setEntry}
-          onRemove={() => {}}
-        />
+      {!hasPermission && (
+        <View style={{ backgroundColor: '#FFFDE7', padding: 12, borderRadius: 8, marginBottom: 16 }}>
+          <AppText variant="bodySmall" color="#F57C00">
+            You don't have permission to manage this pet's feeding.
+          </AppText>
+        </View>
       )}
+      <View style={!hasPermission ? { opacity: 0.5 } : undefined} pointerEvents={!hasPermission ? 'none' : 'auto'}>
+        {featuresLoading ? (
+          <SkeletonChipGrid count={4} />
+        ) : (
+          <FeedingEntryCard
+            entry={entry}
+            index={0}
+            accentColor={FOOD_THEME.color}
+            accentBg={FOOD_THEME.bg}
+            mealTypeOptions={mealTypeOptions}
+            unitOptions={unitOptions}
+            canRemove={false}
+            embeddedInSheet
+            onChange={setEntry}
+            onRemove={() => {}}
+          />
+        )}
+      </View>
     </FormSheetShell>
   );
 }
