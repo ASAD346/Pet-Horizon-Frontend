@@ -16,6 +16,7 @@ import { createExpense } from '@/services/expense/expenseApi';
 import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 import { useLocalization } from '@/hooks/useLocalization';
 import { FormSheetShell, FormSection, FormSelectInput, SheetOptionPicker } from '../sheets';
+import { useToast } from '@/hooks/useToast';
 
 const BRAND_GREEN = '#2E7D32';
 
@@ -37,6 +38,7 @@ export function AddExpenseView({
   isPremium = false,
 }: AddExpenseViewProps) {
   const { currency } = useLocalization();
+  const { showToast } = useToast();
 
   const [category, setCategory] = useState('Food');
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -59,6 +61,7 @@ export function AddExpenseView({
   }, []);
 
   const handleSubmit = async () => {
+    if (saving) return;
     if (!petId || !token) {
       setError('Select a pet before adding an expense.');
       return;
@@ -79,9 +82,12 @@ export function AddExpenseView({
         amount: value,
         note: [merchant.trim(), note.trim()].filter(Boolean).join(' — ') || undefined,
       });
+      showToast('Expense added successfully!');
       onSaved?.();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const errMsg = getErrorMessage(err);
+      setError(errMsg);
+      showToast(`Failed to add expense: ${errMsg}`);
     } finally {
       setSaving(false);
     }

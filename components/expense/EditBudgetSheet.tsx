@@ -10,6 +10,7 @@ import {
 } from '@/components/sheets';
 import { getErrorMessage } from '@/lib/api/errors';
 import { setBudget, updateBudget } from '@/services/expense/expenseApi';
+import { useToast } from '@/hooks/useToast';
 
 interface EditBudgetSheetProps {
   visible: boolean;
@@ -42,6 +43,7 @@ export function EditBudgetSheet({
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>(initialPeriodType);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (visible) {
@@ -52,6 +54,7 @@ export function EditBudgetSheet({
   }, [visible, currentLimit, initialPeriodType]);
 
   const handleSave = async () => {
+    if (saving) return;
     if (!token || !petId) return;
     const limit = Number(amount);
     if (!limit || Number.isNaN(limit) || limit <= 0) {
@@ -67,10 +70,13 @@ export function EditBudgetSheet({
       } else {
         await setBudget(token, { petId, amountLimit: limit, periodType });
       }
+      showToast('Budget saved successfully!');
       onSaved(periodType);
       onClose();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const errMsg = getErrorMessage(err);
+      setError(errMsg);
+      showToast(`Failed to save budget: ${errMsg}`);
     } finally {
       setSaving(false);
     }
