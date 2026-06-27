@@ -13,8 +13,6 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
-import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
-import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme } from '@/components/profile/profileTheme';
 import { SectionLabel, SheetColors } from '@/components/sheets';
@@ -22,6 +20,7 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { getErrorMessage } from '@/lib/api/errors';
 import { changePassword } from '@/services/users/userApi';
+import { useToast } from '@/hooks/useToast';
 
 import { homeCardShadow } from '@/components/home/homeStyles';
 
@@ -32,8 +31,7 @@ export default function ChangePasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const { showSuccessToast, showErrorToast } = useToast();
 
   const [currentPasswordVisible, setCurrentPasswordVisible] = useState(false);
   const [newPasswordVisible, setNewPasswordVisible] = useState(false);
@@ -44,37 +42,36 @@ export default function ChangePasswordScreen() {
 
   const handleSave = useCallback(async () => {
     if (!token) {
-      setError('Please log in again.');
+      showErrorToast('Please log in again.');
       return;
     }
     if (!currentPassword || !newPassword) {
-      setError('Enter your current and new password.');
+      showErrorToast('Enter your current and new password.');
       return;
     }
     if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters.');
+      showErrorToast('New password must be at least 8 characters.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('New passwords do not match.');
+      showErrorToast('New passwords do not match.');
       return;
     }
 
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
     try {
+      setSaving(true);
       const result = await changePassword(token, { currentPassword, newPassword });
-      setSuccess(result.message);
+      showSuccessToast(result.message || 'Password updated successfully!');
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
+      router.back();
     } catch (err) {
-      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err) || 'Action failed: You don\'t have permission to modify this.');
     } finally {
       setSaving(false);
     }
-  }, [token, currentPassword, newPassword, confirmPassword]);
+  }, [token, currentPassword, newPassword, confirmPassword, showSuccessToast, showErrorToast, router]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -85,9 +82,6 @@ export default function ChangePasswordScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {error ? <View style={styles.banner}><AuthErrorBanner message={error} /></View> : null}
-          {success ? <View style={styles.banner}><AuthInfoBanner message={success} /></View> : null}
-
           <View style={styles.formCard}>
             {/* Current Password */}
             <View style={styles.labelContainer}>
@@ -234,10 +228,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.xxl,
-  },
-  banner: {
-    marginBottom: Spacing.md,
-    borderRadius: Radius.md,
   },
   formCard: {
     backgroundColor: '#FFFFFF',

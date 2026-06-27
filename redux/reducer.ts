@@ -45,9 +45,9 @@ function authReducer(state = initialAuthState, action: AnyAction): AuthState {
 function toastReducer(state = initialToastState, action: AnyAction): ToastState {
   switch (action.type) {
     case SHOW_TOAST:
-      return { message: action.payload };
+      return { message: action.payload.message, type: action.payload.type };
     case HIDE_TOAST:
-      return { message: null };
+      return { message: null, type: undefined };
     default:
       return state;
   }
@@ -65,3 +65,4 @@ export const selectAuthToken = (state: AppState) => state.auth.token;
 export const selectIsAuthenticated = (state: AppState) => Boolean(state.auth.token);
 export const selectIsBootstrapping = (state: AppState) => state.auth.isBootstrapping;
 export const selectToastMessage = (state: AppState) => state.toast.message;
+export const selectToastType = (state: AppState) => state.toast.type;

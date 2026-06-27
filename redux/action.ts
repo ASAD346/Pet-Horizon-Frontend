@@ -14,7 +14,7 @@ import {
   HIDE_TOAST,
   SHOW_TOAST,
 } from './action-types';
-import type { AppState } from './types';
+import type { AppState, ToastState } from './types';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -38,7 +38,7 @@ export interface BootstrapCompleteAction {
 
 export interface ShowToastAction {
   type: typeof SHOW_TOAST;
-  payload: string;
+  payload: { message: string; type: ToastState['type'] };
 }
 
 export interface HideToastAction {
@@ -65,9 +65,9 @@ export const bootstrapCompleteAction = (): BootstrapCompleteAction => ({
   type: AUTH_BOOTSTRAP_COMPLETE,
 });
 
-export const showToastAction = (message: string): ShowToastAction => ({
+export const showToastAction = (message: string, type: ToastState['type'] = 'info'): ShowToastAction => ({
   type: SHOW_TOAST,
-  payload: message,
+  payload: { message, type },
 });
 
 export const hideToastAction = (): HideToastAction => ({
