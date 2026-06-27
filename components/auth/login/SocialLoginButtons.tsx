@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { AppButton } from '../../ui/AppButton';
 import { OrDivider } from '../OrDivider';
@@ -36,13 +36,15 @@ export function SocialLoginButtons({
         icon={<AntDesign name="google" size={18} color="#EA4335" />}
       />
 
-      <AppButton
-        title="Continue with Apple"
-        onPress={onApplePress}
-        style={styles.appleButton}
-        textStyle={styles.appleButtonText}
-        icon={<AntDesign name="apple" size={18} color={Palette.white} />}
-      />
+      {Platform.OS === 'ios' ? (
+        <AppButton
+          title="Continue with Apple"
+          onPress={onApplePress}
+          style={styles.appleButton}
+          textStyle={styles.appleButtonText}
+          icon={<AntDesign name="apple" size={18} color={Palette.white} />}
+        />
+      ) : null}
     </View>
   );
 }
