@@ -125,6 +125,7 @@ export function FormNumberInput({
       <View
         style={[
           styles.inputContainerRow,
+          styles.standardHeight,
           focused && { borderColor: accentColor },
           error ? { borderColor: '#E53935' } : null,
         ]}

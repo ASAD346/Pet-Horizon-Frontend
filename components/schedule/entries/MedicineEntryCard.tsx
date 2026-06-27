@@ -98,7 +98,7 @@ export function MedicineEntryCard({
       />
 
       <View style={styles.twoColRow}>
-        <View style={{ flex: 1.2 }}>
+        <View style={styles.halfCol}>
           <FormNumberInput
             label="Dose"
             value={entry.doseAmount}
@@ -107,7 +107,7 @@ export function MedicineEntryCard({
             unit={entry.doseForm === 'tablet' ? 'Qty' : 'ml'}
           />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={styles.halfCol}>
           <FormNumberInput
             label="Supply"
             value={entry.totalPills}
