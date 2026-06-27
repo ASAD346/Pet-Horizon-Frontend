@@ -19,6 +19,7 @@
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/app-icon.png"
       },
+      "usesCleartextTraffic": true,
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "pan",
       "predictiveBackGestureEnabled": false,
