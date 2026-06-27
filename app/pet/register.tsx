@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
@@ -69,6 +70,7 @@ export default function RegisterPetScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RegisterPetFieldErrors>({});
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [hasEditPermission, setHasEditPermission] = useState(true);
   const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
@@ -155,10 +157,7 @@ export default function RegisterPetScreen() {
       try {
         const existing = await fetchPetById(token, editPetId);
         if (!mounted) return;
-        if (!isPetOwner(existing.ownerUserId, user?._id)) {
-          setFormError('Only the pet owner can edit this profile.');
-          return;
-        }
+        
         setPetName(existing.name ?? '');
         setSpecies(existing.species ?? '');
         setBreed(existing.breed ?? '');
@@ -167,6 +166,10 @@ export default function RegisterPetScreen() {
         if (existing.weight != null) setWeight(String(existing.weight));
         if (existing.weightUnit === 'lbs' || existing.weightUnit === 'kg') {
           setWeightUnit(existing.weightUnit);
+        }
+
+        if (!isPetOwner(existing.ownerUserId, user?._id)) {
+          setHasEditPermission(false);
         }
       } catch (error) {
         if (mounted) setFormError(getErrorMessage(error));
@@ -344,9 +347,18 @@ export default function RegisterPetScreen() {
                 </AppText>
               </View>
 
+              {!hasEditPermission && (
+                <View style={styles.viewOnlyBanner}>
+                  <Ionicons name="information-circle" size={20} color="#4A5568" />
+                  <AppText variant="bodySmall" color="#4A5568" style={styles.viewOnlyText}>
+                    This profile is view-only. Only the pet owner can make changes.
+                  </AppText>
+                </View>
+              )}
               {formError ? <AuthErrorBanner message={formError} /> : null}
 
-              <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />
+              <View pointerEvents={hasEditPermission ? 'auto' : 'none'} style={!hasEditPermission && { opacity: 0.6 }}>
+                <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />
 
               <PetLabeledInput
                 label="Pet Name"
@@ -411,6 +423,7 @@ export default function RegisterPetScreen() {
                   {fieldErrors.weight}
                 </AppText>
               ) : null}
+              </View>
             </View>
           </ScrollView>
 
@@ -420,7 +433,7 @@ export default function RegisterPetScreen() {
                 title={isEditMode ? 'Save Changes' : 'Add Pet'}
                 onPress={handleAddPet}
                 loading={loading}
-                disabled={speciesLoading || loading}
+                disabled={speciesLoading || loading || !hasEditPermission}
                 variant="success"
                 size="sm"
                 style={styles.addButton}
@@ -430,7 +443,7 @@ export default function RegisterPetScreen() {
                 <AppButton
                   title="Delete Pet"
                   onPress={handleDeletePet}
-                  disabled={loading}
+                  disabled={loading || !hasEditPermission}
                   variant="outline"
                   size="sm"
                   style={styles.deleteButton}
@@ -538,8 +551,21 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   deleteButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
     color: '#C62828',
+    fontWeight: '700',
+  },
+  viewOnlyBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDFDF2',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: '#C6F6D5',
+  },
+  viewOnlyText: {
+    marginLeft: 8,
+    flex: 1,
   },
 });
