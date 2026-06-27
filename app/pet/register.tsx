@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { AuthErrorBanner } from '@/components/auth/AuthErrorBanner';
 import {
   BirthdayField,
@@ -67,6 +68,8 @@ export default function RegisterPetScreen() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RegisterPetFieldErrors>({});
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
     setFormError(null);
@@ -187,12 +190,16 @@ export default function RegisterPetScreen() {
   );
 
   const handleAddPet = useCallback(async () => {
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
+
     Keyboard.dismiss();
     clearErrors();
 
     if (!token) {
       log.fail('AddPet', 'Submit blocked — no token');
       setFormError('Please log in to register a pet.');
+      isSubmitting.current = false;
       return;
     }
 
@@ -208,6 +215,7 @@ export default function RegisterPetScreen() {
             { text: 'View Premium', onPress: () => router.push('/profile/premium') },
           ],
         );
+        isSubmitting.current = false;
         return;
       }
     }
@@ -216,6 +224,7 @@ export default function RegisterPetScreen() {
     if (hasRegisterPetFieldErrors(validation)) {
       log.fail('AddPet', 'Validation failed', { ...validation });
       setFieldErrors(validation);
+      isSubmitting.current = false;
       return;
     }
 
@@ -266,6 +275,7 @@ export default function RegisterPetScreen() {
       setFormError(getErrorMessage(error, 'Unable to add your pet. Please try again.'));
     } finally {
       setLoading(false);
+      isSubmitting.current = false;
     }
   }, [
     birthday,
@@ -288,27 +298,25 @@ export default function RegisterPetScreen() {
 
   const handleDeletePet = useCallback(() => {
     if (!token || !editPetId) return;
-    Alert.alert('Delete pet', 'This permanently removes the pet and related data.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          setLoading(true);
-          try {
-            await deletePet(token, editPetId);
-            if (user && user.activePetId === editPetId) {
-              await setSession({ token, user: { ...user, activePetId: null } });
-            }
-            router.replace('/(tabs)');
-          } catch (error) {
-            setFormError(getErrorMessage(error));
-          } finally {
-            setLoading(false);
-          }
-        },
-      },
-    ]);
+    setDeleteConfirmVisible(true);
+  }, [token, editPetId]);
+
+  const confirmDeletePet = useCallback(async () => {
+    if (!token || !editPetId) return;
+    
+    setDeleteConfirmVisible(false);
+    setLoading(true);
+    try {
+      await deletePet(token, editPetId);
+      if (user && user.activePetId === editPetId) {
+        await setSession({ token, user: { ...user, activePetId: null } });
+      }
+      router.replace('/(tabs)');
+    } catch (error) {
+      setFormError(getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   }, [token, editPetId, user, setSession, router]);
 
   return (
@@ -433,6 +441,17 @@ export default function RegisterPetScreen() {
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <AppConfirmModal
+        visible={deleteConfirmVisible}
+        title="Delete Pet"
+        message="Are you sure you want to permanently delete this pet profile? All related schedules and data will be lost forever."
+        confirmLabel="Delete"
+        cancelLabel="Keep pet"
+        variant="danger"
+        onConfirm={confirmDeletePet}
+        onCancel={() => setDeleteConfirmVisible(false)}
+      />
     </View>
   );
 }

@@ -445,7 +445,7 @@ export function ProfileHubView() {
         visible={deleteConfirmVisible}
         title="Delete Account"
         message="Are you sure you want to permanently delete your account? This action cannot be undone and all your pet profiles, schedules, and data will be lost forever."
-        confirmLabel="Delete permanently"
+        confirmLabel="Delete"
         cancelLabel="Keep account"
         variant="danger"
         loading={deleting}
