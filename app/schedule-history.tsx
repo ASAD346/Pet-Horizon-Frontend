@@ -277,14 +277,15 @@ export default function ScheduleHistoryScreen() {
 
   const isPremium = user?.premiumStatus === 'premium';
   
-  // High-fidelity header gradient
-  const headerColors = isPremium 
-    ? (['#0E331E', '#184F2E', '#226D3F'] as const)
-    : (['#2E7D32', '#3D8C40'] as const);
+  // Custom curved header config
+  const gradientColors = isPremium
+    ? (['#0E3821', '#184F2E', '#267343'] as const)
+    : (['#3A8F3B', '#5CB35D'] as const);
 
   const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
   const brandBg    = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
   const screenBg   = isPremium ? '#F4F8F6' : '#F5F6F8';
+  const shadowColor = isPremium ? '#082113' : '#1B5E20';
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -330,23 +331,39 @@ export default function ScheduleHistoryScreen() {
 
   return (
     <View style={[styles.root, { backgroundColor: screenBg }]}>
-      {/* Premium Linear Gradient Branded Header matching the dashboard header */}
-      <LinearGradient
-        colors={headerColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.headerContainer, { paddingTop: Math.max(insets.top, Spacing.sm) }]}
-      >
-        <View style={styles.headerRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-          <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
-            History
-          </AppText>
-          <View style={{ width: 40 }} />
+      {/* Premium Branded Header matching other beautiful headers with bottom curve */}
+      <View style={[styles.headerWrapper, { shadowColor }]}>
+        <View style={styles.curveClipper}>
+          <LinearGradient
+            colors={gradientColors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.headerGradient, { paddingTop: Math.max(insets.top, Spacing.sm) + 8 }]}
+          >
+            {/* Decorative background rings */}
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
+              <View style={styles.bgRing1} />
+              <View style={styles.bgRing2} />
+            </View>
+
+            <View style={styles.headerRow}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+              <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
+                History
+              </AppText>
+              <View style={{ width: 40 }} />
+            </View>
+            
+            {/* Bottom accent line */}
+            <View style={[
+              styles.headerDivider,
+              isPremium && { backgroundColor: 'rgba(212, 160, 23, 0.3)' },
+            ]} />
+          </LinearGradient>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* ── Search & Filter Options Row ── */}
       <View style={styles.topFilterBar}>
@@ -459,15 +476,57 @@ export default function ScheduleHistoryScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   
-  headerContainer: {
+  headerWrapper: {
+    width: '100%',
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
+    overflow: Platform.OS === 'android' ? 'hidden' : 'visible',
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: { elevation: 6 },
+    }),
+  },
+  curveClipper: {
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
+    overflow: 'hidden',
+    backgroundColor: '#F5F6F8',
+  },
+  headerGradient: {
+    paddingBottom: 0,
+    borderBottomLeftRadius: 26,
+    borderBottomRightRadius: 26,
+    overflow: 'hidden',
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+  },
+  bgRing1: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    top: -60,
+    right: -40,
+  },
+  bgRing2: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    bottom: -40,
+    left: -20,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     height: 48,
+    paddingBottom: 8,
   },
   backButton: {
     width: 40,
@@ -479,9 +538,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
-    fontSize: 20,
-    lineHeight: 26,
+    fontSize: 18,
+    color: '#FFFFFF',
     textAlign: 'center',
+  },
+  headerDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
 
   topFilterBar: {
