@@ -5,6 +5,7 @@ import { AppText } from '../ui/AppText';
 import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import type { JournalCategory, TimelineEvent } from './journalData';
 import { getCategoryStyle } from './journalData';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ActivityTimelineSectionProps {
   events: TimelineEvent[];
@@ -26,8 +27,12 @@ function TimelineRow({
   isLast: boolean;
   onPress?: (eventId: string) => void;
 }) {
-  const { color, bg } = getCategoryStyle(event.category);
   const completed = event.status === 'completed';
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
+  
+  const brandColor = isPremium ? '#184F2E' : '#2E7D32';
+  const brandBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
 
   return (
     <View style={styles.row}>
@@ -38,8 +43,8 @@ function TimelineRow({
 
       {/* Timeline line and outer ring */}
       <View style={styles.timelineCol}>
-        <View style={[styles.dotOuter, { borderColor: completed ? '#16A34A' : color }]}>
-          <View style={[styles.dotInner, { backgroundColor: completed ? '#16A34A' : color }]} />
+        <View style={[styles.dotOuter, { borderColor: completed ? '#16A34A' : brandColor }]}>
+          <View style={[styles.dotInner, { backgroundColor: completed ? '#16A34A' : brandColor }]} />
         </View>
         {!isLast ? <View style={styles.line} /> : null}
       </View>
@@ -51,22 +56,22 @@ function TimelineRow({
         disabled={!onPress}
         onPress={() => onPress?.(event.id)}
       >
-        <View style={[styles.iconContainer, { backgroundColor: bg }]}>
-          <MaterialCommunityIcons name={event.materialIcon} size={18} color={color} />
+        <View style={[styles.iconContainer, { backgroundColor: brandBg }]}>
+          <MaterialCommunityIcons name={event.materialIcon} size={18} color={brandColor} />
         </View>
         <View style={styles.cardText}>
           <AppText variant="bodySmall" weight="700" color="#111827">
             {event.title}
           </AppText>
-          <AppText variant="caption" color={color} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
+          <AppText variant="caption" color={brandColor} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
             {event.category}
           </AppText>
         </View>
         
         {/* Right side status indicator */}
         <View style={styles.statusCol}>
-          <View style={[styles.statusDot, { backgroundColor: completed ? '#16A34A' : color }]} />
-          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : color} style={styles.statusText}>
+          <View style={[styles.statusDot, { backgroundColor: completed ? '#16A34A' : brandColor }]} />
+          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : brandColor} style={styles.statusText}>
             {completed ? 'COMPLETED' : 'SCHEDULED'}
           </AppText>
         </View>

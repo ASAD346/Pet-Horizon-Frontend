@@ -229,7 +229,15 @@ function FilterSheet({
 }
 
 // ─── Premium Listing Card ─────────────────────────────────────────────────────
-const ActivityCard = React.memo(function ActivityCard({ entry }: { entry: ApiJournalEntry }) {
+const ActivityCard = React.memo(function ActivityCard({
+  entry,
+  brandColor,
+  brandBg,
+}: {
+  entry: ApiJournalEntry;
+  brandColor: string;
+  brandBg: string;
+}) {
   const category = mapActivityTypeToCategory(entry.activityType).toLowerCase();
   const config = KIND_CONFIG[category] ?? KIND_CONFIG.general;
   const skipped = isEntrySkipped(entry);
@@ -246,9 +254,9 @@ const ActivityCard = React.memo(function ActivityCard({ entry }: { entry: ApiJou
   return (
     <View style={styles.card}>
       <View style={styles.cardLeft}>
-        {/* Colorful icon container matching app standards */}
-        <View style={[styles.iconContainer, { backgroundColor: config.bg }]}>
-          <MaterialCommunityIcons name={config.icon} size={18} color={config.color} />
+        {/* Uniform brand-colored icon container */}
+        <View style={[styles.iconContainer, { backgroundColor: brandBg }]}>
+          <MaterialCommunityIcons name={config.icon} size={18} color={brandColor} />
         </View>
         
         <View style={styles.cardInfo}>
@@ -257,7 +265,7 @@ const ActivityCard = React.memo(function ActivityCard({ entry }: { entry: ApiJou
           </AppText>
           
           <View style={styles.metaRow}>
-            <AppText variant="caption" weight="800" color={config.color} style={styles.kindLabel}>
+            <AppText variant="caption" weight="800" color={brandColor} style={styles.kindLabel}>
               {category.toUpperCase()}
             </AppText>
             <AppText variant="caption" color={Palette.gray[400]}>•  {timeStr}</AppText>
@@ -373,8 +381,8 @@ export default function ActivityHistoryScreen() {
   const sections = useMemo(() => groupByDate(items), [items]);
 
   const renderItem = useCallback(({ item }: { item: ApiJournalEntry }) => (
-    <ActivityCard entry={item} />
-  ), []);
+    <ActivityCard entry={item} brandColor={brandColor} brandBg={brandBg} />
+  ), [brandColor, brandBg]);
 
   const renderSectionHeader = useCallback(({ section }: { section: DateSection }) => (
     <SectionDateHeader title={section.title} brandColor={brandColor} />

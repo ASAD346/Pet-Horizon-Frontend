@@ -193,8 +193,16 @@ function FilterSheet({
 }
 
 // ─── Premium Listing Card ─────────────────────────────────────────────────────
-const ScheduleCard = React.memo(function ScheduleCard({ item }: { item: ScheduleHistoryItem }) {
-  const config = KIND_CONFIG[item.kind] ?? { color: Palette.gray[600], bg: '#F3F4F6', icon: 'calendar-check' };
+const ScheduleCard = React.memo(function ScheduleCard({
+  item,
+  brandColor,
+  brandBg,
+}: {
+  item: ScheduleHistoryItem;
+  brandColor: string;
+  brandBg: string;
+}) {
+  const config = KIND_CONFIG[item.kind] ?? { icon: 'calendar-check' };
   const status = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
   const timeLabel = formatTime(item.timeOfDay);
   const dateLabel = item.date
@@ -204,9 +212,9 @@ const ScheduleCard = React.memo(function ScheduleCard({ item }: { item: Schedule
   return (
     <View style={styles.card}>
       <View style={styles.cardLeft}>
-        {/* Colorful icon container matching app standards */}
-        <View style={[styles.iconContainer, { backgroundColor: config.bg }]}>
-          <MaterialCommunityIcons name={config.icon} size={18} color={config.color} />
+        {/* Uniform brand-colored icon container */}
+        <View style={[styles.iconContainer, { backgroundColor: brandBg }]}>
+          <MaterialCommunityIcons name={config.icon} size={18} color={brandColor} />
         </View>
         
         <View style={styles.cardInfo}>
@@ -215,7 +223,7 @@ const ScheduleCard = React.memo(function ScheduleCard({ item }: { item: Schedule
           </AppText>
           
           <View style={styles.metaRow}>
-            <AppText variant="caption" weight="800" color={config.color} style={styles.kindLabel}>
+            <AppText variant="caption" weight="800" color={brandColor} style={styles.kindLabel}>
               {item.kind.toUpperCase()}
             </AppText>
             {timeLabel && (
@@ -324,8 +332,8 @@ export default function ScheduleHistoryScreen() {
   };
 
   const renderItem = useCallback(({ item }: { item: ScheduleHistoryItem }) => (
-    <ScheduleCard item={item} />
-  ), []);
+    <ScheduleCard item={item} brandColor={brandColor} brandBg={brandBg} />
+  ), [brandColor, brandBg]);
 
   const keyExtractor = useCallback((item: ScheduleHistoryItem) => item._id, []);
 
