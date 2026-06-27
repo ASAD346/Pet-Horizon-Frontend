@@ -1,0 +1,266 @@
+﻿To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle-plugin:settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:processResources NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:shared:compileJava NO-SOURCE
+> Task :gradle-plugin:shared:processResources NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:jar UP-TO-DATE
+> Task :gradle-plugin:shared:classes UP-TO-DATE
+> Task :gradle-plugin:shared:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:settings-plugin:jar UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-module-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-module-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileKotlin UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:compileJava NO-SOURCE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:pluginDescriptors UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:processResources UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:classes UP-TO-DATE
+> Task :expo-gradle-plugin:expo-autolinking-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:react-native-gradle-plugin:jar UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileKotlin UP-TO-DATE
+> Task :expo-module-gradle-plugin:compileJava NO-SOURCE
+> Task :expo-module-gradle-plugin:classes UP-TO-DATE
+> Task :expo-module-gradle-plugin:jar UP-TO-DATE
+
+> Configure project :
+[32m[ExpoRootProject][0m Using the following versions:
+  - buildTools:  [32m36.0.0[0m
+  - minSdk:      [32m24[0m
+  - compileSdk:  [32m36[0m
+  - targetSdk:   [32m36[0m
+  - ndk:         [32m27.1.12297006[0m
+  - kotlin:      [32m2.1.20[0m
+  - ksp:         [32m2.1.20-2.0.1[0m
+
+> Configure project :expo
+
+Using expo modules
+  - [32mexpo-constants[0m (18.0.13)
+  - [32mexpo-modules-core[0m (3.0.30)
+  - [33m[≡ƒôª][0m [32mexpo-application[0m (7.0.8)
+  - [33m[≡ƒôª][0m [32mexpo-asset[0m (12.0.13)
+  - [33m[≡ƒôª][0m [32mexpo-clipboard[0m (8.0.8)
+  - [33m[≡ƒôª][0m [32mexpo-device[0m (8.0.10)
+  - [33m[≡ƒôª][0m [32mexpo-file-system[0m (19.0.22)
+  - [33m[≡ƒôª][0m [32mexpo-font[0m (14.0.11)
+  - [33m[≡ƒôª][0m [32mexpo-haptics[0m (15.0.8)
+  - [33m[≡ƒôª][0m [32mexpo-image[0m (3.0.11)
+  - [33m[≡ƒôª][0m [32mexpo-image-loader[0m (6.0.0)
+  - [33m[≡ƒôª][0m [32mexpo-image-picker[0m (17.0.11)
+  - [33m[≡ƒôª][0m [32mexpo-keep-awake[0m (15.0.8)
+  - [33m[≡ƒôª][0m [32mexpo-linear-gradient[0m (15.0.8)
+  - [33m[≡ƒôª][0m [32mexpo-linking[0m (8.0.12)
+  - [33m[≡ƒôª][0m [32mexpo-localization[0m (17.0.9)
+  - [33m[≡ƒôª][0m [32mexpo-notifications[0m (0.32.17)
+  - [33m[≡ƒôª][0m [32mexpo-secure-store[0m (15.0.8)
+  - [33m[≡ƒôª][0m [32mexpo-splash-screen[0m (31.0.13)
+  - [33m[≡ƒôª][0m [32mexpo-system-ui[0m (6.0.9)
+  - [33m[≡ƒôª][0m [32mexpo-web-browser[0m (15.0.11)
+
+
+> Task :app:generateAutolinkingNewArchitectureFiles
+> Task :app:generateAutolinkingPackageList
+> Task :app:generateCodegenSchemaFromJavaScript SKIPPED
+> Task :app:generateCodegenArtifactsFromSchema SKIPPED
+> Task :app:generateReactNativeEntryPoint
+
+> Task :expo-constants:createExpoConfig
+env: load .env
+env: export EXPO_PUBLIC_API_URL EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID EXPO_PUBLIC_INVITE_WEB_HOST
+
+> Task :expo-constants:preBuild
+> Task :expo-modules-core:preBuild UP-TO-DATE
+> Task :expo:generatePackagesList
+> Task :expo:preBuild
+> Task :react-native-async-storage_async-storage:generateCodegenSchemaFromJavaScript
+> Task :react-native-community_datetimepicker:generateCodegenSchemaFromJavaScript
+> Task :react-native-async-storage_async-storage:generateCodegenArtifactsFromSchema
+> Task :react-native-async-storage_async-storage:preBuild
+> Task :react-native-community_datetimepicker:generateCodegenArtifactsFromSchema
+> Task :react-native-community_datetimepicker:preBuild
+> Task :react-native-gesture-handler:generateCodegenSchemaFromJavaScript
+> Task :react-native-google-signin_google-signin:generateCodegenSchemaFromJavaScript
+> Task :react-native-gesture-handler:generateCodegenArtifactsFromSchema
+> Task :react-native-gesture-handler:preBuild
+> Task :react-native-google-signin_google-signin:generateCodegenArtifactsFromSchema
+> Task :react-native-google-signin_google-signin:preBuild
+> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
+> Task :react-native-reanimated:assertNewArchitectureEnabledTask SKIPPED
+> Task :react-native-reanimated:assertWorkletsVersionTask
+> Task :react-native-safe-area-context:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:generateCodegenSchemaFromJavaScript
+> Task :react-native-safe-area-context:generateCodegenArtifactsFromSchema
+> Task :react-native-safe-area-context:preBuild
+> Task :react-native-reanimated:generateCodegenArtifactsFromSchema
+> Task :react-native-screens:generateCodegenSchemaFromJavaScript
+> Task :react-native-reanimated:prepareReanimatedHeadersForPrefabs
+> Task :react-native-reanimated:preBuild
+> Task :react-native-svg:generateCodegenSchemaFromJavaScript
+> Task :react-native-screens:generateCodegenArtifactsFromSchema
+> Task :react-native-screens:preBuild
+> Task :react-native-worklets:assertMinimalReactNativeVersionTask
+> Task :react-native-worklets:assertNewArchitectureEnabledTask SKIPPED
+> Task :react-native-worklets:generateCodegenSchemaFromJavaScript
+> Task :react-native-svg:generateCodegenArtifactsFromSchema
+> Task :react-native-svg:preBuild
+> Task :react-native-reanimated:preReleaseBuild
+> Task :expo:preReleaseBuild
+> Task :expo:mergeReleaseJniLibFolders
+> Task :expo:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo:copyReleaseJniLibsProjectOnly
+> Task :expo-constants:preReleaseBuild
+> Task :expo-constants:mergeReleaseJniLibFolders
+> Task :expo-constants:mergeReleaseNativeLibs NO-SOURCE
+> Task :expo-constants:copyReleaseJniLibsProjectOnly
+> Task :expo-modules-core:preReleaseBuild UP-TO-DATE
+> Task :react-native-worklets:generateCodegenArtifactsFromSchema
+> Task :react-native-worklets:prepareWorkletsHeadersForPrefabs
+> Task :react-native-worklets:preBuild
+> Task :app:preBuild
+> Task :app:preReleaseBuild
+> Task :react-native-worklets:preReleaseBuild
+> Task :react-native-worklets:configureCMakeRelWithDebInfo[arm64-v8a]
+
+> Task :expo-modules-core:configureCMakeRelWithDebInfo[arm64-v8a]
+[CXX5304] This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+[CXX5304] This version only understands SDK XML versions up to 3 but an SDK XML file of version 4 was encountered. This can happen if you use versions of Android Studio and the command-line tools that were released at different times.
+
+> Task :react-native-worklets:generateJsonModelRelease
+> Task :react-native-worklets:prefabReleaseConfigurePackage
+> Task :app:mergeReleaseJniLibFolders
+
+> Task :react-native-worklets:buildCMakeRelWithDebInfo[arm64-v8a][worklets]
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-worklets\android\build\intermediates\cxx\RelWithDebInfo\3r5f4f6l\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-worklets\android\build\intermediates\cxx\RelWithDebInfo\3r5f4f6l\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:externalNativeBuildRelease
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-worklets\android\build\intermediates\cmake\release\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-worklets\android\build\intermediates\cmake\release\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:prefabReleasePackage
+> Task :react-native-worklets:mergeReleaseJniLibFolders
+> Task :react-native-reanimated:configureCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-reanimated:generateJsonModelRelease
+> Task :react-native-reanimated:prefabReleaseConfigurePackage
+> Task :react-native-worklets:mergeReleaseNativeLibs
+
+> Task :react-native-reanimated:buildCMakeRelWithDebInfo[arm64-v8a][reanimated]
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-reanimated\android\build\intermediates\cxx\RelWithDebInfo\432v3r6j\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-reanimated\android\build\intermediates\cxx\RelWithDebInfo\432v3r6j\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-worklets:copyReleaseJniLibsProjectOnly
+
+> Task :react-native-reanimated:externalNativeBuildRelease
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-reanimated\android\build\intermediates\cmake\release\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-reanimated\android\build\intermediates\cmake\release\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-reanimated:prefabReleasePackage
+
+> Task :expo-modules-core:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\expo-modules-core\android\build\intermediates\cxx\RelWithDebInfo\5k61374i\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\expo-modules-core\android\build\intermediates\cxx\RelWithDebInfo\5k61374i\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :expo-modules-core:mergeReleaseJniLibFolders
+> Task :expo-modules-core:mergeReleaseNativeLibs
+> Task :expo-modules-core:copyReleaseJniLibsProjectOnly
+> Task :react-native-async-storage_async-storage:preReleaseBuild
+> Task :react-native-async-storage_async-storage:mergeReleaseJniLibFolders
+> Task :react-native-async-storage_async-storage:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-async-storage_async-storage:copyReleaseJniLibsProjectOnly
+> Task :react-native-community_datetimepicker:preReleaseBuild
+> Task :react-native-community_datetimepicker:mergeReleaseJniLibFolders
+> Task :react-native-community_datetimepicker:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-community_datetimepicker:copyReleaseJniLibsProjectOnly
+> Task :react-native-gesture-handler:preReleaseBuild
+> Task :react-native-gesture-handler:configureCMakeRelWithDebInfo[arm64-v8a]
+
+> Task :react-native-gesture-handler:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\RelWithDebInfo\4v1z693p\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-gesture-handler\android\build\intermediates\cxx\RelWithDebInfo\4v1z693p\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-gesture-handler:mergeReleaseJniLibFolders
+> Task :react-native-gesture-handler:mergeReleaseNativeLibs
+> Task :react-native-gesture-handler:copyReleaseJniLibsProjectOnly
+> Task :react-native-google-signin_google-signin:preReleaseBuild
+> Task :react-native-google-signin_google-signin:mergeReleaseJniLibFolders
+> Task :react-native-google-signin_google-signin:mergeReleaseNativeLibs NO-SOURCE
+
+> Task :app:configureCMakeRelWithDebInfo[arm64-v8a]
+C/C++: CMake Warning in D:/Web/PetHorizon/PetHorizon_App/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt:
+C/C++:   The object file directory
+C/C++:     D:/Web/PetHorizon/PetHorizon_App/android/app/.cxx/RelWithDebInfo/68664g5x/arm64-v8a/rngesturehandler_codegen_autolinked_build/CMakeFiles/react_codegen_rngesturehandler_codegen.dir/./
+C/C++:   has 182 characters.  The maximum full path to an object file is 250
+C/C++:   characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+C/C++:     react/renderer/components/rngesturehandler_codegen/rngesturehandler_codegenJSI-generated.cpp.o
+C/C++:   cannot be safely placed under this directory.  The build may not work
+C/C++:   correctly.
+
+> Task :react-native-google-signin_google-signin:copyReleaseJniLibsProjectOnly
+> Task :react-native-reanimated:mergeReleaseJniLibFolders
+> Task :react-native-reanimated:mergeReleaseNativeLibs
+> Task :react-native-reanimated:copyReleaseJniLibsProjectOnly
+> Task :react-native-safe-area-context:preReleaseBuild
+> Task :react-native-safe-area-context:mergeReleaseJniLibFolders
+> Task :react-native-safe-area-context:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-safe-area-context:copyReleaseJniLibsProjectOnly
+> Task :react-native-screens:preReleaseBuild
+> Task :react-native-screens:configureCMakeRelWithDebInfo[arm64-v8a]
+
+> Task :react-native-screens:buildCMakeRelWithDebInfo[arm64-v8a]
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-screens\android\build\intermediates\cxx\RelWithDebInfo\232z3z6r\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+C/C++: Hard link from 'C:\Users\negle\.gradle\caches\8.14.3\transforms\5361c2961195a7f7b1caefc6911a3fc2\transformed\react-android-0.81.5-release\prefab\modules\reactnative\libs\android.arm64-v8a\libreactnative.so' to 'D:\Web\PetHorizon\PetHorizon_App\node_modules\react-native-screens\android\build\intermediates\cxx\RelWithDebInfo\232z3z6r\obj\arm64-v8a\libreactnative.so' failed. Doing a slower copy instead.
+
+> Task :react-native-screens:mergeReleaseJniLibFolders
+> Task :react-native-screens:mergeReleaseNativeLibs
+> Task :react-native-screens:copyReleaseJniLibsProjectOnly
+> Task :react-native-svg:preReleaseBuild
+> Task :react-native-svg:mergeReleaseJniLibFolders
+> Task :react-native-svg:mergeReleaseNativeLibs NO-SOURCE
+> Task :react-native-svg:copyReleaseJniLibsProjectOnly
+> Task :react-native-community_datetimepicker:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :react-native-community_datetimepicker:generateReleaseBuildConfig
+> Task :react-native-community_datetimepicker:generateReleaseResValues
+> Task :react-native-community_datetimepicker:generateReleaseResources
+> Task :react-native-community_datetimepicker:packageReleaseResources
+> Task :react-native-community_datetimepicker:parseReleaseLocalResources
+> Task :react-native-community_datetimepicker:generateReleaseRFile
+> Task :app:buildCMakeRelWithDebInfo[arm64-v8a]
+> Task :react-native-community_datetimepicker:compileReleaseKotlin
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialDatePickerModule.kt:21:20 'val currentActivity: Activity?' is deprecated. Deprecated in 0.80.0. Use getReactApplicationContext.getCurrentActivity() instead.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialDatePickerModule.kt:21:20 This synthetic property is based on the getter function 'fun getCurrentActivity(): Activity?' from Kotlin. In the future, synthetic properties will be available only if the base getter function came from Java. Consider replacing this property access with a 'getCurrentActivity()' function call.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialDatePickerModule.kt:26:20 'val currentActivity: Activity?' is deprecated. Deprecated in 0.80.0. Use getReactApplicationContext.getCurrentActivity() instead.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialDatePickerModule.kt:26:20 This synthetic property is based on the getter function 'fun getCurrentActivity(): Activity?' from Kotlin. In the future, synthetic properties will be available only if the base getter function came from Java. Consider replacing this property access with a 'getCurrentActivity()' function call.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialTimePickerModule.kt:22:20 'val currentActivity: Activity?' is deprecated. Deprecated in 0.80.0. Use getReactApplicationContext.getCurrentActivity() instead.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialTimePickerModule.kt:22:20 This synthetic property is based on the getter function 'fun getCurrentActivity(): Activity?' from Kotlin. In the future, synthetic properties will be available only if the base getter function came from Java. Consider replacing this property access with a 'getCurrentActivity()' function call.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialTimePickerModule.kt:27:20 'val currentActivity: Activity?' is deprecated. Deprecated in 0.80.0. Use getReactApplicationContext.getCurrentActivity() instead.
+w: file:///D:/Web/PetHorizon/PetHorizon_App/node_modules/@react-native-community/datetimepicker/android/src/main/java/com/reactcommunity/rndatetimepicker/MaterialTimePickerModule.kt:27:20 This synthetic property is based on the getter function 'fun getCurrentActivity(): Activity?' from Kotlin. In the future, synthetic properties will be available only if the base getter function came from Java. Consider replacing this property access with a 'getCurrentActivity()' function call.
+
+> Task :react-native-community_datetimepicker:javaPreCompileRelease
+
+> Task :react-native-community_datetimepicker:compileReleaseJavaWithJavac

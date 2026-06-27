@@ -1,17 +1,33 @@
-# Local release APK build — uses SDK at E:\Android_Studio_Setup
-$ErrorActionPreference = "Stop"
+# Dynamic local release APK build
+$ErrorActionPreference = "Continue"
 
-$AndroidSdk = "E:\Android_Studio_Setup\Android_Sdk"
-$JavaHome = "E:\Android_Studio_Setup\Android_Studio_Install\jbr"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 $ReleaseAbi = "arm64-v8a"
 
+# Detect Android SDK
+$AndroidSdk = $env:ANDROID_HOME
+if (-not $AndroidSdk -or -not (Test-Path "$AndroidSdk\platform-tools\adb.exe")) {
+  $AndroidSdk = "$env:USERPROFILE\AppData\Local\Android\Sdk"
+}
 if (-not (Test-Path "$AndroidSdk\platform-tools\adb.exe")) {
-  Write-Error "Android SDK not found at $AndroidSdk"
+  $AndroidSdk = "E:\Android_Studio_Setup\Android_Sdk"
+}
+
+if (-not (Test-Path "$AndroidSdk\platform-tools\adb.exe")) {
+  Write-Error "Android SDK not found at $AndroidSdk. Please set your ANDROID_HOME environment variable."
+}
+
+# Detect Java Home (JDK/JBR)
+$JavaHome = $env:JAVA_HOME
+if (-not $JavaHome -or -not (Test-Path "$JavaHome\bin\java.exe")) {
+  $JavaHome = "C:\Program Files\Android\Android Studio\jbr"
+}
+if (-not (Test-Path "$JavaHome\bin\java.exe")) {
+  $JavaHome = "E:\Android_Studio_Setup\Android_Studio_Install\jbr"
 }
 
 if (-not (Test-Path "$JavaHome\bin\java.exe")) {
-  Write-Error "Java not found at $JavaHome"
+  Write-Error "Java JDK/JBR not found at $JavaHome. Please set your JAVA_HOME environment variable."
 }
 
 $env:ANDROID_HOME = $AndroidSdk
@@ -62,13 +78,20 @@ Set-Location "$ProjectRoot\android"
   --no-daemon `
   --max-workers=2 `
   "-PreactNativeArchitectures=$ReleaseAbi"
+$gradleExit = $LASTEXITCODE
 Set-Location $ProjectRoot
+
+if ($gradleExit -ne 0) {
+  Write-Error "Gradle build failed with exit code $gradleExit"
+  exit $gradleExit
+}
 
 $apk = "$ProjectRoot\android\app\build\outputs\apk\release\app-release.apk"
 if (Test-Path $apk) {
   Write-Host ""
-  Write-Host "SUCCESS — APK ready:" -ForegroundColor Green
+  Write-Host "SUCCESS - APK ready:" -ForegroundColor Green
   Write-Host $apk
 } else {
   Write-Error "Build finished but APK not found at $apk"
 }
+
