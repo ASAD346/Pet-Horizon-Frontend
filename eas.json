@@ -11,7 +11,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://pet-horizon-backend.onrender.com/v1",
+        "EXPO_PUBLIC_API_URL": "http://16.171.154.65/v1",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "162625002184-j28egm3lo9ugaeem48pp0enuc32snv82.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com"
       }
@@ -22,7 +22,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://pet-horizon-backend.onrender.com/v1",
+        "EXPO_PUBLIC_API_URL": "http://16.171.154.65/v1",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "162625002184-j28egm3lo9ugaeem48pp0enuc32snv82.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com"
       }
@@ -32,7 +32,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://pet-horizon-backend.onrender.com/v1",
+        "EXPO_PUBLIC_API_URL": "http://16.171.154.65/v1",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "162625002184-j28egm3lo9ugaeem48pp0enuc32snv82.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com"
       }

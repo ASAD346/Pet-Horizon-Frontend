@@ -99,8 +99,14 @@ export async function acquireDevicePushToken(): Promise<string | null> {
 
   try {
     const Notifications = await getNotificationsModule();
-    const pushToken = await Notifications.getDevicePushTokenAsync();
-    const token = pushToken.data?.trim() ?? '';
+    
+    // Safety timeout: Native token retrieval might hang if FCM credentials are misconfigured
+    const tokenResult = await Promise.race([
+      Notifications.getDevicePushTokenAsync(),
+      new Promise<null>((_, reject) => setTimeout(() => reject(new Error('FCM token request timed out after 5s')), 5000))
+    ]);
+
+    const token = tokenResult?.data?.trim() ?? '';
 
     if (!token) {
       log.warn(SCOPE, 'No native push token returned');
