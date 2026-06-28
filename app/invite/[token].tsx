@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ScrollView,
@@ -31,6 +32,7 @@ export default function InviteAcceptScreen() {
 
   const [info, setInfo] = useState<InviteInfoResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isValidating, setIsValidating] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const { showErrorToast } = useToast();
 
@@ -60,11 +62,15 @@ export default function InviteAcceptScreen() {
   }, [loadInfo]);
 
   useEffect(() => {
+    if (loading) return;
+
     if (isOwnInvite) {
       showErrorToast("You cannot accept your own invitation.");
       router.replace('/(tabs)');
+    } else {
+      setIsValidating(false);
     }
-  }, [isOwnInvite, showErrorToast, router]);
+  }, [loading, isOwnInvite, showErrorToast, router]);
 
   const handleAccept = async () => {
     if (!inviteToken) return;
@@ -105,12 +111,18 @@ export default function InviteAcceptScreen() {
     }
   };
 
-  if (loading || isOwnInvite) {
+  if (loading || isValidating) {
     return (
       <SafeAreaView style={styles.container}>
-        <SkeletonInviteCard />
+        <View style={styles.centeredLoaderContainer}>
+          <ActivityIndicator color="#114227" size="large" />
+        </View>
       </SafeAreaView>
     );
+  }
+
+  if (isOwnInvite) {
+    return null;
   }
 
   return (
@@ -244,5 +256,11 @@ const styles = StyleSheet.create({
   backBtn: {
     width: '100%',
     borderRadius: Radius.full,
+  },
+  centeredLoaderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: HomeTheme.background,
   },
 });
