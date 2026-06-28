@@ -27,6 +27,9 @@ import {
 } from '@/components/pet';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearPetListCache } from '@/lib/pet/petListCache';
+import { clearActivePetCache } from '@/lib/pet/activePetCache';
 import { getErrorMessage } from '@/lib/api/errors';
 import { LoginTheme, Palette, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
@@ -53,7 +56,8 @@ export default function RegisterPetScreen() {
   const isEditMode = params.mode === 'edit' && Boolean(params.petId);
   const editPetId = Array.isArray(params.petId) ? params.petId[0] : params.petId;
   const { token, user, setSession } = useAuth();
-  const { showToast, showErrorToast } = useToast();
+  const { showToast, showSuccessToast, showErrorToast } = useToast();
+  const queryClient = useQueryClient();
 
   const [speciesList, setSpeciesList] = useState<string[]>([]);
   const [breeds, setBreeds] = useState<string[]>([]);
@@ -316,16 +320,36 @@ export default function RegisterPetScreen() {
     setLoading(true);
     try {
       await deletePet(token, editPetId);
-      if (user && user.activePetId === editPetId) {
-        await setSession({ token, user: { ...user, activePetId: null } });
+
+      let nextActivePetId: string | null = null;
+      try {
+        const remainingPets = await fetchPets(token);
+        const filteredPets = remainingPets.filter((p) => p._id !== editPetId);
+        nextActivePetId = filteredPets[0]?._id ?? null;
+      } catch (err) {
+        log.warn('DeletePet', 'Failed to fetch remaining pets for fallback', {
+          message: err instanceof Error ? err.message : String(err),
+        });
       }
+
+      if (user && user.activePetId === editPetId) {
+        await setSession({ token, user: { ...user, activePetId: nextActivePetId } });
+        clearActivePetCache();
+      }
+
+      clearPetListCache();
+
+      queryClient.invalidateQueries({ queryKey: ['petsList'] });
+      queryClient.invalidateQueries({ queryKey: ['pets'] });
+
+      showSuccessToast("Pet workspace deleted permanently.");
       router.replace('/(tabs)');
     } catch (error) {
       showErrorToast(getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [token, editPetId, user, setSession, router]);
+  }, [token, editPetId, user, setSession, router, queryClient]);
 
   return (
     <View style={styles.root}>
