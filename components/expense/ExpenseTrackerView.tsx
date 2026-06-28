@@ -107,7 +107,7 @@ export function ExpenseTrackerView({
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([reloadExpenses(), reloadBudget()]);
+    await Promise.all([reloadExpenses(true), reloadBudget(true)]);
     setRefreshing(false);
   };
 
@@ -206,8 +206,8 @@ export function ExpenseTrackerView({
             if (savedPeriod) {
               setPeriodType(savedPeriod);
             }
-            reloadBudget();
-            reloadExpenses();
+            reloadBudget(true);
+            reloadExpenses(true);
           }}
         />
       ) : null}
@@ -221,8 +221,8 @@ export function ExpenseTrackerView({
           onClose={() => setAddExpenseVisible(false)}
           onSaved={() => {
             setAddExpenseVisible(false);
-            reloadExpenses();
-            reloadBudget();
+            reloadExpenses(true);
+            reloadBudget(true);
           }}
         />
       ) : null}
