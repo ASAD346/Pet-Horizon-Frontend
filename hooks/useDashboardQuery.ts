@@ -54,8 +54,10 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     void loadCache();
   }, [petId]);
 
+  const localDateStr = new Date().toISOString().split('T')[0];
+
   const query = useQuery({
-    queryKey: ['dashboard', petId],
+    queryKey: ['dashboard', petId, localDateStr],
     queryFn: async () => {
       console.log('[useDashboardQuery] Fetching dashboard from API...');
       return fetchUnifiedDashboard(token!);

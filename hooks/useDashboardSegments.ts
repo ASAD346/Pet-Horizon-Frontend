@@ -18,8 +18,10 @@ export function usePetProfileQuery(token: string | null, petId: string | null | 
     }
   }, [petId]);
 
+  const localDateStr = new Date().toISOString().split('T')[0];
+
   const query = useQuery({
-    queryKey: ['dashboard', petId],
+    queryKey: ['dashboard', petId, localDateStr],
     queryFn: async () => {
       return fetchUnifiedDashboard(token!);
     },
@@ -52,8 +54,10 @@ export function useTodaySchedulesQuery(token: string | null, petId: string | nul
     }
   }, [petId]);
 
+  const localDateStr = new Date().toISOString().split('T')[0];
+
   const query = useQuery({
-    queryKey: ['dashboard', petId],
+    queryKey: ['dashboard', petId, localDateStr],
     queryFn: async () => {
       return fetchUnifiedDashboard(token!);
     },
@@ -86,8 +90,10 @@ export function useUpcomingTasksQuery(token: string | null, petId: string | null
     }
   }, [petId]);
 
+  const localDateStr = new Date().toISOString().split('T')[0];
+
   const query = useQuery({
-    queryKey: ['dashboard', petId],
+    queryKey: ['dashboard', petId, localDateStr],
     queryFn: async () => {
       return fetchUnifiedDashboard(token!);
     },
@@ -120,8 +126,10 @@ export function useNotificationsQuery(token: string | null, petId: string | null
     }
   }, [petId]);
 
+  const localDateStr = new Date().toISOString().split('T')[0];
+
   const query = useQuery({
-    queryKey: ['dashboard', petId],
+    queryKey: ['dashboard', petId, localDateStr],
     queryFn: async () => {
       return fetchUnifiedDashboard(token!);
     },
@@ -154,8 +162,10 @@ export function useRecentActivitiesQuery(token: string | null, petId: string | n
     }
   }, [petId]);
 
+  const localDateStr = new Date().toISOString().split('T')[0];
+
   const query = useQuery({
-    queryKey: ['dashboard', petId],
+    queryKey: ['dashboard', petId, localDateStr],
     queryFn: async () => {
       return fetchUnifiedDashboard(token!);
     },

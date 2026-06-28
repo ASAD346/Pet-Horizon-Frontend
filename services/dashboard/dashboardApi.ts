@@ -19,9 +19,14 @@ export async function fetchDashboardStatus(token: string): Promise<DashboardStat
 }
 
 export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]> {
-  log.info(SCOPE, 'GET /dashboard/upcoming-tasks');
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const localDate = new Date().toISOString().split('T')[0];
+  const offset = new Date().getTimezoneOffset();
+  const queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
+  
+  log.info(SCOPE, `GET /dashboard/upcoming-tasks${queryParams}`);
   try {
-    const data = await apiRequest<DashboardTask[]>(API_ENDPOINTS.dashboard.upcomingTasks, { token });
+    const data = await apiRequest<DashboardTask[]>(`${API_ENDPOINTS.dashboard.upcomingTasks}${queryParams}`, { token });
     log.ok(SCOPE, 'Upcoming tasks loaded', { count: data.length });
     return data;
   } catch (error) {
@@ -31,9 +36,14 @@ export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]
 }
 
 export async function fetchUnifiedDashboard(token: string): Promise<UnifiedDashboardData> {
-  log.info(SCOPE, 'GET /dashboard');
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const localDate = new Date().toISOString().split('T')[0];
+  const offset = new Date().getTimezoneOffset();
+  const queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
+
+  log.info(SCOPE, `GET /dashboard${queryParams}`);
   try {
-    const data = await apiRequest<UnifiedDashboardData>(API_ENDPOINTS.dashboard.unified, { token });
+    const data = await apiRequest<UnifiedDashboardData>(`${API_ENDPOINTS.dashboard.unified}${queryParams}`, { token });
     log.ok(SCOPE, 'Unified dashboard loaded');
     return data;
   } catch (error) {
