@@ -38,6 +38,7 @@ interface FormSheetShellProps {
   saving?: boolean;
   saveDisabled?: boolean;
   compact?: boolean;
+  error?: string | null;
   children: React.ReactNode;
 }
 
@@ -54,6 +55,7 @@ export function FormSheetShell({
   saving,
   saveDisabled,
   compact = false,
+  error,
   children,
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
@@ -132,6 +134,14 @@ export function FormSheetShell({
               ) : null}
 
               {children}
+
+              {error ? (
+                <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+                  <AppText variant="bodySmall" weight="700" color="#E53935">
+                    {error}
+                  </AppText>
+                </View>
+              ) : null}
             </ScrollView>
 
             {onSave && saveLabel ? (

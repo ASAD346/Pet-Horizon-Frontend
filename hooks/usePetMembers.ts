@@ -38,5 +38,5 @@ export function usePetMembers(token: string | null, petId: string | null, isOwne
     setLoading,
   });
 
-  return { members, loading, error, reload };
+  return { members, setMembers, loading, error, reload };
 }

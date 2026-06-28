@@ -9,6 +9,7 @@ import {
 } from '@/components/sheets';
 import { getErrorMessage } from '@/lib/api/errors';
 import { removePetMember, updatePetMemberPermissions } from '@/services/family/familyApi';
+import { useToast } from '@/hooks/useToast';
 import type { PetMemberRow } from '@/types/family';
 
 const MODULE_OPTIONS = [
@@ -33,7 +34,7 @@ interface MemberPermissionsSheetProps {
   token: string | null;
   isPremium?: boolean;
   onClose: () => void;
-  onUpdated: () => void;
+  onUpdated: (deletedMemberId?: string) => void;
 }
 
 export function MemberPermissionsSheet({
@@ -50,6 +51,7 @@ export function MemberPermissionsSheet({
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccessToast, showErrorToast } = useToast();
 
   const memberName =
     member?.userId.fullName?.trim() || member?.userId.email?.split('@')[0] || 'Member';
@@ -88,17 +90,19 @@ export function MemberPermissionsSheet({
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = async () => {
     if (!token || !petId || !member) return;
+    setRemoving(true);
+    setError(null);
     try {
-      setRemoving(true);
-      setError(null);
-      removePetMember(token, petId, member.userId._id).then(() => {
-        onUpdated();
-        onClose();
-      });
-    } catch (err) {
-      setError(getErrorMessage(err));
+      await removePetMember(token, petId, member.userId._id);
+      showSuccessToast("Member removed from Family Hub successfully.");
+      onUpdated(member.userId._id);
+      onClose();
+    } catch (err: any) {
+      const errMsg = err?.message || getErrorMessage(err) || "Failed to remove the member. Please try again.";
+      setError(errMsg);
+      showErrorToast(errMsg);
     } finally {
       setRemoving(false);
     }

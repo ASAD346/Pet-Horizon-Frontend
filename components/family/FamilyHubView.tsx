@@ -48,7 +48,7 @@ export function FamilyHubView() {
   const { token, user } = useAuth();
   const { pet, loading: petLoading, reload: reloadPet } = useActivePet(token);
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
-  const { members, loading: membersLoading, error: membersError, reload: reloadMembers } =
+  const { members, setMembers, loading: membersLoading, error: membersError, reload: reloadMembers } =
     usePetMembers(token, pet?._id ?? null, isOwner);
   const { showErrorToast } = useToast();
 
@@ -285,7 +285,13 @@ export function FamilyHubView() {
           setPermissionsVisible(false);
           setSelectedMember(null);
         }}
-        onUpdated={reloadMembers}
+        onUpdated={(deletedMemberId) => {
+          if (deletedMemberId) {
+            setMembers((prev) => prev.filter((m) => (m.userId?._id || (m as any).id) !== deletedMemberId));
+          } else {
+            reloadMembers();
+          }
+        }}
       />
 
       <LogJournalSheet
