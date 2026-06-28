@@ -585,9 +585,7 @@ export function ScheduleSetupView({
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.subtitle}>
-            Build your pet's daily care routine — feeding, walks, medicine, vaccines, and grooming.
-          </AppText>
+         
 
           {/* Category Chips Selector */}
           {pet && canViewAnySchedule && (
