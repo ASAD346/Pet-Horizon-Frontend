@@ -406,8 +406,19 @@ export function ScheduleSetupView({
       return;
     }
 
-    setPendingDeleteInfo({ sectionMeta, remoteId, entry });
-    setDeleteModalVisible(true);
+    Alert.alert(
+      "Delete Schedule Entry?",
+      "Are you sure you want to proceed with this action? This change cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Proceed",
+          onPress: async () => {
+            await handleDeleteEntry(sectionMeta.key, remoteId, entry);
+          }
+        }
+      ]
+    );
   };
 
   const handleDeleteEntry = async (

@@ -472,6 +472,7 @@ export default function HomeScreen() {
         <GroomingAlertsRow
           token={token}
           petId={pet?._id}
+          isPremium={user?.premiumStatus === 'premium'}
           onAlertPress={
             canEdit('grooming')
               ? (record) => {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { AppButton } from '@/components/ui/AppButton';
 import {
   FormSheetShell,
@@ -15,6 +15,7 @@ import {
   deleteGroomingRecord,
   updateGroomingRecord,
 } from '@/services/grooming/groomingApi';
+import { useToast } from '@/hooks/useToast';
 import type { GroomingRecord } from '@/types/grooming';
 
 interface GroomingManageSheetProps {
@@ -38,6 +39,7 @@ export function GroomingManageSheet({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccessToast, showErrorToast } = useToast();
 
   useEffect(() => {
     if (visible && record) {
@@ -47,37 +49,67 @@ export function GroomingManageSheet({
     }
   }, [visible, record]);
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!token || !record) return;
-    setSaving(true);
-    setError(null);
-    try {
-      await updateGroomingRecord(token, record._id, {
-        notes: notes.trim(),
-        scheduledDate: scheduledDate ? dateToApiDateString(scheduledDate) : null,
-      });
-      onUpdated();
-      onClose();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setSaving(false);
-    }
+    Alert.alert(
+      "Modify Schedule?",
+      "Are you sure you want to proceed with this action? This change cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Proceed",
+          onPress: async () => {
+            setSaving(true);
+            setError(null);
+            try {
+              await updateGroomingRecord(token, record._id, {
+                notes: notes.trim(),
+                scheduledDate: scheduledDate ? dateToApiDateString(scheduledDate) : null,
+              });
+              showSuccessToast("Grooming task modified successfully.");
+              onUpdated();
+              onClose();
+            } catch (err) {
+              const errMsg = getErrorMessage(err);
+              setError(errMsg);
+              showErrorToast(errMsg);
+            } finally {
+              setSaving(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!token || !record) return;
-    setDeleting(true);
-    setError(null);
-    try {
-      await deleteGroomingRecord(token, record._id);
-      onUpdated();
-      onClose();
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setDeleting(false);
-    }
+    Alert.alert(
+      "Delete Schedule Entry?",
+      "Are you sure you want to proceed with this action? This change cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Yes, Proceed",
+          onPress: async () => {
+            setDeleting(true);
+            setError(null);
+            try {
+              await deleteGroomingRecord(token, record._id);
+              showSuccessToast("Grooming task deleted successfully.");
+              onUpdated();
+              onClose();
+            } catch (err: any) {
+              const errMsg = err?.message || getErrorMessage(err) || "Failed to delete the grooming task.";
+              setError(errMsg);
+              showErrorToast(errMsg);
+            } finally {
+              setDeleting(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
