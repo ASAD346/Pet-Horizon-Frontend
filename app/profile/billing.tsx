@@ -11,7 +11,7 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
@@ -181,23 +181,20 @@ export default function BillingScreen() {
         </View>
 
         {status?.isPremium ? (
-          <AppButton
+          <CustomButton
             title="Cancel Auto-Renewal"
             onPress={handleCancel}
-            loading={cancelling}
+            isLoading={cancelling}
             variant="outline"
-            size="md"
-            style={styles.cancelBtn}
-            textStyle={styles.cancelText}
+            style={{ marginBottom: Spacing.lg, borderColor: '#E53935' }}
+            textStyle={{ color: '#E53935' }}
           />
         ) : (
-          <AppButton
+          <CustomButton
             title="Upgrade to Premium"
             onPress={() => router.push('/profile/premium')}
-            variant="success"
-            size="md"
-            style={styles.upgradeBtn}
-            textStyle={styles.upgradeText}
+            variant="primary"
+            style={{ marginBottom: Spacing.lg }}
           />
         )}
 
@@ -228,13 +225,11 @@ export default function BillingScreen() {
               onBlur={() => setIsInputFocused(false)}
             />
           </View>
-          <AppButton
+          <CustomButton
             title="Save Payment Method"
             onPress={handleUpdateMethod}
-            loading={savingMethod}
-            variant="success"
-            size="md"
-            style={styles.methodBtn}
+            isLoading={savingMethod}
+            variant="primary"
           />
         </View>
 
@@ -378,26 +373,6 @@ const styles = StyleSheet.create({
   alignEnd: {
     alignItems: 'flex-end',
   },
-  cancelBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    borderColor: '#E53935',
-    marginBottom: Spacing.lg,
-    minHeight: 52,
-  },
-  cancelText: {
-    color: '#E53935',
-    fontWeight: '800',
-  },
-  upgradeBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    marginBottom: Spacing.lg,
-    minHeight: 52,
-  },
-  upgradeText: {
-    fontWeight: '800',
-  },
   formCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
@@ -464,12 +439,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: SheetColors.inputText,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-  },
-  methodBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    marginBottom: 0,
-    minHeight: 52,
   },
   historyLabelContainer: {
     flexDirection: 'row',

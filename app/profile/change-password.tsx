@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme } from '@/components/profile/profileTheme';
@@ -201,14 +201,12 @@ export default function ChangePasswordScreen() {
             </View>
           </View>
 
-          <AppButton
+          <CustomButton
             title="Update Password"
             onPress={handleSave}
-            loading={saving}
-            variant="success"
-            size="md"
-            style={styles.submitBtn}
-            textStyle={styles.submitText}
+            isLoading={saving}
+            variant="primary"
+            style={{ marginTop: Spacing.sm }}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -310,26 +308,5 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  submitBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    height: 52,
-    marginTop: Spacing.sm,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1B5E20',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  submitText: {
-    fontSize: 16,
-    fontWeight: '800',
   },
 });

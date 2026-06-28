@@ -14,9 +14,8 @@ import Animated, {
   useAnimatedStyle, 
   withSpring 
 } from 'react-native-reanimated';
-import { Palette, Radius, Spacing } from '../../constants/theme';
+import { Palette, Radius, Spacing } from '@/constants/theme';
 import { AppText } from './AppText';
-import { useAuth } from '@/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 
 interface AppButtonProps {
@@ -222,7 +221,6 @@ export interface CustomButtonProps {
 }
 
 const PREMIUM_GRADIENT = ['#0E3821', '#1A5C35', '#C8940E'] as const;
-const FREE_GREEN = '#114227';
 
 export function CustomButton({
   title,
@@ -235,9 +233,6 @@ export function CustomButton({
   textStyle,
   accessibilityLabel,
 }: CustomButtonProps) {
-  const { user } = useAuth();
-  const isPremium = user?.premiumStatus === 'premium';
-
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -254,21 +249,18 @@ export function CustomButton({
     transform: [{ scale: scale.value }],
   }));
 
-  // Resolve per-variant, per-tier token values
   const resolvedColors = (() => {
     if (variant === 'outline') {
-      const accent = isPremium ? '#C8940E' : FREE_GREEN;
-      return { bg: 'transparent', text: accent, border: accent };
+      return { bg: 'transparent', text: '#C8940E', border: '#C8940E' };
     }
     if (variant === 'text') {
-      return { bg: 'transparent', text: isPremium ? '#C8940E' : FREE_GREEN, border: 'transparent' };
+      return { bg: 'transparent', text: '#C8940E', border: 'transparent' };
     }
-    // primary
-    return { bg: isPremium ? 'transparent' : FREE_GREEN, text: '#FFFFFF', border: 'transparent' };
+    return { bg: 'transparent', text: '#FFFFFF', border: 'transparent' };
   })();
 
   const { bg, text, border } = resolvedColors;
-  const isGradient = variant === 'primary' && isPremium;
+  const isGradient = variant === 'primary';
 
   const innerContent = isLoading ? (
     <ActivityIndicator size="small" color={text} />
@@ -277,7 +269,7 @@ export function CustomButton({
       {icon}
       <AppText
         variant="body"
-        weight="600"
+        weight="800"
         color={text}
         style={[customStyles.label, textStyle]}
         numberOfLines={1}
@@ -341,7 +333,7 @@ export function CustomButton({
 const customStyles = StyleSheet.create({
   base: {
     height: 52,
-    borderRadius: 16,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'stretch',

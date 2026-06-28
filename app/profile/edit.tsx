@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { PetPhotoPicker } from '@/components/pet';
@@ -256,14 +256,12 @@ export default function EditProfileScreen() {
             ) : null}
           </View>
 
-          <AppButton
+          <CustomButton
             title="Save Changes"
             onPress={handleSave}
-            loading={saving}
-            variant="success"
-            size="md"
-            style={styles.submitBtn}
-            textStyle={styles.submitText}
+            isLoading={saving}
+            variant="primary"
+            style={{ marginTop: Spacing.sm }}
           />
         </ScrollView>
       </KeyboardAvoidingView>
@@ -373,26 +371,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: SheetColors.inputText,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-  },
-  submitBtn: {
-    width: '100%',
-    borderRadius: Radius.full,
-    minHeight: 52,
-    marginTop: Spacing.sm,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1B5E20',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  submitText: {
-    fontSize: 16,
-    fontWeight: '800',
   },
 });

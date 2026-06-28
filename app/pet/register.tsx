@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import {
@@ -457,23 +457,21 @@ export default function RegisterPetScreen() {
 
           <View style={styles.footer}>
             <View style={styles.formContainer}>
-              <AppButton
+              <CustomButton
                 title={isEditMode ? 'Save Changes' : 'Add Pet'}
                 onPress={handleAddPet}
-                loading={loading}
+                isLoading={loading}
                 disabled={speciesLoading || loading || !hasEditPermission}
-                variant="success"
-                size="sm"
+                variant="primary"
                 style={styles.addButton}
                 textStyle={styles.addButtonText}
               />
               {isEditMode ? (
-                <AppButton
+                <CustomButton
                   title="Delete Pet"
                   onPress={handleDeletePet}
                   disabled={loading || !hasEditPermission}
                   variant="outline"
-                  size="sm"
                   style={styles.deleteButton}
                   textStyle={styles.deleteButtonText}
                 />
@@ -556,8 +554,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 52,
     borderRadius: 14,
-    backgroundColor: '#5CB35D',
-    shadowColor: '#5CB35D',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
