@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { HomeTheme, Spacing } from '@/constants/theme';
 import { fetchGroomingAlerts } from '@/services/grooming/groomingApi';
 import type { GroomingRecord } from '@/types/grooming';
 
@@ -16,6 +16,15 @@ interface GroomingAlertsRowProps {
 function groomingTypeLabel(type: string): string {
   if (!type) return 'Grooming';
   return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+}
+
+function getGroomingIcon(type: string): React.ComponentProps<typeof Ionicons>['name'] {
+  const t = type?.toLowerCase() || '';
+  if (t.includes('bath') || t.includes('wash') || t.includes('shower')) return 'water';
+  if (t.includes('cut') || t.includes('hair') || t.includes('trim')) return 'cut';
+  if (t.includes('nail') || t.includes('claw')) return 'cut-outline';
+  if (t.includes('brush') || t.includes('comb')) return 'sparkles';
+  return 'water'; // fallback
 }
 
 export function GroomingAlertsRow({ token, petId, isPremium = false, onAlertPress }: GroomingAlertsRowProps) {
@@ -46,8 +55,7 @@ export function GroomingAlertsRow({ token, petId, isPremium = false, onAlertPres
     <View style={styles.row}>
       {alerts.map((alert) => {
         const overdue = alert.alertType === 'overdue';
-        const accent = overdue ? '#B71C1C' : '#114227';
-        const cardBorderColor = isPremium ? '#D4A017' : 'rgba(46, 125, 50, 0.15)';
+        const cardBorderColor = isPremium ? '#D4A017' : 'rgba(46, 125, 50, 0.1)';
 
         return (
           <TouchableOpacity
@@ -64,37 +72,32 @@ export function GroomingAlertsRow({ token, petId, isPremium = false, onAlertPres
                 borderWidth: isPremium ? 1.5 : 1,
                 // Subtle gold shadow/glow for Premium
                 shadowColor: isPremium ? '#D4A017' : 'transparent',
-                shadowOpacity: isPremium ? 0.25 : 0,
-                shadowRadius: isPremium ? 5 : 0,
+                shadowOpacity: isPremium ? 0.2 : 0,
+                shadowRadius: isPremium ? 4 : 0,
                 shadowOffset: { width: 0, height: 2 },
                 elevation: isPremium ? 2 : 0,
               }
             ]}>
-              {/* Left Frame */}
+              {/* Left Container */}
               <View style={styles.iconWrap}>
-                <MaterialCommunityIcons name="content-cut" size={20} color="#114227" />
+                <Ionicons name={getGroomingIcon(alert.groomingType)} size={20} color="#114227" />
               </View>
 
-              {/* Center Frame */}
+              {/* Center Text Frame */}
               <View style={styles.centerFrame}>
-                <AppText variant="bodySmall" weight="800" color="#1A2B4E" numberOfLines={1}>
+                <AppText variant="bodySmall" weight="600" color="#1A2B4E" numberOfLines={1}>
                   {groomingTypeLabel(alert.groomingType)}
                 </AppText>
-                <AppText
-                  variant="caption"
-                  weight="600"
-                  color={accent}
-                  numberOfLines={1}
-                >
-                  {alert.remainingDays != null
-                    ? overdue
+                {overdue ? (
+                  <AppText variant="caption" weight="600" color="#B71C1C" style={styles.overdueSubtitle}>
+                    {alert.remainingDays != null
                       ? `${Math.abs(alert.remainingDays)} day${Math.abs(alert.remainingDays) === 1 ? '' : 's'} overdue`
-                      : `Due in ${alert.remainingDays} day${alert.remainingDays === 1 ? '' : 's'}`
-                    : 'Schedule grooming'}
-                </AppText>
+                      : 'Overdue'}
+                  </AppText>
+                ) : null}
               </View>
 
-              {/* Right Frame */}
+              {/* Right Action Frame */}
               <View style={styles.rightFrame}>
                 {isPremium ? (
                   <View style={styles.premiumBadge}>
@@ -105,9 +108,9 @@ export function GroomingAlertsRow({ token, petId, isPremium = false, onAlertPres
                 ) : null}
                 {onAlertPress ? (
                   <Ionicons name="chevron-forward" size={16} color={isPremium ? '#D4A017' : '#114227'} />
-                ) : (
+                ) : overdue ? (
                   <View style={styles.alertDot} />
-                )}
+                ) : null}
               </View>
             </View>
           </TouchableOpacity>
@@ -131,22 +134,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F2F9F2', // Soft, low-opacity Light Tech Green blend
-    borderRadius: Radius.lg,
+    borderRadius: 16, // Soft rounded borders matching modern design spec
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     gap: Spacing.md,
   },
   iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: 'rgba(17, 66, 39, 0.08)',
+    width: 40,
+    height: 40,
+    borderRadius: 20, // Circular proportions
+    backgroundColor: 'rgba(17, 66, 39, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   centerFrame: {
     flex: 1,
     justifyContent: 'center',
+    gap: 2,
+  },
+  overdueSubtitle: {
+    marginTop: 1,
   },
   rightFrame: {
     flexDirection: 'row',
@@ -154,8 +161,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   premiumBadge: {
-    backgroundColor: 'rgba(212, 160, 23, 0.1)',
-    borderColor: 'rgba(212, 160, 23, 0.25)',
+    backgroundColor: 'rgba(212, 160, 23, 0.08)',
+    borderColor: 'rgba(212, 160, 23, 0.2)',
     borderWidth: 1,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -166,9 +173,9 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   alertDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E53935',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#B71C1C',
   },
 });
