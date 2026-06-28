@@ -102,7 +102,20 @@ export async function clearSession(): Promise<void> {
     deleteItem(TOKEN_KEY),
     deleteItem(USER_KEY),
     AsyncStorage.removeItem(STORAGE_BACKEND_KEY),
+    AsyncStorage.removeItem('userToken'),
+    AsyncStorage.removeItem('authSession'),
+    AsyncStorage.removeItem('currentUserId'),
+    AsyncStorage.removeItem('pet_horizon_cached_active_pet'),
+    AsyncStorage.removeItem('pet_horizon_cached_pet_permissions'),
   ]);
+
+  try {
+    await AsyncStorage.setItem('HAS_SEEN_ONBOARDING', 'true');
+  } catch (error) {
+    log.warn('AuthStorage', 'Failed to force HAS_SEEN_ONBOARDING on clearSession', {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
 }
 
 export async function getStoredToken(): Promise<string | null> {

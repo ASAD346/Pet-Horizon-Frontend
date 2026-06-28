@@ -1,5 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dimensions, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
@@ -59,11 +60,30 @@ export default function GetStartedScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<any>(null);
   
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+
   // Reanimated values
   const scrollX = useSharedValue(0);
   const buttonScale = useSharedValue(1);
 
   useAuthEntryRedirect();
+
+  useEffect(() => {
+    AsyncStorage.getItem('HAS_SEEN_ONBOARDING')
+      .then((val) => {
+        if (val === 'true') {
+          setHasSeenOnboarding(true);
+          if (!isAuthenticated && !isBootstrapping) {
+            router.replace('/auth/login');
+          }
+        } else {
+          setHasSeenOnboarding(false);
+        }
+      })
+      .catch(() => {
+        setHasSeenOnboarding(false);
+      });
+  }, [isAuthenticated, isBootstrapping, router]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -84,8 +104,13 @@ export default function GetStartedScreen() {
     }
   };
 
-  const handleGetStarted = () => {
-    router.push('/auth/login');
+  const handleGetStarted = async () => {
+    try {
+      await AsyncStorage.setItem('HAS_SEEN_ONBOARDING', 'true');
+    } catch (e) {
+      console.warn('Failed to save HAS_SEEN_ONBOARDING', e);
+    }
+    router.replace('/auth/login');
   };
 
   // Button micro-interactions
@@ -117,7 +142,7 @@ export default function GetStartedScreen() {
   const activeColors = SLIDES.map((slide) => slide.accentColor);
   const currentSlide = SLIDES[activeIndex] || SLIDES[0];
 
-  if (isBootstrapping || isAuthenticated) {
+  if (isBootstrapping || isAuthenticated || hasSeenOnboarding === null || hasSeenOnboarding === true) {
     return <AuthEntryLoader />;
   }
 
