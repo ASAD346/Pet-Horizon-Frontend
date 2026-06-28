@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useId, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SheetColors } from './sheetUi';
+import { SheetOverlayContext } from './FormSheetShell';
 
 export type SheetOption = {
   value: string;
@@ -37,7 +38,8 @@ export function SheetOptionPicker({
   onSelect,
   useNativeModal = true,
 }: SheetOptionPickerProps) {
-  if (!visible) return null;
+  const overlayContext = useContext(SheetOverlayContext);
+  const id = useId();
 
   const content = (
     <Pressable style={styles.overlay} onPress={onClose}>
@@ -82,18 +84,29 @@ export function SheetOptionPicker({
     </Pressable>
   );
 
-  if (useNativeModal) {
-    return (
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-        {content}
-      </Modal>
-    );
+  useEffect(() => {
+    if (visible && overlayContext) {
+      overlayContext.setOverlay(id, 
+        <View key={id} style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+          {content}
+        </View>
+      );
+    } else if (!visible && overlayContext) {
+      overlayContext.removeOverlay(id);
+    }
+    return () => {
+      if (overlayContext) overlayContext.removeOverlay(id);
+    };
+  }, [visible, overlayContext, id, content]);
+
+  if (overlayContext) {
+    return null;
   }
 
   return (
-    <View style={StyleSheet.absoluteFillObject}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       {content}
-    </View>
+    </Modal>
   );
 }
 
