@@ -213,6 +213,7 @@ export function LogFoodSheet({
       onSave={handleSave}
       saving={saving}
       saveDisabled={featuresLoading || !entry.mealType || !entry.unit || !hasPermission}
+      isReadOnly={!hasPermission}
       compact
     >
       {!hasPermission && (

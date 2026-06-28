@@ -557,6 +557,7 @@ export default function HomeScreen() {
           onClose={() => setLogWalkVisible(false)}
           petId={pet?._id ?? null}
           token={token}
+          isReadOnly={!canEdit('walks')}
           onSaved={() => {
             void refetchDashboard();
           }}
@@ -567,6 +568,7 @@ export default function HomeScreen() {
           onClose={() => setLogMedicineVisible(false)}
           petId={pet?._id ?? null}
           token={token}
+          isReadOnly={!canEdit('medicine')}
           onSaved={() => {
             void refetchDashboard();
           }}
@@ -577,6 +579,7 @@ export default function HomeScreen() {
           onClose={() => setLogGroomingVisible(false)}
           petId={pet?._id ?? null}
           token={token}
+          isReadOnly={!canEdit('grooming')}
           onSaved={() => {
             void refetchDashboard();
           }}
@@ -587,6 +590,7 @@ export default function HomeScreen() {
           onClose={() => setLogVaccinationVisible(false)}
           petId={pet?._id ?? null}
           token={token}
+          isReadOnly={!canEdit('vaccination')}
           onSaved={() => {
             void refetchDashboard();
           }}
@@ -601,6 +605,7 @@ export default function HomeScreen() {
           visible={groomingManageVisible}
           record={groomingManageRecord}
           token={token}
+          isReadOnly={!canEdit('grooming')}
           onClose={() => {
             setGroomingManageVisible(false);
             setGroomingManageRecord(null);

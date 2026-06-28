@@ -30,6 +30,7 @@ interface LogWalkSheetProps {
   token: string | null;
   onSaved?: () => void;
   initialEntry?: WalkEntryState | null;
+  isReadOnly?: boolean;
 }
 
 export function LogWalkSheet({
@@ -39,6 +40,7 @@ export function LogWalkSheet({
   token,
   onSaved,
   initialEntry,
+  isReadOnly = false,
 }: LogWalkSheetProps) {
   const [entry, setEntry] = useState<WalkEntryState>(() => ({
     id: 'draft',
@@ -122,6 +124,7 @@ export function LogWalkSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Walk'}
       onSave={handleSave}
       saving={saving}
+      isReadOnly={isReadOnly}
       compact
     >
       <WalkEntryCard

@@ -24,6 +24,7 @@ interface GroomingManageSheetProps {
   token: string | null;
   onClose: () => void;
   onUpdated: () => void;
+  isReadOnly?: boolean;
 }
 
 export function GroomingManageSheet({
@@ -32,6 +33,7 @@ export function GroomingManageSheet({
   token,
   onClose,
   onUpdated,
+  isReadOnly = false,
 }: GroomingManageSheetProps) {
   const [notes, setNotes] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
@@ -120,39 +122,43 @@ export function GroomingManageSheet({
         title="Manage Grooming"
         subtitle={record?.groomingType ?? 'Edit scheduled task'}
         icon="content-cut"
-        saveLabel="Save Changes"
-        onSave={handleSave}
+        saveLabel={isReadOnly ? undefined : "Save Changes"}
+        onSave={isReadOnly ? undefined : handleSave}
         saving={saving}
         saveDisabled={deleting}
         error={error}
         compact
       >
-        <FormDateInput
-          label="Scheduled Date"
-          value={scheduledDate ?? new Date()}
-          onPress={() => setPickerVisible(true)}
-        />
+        <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? styles.readOnlyContainer : null}>
+          <FormDateInput
+            label="Scheduled Date"
+            value={scheduledDate ?? new Date()}
+            onPress={() => setPickerVisible(true)}
+          />
 
-        <FormTextInput
-          label="Notes"
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Optional notes..."
-          multiline
-        />
-
-        <View style={styles.deleteSection}>
-          <AppButton
-            title="Delete Grooming Task"
-            onPress={handleDelete}
-            loading={deleting}
-            disabled={saving}
-            variant="outline"
-            size="sm"
-            style={styles.deleteBtn}
-            textStyle={styles.deleteText}
+          <FormTextInput
+            label="Notes"
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Optional notes..."
+            multiline
           />
         </View>
+
+        {!isReadOnly ? (
+          <View style={styles.deleteSection}>
+            <AppButton
+              title="Delete Grooming Task"
+              onPress={handleDelete}
+              loading={deleting}
+              disabled={saving}
+              variant="outline"
+              size="sm"
+              style={styles.deleteBtn}
+              textStyle={styles.deleteText}
+            />
+          </View>
+        ) : null}
       </FormSheetShell>
 
       <ThemedDatePicker
@@ -182,5 +188,8 @@ const styles = StyleSheet.create({
   deleteText: {
     color: '#E53935',
     fontWeight: '700',
+  },
+  readOnlyContainer: {
+    opacity: 0.65,
   },
 });

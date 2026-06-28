@@ -32,6 +32,7 @@ interface LogGroomingSheetProps {
   initialEntry?: GroomingEntryState | null;
   typeOptions?: GroomingTypeOption[];
   groomingVisible?: boolean;
+  isReadOnly?: boolean;
 }
 
 export function LogGroomingSheet({
@@ -43,6 +44,7 @@ export function LogGroomingSheet({
   initialEntry,
   typeOptions: propsTypeOptions,
   groomingVisible: propsGroomingVisible = true,
+  isReadOnly = false,
 }: LogGroomingSheetProps) {
   const [typeOptions, setTypeOptions] = useState<GroomingTypeOption[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
@@ -179,6 +181,7 @@ export function LogGroomingSheet({
       onSave={handleSave}
       saving={saving}
       saveDisabled={loadingTypes || !groomingVisible || !entry.groomingType}
+      isReadOnly={isReadOnly}
       compact
     >
       {loadingTypes ? (

@@ -30,6 +30,7 @@ interface LogMedicineSheetProps {
   token: string | null;
   onSaved?: () => void;
   initialEntry?: MedicineEntryState | null;
+  isReadOnly?: boolean;
 }
 
 export function LogMedicineSheet({
@@ -39,6 +40,7 @@ export function LogMedicineSheet({
   token,
   onSaved,
   initialEntry,
+  isReadOnly = false,
 }: LogMedicineSheetProps) {
   const [entry, setEntry] = useState<MedicineEntryState>(() => initialEntry ?? {
     id: 'draft',
@@ -153,6 +155,7 @@ export function LogMedicineSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Medicine'}
       onSave={handleSave}
       saving={saving}
+      isReadOnly={isReadOnly}
       compact
     >
       <MedicineEntryCard

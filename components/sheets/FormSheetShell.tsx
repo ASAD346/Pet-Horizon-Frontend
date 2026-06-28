@@ -39,6 +39,7 @@ interface FormSheetShellProps {
   saveDisabled?: boolean;
   compact?: boolean;
   error?: string | null;
+  isReadOnly?: boolean;
   children: React.ReactNode;
 }
 
@@ -56,6 +57,7 @@ export function FormSheetShell({
   saveDisabled,
   compact = false,
   error,
+  isReadOnly = false,
   children,
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
@@ -133,7 +135,9 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              {children}
+              <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : null}>
+                {children}
+              </View>
 
               {error ? (
                 <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
@@ -144,7 +148,7 @@ export function FormSheetShell({
               ) : null}
             </ScrollView>
 
-            {onSave && saveLabel ? (
+            {onSave && saveLabel && !isReadOnly ? (
               <StickyActionFooter
                 onSave={onSave}
                 saveLabel={saveLabel}

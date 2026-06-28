@@ -35,6 +35,7 @@ interface LogVaccinationSheetProps {
   token: string | null;
   onSaved?: () => void;
   initialEntry?: VaccinationEntryState | null;
+  isReadOnly?: boolean;
 }
 
 export function LogVaccinationSheet({
@@ -44,6 +45,7 @@ export function LogVaccinationSheet({
   token,
   onSaved,
   initialEntry,
+  isReadOnly = false,
 }: LogVaccinationSheetProps) {
   const [entry, setEntry] = useState<VaccinationEntryState>(() => initialEntry ?? {
     id: 'draft',
@@ -152,6 +154,7 @@ export function LogVaccinationSheet({
       onSave={handleSave}
       saving={saving}
       saveDisabled={!entry.vaccineName.trim()}
+      isReadOnly={isReadOnly}
       compact
     >
       <VaccinationEntryCard
@@ -168,8 +171,6 @@ export function LogVaccinationSheet({
       <FormSection
         title="Vaccination history"
         icon="history"
-        accentColor={VACCINATION_THEME.color}
-        accentBg={VACCINATION_THEME.bg}
       >
         {historyLoading ? (
           <SkeletonList count={2} />
