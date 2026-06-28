@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useContext, useId } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Palette, Radius, Spacing } from '../../constants/theme';
 import { useAppThemeColor } from '../sheets/useAppThemeColor';
+import { SheetOverlayContext } from '../sheets/FormSheetShell';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = [
@@ -99,6 +100,9 @@ export function ThemedDatePicker({
   const [viewMonth, setViewMonth] = useState(value.getMonth());
   const [selected, setSelected] = useState(value);
 
+  const overlayContext = useContext(SheetOverlayContext);
+  const id = useId();
+
   useEffect(() => {
     if (visible) {
       setViewYear(value.getFullYear());
@@ -154,7 +158,7 @@ export function ThemedDatePicker({
     }
   };
 
-  if (!visible) return null;
+
 
   const content = (
       <Pressable style={styles.overlay} onPress={onClose}>
@@ -333,18 +337,29 @@ export function ThemedDatePicker({
       </Pressable>
   );
 
-  if (useNativeModal) {
-    return (
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-        {content}
-      </Modal>
-    );
+  useEffect(() => {
+    if (visible && overlayContext) {
+      overlayContext.setOverlay(id, 
+        <View key={id} style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+          {content}
+        </View>
+      );
+    } else if (!visible && overlayContext) {
+      overlayContext.removeOverlay(id);
+    }
+    return () => {
+      if (overlayContext) overlayContext.removeOverlay(id);
+    };
+  }, [visible, overlayContext, id, content]);
+
+  if (overlayContext) {
+    return null;
   }
 
   return (
-    <View style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       {content}
-    </View>
+    </Modal>
   );
 }
 

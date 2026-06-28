@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createContext, useState, ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +18,11 @@ import { FormSheetHero } from './FormSheetHero';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
 import { StickyActionFooter } from './FormSystem';
+
+export const SheetOverlayContext = createContext<{
+  setOverlay: (key: string, node: ReactNode) => void;
+  removeOverlay: (key: string) => void;
+} | null>(null);
 
 interface FormSheetShellProps {
   visible: boolean;
@@ -52,14 +57,25 @@ export function FormSheetShell({
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
   const { accentColor, accentBg, gradientColors } = useAppThemeColor();
+  const [overlays, setOverlays] = useState<Record<string, ReactNode>>({});
+
+  const contextValue = React.useMemo(() => ({
+    setOverlay: (key: string, node: ReactNode) => setOverlays(prev => ({ ...prev, [key]: node })),
+    removeOverlay: (key: string) => setOverlays(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    })
+  }), []);
 
   return (
     <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={formSheetStyles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
-      >
+      <SheetOverlayContext.Provider value={contextValue}>
+        <KeyboardAvoidingView
+          style={formSheetStyles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+        >
         <Pressable style={formSheetStyles.overlay} onPress={onClose}>
           <Pressable
             style={[formSheetStyles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
@@ -126,9 +142,12 @@ export function FormSheetShell({
                 accentColor={accentColor}
               />
             ) : null}
+
+            {Object.values(overlays)}
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
+      </SheetOverlayContext.Provider>
     </SafeModal>
   );
 }

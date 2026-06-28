@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext, useId } from 'react';
 import { View, StyleSheet, Pressable, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeModal } from '../ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Radius, Spacing, Palette } from '../../constants/theme';
 import { useAppThemeColor } from './useAppThemeColor';
+import { SheetOverlayContext } from './FormSheetShell';
 
 interface ThemedTimePickerProps {
   visible: boolean;
@@ -19,6 +20,8 @@ const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
 export function ThemedTimePicker({ visible, value, onClose, onConfirm, useNativeModal = false }: ThemedTimePickerProps) {
   const { accentColor } = useAppThemeColor();
+  const overlayContext = useContext(SheetOverlayContext);
+  const id = useId();
   
   const [selectedHour, setSelectedHour] = useState(12);
   const [selectedMinute, setSelectedMinute] = useState(0);
@@ -61,7 +64,7 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm, useNative
 
   const formatNum = (num: number) => String(num).padStart(2, '0');
 
-  if (!visible) return null;
+
 
   const content = (
       <Pressable style={styles.overlay} onPress={onClose}>
@@ -190,18 +193,29 @@ export function ThemedTimePicker({ visible, value, onClose, onConfirm, useNative
       </Pressable>
   );
 
-  if (useNativeModal) {
-    return (
-      <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-        {content}
-      </SafeModal>
-    );
+  useEffect(() => {
+    if (visible && overlayContext) {
+      overlayContext.setOverlay(id, 
+        <View key={id} style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+          {content}
+        </View>
+      );
+    } else if (!visible && overlayContext) {
+      overlayContext.removeOverlay(id);
+    }
+    return () => {
+      if (overlayContext) overlayContext.removeOverlay(id);
+    };
+  }, [visible, overlayContext, id, content]);
+
+  if (overlayContext) {
+    return null;
   }
 
   return (
-    <View style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
+    <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       {content}
-    </View>
+    </SafeModal>
   );
 }
 
