@@ -113,7 +113,7 @@ export default function InviteAcceptScreen() {
 
   if (loading || isValidating) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.centeredLoaderContainer}>
           <ActivityIndicator color="#114227" size="large" />
         </View>
@@ -126,7 +126,7 @@ export default function InviteAcceptScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <ScrollView contentContainerStyle={styles.content}>
         <AppText variant="h2" weight="800" color={HomeTheme.text} style={styles.title}>
           Family Invitation
