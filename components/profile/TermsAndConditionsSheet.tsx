@@ -1,11 +1,9 @@
 import React from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { SafeModal } from '@/components/ui/SafeModal';
-import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
+import { ProfileModalShell } from './ProfileModalShell';
 
 const SECTIONS = [
   {
@@ -41,87 +39,32 @@ interface TermsAndConditionsSheetProps {
 }
 
 export function TermsAndConditionsSheet({ visible, onClose }: TermsAndConditionsSheetProps) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}>
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <AppText variant="h3" weight="800" color={ProfileTheme.text}>
-              Terms & Conditions
+    <ProfileModalShell visible={visible} onClose={onClose} title="Terms & Conditions">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.intro}>
+          Please read these terms carefully, especially sections related to payments and
+          subscriptions.
+        </AppText>
+        {SECTIONS.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <AppText variant="body" weight="700" color={ProfileTheme.text}>
+              {section.title}
             </AppText>
-            <Pressable onPress={onClose} hitSlop={8} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color={ProfileTheme.text} />
-            </Pressable>
+            <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.sectionBody}>
+              {section.body}
+            </AppText>
           </View>
-
-          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-            <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.intro}>
-              Please read these terms carefully, especially sections related to payments and
-              subscriptions.
-            </AppText>
-            {SECTIONS.map((section) => (
-              <View key={section.title} style={styles.section}>
-                <AppText variant="body" weight="700" color={ProfileTheme.text}>
-                  {section.title}
-                </AppText>
-                <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.sectionBody}>
-                  {section.body}
-                </AppText>
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      </View>
-    </SafeModal>
+        ))}
+      </ScrollView>
+    </ProfileModalShell>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  sheet: {
-    backgroundColor: HomeTheme.white,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '88%',
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: '#D1D5DB',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.sm,
-  },
-  closeBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: ProfileTheme.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
+    paddingBottom: Spacing.xl,
   },
   intro: {
     marginBottom: Spacing.md,

@@ -6,8 +6,9 @@ import { useToast } from '@/hooks/useToast';
 import { Radius, Spacing, Palette } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
 import { submitFeedback } from '@/services/feedback/feedbackApi';
-import { FormSheetShell, FormTextInput } from '../sheets';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
+import { ProfileModalShell } from './ProfileModalShell';
+import { FormTextInput } from '../sheets';
 
 interface FeedbackSheetProps {
   visible: boolean;
@@ -45,14 +46,10 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
   };
 
   return (
-    <FormSheetShell
+    <ProfileModalShell
       visible={visible}
       onClose={onClose}
-      title="Share Feedback"
-      icon="heart-outline"
-      accentColor={ProfileTheme.green}
-      accentBg="rgba(46, 125, 50, 0.08)"
-      compact
+      title="Rate Us & Feedback"
     >
       <View style={styles.infoContainer}>
         <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.description}>
@@ -95,15 +92,14 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
         multiline
       />
 
-      <AppButton
+      <CustomButton
         title="Submit Feedback"
         onPress={handleSubmit}
-        loading={submitting}
-        variant="success"
-        size="md"
+        isLoading={submitting}
+        variant="primary"
         style={{ marginTop: Spacing.md }}
       />
-    </FormSheetShell>
+    </ProfileModalShell>
   );
 }
 

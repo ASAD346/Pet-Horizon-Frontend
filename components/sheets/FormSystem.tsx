@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, TextInput, Switch, Platform, Activi
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
+import { CustomButton } from '@/components/ui/AppButton';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { FormSheetColors } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
@@ -353,39 +354,23 @@ export function StickyActionFooter({
   saveLabel,
   saving = false,
   saveDisabled = false,
-  accentColor,
 }: StickyActionFooterProps) {
   const insets = useSafeAreaInsets();
-  const { accentColor: finalAccentColor } = useAppThemeColor();
-  const color = accentColor || finalAccentColor;
 
   return (
     <View
       style={[
         styles.stickyFooter,
-        {
-          paddingBottom: Math.max(insets.bottom, 20),
-        },
+        { paddingBottom: Math.max(insets.bottom, 20) },
       ]}
     >
-      <TouchableOpacity
-        style={[
-          styles.saveButton,
-          { backgroundColor: color },
-          (saveDisabled || saving) && styles.disabledButton,
-        ]}
+      <CustomButton
+        title={saveLabel}
         onPress={onSave}
+        isLoading={saving}
         disabled={saveDisabled || saving}
-        activeOpacity={0.8}
-      >
-        {saving ? (
-          <ActivityIndicator color="#FFFFFF" size="small" />
-        ) : (
-          <AppText variant="bodySmall" weight="800" color="#FFFFFF">
-            {saveLabel}
-          </AppText>
-        )}
-      </TouchableOpacity>
+        style={styles.saveButtonCustom}
+      />
     </View>
   );
 }
@@ -539,15 +524,13 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  saveButton: {
-    height: 42,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
+  saveButtonCustom: {
     width: '100%',
-  },
-  disabledButton: {
-    opacity: 0.5,
+    shadowColor: '#114227',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
   },
   errorText: {
     marginTop: 4,

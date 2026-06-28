@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
-import { AppButton } from '../../ui/AppButton';
+import { CustomButton } from '../../ui/AppButton';
 import { AuthTextField } from '../AuthTextField';
 import { Palette, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
@@ -101,13 +101,12 @@ export function LoginFormSection({
         </TouchableOpacity>
       </View>
 
-      <AppButton
+      <CustomButton
         title="Login"
         onPress={onLogin}
-        loading={loading}
+        isLoading={loading}
         disabled={loading}
         style={styles.loginButton}
-        textStyle={styles.loginButtonText}
       />
 
       <View style={styles.signupRow}>
@@ -180,22 +179,14 @@ const styles = StyleSheet.create({
     borderColor: '#114227',
   },
   loginButton: {
+    // height/borderRadius/colors are owned by CustomButton's design tokens.
+    // Only add layout-level overrides here.
     width: '100%',
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: '#5CB35D',
-    shadowColor: '#5CB35D',
+    shadowColor: '#114227',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.22,
     shadowRadius: 10,
     elevation: 4,
-    borderWidth: 0,
-  },
-  loginButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Palette.white,
-    letterSpacing: 0.5,
   },
   signupRow: {
     flexDirection: 'row',
