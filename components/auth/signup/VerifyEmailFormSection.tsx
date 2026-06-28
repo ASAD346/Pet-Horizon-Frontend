@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
-import { AppButton } from '../../ui/AppButton';
+import { CustomButton } from '../../ui/AppButton';
 import { AuthTextField } from '../AuthTextField';
 import { Palette, Spacing } from '../../../constants/theme';
 import type { VerifyEmailFieldErrors } from '../../../services/auth/validation';
@@ -60,13 +60,12 @@ export function VerifyEmailFormSection({
         </AppText>
       </TouchableOpacity>
 
-      <AppButton
+      <CustomButton
         title="Verify Email"
         onPress={onVerify}
-        loading={loading}
+        isLoading={loading}
         disabled={busy}
-        style={styles.verifyButton}
-        textStyle={styles.verifyButtonText}
+        style={{ marginTop: Spacing.xs }}
       />
 
       <View style={styles.loginRow}>
@@ -98,25 +97,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     marginBottom: Spacing.sm,
     marginTop: -Spacing.xs,
-  },
-  verifyButton: {
-    width: '100%',
-    height: 52,
-    borderRadius: 14, // Consistent modern rounded corners
-    backgroundColor: '#5CB35D',
-    shadowColor: '#5CB35D',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 5,
-    borderWidth: 0,
-    marginTop: Spacing.xs,
-  },
-  verifyButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Palette.white,
-    letterSpacing: 0.5,
   },
   loginRow: {
     flexDirection: 'row',

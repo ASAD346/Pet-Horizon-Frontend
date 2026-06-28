@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { Radius, Spacing } from '@/constants/theme';
 import { ScheduleTheme } from './scheduleTheme';
 
@@ -26,15 +26,11 @@ const buttonShadow = Platform.select({
 export function ScheduleFooter({ loading, disabled, onSave, onSkip }: ScheduleFooterProps) {
   return (
     <View style={styles.wrap}>
-      <AppButton
+      <CustomButton
         title="Finish Setup"
         onPress={onSave}
-        loading={loading}
+        isLoading={loading}
         disabled={disabled || loading}
-        variant="success"
-        size="md"
-        style={[styles.primaryBtn, buttonShadow]}
-        textStyle={styles.primaryBtnText}
         icon={
           <MaterialCommunityIcons name="paw" size={20} color="#FFFFFF" />
         }
@@ -54,17 +50,6 @@ const styles = StyleSheet.create({
   wrap: {
     marginTop: Spacing.md,
     alignItems: 'center',
-  },
-  primaryBtn: {
-    width: '100%',
-    minHeight: 54,
-    borderRadius: Radius.full,
-    backgroundColor: ScheduleTheme.ctaOrange,
-  },
-  primaryBtnText: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#FFFFFF',
   },
   skipBtn: {
     marginTop: Spacing.md,

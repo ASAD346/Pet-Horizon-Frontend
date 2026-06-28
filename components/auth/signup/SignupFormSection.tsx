@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
-import { AppButton } from '../../ui/AppButton';
+import { CustomButton } from '../../ui/AppButton';
 import { AuthTextField } from '../AuthTextField';
 import { Palette, Spacing } from '../../../constants/theme';
 import type { SignupFieldErrors } from '../../../services/auth/validation';
@@ -96,13 +96,12 @@ export function SignupFormSection({
         error={fieldErrors?.confirmPassword}
       />
 
-      <AppButton
+      <CustomButton
         title="Sign Up"
         onPress={onSignUp}
-        loading={loading}
+        isLoading={loading}
         disabled={loading}
-        style={styles.signUpButton}
-        textStyle={styles.signUpButtonText}
+        style={{ marginTop: Spacing.xs }}
       />
 
       <View style={styles.loginRow}>
@@ -143,25 +142,6 @@ const styles = StyleSheet.create({
   headerDescription: {
     fontSize: 13,
     color: Palette.gray[500],
-  },
-  signUpButton: {
-    width: '100%',
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: '#5CB35D',
-    shadowColor: '#5CB35D',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 5,
-    borderWidth: 0,
-    marginTop: Spacing.xs,
-  },
-  signUpButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Palette.white,
-    letterSpacing: 0.5,
   },
   loginRow: {
     flexDirection: 'row',

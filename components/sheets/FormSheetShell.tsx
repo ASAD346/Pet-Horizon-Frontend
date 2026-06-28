@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { FormSheetHero } from './FormSheetHero';

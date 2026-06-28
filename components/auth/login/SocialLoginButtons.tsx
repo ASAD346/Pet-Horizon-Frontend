@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import { AppButton } from '../../ui/AppButton';
+import { AppButton } from '../../ui/AppButton'; // Social buttons keep brand-specific styles
 import { OrDivider } from '../OrDivider';
 import { Spacing, Palette } from '../../../constants/theme';
 

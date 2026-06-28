@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import {
   FormSheetShell,
   FormSection,
@@ -146,13 +146,12 @@ export function MemberPermissionsSheet({
       </FormSection>
 
       <View style={styles.removeSection}>
-        <AppButton
+        <CustomButton
           title="Remove Member from Family"
           onPress={handleRemove}
-          loading={removing}
+          isLoading={removing}
           disabled={saving}
           variant="outline"
-          size="sm"
           style={styles.removeBtn}
           textStyle={styles.removeText}
         />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
-import { AppButton } from '../../ui/AppButton';
+import { CustomButton } from '../../ui/AppButton';
 import { AuthTextField } from '../AuthTextField';
 import { Palette, Spacing } from '../../../constants/theme';
 import type { ForgotPasswordFieldErrors } from '../../../services/auth/validation';
@@ -44,13 +44,12 @@ export function ForgotPasswordFormSection({
         autoCapitalize="none"
       />
 
-      <AppButton
+      <CustomButton
         title="Send Reset Code"
         onPress={onSendCode}
-        loading={loading}
+        isLoading={loading}
         disabled={loading}
-        style={styles.submitButton}
-        textStyle={styles.submitButtonText}
+        style={{ marginTop: Spacing.xs }}
       />
 
       <View style={styles.loginRow}>
@@ -77,25 +76,6 @@ const styles = StyleSheet.create({
   subtitle: {
     marginBottom: Spacing.md,
     lineHeight: 20,
-  },
-  submitButton: {
-    width: '100%',
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: '#5CB35D',
-    shadowColor: '#5CB35D',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 5,
-    borderWidth: 0,
-    marginTop: Spacing.xs,
-  },
-  submitButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: Palette.white,
-    letterSpacing: 0.5,
   },
   loginRow: {
     flexDirection: 'row',

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useToast } from '@/hooks/useToast';
@@ -174,20 +174,17 @@ export default function InviteAcceptScreen() {
               <AuthInfoBanner message="Sign in or create an account to accept this invitation." />
             ) : null}
 
-            <AppButton
+            <CustomButton
               title={isAuthenticated ? 'Accept Invitation' : 'Sign in to Accept'}
               onPress={handleAccept}
-              loading={accepting}
+              isLoading={accepting}
               disabled={!info.valid}
-              variant="success"
-              size="md"
               style={styles.acceptBtn}
             />
-            <AppButton
+            <CustomButton
               title="Go Back"
               onPress={() => router.back()}
               variant="outline"
-              size="md"
               style={styles.backBtn}
             />
           </>

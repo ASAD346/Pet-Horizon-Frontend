@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import {
   FormSheetShell,
   FormTextInput,
@@ -100,13 +100,12 @@ export function JournalEntryEditSheet({
       />
 
       <View style={styles.deleteSection}>
-        <AppButton
+        <CustomButton
           title="Delete Journal Entry"
           onPress={handleDelete}
-          loading={deleting}
+          isLoading={deleting}
           disabled={saving}
           variant="outline"
-          size="sm"
           style={styles.deleteBtn}
           textStyle={styles.deleteText}
         />

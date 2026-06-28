@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { AppButton } from '@/components/ui/AppButton';
+import { CustomButton } from '@/components/ui/AppButton';
 import {
   FormSheetShell,
   FormDateInput,
@@ -147,13 +147,12 @@ export function GroomingManageSheet({
 
         {!isReadOnly ? (
           <View style={styles.deleteSection}>
-            <AppButton
+            <CustomButton
               title="Delete Grooming Task"
               onPress={handleDelete}
-              loading={deleting}
+              isLoading={deleting}
               disabled={saving}
               variant="outline"
-              size="sm"
               style={styles.deleteBtn}
               textStyle={styles.deleteText}
             />
