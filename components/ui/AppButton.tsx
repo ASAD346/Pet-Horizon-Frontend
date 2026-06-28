@@ -17,6 +17,7 @@ import Animated, {
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import { AppText } from './AppText';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '@/hooks/useAuth';
 
 interface AppButtonProps {
   title: string;
@@ -203,9 +204,9 @@ const styles = StyleSheet.create({
 
 // ---------------------------------------------------------------------------
 // CustomButton — Tier-aware, unified design-system button
-// Automatically switches between Free (solid #114227) and Premium (emerald-gold
-// gradient) styles based on the active user's premiumStatus.
-// Use this everywhere you previously used local inline button styling.
+// Automatically switches between Free (solid #5CB35D) and Premium (deep
+// emerald gradient #0A2419 → #1A5C35) based on the user's premiumStatus.
+// Zero gold, zero mustard. Only GREEN. Always.
 // ---------------------------------------------------------------------------
 
 export interface CustomButtonProps {
@@ -220,7 +221,13 @@ export interface CustomButtonProps {
   accessibilityLabel?: string;
 }
 
-const PREMIUM_GRADIENT = ['#0E3821', '#1A5C35', '#C8940E'] as const;
+// ── Tier color constants ────────────────────────────────────────────────────
+/** Free tier: solid brand green */
+const FREE_GREEN = '#5CB35D';
+/** Premium tier: deep emerald gradient (dark forest → rich emerald) */
+const PREMIUM_GRADIENT: readonly [string, string, string] = ['#0A2419', '#114227', '#1A5C35'];
+/** Shared accent for outline/text variants */
+const ACCENT_GREEN = '#114227';
 
 export function CustomButton({
   title,
@@ -233,6 +240,9 @@ export function CustomButton({
   textStyle,
   accessibilityLabel,
 }: CustomButtonProps) {
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
+
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -249,28 +259,95 @@ export function CustomButton({
     transform: [{ scale: scale.value }],
   }));
 
-  const resolvedColors = (() => {
-    if (variant === 'outline') {
-      return { bg: 'transparent', text: '#C8940E', border: '#C8940E' };
-    }
-    if (variant === 'text') {
-      return { bg: 'transparent', text: '#C8940E', border: 'transparent' };
-    }
-    return { bg: 'transparent', text: '#FFFFFF', border: 'transparent' };
-  })();
+  // For outline/text: accent shifts to deep emerald when premium
+  const accentColor = isPremium ? ACCENT_GREEN : FREE_GREEN;
 
-  const { bg, text, border } = resolvedColors;
-  const isGradient = variant === 'primary';
+  if (variant === 'outline') {
+    return (
+      <AnimatedTouchableOpacity
+        activeOpacity={0.85}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={onPress}
+        disabled={disabled || isLoading}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? title}
+        style={[
+          customStyles.base,
+          {
+            backgroundColor: 'transparent',
+            borderColor: accentColor,
+            borderWidth: 1.5,
+            opacity: disabled ? 0.5 : 1,
+          },
+          animatedStyle,
+          style,
+        ]}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={accentColor} />
+        ) : (
+          <View style={customStyles.innerRow}>
+            {icon}
+            <AppText
+              variant="body"
+              weight="800"
+              color={accentColor}
+              style={[customStyles.label, textStyle]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {title}
+            </AppText>
+          </View>
+        )}
+      </AnimatedTouchableOpacity>
+    );
+  }
 
+  if (variant === 'text') {
+    return (
+      <AnimatedTouchableOpacity
+        activeOpacity={0.75}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={onPress}
+        disabled={disabled || isLoading}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? title}
+        style={[customStyles.base, { backgroundColor: 'transparent', opacity: disabled ? 0.5 : 1 }, animatedStyle, style]}
+      >
+        {isLoading ? (
+          <ActivityIndicator size="small" color={accentColor} />
+        ) : (
+          <View style={customStyles.innerRow}>
+            {icon}
+            <AppText
+              variant="body"
+              weight="800"
+              color={accentColor}
+              style={[customStyles.label, textStyle]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {title}
+            </AppText>
+          </View>
+        )}
+      </AnimatedTouchableOpacity>
+    );
+  }
+
+  // ── variant === 'primary' ─────────────────────────────────────────────────
   const innerContent = isLoading ? (
-    <ActivityIndicator size="small" color={text} />
+    <ActivityIndicator size="small" color="#FFFFFF" />
   ) : (
     <View style={customStyles.innerRow}>
       {icon}
       <AppText
         variant="body"
         weight="800"
-        color={text}
+        color="#FFFFFF"
         style={[customStyles.label, textStyle]}
         numberOfLines={1}
         ellipsizeMode="tail"
@@ -280,7 +357,8 @@ export function CustomButton({
     </View>
   );
 
-  if (isGradient) {
+  if (isPremium) {
+    // Premium: deep emerald gradient
     return (
       <AnimatedTouchableOpacity
         activeOpacity={0.85}
@@ -304,6 +382,7 @@ export function CustomButton({
     );
   }
 
+  // Free: solid standard green
   return (
     <AnimatedTouchableOpacity
       activeOpacity={0.85}
@@ -316,9 +395,7 @@ export function CustomButton({
       style={[
         customStyles.base,
         {
-          backgroundColor: bg,
-          borderColor: border,
-          borderWidth: variant === 'outline' ? 1.5 : 0,
+          backgroundColor: FREE_GREEN,
           opacity: disabled ? 0.5 : 1,
         },
         animatedStyle,
