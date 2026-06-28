@@ -8,6 +8,7 @@ import {
   Platform,
   Alert,
   Pressable,
+  Animated,
 } from 'react-native';
 import { SafeModal } from '@/components/ui/SafeModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -105,6 +106,81 @@ function ScheduleEntriesSkeleton() {
       <Skeleton width="100%" height={56} borderRadius={Radius.md} />
       <Skeleton width="100%" height={56} borderRadius={Radius.md} />
     </View>
+  );
+}
+
+// ── Animated expandable chip ─────────────────────────────────────────────
+interface AnimatedChipProps {
+  label: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  isSelected: boolean;
+  brandColor: string;
+  brandBg: string;
+  onPress: () => void;
+}
+
+function AnimatedChip({ label, icon, isSelected, brandColor, brandBg, onPress }: AnimatedChipProps) {
+  const labelOpacity = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+  const labelWidth = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(labelWidth, {
+        toValue: isSelected ? 1 : 0,
+        useNativeDriver: false,
+        friction: 7,
+        tension: 60,
+      }),
+      Animated.timing(labelOpacity, {
+        toValue: isSelected ? 1 : 0,
+        duration: isSelected ? 200 : 80,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  }, [isSelected]);
+
+  const activeColor = brandColor;
+  const inactiveColor = '#94A3B8';
+  const iconColor = isSelected ? activeColor : inactiveColor;
+
+  const animatedLabelStyle = {
+    maxWidth: labelWidth.interpolate({ inputRange: [0, 1], outputRange: [0, 80] }),
+    opacity: labelOpacity,
+    marginLeft: labelWidth.interpolate({ inputRange: [0, 1], outputRange: [0, 6] }),
+    overflow: 'hidden' as const,
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.72}
+      style={[
+        styles.chipButton,
+        isSelected
+          ? { backgroundColor: brandBg, borderColor: brandColor, borderWidth: 1.5 }
+          : { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0', borderWidth: 1 },
+      ]}
+    >
+      <MaterialCommunityIcons
+        name={icon}
+        size={16}
+        color={iconColor}
+      />
+      <Animated.Text
+        style={[
+          animatedLabelStyle,
+          {
+            fontSize: 12,
+            fontWeight: '800',
+            color: iconColor,
+            includeFontPadding: false,
+          },
+        ]}
+        numberOfLines={1}
+      >
+        {label}
+      </Animated.Text>
+    </TouchableOpacity>
   );
 }
 
@@ -493,13 +569,13 @@ export function ScheduleSetupView({
       (section.key !== 'grooming' || groomingVisible) && canViewSchedule(section.key),
   );
 
-  const filterChips: { key: 'all' | ScheduleSectionKey; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'feeding', label: 'Feeding' },
-    { key: 'walk', label: 'Walks' },
-    { key: 'grooming', label: 'Grooming' },
-    { key: 'medicine', label: 'Medicine' },
-    { key: 'vaccination', label: 'Vaccines' },
+  const filterChips: { key: 'all' | ScheduleSectionKey; label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }[] = [
+    { key: 'all',        label: 'All',      icon: 'view-grid-outline' },
+    { key: 'feeding',   label: 'Feeding',   icon: 'bowl-mix-outline' },
+    { key: 'walk',      label: 'Walks',     icon: 'walk' },
+    { key: 'grooming',  label: 'Grooming',  icon: 'content-cut' },
+    { key: 'medicine',  label: 'Medicine',  icon: 'pill' },
+    { key: 'vaccination', label: 'Vaccines', icon: 'shield-plus-outline' },
   ];
 
   const filteredChips = filterChips.filter(
@@ -598,23 +674,15 @@ export function ScheduleSetupView({
               {filteredChips.map((chip) => {
                 const isSelected = selectedCategory === chip.key;
                 return (
-                  <TouchableOpacity
+                  <AnimatedChip
                     key={chip.key}
+                    label={chip.label}
+                    icon={chip.icon}
+                    isSelected={isSelected}
+                    brandColor={brandColor}
+                    brandBg={brandBg}
                     onPress={() => setSelectedCategory(chip.key)}
-                    style={[
-                      styles.chipButton,
-                      isSelected ? { backgroundColor: brandColor, borderColor: brandColor } : { borderColor: Palette.gray[200] },
-                    ]}
-                    activeOpacity={0.8}
-                  >
-                    <AppText
-                      variant="caption"
-                      weight="800"
-                      color={isSelected ? '#FFFFFF' : HomeTheme.textMuted}
-                    >
-                      {chip.label}
-                    </AppText>
-                  </TouchableOpacity>
+                  />
                 );
               })}
             </ScrollView>
@@ -909,20 +977,20 @@ const styles = StyleSheet.create({
   },
   chipsContainer: {
     marginBottom: Spacing.md,
-    maxHeight: 40,
+    maxHeight: 44,
   },
   chipsContent: {
-    gap: Spacing.sm,
+    gap: 8,
     paddingRight: Spacing.lg,
+    alignItems: 'center',
   },
   chipButton: {
-    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: Radius.full,
-    borderWidth: 1,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
+    minWidth: 36,
   },
   timelineList: {
     gap: Spacing.xs,
