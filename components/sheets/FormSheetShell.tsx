@@ -18,6 +18,7 @@ import { FormSheetHero } from './FormSheetHero';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
 import { StickyActionFooter } from './FormSystem';
+import { ToastHost } from '@/components/ui/ToastHost';
 
 export const SheetOverlayContext = createContext<{
   setOverlay: (key: string, node: ReactNode) => void;
@@ -147,6 +148,7 @@ export function FormSheetShell({
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
+      <ToastHost />
       </SheetOverlayContext.Provider>
     </SafeModal>
   );
