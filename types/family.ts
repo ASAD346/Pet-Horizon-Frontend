@@ -39,6 +39,8 @@ export interface InviteInfoResponse {
   inviteType: string;
   inviterName?: string | null;
   inviterPhoto?: string | null;
+  invitedBy?: string | null;
+  creatorId?: string | null;
   pet?: {
     petId: string;
     name: string;

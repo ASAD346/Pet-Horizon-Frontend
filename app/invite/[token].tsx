@@ -34,6 +34,10 @@ export default function InviteAcceptScreen() {
   const [accepting, setAccepting] = useState(false);
   const { showErrorToast } = useToast();
 
+  const currentUserId = user?._id;
+  const invitationCreatorId = info?.invitedBy || info?.creatorId;
+  const isOwnInvite = !!(currentUserId && invitationCreatorId && currentUserId === invitationCreatorId);
+
   const loadInfo = useCallback(async () => {
     if (!inviteToken) {
       showErrorToast('Invalid invitation link.');
@@ -54,6 +58,13 @@ export default function InviteAcceptScreen() {
   useEffect(() => {
     loadInfo();
   }, [loadInfo]);
+
+  useEffect(() => {
+    if (isOwnInvite) {
+      showErrorToast("You cannot accept your own invitation.");
+      router.replace('/(tabs)');
+    }
+  }, [isOwnInvite, showErrorToast, router]);
 
   const handleAccept = async () => {
     if (!inviteToken) return;
@@ -94,7 +105,7 @@ export default function InviteAcceptScreen() {
     }
   };
 
-  if (loading) {
+  if (loading || isOwnInvite) {
     return (
       <SafeAreaView style={styles.container}>
         <SkeletonInviteCard />
