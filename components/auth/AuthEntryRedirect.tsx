@@ -23,10 +23,7 @@ export function useAuthEntryRedirect(enabled = true) {
     if (!enabled || isBootstrapping || !isAuthenticated) return;
 
     const target: Href = user?.activePetId ? '/(tabs)' : '/pet/register';
-    const timer = setTimeout(() => {
-      router.replace(target);
-    }, 1500); // 1.5s delay to let the beautiful animated splash screen be appreciated
-    return () => clearTimeout(timer);
+    router.replace(target);
   }, [enabled, isAuthenticated, isBootstrapping, router, user?.activePetId]);
 }
 
@@ -161,11 +158,6 @@ export function AuthEntryLoader() {
 
     return () => clearTimeout(halo2Timer);
   }, [logoScale, logoOpacity, haloScale1, haloOpacity1, haloScale2, haloOpacity2, progressAnim, contentFade]);
-
-  useEffect(() => {
-    // Dissolve the native flat green splash screen immediately because our custom UI is now mounted.
-    void SplashScreen.hideAsync();
-  }, []);
 
   // Interpolate progress translateX
   const progressTranslateX = progressAnim.interpolate({

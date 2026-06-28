@@ -59,7 +59,6 @@ export const rootReducer = combineReducers({
 });
 
 export type { AppState, AuthState, ToastState } from './types';
-
 export const selectAuthUser = (state: AppState) => state.auth.user;
 export const selectAuthToken = (state: AppState) => state.auth.token;
 export const selectIsAuthenticated = (state: AppState) => Boolean(state.auth.token);
