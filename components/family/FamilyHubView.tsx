@@ -267,22 +267,9 @@ export function FamilyHubView() {
               hostName={ownerName}
               currentUserId={user?._id}
               onMemberSettingsPress={(memberId) => {
-                if (isOwner) {
-                  const row = members.find((member) => member.userId._id === memberId);
-                  if (row) {
-                    setSelectedMember(row);
-                    setPermissionsVisible(true);
-                  }
-                } else if (user && memberId === user._id) {
-                  const clickedMemberRow = displayMembers.find((m) => m.id === memberId);
-                  const unifiedPayload = {
-                    ...clickedMemberRow,
-                    permissions: guestPermissions?.permissions || guestPermissions?.member?.permissions || (clickedMemberRow as any)?.permissions,
-                    allowedModules: guestPermissions?.member?.allowedModules || (clickedMemberRow as any)?.allowedModules || guestPermissions?.allowedModules || []
-                  };
-                  setSelectedMember(unifiedPayload as any);
-                  setPermissionsVisible(true);
-                }
+                // TEMPORARILY DISABLED: Bypass permission sheet modal mounting
+                console.log("Member settings modal is temporarily deactivated:", memberId);
+                return;
               }}
             />
           </>
