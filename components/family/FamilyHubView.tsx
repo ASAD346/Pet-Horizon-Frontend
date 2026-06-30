@@ -314,6 +314,7 @@ export function FamilyHubView() {
         onUpdated={(updatedOrDeletedMember) => {
           if (typeof updatedOrDeletedMember === 'string') {
             setMembers((prev) => prev.filter((m) => (m.userId?._id || (m as any).id) !== updatedOrDeletedMember));
+            void reloadMembers(true);
           } else if (updatedOrDeletedMember && typeof updatedOrDeletedMember === 'object') {
             setMembers((prev) =>
               prev.map((m) =>

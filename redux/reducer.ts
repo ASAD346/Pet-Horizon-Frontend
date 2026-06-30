@@ -6,6 +6,7 @@ import {
   HIDE_TOAST,
   SHOW_TOAST,
   SET_FORM_READ_ONLY,
+  UPDATE_MEMBER_PERMISSIONS_SUCCESS,
 } from './action-types';
 import type { AppState, AuthState, ToastState, UiState } from './types';
 
@@ -22,6 +23,30 @@ const initialToastState: ToastState = {
 const initialUiState: UiState = {
   isFormReadOnly: false,
 };
+
+interface FamilyState {
+  members: any[];
+}
+
+const initialFamilyState: FamilyState = {
+  members: [],
+};
+
+function familyReducer(state = initialFamilyState, action: AnyAction): FamilyState {
+  switch (action.type) {
+    case UPDATE_MEMBER_PERMISSIONS_SUCCESS:
+      return {
+        ...state,
+        members: state.members.map((m: any) =>
+          String(m._id || m.id || m.userId?._id) === String(action.payload.memberId)
+            ? { ...m, permissions: action.payload.permissions }
+            : m
+        ),
+      };
+    default:
+      return state;
+  }
+}
 
 function authReducer(state = initialAuthState, action: AnyAction): AuthState {
   switch (action.type) {
@@ -71,6 +96,7 @@ export const rootReducer = combineReducers({
   auth: authReducer,
   toast: toastReducer,
   ui: uiReducer,
+  family: familyReducer,
 });
 
 export type { AppState, AuthState, ToastState, UiState } from './types';

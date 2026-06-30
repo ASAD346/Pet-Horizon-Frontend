@@ -15,6 +15,7 @@ import {
   HIDE_TOAST,
   SHOW_TOAST,
   SET_FORM_READ_ONLY,
+  UPDATE_MEMBER_PERMISSIONS_SUCCESS,
 } from './action-types';
 import type { AppState, ToastState } from './types';
 
@@ -52,13 +53,19 @@ export interface SetFormReadOnlyAction {
   payload: boolean;
 }
 
+export interface UpdateMemberPermissionsSuccessAction {
+  type: typeof UPDATE_MEMBER_PERMISSIONS_SUCCESS;
+  payload: { memberId: string; permissions: any };
+}
+
 export type AppAction =
   | SetSessionAction
   | ClearSessionAction
   | BootstrapCompleteAction
   | ShowToastAction
   | HideToastAction
-  | SetFormReadOnlyAction;
+  | SetFormReadOnlyAction
+  | UpdateMemberPermissionsSuccessAction;
 
 export const setSessionAction = (session: AuthSession): SetSessionAction => ({
   type: AUTH_SET_SESSION,
@@ -85,6 +92,11 @@ export const hideToastAction = (): HideToastAction => ({
 export const setFormReadOnlyAction = (isReadOnly: boolean): SetFormReadOnlyAction => ({
   type: SET_FORM_READ_ONLY,
   payload: isReadOnly,
+});
+
+export const updateMemberPermissionsSuccess = (memberId: string, permissions: any): UpdateMemberPermissionsSuccessAction => ({
+  type: UPDATE_MEMBER_PERMISSIONS_SUCCESS,
+  payload: { memberId, permissions },
 });
 
 export function bootstrapAuth(): AppThunk {

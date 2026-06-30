@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { useDispatch } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
+import { updateMemberPermissionsSuccess } from '@/redux/action';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import {
@@ -56,6 +59,9 @@ export function MemberPermissionsSheet({
     legacyModules: member?.allowedModules
   });
 
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+
   const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
   const [feeding, setFeeding] = useState(false);
   const [walks, setWalks] = useState(false);
@@ -84,27 +90,27 @@ export function MemberPermissionsSheet({
     const targetRecord = activeCachedMember || member;
     if (visible && targetRecord) {
       setAccessLevel(targetRecord.accessLevel === 'edit' ? 'edit' : 'readonly');
-      if (targetRecord.permissions) {
-        setFeeding(!!targetRecord.permissions.feeding);
-        setWalks(!!targetRecord.permissions.walks);
-        setMedicine(!!targetRecord.permissions.medicine);
-        setGrooming(!!targetRecord.permissions.grooming);
-        setVaccination(!!targetRecord.permissions.vaccination);
-        setJournal(!!targetRecord.permissions.journal);
-        setExpenses(!!targetRecord.permissions.expenses);
-      } else {
-        const allowed = targetRecord.allowedModules ?? [];
-        setFeeding(!!allowed.includes('feeding'));
-        setWalks(!!allowed.includes('walks'));
-        setMedicine(!!allowed.includes('medicine'));
-        setGrooming(!!allowed.includes('grooming'));
-        setVaccination(!!allowed.includes('vaccination'));
-        setJournal(!!allowed.includes('journal'));
-        setExpenses(!!allowed.includes('expenses'));
-      }
+      
+      const currentPerms = targetRecord.permissions || {};
+      const allowed = targetRecord.allowedModules ?? [];
+
+      const getCheck = (key: string) => {
+        if ((currentPerms as any)[key] !== undefined) return !!(currentPerms as any)[key];
+        if ((targetRecord as any)[key] !== undefined) return !!(targetRecord as any)[key];
+        const targetMatch = key.charAt(0).toUpperCase() + key.slice(1);
+        return !!(allowed.includes(key) || allowed.includes(targetMatch));
+      };
+
+      setFeeding(getCheck('feeding'));
+      setWalks(getCheck('walks'));
+      setMedicine(getCheck('medicine'));
+      setGrooming(getCheck('grooming'));
+      setVaccination(getCheck('vaccination'));
+      setJournal(getCheck('journal'));
+      setExpenses(getCheck('expenses'));
       setError(null);
     }
-  }, [visible, activeCachedMember, member]);
+  }, [member, visible, activeCachedMember]);
 
   const getLivePermission = (key: string) => {
     const targetRecord = activeCachedMember || member;
@@ -160,7 +166,7 @@ export function MemberPermissionsSheet({
     setSaving(true);
     setError(null);
     try {
-      const updatedPermissions = {
+      const updatedPermissionsObj = {
         feeding,
         walks,
         medicine,
@@ -169,25 +175,43 @@ export function MemberPermissionsSheet({
         journal,
         expenses,
       };
-      const allowedModules = Object.keys(updatedPermissions).filter(
-        (key) => updatedPermissions[key as keyof typeof updatedPermissions],
+      const allowedModules = Object.keys(updatedPermissionsObj).filter(
+        (key) => updatedPermissionsObj[key as keyof typeof updatedPermissionsObj],
       );
 
-      const res = await updatePetMemberPermissions(token, petId, targetUserId, {
+      const res: any = await updatePetMemberPermissions(token, petId, targetUserId, {
         accessLevel,
         allowedModules,
-        permissions: updatedPermissions,
+        permissions: updatedPermissionsObj,
       } as any);
+
+      // FORCE UPDATE: Explicitly modify the local cache array for 'petMembers'
+      queryClient.setQueryData(['petMembers', petId], (oldMembersList: any) => {
+        if (!oldMembersList || !Array.isArray(oldMembersList)) return oldMembersList;
+        return oldMembersList.map((m: any) =>
+          String(m._id || m.id || m.userId?._id) === String(targetUserId)
+            ? { ...m, permissions: updatedPermissionsObj, allowedModules }
+            : m
+        );
+      });
+
+      // CRITICAL REDUX FIX: Immutably overwrite the state slice right now!
+      dispatch(updateMemberPermissionsSuccess(targetUserId, updatedPermissionsObj) as any);
+
+      // CRITICAL CACHE FLUSH: Invalidate and drop older server snapshots
+      await queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
+      await queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
 
       showSuccessToast("Member permissions updated successfully.");
       onUpdated({
         ...member,
         accessLevel,
         allowedModules,
-        permissions: res.member?.permissions || updatedPermissions,
+        permissions: res.member?.permissions || updatedPermissionsObj,
       });
       onClose();
     } catch (err) {
+      console.error("MUTATION_SAVE_SYNC_ERROR:", err);
       setError(getErrorMessage(err));
     } finally {
       setSaving(false);
@@ -200,6 +224,11 @@ export function MemberPermissionsSheet({
     setError(null);
     try {
       await removePetMember(token, petId, targetUserId);
+
+      // CRITICAL: Invalidate and refetch immediately to kill the stale data bug
+      await queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
+      await queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
+
       showSuccessToast("Member removed from Family Hub successfully.");
       onUpdated(targetUserId);
       onClose();
@@ -227,15 +256,6 @@ export function MemberPermissionsSheet({
       isReadOnly={isReadOnly}
       compact
     >
-      <FormSection title="Access Scope">
-        <FormSegmentedControl
-          label="Access Level"
-          options={ACCESS_LEVELS.map((o) => ({ value: o.id, label: o.label }))}
-          selected={accessLevel}
-          onSelect={(val) => setAccessLevel(val as 'readonly' | 'edit')}
-        />
-      </FormSection>
-
       <FormSection title="Allowed Modules">
         {MODULE_OPTIONS.map((module) => {
           const isEnabled = isReadOnly ? getLivePermission(module.id) : getPermissionValue(module.id);

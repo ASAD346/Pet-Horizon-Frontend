@@ -15,8 +15,13 @@ export interface UiState {
   isFormReadOnly: boolean;
 }
 
+export interface FamilyState {
+  members: any[];
+}
+
 export interface AppState {
   auth: AuthState;
   toast: ToastState;
   ui: UiState;
+  family: FamilyState;
 }
