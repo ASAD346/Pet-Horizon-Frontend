@@ -163,58 +163,61 @@ export function MemberPermissionsSheet({
 
   const handleSave = async () => {
     if (!token || !petId || !member) return;
-    setSaving(true);
     setError(null);
-    try {
-      const updatedPermissionsObj = {
-        feeding,
-        walks,
-        medicine,
-        grooming,
-        vaccination,
-        journal,
-        expenses,
-      };
-      const allowedModules = Object.keys(updatedPermissionsObj).filter(
-        (key) => updatedPermissionsObj[key as keyof typeof updatedPermissionsObj],
-      );
 
-      const res: any = await updatePetMemberPermissions(token, petId, targetUserId, {
+    const updatedPermissionsObj = {
+      feeding,
+      walks,
+      medicine,
+      grooming,
+      vaccination,
+      journal,
+      expenses,
+    };
+    const allowedModules = Object.keys(updatedPermissionsObj).filter(
+      (key) => updatedPermissionsObj[key as keyof typeof updatedPermissionsObj],
+    );
+
+    // 1. INSTANT ACTION: Synchronously overwrite Redux global store first
+    dispatch({
+      type: 'family/updateMemberPermissionsSuccess',
+      payload: { memberId: targetUserId, permissions: updatedPermissionsObj }
+    });
+
+    // 2. INSTANT ACTION: Synchronously overwrite React Query cache line immediately
+    queryClient.setQueryData(['petMembers', petId], (oldMembersList: any) => {
+      if (!oldMembersList || !Array.isArray(oldMembersList)) return oldMembersList;
+      return oldMembersList.map((m: any) =>
+        String(m._id || m.id || m.userId?._id) === String(targetUserId)
+          ? { ...m, permissions: updatedPermissionsObj, allowedModules }
+          : m
+      );
+    });
+
+    // 3. Inform parent component instantly
+    onUpdated({
+      ...member,
+      accessLevel,
+      allowedModules,
+      permissions: updatedPermissionsObj,
+    });
+
+    // 4. Dismiss the UI sheet overlay instantly so the layout transition looks seamless
+    onClose();
+
+    // 5. Fire off the backend network request quietly in the background
+    try {
+      await updatePetMemberPermissions(token, petId, targetUserId, {
         accessLevel,
         allowedModules,
         permissions: updatedPermissionsObj,
       } as any);
 
-      // FORCE UPDATE: Explicitly modify the local cache array for 'petMembers'
-      queryClient.setQueryData(['petMembers', petId], (oldMembersList: any) => {
-        if (!oldMembersList || !Array.isArray(oldMembersList)) return oldMembersList;
-        return oldMembersList.map((m: any) =>
-          String(m._id || m.id || m.userId?._id) === String(targetUserId)
-            ? { ...m, permissions: updatedPermissionsObj, allowedModules }
-            : m
-        );
-      });
-
-      // CRITICAL REDUX FIX: Immutably overwrite the state slice right now!
-      dispatch(updateMemberPermissionsSuccess(targetUserId, updatedPermissionsObj) as any);
-
-      // CRITICAL CACHE FLUSH: Invalidate and drop older server snapshots
-      await queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
-      await queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
-
-      showSuccessToast("Member permissions updated successfully.");
-      onUpdated({
-        ...member,
-        accessLevel,
-        allowedModules,
-        permissions: res.member?.permissions || updatedPermissionsObj,
-      });
-      onClose();
+      // Quietly trigger background validation once server settles
+      queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
     } catch (err) {
-      console.error("MUTATION_SAVE_SYNC_ERROR:", err);
-      setError(getErrorMessage(err));
-    } finally {
-      setSaving(false);
+      console.error("BACKGROUND_PERSISTENCE_DELAY_OR_ERROR:", err);
     }
   };
 

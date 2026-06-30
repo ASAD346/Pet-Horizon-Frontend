@@ -111,6 +111,38 @@ export interface PetAccessControls {
   ownerName: string | null;
 }
 
+export const evaluateModuleAccess = (
+  activeWorkspaceData: any,
+  moduleId: string,
+  legacyStringName: string
+): boolean => {
+  if (!activeWorkspaceData) return false;
+
+  // Rule 1: If user is the absolute owner/creator, pass through instantly
+  if (activeWorkspaceData.isOwner || activeWorkspaceData.role === 'owner') {
+    return true;
+  }
+
+  // Rule 2: Inspect explicit nested boolean configurations returned from Node.js
+  const permsObject = activeWorkspaceData.permissions || activeWorkspaceData.member?.permissions;
+  if (permsObject && typeof permsObject[moduleId] !== 'undefined') {
+    return Boolean(permsObject[moduleId]);
+  }
+
+  // Rule 3: Inspect alternative base layout level parameters
+  if (typeof activeWorkspaceData[moduleId] !== 'undefined') {
+    return Boolean(activeWorkspaceData[moduleId]);
+  }
+
+  // Rule 4: High-Fidelity Fallback array inspection
+  const allowedModulesArray = activeWorkspaceData.allowedModules || activeWorkspaceData.member?.allowedModules;
+  if (Array.isArray(allowedModulesArray)) {
+    return allowedModulesArray.includes(legacyStringName);
+  }
+
+  return false; // Absolute fallback boundary lock
+};
+
 export function buildPetAccessControls(params: {
   permissions: PetPermissionsResponse | null;
   petOwnerUserId?: string | null;
@@ -130,14 +162,7 @@ export function buildPetAccessControls(params: {
     if (!isSpeciesModuleVisible(moduleId, species, remoteHidden)) return false;
     if (isOwner) return true;
 
-    // Explicitly read from the live session workspace permissions mapped from the database
-    const serverPermissions = permissions?.permissions;
-
-    if (!serverPermissions || typeof serverPermissions[moduleId] === 'undefined') {
-      return false; // Absolute Fail-Safe: If not explicitly true from DB, it is strictly FALSE/LOCKED
-    }
-
-    return !!serverPermissions[moduleId];
+    return evaluateModuleAccess(permissions, moduleId, moduleId);
   };
 
   const canEdit = (moduleId: AppModuleId): boolean => {
