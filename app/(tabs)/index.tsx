@@ -70,6 +70,8 @@ import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { SkeletonDashboard } from '@/components/ui/skeletons';
 import type { GroomingRecord } from '@/types/grooming';
+import { QrScannerModal } from '@/components/family/QrScannerModal';
+import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
 
 
 
@@ -345,6 +347,16 @@ export default function HomeScreen() {
   const [groomingManageVisible, setGroomingManageVisible] = useState(false);
 
   const [groomingManageRecord, setGroomingManageRecord] = useState<GroomingRecord | null>(null);
+
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
+  const [scannedToken, setScannedToken] = useState<string | null>(null);
+  const [acceptModalVisible, setAcceptModalVisible] = useState(false);
+
+  const handleQrScanSuccess = useCallback((scannedToken: string) => {
+    setQrScannerVisible(false);
+    setScannedToken(scannedToken);
+    setAcceptModalVisible(true);
+  }, []);
 
 
   const openGroomingManage = useCallback((recordId: string) => {
@@ -641,6 +653,26 @@ export default function HomeScreen() {
           onClose={() => setPetSwitcherVisible(false)}
           onSelectPet={handleSwitchPet}
           onAddPet={handleAddPet}
+        />
+
+        <QrScannerModal
+          visible={qrScannerVisible}
+          onClose={() => setQrScannerVisible(false)}
+          onScanSuccess={handleQrScanSuccess}
+        />
+
+        <AcceptInviteModal
+          visible={acceptModalVisible}
+          inviteToken={scannedToken}
+          onClose={() => {
+            setAcceptModalVisible(false);
+            setScannedToken(null);
+          }}
+          onSuccess={() => {
+            // Refetch active pet/dashboard state on success
+            void refetchDashboard();
+            if (reloadPet) void reloadPet();
+          }}
         />
 
     </View>

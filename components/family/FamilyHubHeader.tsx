@@ -14,7 +14,6 @@ interface FamilyHubHeaderProps {
   topInset?: number;
   onJournalPress?: () => void;
   showJournal?: boolean;
-  onQrScanPress?: () => void;
 }
 
 export function FamilyHubHeader({
@@ -24,7 +23,6 @@ export function FamilyHubHeader({
   topInset = 0,
   onJournalPress,
   showJournal = true,
-  onQrScanPress,
 }: FamilyHubHeaderProps) {
   const insets = useSafeAreaInsets();
 
@@ -109,7 +107,6 @@ export function FamilyHubHeader({
               onNotificationsPress={onNotificationsPress}
               onJournalPress={onJournalPress}
               showJournal={showJournal}
-              onQrScanPress={onQrScanPress}
               dark
             />
           </View>

@@ -5,16 +5,19 @@ import {
   Share,
   StyleSheet,
   View,
+  TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
+import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
 import { FamilyHubHeader } from './FamilyHubHeader';
 import { FamilyOverviewCard } from '@/components/family/FamilyOverviewCard';
 import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
 import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
 import { MembersListSection } from '@/components/family/MembersListSection';
-import { HomeTheme, Spacing } from '@/constants/theme';
+import { HomeTheme, Spacing, Radius } from '@/constants/theme';
 import { SkeletonFamilyHub } from '@/components/ui/skeletons';
 import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 import { useAuth } from '@/hooks/useAuth';
@@ -23,6 +26,7 @@ import { usePetMembers } from '@/hooks/usePetMembers';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { LogJournalSheet } from '@/components/journal';
 import { QrScannerModal } from '@/components/family/QrScannerModal';
+import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
 import { generatePetInvite } from '@/services/family/familyApi';
 import { fetchPremiumStatus } from '@/services/premium/premiumApi';
 import {
@@ -64,6 +68,8 @@ export function FamilyHubView() {
   const { canViewJournal, ownerName } = usePetPermissions(token, pet, user?._id);
   const [journalVisible, setJournalVisible] = useState(false);
   const [qrScannerVisible, setQrScannerVisible] = useState(false);
+  const [scannedToken, setScannedToken] = useState<string | null>(null);
+  const [acceptModalVisible, setAcceptModalVisible] = useState(false);
 
   const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
   const [invite, setInvite] = useState<GenerateInviteResponse | null>(null);
@@ -208,7 +214,6 @@ export function FamilyHubView() {
         onNotificationsPress={onNotificationsPress}
         onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
         showJournal={canViewJournal}
-        onQrScanPress={!isOwner ? () => setQrScannerVisible(true) : undefined}
         isPremium={isPremium}
         topInset={insets.top}
       />
@@ -277,6 +282,26 @@ export function FamilyHubView() {
                 return;
               }}
             />
+
+            {/* Join another family workspace via QR scan */}
+            <TouchableOpacity
+              style={styles.joinFamilyCard}
+              onPress={() => setQrScannerVisible(true)}
+              activeOpacity={0.85}
+            >
+              <View style={styles.joinIconBg}>
+                <Ionicons name="qr-code-outline" size={24} color="#3A8F3B" />
+              </View>
+              <View style={styles.joinTextContainer}>
+                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                  Join Another Family
+                </AppText>
+                <AppText variant="caption" color={HomeTheme.textMuted}>
+                  Scan a QR invitation to co-manage another pet.
+                </AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
+            </TouchableOpacity>
           </>
         ) : null}
       </ScrollView>
@@ -332,9 +357,22 @@ export function FamilyHubView() {
         onClose={() => setQrScannerVisible(false)}
         onScanSuccess={(scannedToken) => {
           setQrScannerVisible(false);
-          if (scannedToken) {
-            router.push(`/invite/${encodeURIComponent(scannedToken)}` as any);
-          }
+          setScannedToken(scannedToken);
+          setAcceptModalVisible(true);
+        }}
+      />
+
+      <AcceptInviteModal
+        visible={acceptModalVisible}
+        inviteToken={scannedToken}
+        onClose={() => {
+          setAcceptModalVisible(false);
+          setScannedToken(null);
+        }}
+        onSuccess={() => {
+          // On success, reload members lists in-place
+          if (reloadMembers) void reloadMembers(true);
+          if (reloadPet) void reloadPet();
         }}
       />
     </View>
@@ -355,5 +393,30 @@ const styles = StyleSheet.create({
   },
   skeletonWrap: {
     paddingHorizontal: Spacing.lg,
+  },
+  joinFamilyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    marginHorizontal: Spacing.lg,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.lg,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    gap: Spacing.md,
+  },
+  joinIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  joinTextContainer: {
+    flex: 1,
+    gap: 2,
   },
 });

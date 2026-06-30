@@ -16,6 +16,7 @@ import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { QrScannerModal } from '@/components/family/QrScannerModal';
+import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
 import {
   BirthdayField,
   BreedSelector,
@@ -80,6 +81,8 @@ export default function RegisterPetScreen() {
   const [hasEditPermission, setHasEditPermission] = useState(true);
   const [chosenTrack, setChosenTrack] = useState<'none' | 'add' | 'join'>((isAddMode || isEditMode) ? 'add' : 'none');
   const [scannerVisible, setScannerVisible] = useState(false);
+  const [scannedToken, setScannedToken] = useState<string | null>(null);
+  const [acceptModalVisible, setAcceptModalVisible] = useState(false);
   const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
@@ -365,7 +368,21 @@ export default function RegisterPetScreen() {
         onClose={() => setScannerVisible(false)}
         onScanSuccess={(scannedToken) => {
           setScannerVisible(false);
-          router.replace(`/invite/${encodeURIComponent(scannedToken)}` as any);
+          setScannedToken(scannedToken);
+          setAcceptModalVisible(true);
+        }}
+      />
+
+      <AcceptInviteModal
+        visible={acceptModalVisible}
+        inviteToken={scannedToken}
+        onClose={() => {
+          setAcceptModalVisible(false);
+          setScannedToken(null);
+        }}
+        onSuccess={() => {
+          // Navigate to dashboard after joining
+          router.replace('/(tabs)');
         }}
       />
 
