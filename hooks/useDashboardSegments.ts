@@ -18,7 +18,8 @@ export function usePetProfileQuery(token: string | null, petId: string | null | 
     }
   }, [petId]);
 
-  const localDateStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const query = useQuery({
     queryKey: ['dashboard', petId, localDateStr],
@@ -54,7 +55,8 @@ export function useTodaySchedulesQuery(token: string | null, petId: string | nul
     }
   }, [petId]);
 
-  const localDateStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const query = useQuery({
     queryKey: ['dashboard', petId, localDateStr],
@@ -90,7 +92,8 @@ export function useUpcomingTasksQuery(token: string | null, petId: string | null
     }
   }, [petId]);
 
-  const localDateStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const query = useQuery({
     queryKey: ['dashboard', petId, localDateStr],
@@ -126,7 +129,8 @@ export function useNotificationsQuery(token: string | null, petId: string | null
     }
   }, [petId]);
 
-  const localDateStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const query = useQuery({
     queryKey: ['dashboard', petId, localDateStr],
@@ -162,7 +166,8 @@ export function useRecentActivitiesQuery(token: string | null, petId: string | n
     }
   }, [petId]);
 
-  const localDateStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const query = useQuery({
     queryKey: ['dashboard', petId, localDateStr],

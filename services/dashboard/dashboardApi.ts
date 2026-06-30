@@ -20,7 +20,8 @@ export async function fetchDashboardStatus(token: string): Promise<DashboardStat
 
 export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]> {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const localDate = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const offset = new Date().getTimezoneOffset();
   const queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
   
@@ -37,7 +38,8 @@ export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]
 
 export async function fetchUnifiedDashboard(token: string, clientDate?: string): Promise<UnifiedDashboardData> {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const localDate = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const offset = new Date().getTimezoneOffset();
   let queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
   if (clientDate) {
