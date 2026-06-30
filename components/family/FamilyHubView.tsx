@@ -104,10 +104,13 @@ export function FamilyHubView() {
     return guestMembers;
   }, [user, isOwner, members, guestMembers]);
 
+  const [guestPermissions, setGuestPermissions] = useState<any | null>(null);
+
   const loadGuestAccess = useCallback(async () => {
     if (!token || !pet?._id || pet._id === 'fallback-pet-id-123' || isOwner || !user) {
       resetGuestScope();
       setGuestMembers([]);
+      setGuestPermissions(null);
       return;
     }
 
@@ -116,6 +119,7 @@ export function FamilyHubView() {
 
     try {
       const perms = await fetchPetPermissions(token, pet._id);
+      setGuestPermissions(perms);
       setGuestMembers([
         buildGuestMemberDisplay(
           user,
@@ -252,10 +256,26 @@ export function FamilyHubView() {
               isPremium={isPremium}
               isOwner={isOwner}
               hostName={ownerName}
+              currentUserId={user?._id}
               onMemberSettingsPress={(memberId) => {
-                const row = members.find((member) => member.userId._id === memberId);
-                if (row) {
-                  setSelectedMember(row);
+                if (isOwner) {
+                  const row = members.find((member) => member.userId._id === memberId);
+                  if (row) {
+                    setSelectedMember(row);
+                    setPermissionsVisible(true);
+                  }
+                } else if (user && memberId === user._id) {
+                  const fakeRow: PetMemberRow = {
+                    userId: {
+                      _id: user._id,
+                      fullName: user.fullName,
+                      email: user.email,
+                      profileImage: user.profileImage,
+                    },
+                    accessLevel: guestPermissions?.accessLevel ?? 'readonly',
+                    allowedModules: guestPermissions?.allowedModules ?? [],
+                  };
+                  setSelectedMember(fakeRow);
                   setPermissionsVisible(true);
                 }
               }}
@@ -281,6 +301,7 @@ export function FamilyHubView() {
         petId={pet?._id ?? null}
         token={token}
         isPremium={isPremium}
+        isReadOnly={!isOwner}
         onClose={() => {
           setPermissionsVisible(false);
           setSelectedMember(null);

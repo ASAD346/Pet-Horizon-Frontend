@@ -14,6 +14,7 @@ interface MembersListSectionProps {
   isPremium?: boolean;
   isOwner?: boolean;
   hostName?: string | null;
+  currentUserId?: string | null;
 }
 
 function MemberAvatar({ color }: { color: string }) {
@@ -34,6 +35,7 @@ export function MembersListSection({
   isPremium = false,
   isOwner = true,
   hostName = null,
+  currentUserId = null,
 }: MembersListSectionProps) {
   const activeCount = members.length;
 
@@ -80,13 +82,19 @@ export function MembersListSection({
       ) : (
         members.map((member) => {
           const canManage = manageableIds.includes(member.id);
+          const isSelf = currentUserId && member.id === currentUserId;
+          const isPressable = canManage || isSelf;
+          const CardContainer = isPressable ? TouchableOpacity : View;
+
           return (
-            <View
+            <CardContainer
               key={member.id}
               style={[
                 styles.memberCard,
                 { borderWidth: 1, borderColor: cardBorderColor }
               ]}
+              activeOpacity={isPressable ? 0.85 : 1}
+              onPress={isPressable ? () => onMemberSettingsPress?.(member.id) : undefined}
             >
               <MemberAvatar color={member.avatarColor} />
               
@@ -136,7 +144,7 @@ export function MembersListSection({
                   </TouchableOpacity>
                 ) : null}
               </View>
-            </View>
+            </CardContainer>
           );
         })
       )}

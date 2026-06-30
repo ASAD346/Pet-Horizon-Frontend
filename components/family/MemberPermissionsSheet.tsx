@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { CustomButton } from '@/components/ui/AppButton';
+import { AppText } from '@/components/ui/AppText';
 import {
   FormSheetShell,
   FormSection,
@@ -33,6 +34,7 @@ interface MemberPermissionsSheetProps {
   petId: string | null;
   token: string | null;
   isPremium?: boolean;
+  isReadOnly?: boolean;
   onClose: () => void;
   onUpdated: (updatedOrDeletedMember: string | PetMemberRow) => void;
 }
@@ -43,6 +45,7 @@ export function MemberPermissionsSheet({
   petId,
   token,
   isPremium = false,
+  isReadOnly = false,
   onClose,
   onUpdated,
 }: MemberPermissionsSheetProps) {
@@ -118,13 +121,14 @@ export function MemberPermissionsSheet({
       visible={visible}
       onClose={onClose}
       title="Member Settings"
-      subtitle={`Manage permissions for ${memberName}`}
+      subtitle={isReadOnly ? `Viewing permissions for ${memberName}` : `Manage permissions for ${memberName}`}
       icon="account"
-      saveLabel="Save Permissions"
-      onSave={handleSave}
+      saveLabel={isReadOnly ? undefined : "Save Permissions"}
+      onSave={isReadOnly ? undefined : handleSave}
       saving={saving}
       saveDisabled={removing}
       error={error}
+      isReadOnly={isReadOnly}
       compact
     >
       <FormSection title="Access Scope">
@@ -150,17 +154,25 @@ export function MemberPermissionsSheet({
         })}
       </FormSection>
 
-      <View style={styles.removeSection}>
-        <CustomButton
-          title="Remove Member from Family"
-          onPress={handleRemove}
-          isLoading={removing}
-          disabled={saving}
-          variant="outline"
-          style={styles.removeBtn}
-          textStyle={styles.removeText}
-        />
-      </View>
+      {!isReadOnly ? (
+        <View style={styles.removeSection}>
+          <CustomButton
+            title="Remove Member from Family"
+            onPress={handleRemove}
+            isLoading={removing}
+            disabled={saving}
+            variant="outline"
+            style={styles.removeBtn}
+            textStyle={styles.removeText}
+          />
+        </View>
+      ) : (
+        <View style={{ paddingHorizontal: 4, marginTop: 24, alignItems: 'center' }}>
+          <AppText variant="bodySmall" weight="700" color="#64748B">
+            Viewing assigned workspace permissions.
+          </AppText>
+        </View>
+      )}
     </FormSheetShell>
   );
 }
