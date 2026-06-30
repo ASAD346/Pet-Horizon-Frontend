@@ -107,13 +107,20 @@ export default function HomeScreen() {
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
 
+  const petPermissions = usePetPermissions(token, pet, user?._id);
   const {
     canView,
     canEdit,
     canViewJournal,
     isOwner,
     accessBannerMessage,
-  } = usePetPermissions(token, pet, user?._id);
+  } = petPermissions;
+
+  console.log("HOME_SCREEN_PERMISSIONS_PROBE:", {
+      rawObject: petPermissions,
+      extractedNestedBlock: (petPermissions as any)?.permissions,
+      fallbackArray: petPermissions?.allowedModules
+  });
 
   const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
     token,

@@ -150,20 +150,16 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
           const moduleId = QUICK_ACTION_MODULES[action.label];
-          
-          // Disable if the user lacks edit permission
-          const isDisabled = moduleId ? (canEdit ? !canEdit(moduleId) : false) : false;
+          // Disable if the user lacks view permission
+          const isDisabled = moduleId ? (canView ? !canView(moduleId) : false) : false;
 
           return (
             <TouchableOpacity
               key={action.label}
-              activeOpacity={isDisabled ? 0.95 : 0.8}
+              activeOpacity={isDisabled ? 0.55 : 0.8}
+              disabled={isDisabled}
               onPress={() => {
-                if (isDisabled) {
-                  if (onPermissionDenied) {
-                    onPermissionDenied(action.label);
-                  }
-                } else if (onPress) {
+                if (!isDisabled && onPress) {
                   handlePress(onPress);
                 }
               }}
