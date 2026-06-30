@@ -9,6 +9,15 @@ export interface PetMemberRow {
   userId: PetMemberUser;
   accessLevel: 'admin' | 'edit' | 'readonly' | string;
   allowedModules: string[];
+  permissions?: {
+    feeding?: boolean;
+    walks?: boolean;
+    medicine?: boolean;
+    grooming?: boolean;
+    vaccination?: boolean;
+    journal?: boolean;
+    expenses?: boolean;
+  };
   grantedAt?: string;
 }
 

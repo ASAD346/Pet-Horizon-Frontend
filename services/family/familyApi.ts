@@ -95,10 +95,10 @@ export async function updatePetMemberPermissions(
   petId: string,
   userId: string,
   payload: UpdateMemberPermissionsRequest,
-): Promise<{ message: string; accessLevel: string; allowedModules: string[] }> {
+): Promise<{ message: string; accessLevel: string; allowedModules: string[]; member?: any }> {
   log.info(SCOPE, 'PUT /pets/:petId/members/:userId/permissions', { petId, userId });
   try {
-    const data = await apiRequest<{ message: string; accessLevel: string; allowedModules: string[] }>(
+    const data = await apiRequest<{ message: string; accessLevel: string; allowedModules: string[]; member?: any }>(
       API_ENDPOINTS.family.updateMemberPermissionsByPet(petId, userId),
       { method: 'PUT', token, body: payload },
     );

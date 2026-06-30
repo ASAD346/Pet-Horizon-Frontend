@@ -88,9 +88,16 @@ export function MemberPermissionsSheet({
       }
       setError(null);
     }
-  }, [visible, member]);
+  }, [visible, member, member?.permissions]);
 
   const getPermissionValue = (moduleId: string) => {
+    if (isReadOnly && member) {
+      if (member.permissions) {
+        return !!(member.permissions as any)[moduleId];
+      }
+      const allowed = member.allowedModules ?? [];
+      return allowed.includes(moduleId);
+    }
     switch (moduleId) {
       case 'feeding': return feeding;
       case 'walks': return walks;
