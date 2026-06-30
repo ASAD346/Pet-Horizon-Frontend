@@ -34,7 +34,7 @@ interface MemberPermissionsSheetProps {
   token: string | null;
   isPremium?: boolean;
   onClose: () => void;
-  onUpdated: (deletedMemberId?: string) => void;
+  onUpdated: (updatedOrDeletedMember: string | PetMemberRow) => void;
 }
 
 export function MemberPermissionsSheet({
@@ -81,7 +81,12 @@ export function MemberPermissionsSheet({
         accessLevel,
         allowedModules: modules,
       });
-      onUpdated();
+      showSuccessToast("Member permissions updated successfully.");
+      onUpdated({
+        ...member,
+        accessLevel,
+        allowedModules: modules,
+      });
       onClose();
     } catch (err) {
       setError(getErrorMessage(err));

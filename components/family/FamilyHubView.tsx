@@ -285,11 +285,20 @@ export function FamilyHubView() {
           setPermissionsVisible(false);
           setSelectedMember(null);
         }}
-        onUpdated={(deletedMemberId) => {
-          if (deletedMemberId) {
-            setMembers((prev) => prev.filter((m) => (m.userId?._id || (m as any).id) !== deletedMemberId));
+        onUpdated={(updatedOrDeletedMember) => {
+          if (typeof updatedOrDeletedMember === 'string') {
+            setMembers((prev) => prev.filter((m) => (m.userId?._id || (m as any).id) !== updatedOrDeletedMember));
+          } else if (updatedOrDeletedMember && typeof updatedOrDeletedMember === 'object') {
+            setMembers((prev) =>
+              prev.map((m) =>
+                m.userId._id === updatedOrDeletedMember.userId._id
+                  ? updatedOrDeletedMember
+                  : m
+              )
+            );
+            void reloadMembers(true);
           } else {
-            reloadMembers();
+            void reloadMembers(true);
           }
         }}
       />

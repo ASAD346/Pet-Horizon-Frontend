@@ -1,12 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
-import { CustomButton } from '@/components/ui/AppButton';
+import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
 import {
-  FormSheetShell,
   FormDateInput,
+  FormSheetShell,
   FormTextInput,
 } from '@/components/sheets';
-import { ThemedDatePicker } from '@/components/pet/ThemedDatePicker';
+import { CustomButton } from '@/components/ui/AppButton';
+import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
   dateToApiDateString,
@@ -15,8 +14,9 @@ import {
   deleteGroomingRecord,
   updateGroomingRecord,
 } from '@/services/grooming/groomingApi';
-import { useToast } from '@/hooks/useToast';
 import type { GroomingRecord } from '@/types/grooming';
+import React, { useEffect, useState } from 'react';
+import { Alert, StyleSheet, View } from 'react-native';
 
 interface GroomingManageSheetProps {
   visible: boolean;
@@ -127,7 +127,6 @@ export function GroomingManageSheet({
         saving={saving}
         saveDisabled={deleting}
         error={error}
-        isReadOnly={isReadOnly}
         compact
       >
         <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? styles.readOnlyContainer : null}>
