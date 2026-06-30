@@ -1,35 +1,24 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/api/errors';
 import { mapBudgetDisplay } from '@/lib/expense/expenseMappers';
-import { log } from '@/lib/log';
 import { fetchRemainingBudget } from '@/services/expense/expenseApi';
 import type { BudgetRemainingItem } from '@/types/expense';
-import { useStaleFocusLoader } from './useStaleFocusLoader';
 
 export function useBudget(token: string | null, petId: string | null | undefined) {
-  const [budgets, setBudgets] = useState<BudgetRemainingItem[]>([]);
+  const queryClient = useQueryClient();
+  const queryKey = ['budget', petId];
+
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>('weekly');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const scopeKey = token && petId ? `${token}:${petId}` : null;
 
-  const display = useMemo(() => {
-    const active = budgets.find((item) => item.periodType === periodType) ?? null;
-    return mapBudgetDisplay(active, periodType);
-  }, [budgets, periodType]);
-
-  const load = useCallback(async () => {
-    if (!token || !petId) return [];
-    const data = await fetchRemainingBudget(token, petId);
-    return data.budgets ?? [];
-  }, [token, petId]);
-
-  const reload = useStaleFocusLoader({
-    scopeKey,
-    enabled: Boolean(token && petId),
-    load,
-    onSuccess: (rows) => {
-      setBudgets(rows);
+  const { data: budgets = [], isFetching, error, refetch } = useQuery({
+    queryKey,
+    queryFn: async () => {
+      if (!token || !petId) return [];
+      const data = await fetchRemainingBudget(token, petId);
+      const rows = data.budgets ?? [];
+      
+      // Auto-select period type if the current one isn't active but the other is
       if (rows && rows.length > 0) {
         const currentActive = rows.find((b) => b.periodType === periodType && b.amountLimit > 0);
         if (!currentActive) {
@@ -42,21 +31,35 @@ export function useBudget(token: string | null, petId: string | null | undefined
           }
         }
       }
-      setError(null);
+      return rows;
     },
-    onClear: () => {
-      setBudgets([]);
-      setError(null);
-    },
-    onError: (err, isFirstLoad) => {
-      if (isFirstLoad) {
-        setBudgets([]);
-        setError(getErrorMessage(err));
-        log.fail('Budget', 'Load failed', getErrorMessage(err));
-      }
-    },
-    setLoading,
+    enabled: Boolean(token && petId),
+    staleTime: 0,
   });
 
-  return { budget: display, budgets, periodType, setPeriodType, loading, error, reload };
+  const display = useMemo(() => {
+    const active = budgets.find((item) => item.periodType === periodType) ?? null;
+    return mapBudgetDisplay(active, periodType);
+  }, [budgets, periodType]);
+
+  const decrementLocalBudget = (amount: number) => {
+    queryClient.setQueryData(queryKey, (old: BudgetRemainingItem[] | undefined) => {
+      if (!old) return [];
+      return old.map(b => ({
+        ...b,
+        totalSpent: b.totalSpent + amount,
+        remaining: Math.max(0, b.remaining - amount),
+      }));
+    });
+  };
+
+  return {
+    budget: display,
+    periodType,
+    setPeriodType,
+    loading: isFetching,
+    error: error ? getErrorMessage(error) : null,
+    reload: () => refetch(),
+    decrementLocalBudget,
+  };
 }

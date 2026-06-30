@@ -83,7 +83,7 @@ export function ExpenseTrackerView({
     pet?._id,
     selectedMonth,
   );
-  const { budget, loading: budgetLoading, periodType, setPeriodType, reload: reloadBudget } = useBudget(
+  const { budget, loading: budgetLoading, periodType, setPeriodType, reload: reloadBudget, decrementLocalBudget } = useBudget(
     token,
     pet?._id,
   );
@@ -107,7 +107,7 @@ export function ExpenseTrackerView({
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await Promise.all([reloadExpenses(true), reloadBudget(true)]);
+    await Promise.all([reloadExpenses(), reloadBudget()]);
     setRefreshing(false);
   };
 
@@ -207,8 +207,8 @@ export function ExpenseTrackerView({
             if (savedPeriod) {
               setPeriodType(savedPeriod);
             }
-            reloadBudget(true, true);
-            reloadExpenses(true, true);
+            reloadBudget();
+            reloadExpenses();
           }}
         />
       ) : null}
@@ -224,8 +224,9 @@ export function ExpenseTrackerView({
             setAddExpenseVisible(false);
             if (newExpense) {
               addLocalExpense(newExpense);
+              decrementLocalBudget(newExpense.amount);
             }
-            reloadBudget(true, true);
+            reloadBudget();
           }}
         />
       ) : null}

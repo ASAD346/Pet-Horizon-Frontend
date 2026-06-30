@@ -83,11 +83,16 @@ export function AddExpenseView({
     setError(null);
     try {
       const selected = API_EXPENSE_CATEGORIES.find((item) => item.label === category);
+      const now = new Date();
+      // Ensure backend uses the local month by hardcoding noon UTC of the local date
+      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T12:00:00.000Z`;
+      
       const data = await createExpense(token, {
         petId,
         category: selected?.value ?? 'other',
         amount: value,
         note: [merchant.trim(), note.trim()].filter(Boolean).join(' — ') || undefined,
+        date: localDate,
       });
       showToast('Expense added successfully!');
       onSaved?.(data.expense);

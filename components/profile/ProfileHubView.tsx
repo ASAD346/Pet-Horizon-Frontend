@@ -400,20 +400,20 @@ export function ProfileHubView() {
 
         <ProfileMenuSection title="ACTIONS">
           <ProfileMenuRow
-            icon="log-out-outline"
-            title="Sign Out"
-            subtitle="Log out of your active session"
-            onPress={handleLogout}
-            iconColor="#FBBC05"
-            iconBg="rgba(251, 188, 5, 0.08)"
-          />
-          <ProfileMenuRow
             icon="trash-outline"
             title="Delete Account"
             subtitle="Permanently erase your data and profile"
             onPress={handleDeletePress}
             iconColor="#EA4335"
             iconBg="rgba(234, 67, 53, 0.08)"
+          />
+          <ProfileMenuRow
+            icon="log-out-outline"
+            title="Sign Out"
+            subtitle="Log out of your active session"
+            onPress={handleLogout}
+            iconColor="#FBBC05"
+            iconBg="rgba(251, 188, 5, 0.08)"
           />
         </ProfileMenuSection>
       </Animated.ScrollView>
