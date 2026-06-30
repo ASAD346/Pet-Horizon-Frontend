@@ -28,7 +28,7 @@ interface AddExpenseViewProps {
   petId?: string | null;
   token?: string | null;
   onClose: () => void;
-  onSaved?: (expense: ApiExpense) => void;
+  onSaved?: (expense: ApiExpense, budgetStatus?: any) => void;
   isPremium?: boolean;
 }
 
@@ -84,8 +84,9 @@ export function AddExpenseView({
     try {
       const selected = API_EXPENSE_CATEGORIES.find((item) => item.label === category);
       const now = new Date();
-      // Ensure backend uses the local month by hardcoding noon UTC of the local date
-      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}T12:00:00.000Z`;
+      // Ensure backend uses the local month by formatting the local time precisely, keeping the local hour/min/sec
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.000Z`;
       
       const data = await createExpense(token, {
         petId,
@@ -95,7 +96,7 @@ export function AddExpenseView({
         date: localDate,
       });
       showToast('Expense added successfully!');
-      onSaved?.(data.expense);
+      onSaved?.(data.expense, data.budgetStatus);
     } catch (err) {
       const errMsg = getErrorMessage(err);
       setError(errMsg);

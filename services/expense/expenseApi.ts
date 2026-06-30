@@ -126,10 +126,14 @@ export async function fetchBudgets(token: string, petId: string): Promise<ApiBud
 export async function fetchRemainingBudget(
   token: string,
   petId: string,
+  clientDate?: string,
 ): Promise<BudgetRemainingResponse> {
   log.info(SCOPE, 'GET /budget/remaining', { petId });
   try {
-    const query = `?petId=${encodeURIComponent(petId)}`;
+    let query = `?petId=${encodeURIComponent(petId)}`;
+    if (clientDate) {
+      query += `&clientDate=${encodeURIComponent(clientDate)}`;
+    }
     const data = await apiRequest<BudgetRemainingResponse>(
       `${API_ENDPOINTS.budget.remaining}${query}`,
       { token },

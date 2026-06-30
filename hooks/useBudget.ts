@@ -15,7 +15,12 @@ export function useBudget(token: string | null, petId: string | null | undefined
     queryKey,
     queryFn: async () => {
       if (!token || !petId) return [];
-      const data = await fetchRemainingBudget(token, petId);
+      
+      const now = new Date();
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const clientDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.000Z`;
+
+      const data = await fetchRemainingBudget(token, petId, clientDate);
       const rows = data.budgets ?? [];
       
       // Auto-select period type if the current one isn't active but the other is
@@ -53,6 +58,10 @@ export function useBudget(token: string | null, petId: string | null | undefined
     });
   };
 
+  const updateLocalBudgetStatus = (newBudgets: BudgetRemainingItem[]) => {
+    queryClient.setQueryData(queryKey, newBudgets);
+  };
+
   return {
     budget: display,
     periodType,
@@ -61,5 +70,6 @@ export function useBudget(token: string | null, petId: string | null | undefined
     error: error ? getErrorMessage(error) : null,
     reload: () => refetch(),
     decrementLocalBudget,
+    updateLocalBudgetStatus,
   };
 }
