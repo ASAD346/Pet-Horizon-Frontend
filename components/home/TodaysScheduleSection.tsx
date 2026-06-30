@@ -373,19 +373,25 @@ function parseDateString(str: string | undefined | null): Date | null {
 }
 
 function isScheduleActiveToday(row: ScheduleRow): boolean {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
   const item = row.item as any;
 
   // 1. Explicit single date check
   const scheduleType = item.scheduleType;
   if (scheduleType === 'single' || !scheduleType) {
-    const explicitDateStr = item.date || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
-    const explicitDate = parseDateString(explicitDateStr);
-
-    if (explicitDate) {
-      return explicitDate.getTime() === today.getTime();
+    const explicitDateStr = item.date || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
+    if (explicitDateStr) {
+      const itemDate = new Date(explicitDateStr);
+      if (!isNaN(itemDate.getTime())) {
+        return itemDate >= startOfToday && itemDate <= endOfToday;
+      }
+      const explicitDate = parseDateString(explicitDateStr);
+      if (explicitDate) {
+        return explicitDate.getTime() === startOfToday.getTime();
+      }
     }
   }
 
@@ -393,11 +399,11 @@ function isScheduleActiveToday(row: ScheduleRow): boolean {
   const startDate = parseDateString(item.startDate);
   const endDate = parseDateString(item.endDate);
 
-  if (startDate && today.getTime() < startDate.getTime()) {
+  if (startDate && startOfToday.getTime() < startDate.getTime()) {
     return false;
   }
 
-  if (endDate && today.getTime() > endDate.getTime()) {
+  if (endDate && startOfToday.getTime() > endDate.getTime()) {
     return false;
   }
 
@@ -405,7 +411,7 @@ function isScheduleActiveToday(row: ScheduleRow): boolean {
   const meta = item.metadata;
   if (meta && 'daysOfWeek' in meta && Array.isArray(meta.daysOfWeek) && meta.daysOfWeek.length > 0) {
     const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-    const todayDayCode = DAY_CODES[today.getDay()];
+    const todayDayCode = DAY_CODES[now.getDay()];
     if (!meta.daysOfWeek.includes(todayDayCode)) {
       return false;
     }

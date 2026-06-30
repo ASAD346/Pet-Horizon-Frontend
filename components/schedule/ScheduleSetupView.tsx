@@ -475,26 +475,19 @@ export function ScheduleSetupView({
   };
 
   const confirmDeleteEntry = (sectionMeta: ScheduleSectionTheme, entry: EditorEntry) => {
-    const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry);
+    const remoteId = scheduleEntryRemoteId(sectionMeta.key, entry) || (entry as any)._id || (entry as any).id || (entry as any).scheduleId || (entry as any).recordId;
     console.log('[confirmDeleteEntry] key:', sectionMeta.key, 'remoteId:', remoteId, 'hasToken:', !!token);
     if (!remoteId || !token) {
       console.warn('[confirmDeleteEntry] Aborted. remoteId or token missing.');
       return;
     }
 
-    Alert.alert(
-      "Delete Schedule Entry?",
-      "Are you sure you want to proceed with this action? This change cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Yes, Proceed",
-          onPress: async () => {
-            await handleDeleteEntry(sectionMeta.key, remoteId, entry);
-          }
-        }
-      ]
-    );
+    setPendingDeleteInfo({
+      sectionMeta,
+      remoteId,
+      entry,
+    });
+    setDeleteModalVisible(true);
   };
 
   const handleDeleteEntry = async (
