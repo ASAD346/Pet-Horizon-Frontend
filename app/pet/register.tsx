@@ -451,9 +451,16 @@ export default function RegisterPetScreen() {
           >
             <View style={styles.formContainer}>
               <View style={styles.header}>
-                <AppText variant="h3" weight="800" align="center" style={styles.title}>
-                  {isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!'}
-                </AppText>
+                <View style={styles.headerRow}>
+                  {(isEditMode || isAddMode) && (
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                      <Ionicons name="chevron-back" size={22} color="#2E7D32" />
+                    </TouchableOpacity>
+                  )}
+                  <AppText variant="h3" weight="800" align="center" style={styles.title}>
+                    {isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!'}
+                  </AppText>
+                </View>
                 <View style={styles.accentLine} />
                 <AppText variant="bodySmall" color={Palette.gray[500]} align="center" style={styles.subtitle}>
                   Let&apos;s create a profile to help you track their healthy lifestyle.
@@ -605,6 +612,23 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     marginBottom: Spacing.xs,
     alignItems: 'center',
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 0,
+    zIndex: 1,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(46, 125, 50, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 20,
