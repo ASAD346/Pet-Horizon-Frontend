@@ -323,14 +323,6 @@ const styles = StyleSheet.create({
   linkText: {
     textDecorationLine: 'underline',
   },
-  openAppBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
   copyBtn: {
     width: 40,
     height: 40,
