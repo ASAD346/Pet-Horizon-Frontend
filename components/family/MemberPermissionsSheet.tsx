@@ -68,8 +68,10 @@ export function MemberPermissionsSheet({
   const [error, setError] = useState<string | null>(null);
   const { showSuccessToast, showErrorToast } = useToast();
 
+  const targetUserId = member?.userId?._id || (member as any)?.id || (member as any)?._id || '';
+
   const memberName =
-    member?.userId.fullName?.trim() || member?.userId.email?.split('@')[0] || 'Member';
+    member?.userId?.fullName?.trim() || member?.userId?.email?.split('@')[0] || (member as any)?.name || 'Member';
 
   useEffect(() => {
     if (visible && member) {
@@ -104,8 +106,9 @@ export function MemberPermissionsSheet({
       return Boolean((member.permissions as any)[key]);
     }
     
-    // Absolute safe fallback - if data hasn't arrived, it must stay gray/disabled
-    return false;
+    // Fallback to allowedModules if permissions is not set (e.g. hitting stale remote backend)
+    const allowed = member.allowedModules ?? [];
+    return allowed.includes(key);
   };
 
   const getPermissionValue = (moduleId: string) => {
@@ -151,7 +154,7 @@ export function MemberPermissionsSheet({
         (key) => updatedPermissions[key as keyof typeof updatedPermissions],
       );
 
-      const res = await updatePetMemberPermissions(token, petId, member.userId._id, {
+      const res = await updatePetMemberPermissions(token, petId, targetUserId, {
         accessLevel,
         allowedModules,
         permissions: updatedPermissions,
@@ -177,9 +180,9 @@ export function MemberPermissionsSheet({
     setRemoving(true);
     setError(null);
     try {
-      await removePetMember(token, petId, member.userId._id);
+      await removePetMember(token, petId, targetUserId);
       showSuccessToast("Member removed from Family Hub successfully.");
-      onUpdated(member.userId._id);
+      onUpdated(targetUserId);
       onClose();
     } catch (err: any) {
       const errMsg = err?.message || getErrorMessage(err) || "Failed to remove the member. Please try again.";
