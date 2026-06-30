@@ -96,14 +96,19 @@ export function MemberPermissionsSheet({
     }
   }, [visible, member, member?.permissions]);
 
-  const getPermissionValue = (moduleId: string) => {
-    if (isReadOnly && member) {
-      if (member.permissions) {
-        return !!(member.permissions as any)[moduleId];
-      }
-      const allowed = member.allowedModules ?? [];
-      return allowed.includes(moduleId);
+  const getLivePermission = (key: string) => {
+    if (!member) return false;
+    
+    // Extract directly from our serialized backend object
+    if (member.permissions && typeof (member.permissions as any)[key] !== 'undefined') {
+      return Boolean((member.permissions as any)[key]);
     }
+    
+    // Absolute safe fallback - if data hasn't arrived, it must stay gray/disabled
+    return false;
+  };
+
+  const getPermissionValue = (moduleId: string) => {
     switch (moduleId) {
       case 'feeding': return feeding;
       case 'walks': return walks;
@@ -211,7 +216,7 @@ export function MemberPermissionsSheet({
 
       <FormSection title="Allowed Modules">
         {MODULE_OPTIONS.map((module) => {
-          const isEnabled = getPermissionValue(module.id);
+          const isEnabled = isReadOnly ? getLivePermission(module.id) : getPermissionValue(module.id);
           return (
             <FormToggleRow
               key={module.id}

@@ -274,11 +274,25 @@ export function FamilyHubView() {
                     setPermissionsVisible(true);
                   }
                 } else if (user && memberId === user._id) {
-                  const realRecord = guestPermissions?.member;
-                  if (realRecord) {
-                    setSelectedMember(realRecord);
-                    setPermissionsVisible(true);
-                  }
+                  const clickedMemberRow = displayMembers.find((m) => m.id === memberId);
+                  const secureMemberPayload = {
+                    ...clickedMemberRow,
+                    userId: {
+                      _id: user._id,
+                      fullName: user.fullName,
+                      email: user.email,
+                      profileImage: user.profileImage,
+                    },
+                    id: clickedMemberRow?.id || (clickedMemberRow as any)?._id || guestPermissions?.member?.id || user._id,
+                    permissions: guestPermissions?.member?.permissions || (clickedMemberRow as any)?.permissions || guestPermissions?.permissions,
+                    allowedModules: guestPermissions?.member?.allowedModules || (clickedMemberRow as any)?.allowedModules || guestPermissions?.allowedModules || [],
+                    accessLevel: guestPermissions?.member?.accessLevel || guestPermissions?.accessLevel || 'readonly',
+                  };
+
+                  console.log("EMERGENCY_MODAL_PAYLOAD_CHECK:", secureMemberPayload);
+
+                  setSelectedMember(secureMemberPayload as any);
+                  setPermissionsVisible(true);
                 }
               }}
             />
