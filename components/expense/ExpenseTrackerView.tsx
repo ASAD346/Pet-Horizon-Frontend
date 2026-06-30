@@ -174,6 +174,7 @@ export function ExpenseTrackerView({
               transactions={expenses}
               loading={expensesLoading || petLoading}
               isPremium={isPremium}
+              onAddExpensePress={() => setAddExpenseVisible(true)}
             />
           </>
         ) : null}

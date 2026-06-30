@@ -18,6 +18,7 @@ interface RecentTransactionsSectionProps {
   transactions: ExpenseTransaction[];
   loading?: boolean;
   isPremium?: boolean;
+  onAddExpensePress?: () => void;
 }
 
 function filterTransactions(
@@ -33,6 +34,7 @@ export function RecentTransactionsSection({
   transactions,
   loading,
   isPremium = false,
+  onAddExpensePress,
 }: RecentTransactionsSectionProps) {
   const router = useRouter();
   const { formatCurrency } = useLocalization();
@@ -69,7 +71,7 @@ export function RecentTransactionsSection({
             ? "Start tracking your pet's costs — vet visits, food, grooming, and more. Staying on budget has never been easier."
             : `No ${categoryFilter} expenses recorded this month. Add one to start tracking.`}
           buttonLabel="Log First Expense"
-          onButtonPress={() => router.push('/expense/add' as Href)}
+          onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
         />
       ) : (
         filtered.map((item) => (
