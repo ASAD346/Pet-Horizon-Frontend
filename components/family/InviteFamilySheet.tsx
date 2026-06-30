@@ -158,22 +158,7 @@ export function InviteFamilySheet({
     }
   };
 
-  const handleOpenAppLink = async () => {
-    if (!appLink) return;
-    try {
-      const supported = await Linking.canOpenURL(appLink);
-      if (!supported) {
-        Alert.alert(
-          'Pet Horizon',
-          'Install the Pet Horizon app first, then try again.',
-        );
-        return;
-      }
-      await Linking.openURL(appLink);
-    } catch {
-      Alert.alert('Pet Horizon', 'Could not open the app. Make sure Pet Horizon is installed.');
-    }
-  };
+
 
   const handleShare = async () => {
     if (!invite || !webLink) return;
@@ -294,19 +279,6 @@ export function InviteFamilySheet({
           </AppText>
         ) : null}
 
-        {appLink ? (
-          <TouchableOpacity
-            style={styles.openAppBtn}
-            onPress={handleOpenAppLink}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="open-outline" size={18} color={activeGreen} />
-            <AppText variant="bodySmall" weight="700" color={activeGreen}>
-              Open directly in Pet Horizon app
-            </AppText>
-          </TouchableOpacity>
-        ) : null}
       </FormSection>
 
       <FormSection title="Or Scan QR Code">

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useSelector } from 'react-redux';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 
 import { StatusBar } from 'expo-status-bar';
@@ -106,6 +107,16 @@ export default function HomeScreen() {
   const { token, user, setSession } = useAuth();
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
+
+  const currentPetWorkspace = useSelector((state: any) => (state.pet?.activeWorkspace || state.family?.activeWorkspace)); 
+  const currentUser = useSelector((state: any) => state.auth.user);
+
+  // Directly locate this user's live database permission block
+  const myPermissions = currentPetWorkspace?.members?.find(
+      (m: any) => String(m.userId || m.id) === String(currentUser?._id || currentUser?.id)
+  )?.permissions || currentPetWorkspace?.permissions;
+
+  console.log("CRITICAL_HOME_GATEKEEPER_PROBE:", myPermissions);
 
   const petPermissions = usePetPermissions(token, pet, user?._id);
   const {
