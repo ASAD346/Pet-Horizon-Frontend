@@ -142,6 +142,15 @@ export function FamilyHubView() {
 
   useEffect(() => {
     loadGuestAccess();
+
+    // Poll guest access permissions every 5 seconds to keep view in sync
+    const intervalId = setInterval(() => {
+      void loadGuestAccess();
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [loadGuestAccess]);
 
   useEffect(() => {
