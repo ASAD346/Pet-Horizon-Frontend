@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { getErrorMessage } from '@/lib/api/errors';
+import type { ApiExpense } from '@/types/expense';
 import {
   currentMonthKey,
   mapExpenseToTransaction,
@@ -46,5 +47,10 @@ export function useExpenses(
     setLoading,
   });
 
-  return { expenses, loading, error, reload, month };
+  const addLocalExpense = useCallback((newApiExpense: ApiExpense) => {
+    const newTx = mapExpenseToTransaction(newApiExpense);
+    setExpenses((prev) => [newTx, ...prev]);
+  }, []);
+
+  return { expenses, loading, error, reload, month, addLocalExpense };
 }

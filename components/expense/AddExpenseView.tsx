@@ -21,12 +21,14 @@ import { useToast } from '@/hooks/useToast';
 
 const BRAND_GREEN = '#2E7D32';
 
+import type { ApiExpense } from '@/types/expense';
+
 interface AddExpenseViewProps {
   visible: boolean;
   petId?: string | null;
   token?: string | null;
   onClose: () => void;
-  onSaved?: () => void;
+  onSaved?: (expense: ApiExpense) => void;
   isPremium?: boolean;
 }
 
@@ -81,14 +83,14 @@ export function AddExpenseView({
     setError(null);
     try {
       const selected = API_EXPENSE_CATEGORIES.find((item) => item.label === category);
-      await createExpense(token, {
+      const data = await createExpense(token, {
         petId,
         category: selected?.value ?? 'other',
         amount: value,
         note: [merchant.trim(), note.trim()].filter(Boolean).join(' — ') || undefined,
       });
       showToast('Expense added successfully!');
-      onSaved?.();
+      onSaved?.(data.expense);
     } catch (err) {
       const errMsg = getErrorMessage(err);
       setError(errMsg);

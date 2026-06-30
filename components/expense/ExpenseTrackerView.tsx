@@ -78,7 +78,7 @@ export function ExpenseTrackerView({
     return match ? match.label : '';
   }, [selectedMonth, monthOptions]);
 
-  const { expenses, loading: expensesLoading, error, reload: reloadExpenses } = useExpenses(
+  const { expenses, loading: expensesLoading, error, reload: reloadExpenses, addLocalExpense } = useExpenses(
     token,
     pet?._id,
     selectedMonth,
@@ -220,8 +220,11 @@ export function ExpenseTrackerView({
           token={token}
           isPremium={isPremium}
           onClose={() => setAddExpenseVisible(false)}
-          onSaved={() => {
+          onSaved={(newExpense) => {
             setAddExpenseVisible(false);
+            if (newExpense) {
+              addLocalExpense(newExpense);
+            }
             reloadExpenses(true);
             reloadBudget(true);
           }}

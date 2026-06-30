@@ -11,7 +11,8 @@ import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
-import { useJournalEntries } from '@/hooks/useJournalEntries';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { fetchJournalEntries } from '@/services/journal/journalApi';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import {
   buildDateStrip,
@@ -52,16 +53,23 @@ export function JournalContent({ active = true }: JournalContentProps) {
     pet,
     user?._id,
   );
-  const { entries, loading, error, reload } = useJournalEntries(
-    token,
-    pet?._id ?? null,
-    active && Boolean(pet?._id),
-  );
+  const queryClient = useQueryClient();
+  const { data: journalData, isFetching: loading, error, refetch: reload } = useQuery({
+    queryKey: ['journalEntries', pet?._id],
+    queryFn: async () => {
+      if (!token || !pet?._id) return { items: [], total: 0 };
+      return fetchJournalEntries(token, pet._id, 1, 100);
+    },
+    enabled: active && Boolean(token) && Boolean(pet?._id),
+    staleTime: 0,
+  });
+  
+  const entries = journalData?.items ?? [];
   const { showErrorToast } = useToast();
 
   useEffect(() => {
     if (error) {
-      showErrorToast(error);
+      showErrorToast(getErrorMessage(error));
     }
   }, [error, showErrorToast]);
 
@@ -155,7 +163,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
         });
       }
       await uploadJournalImage(token, target._id, result.assets[0].uri);
-      await reload();
+      await queryClient.invalidateQueries({ queryKey: ['journalEntries', pet?._id] });
     } catch (err) {
       showErrorToast(getErrorMessage(err));
     } finally {
@@ -236,7 +244,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
       entry={editEntry}
       token={token}
       onClose={() => setEditEntryId(null)}
-      onSaved={reload}
+      onSaved={() => queryClient.invalidateQueries({ queryKey: ['journalEntries', pet?._id] })}
     />
     </>
   );
