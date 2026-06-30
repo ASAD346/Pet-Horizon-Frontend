@@ -11,6 +11,7 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { removePetMember, updatePetMemberPermissions } from '@/services/family/familyApi';
 import { useToast } from '@/hooks/useToast';
+import { usePetMembers } from '@/hooks/usePetMembers';
 import type { PetMemberRow } from '@/types/family';
 
 const MODULE_OPTIONS = [
@@ -67,25 +68,32 @@ export function MemberPermissionsSheet({
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showSuccessToast, showErrorToast } = useToast();
+  
+  const { members: membersList } = usePetMembers(token, petId, !isReadOnly);
 
   const targetUserId = member?.userId?._id || (member as any)?.id || (member as any)?._id || '';
+
+  const activeCachedMember = membersList?.find(
+    (m) => String(m.userId?._id || (m as any).id || (m as any)._id) === String(targetUserId)
+  );
 
   const memberName =
     member?.userId?.fullName || (member as any)?.fullName || (member as any)?.name || "Care Member";
 
   useEffect(() => {
-    if (visible && member) {
-      setAccessLevel(member.accessLevel === 'edit' ? 'edit' : 'readonly');
-      if (member.permissions) {
-        setFeeding(!!member.permissions.feeding);
-        setWalks(!!member.permissions.walks);
-        setMedicine(!!member.permissions.medicine);
-        setGrooming(!!member.permissions.grooming);
-        setVaccination(!!member.permissions.vaccination);
-        setJournal(!!member.permissions.journal);
-        setExpenses(!!member.permissions.expenses);
+    const targetRecord = activeCachedMember || member;
+    if (visible && targetRecord) {
+      setAccessLevel(targetRecord.accessLevel === 'edit' ? 'edit' : 'readonly');
+      if (targetRecord.permissions) {
+        setFeeding(!!targetRecord.permissions.feeding);
+        setWalks(!!targetRecord.permissions.walks);
+        setMedicine(!!targetRecord.permissions.medicine);
+        setGrooming(!!targetRecord.permissions.grooming);
+        setVaccination(!!targetRecord.permissions.vaccination);
+        setJournal(!!targetRecord.permissions.journal);
+        setExpenses(!!targetRecord.permissions.expenses);
       } else {
-        const allowed = member.allowedModules ?? [];
+        const allowed = targetRecord.allowedModules ?? [];
         setFeeding(!!allowed.includes('feeding'));
         setWalks(!!allowed.includes('walks'));
         setMedicine(!!allowed.includes('medicine'));
@@ -96,23 +104,24 @@ export function MemberPermissionsSheet({
       }
       setError(null);
     }
-  }, [visible, member, member?.permissions]);
+  }, [visible, activeCachedMember, member]);
 
   const getLivePermission = (key: string) => {
-    if (!member) return false;
+    const targetRecord = activeCachedMember || member;
+    if (!targetRecord) return false;
 
     // 1. Direct extraction path from core permissions layer
-    if (member.permissions && typeof (member.permissions as any)[key] !== 'undefined') {
-      return Boolean((member.permissions as any)[key]);
+    if (targetRecord.permissions && typeof (targetRecord.permissions as any)[key] !== 'undefined') {
+      return Boolean((targetRecord.permissions as any)[key]);
     }
     
     // 2. Fallback lookup: Check if it's nested directly under member object properties
-    if (typeof (member as any)[key] !== 'undefined') {
-      return Boolean((member as any)[key]);
+    if (typeof (targetRecord as any)[key] !== 'undefined') {
+      return Boolean((targetRecord as any)[key]);
     }
 
     // 3. Array Fallback lookup (Case Insensitive / Standard Match)
-    const modulesArray = member.allowedModules || (member.userId as any)?.allowedModules;
+    const modulesArray = targetRecord.allowedModules || (targetRecord.userId as any)?.allowedModules;
     if (Array.isArray(modulesArray)) {
       const targetMatch = key.charAt(0).toUpperCase() + key.slice(1); // e.g., 'feeding' -> 'Feeding'
       return modulesArray.includes(key) || modulesArray.includes(targetMatch);
