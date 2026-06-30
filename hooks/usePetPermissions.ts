@@ -78,7 +78,16 @@ export function usePetPermissions(
     }
 
     void reload();
-  }, [scopeKey, reload]);
+
+    // Aggressive polling / background-sync to catch admin permission updates in real-time
+    const intervalId = setInterval(() => {
+      void reload();
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [scopeKey, reload, pet?._id]);
 
   const access = useMemo(
     () =>
