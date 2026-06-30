@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -19,6 +19,8 @@ import { FormSheetColors, formSheetStyles } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
 import { StickyActionFooter } from './FormSystem';
 import { ToastHost } from '@/components/ui/ToastHost';
+import { useAppDispatch } from '@/redux/store';
+import { setFormReadOnlyAction } from '@/redux/action';
 
 export const SheetOverlayContext = createContext<{
   setOverlay: (key: string, node: ReactNode) => void;
@@ -63,6 +65,16 @@ export function FormSheetShell({
   const insets = useSafeAreaInsets();
   const { accentColor, accentBg, gradientColors } = useAppThemeColor();
   const [overlays, setOverlays] = useState<Record<string, ReactNode>>({});
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (visible) {
+      dispatch(setFormReadOnlyAction(isReadOnly));
+    }
+    return () => {
+      dispatch(setFormReadOnlyAction(false));
+    };
+  }, [visible, isReadOnly, dispatch]);
 
   const contextValue = React.useMemo(() => ({
     setOverlay: (key: string, node: ReactNode) => setOverlays(prev => ({ ...prev, [key]: node })),
@@ -135,7 +147,7 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : null}>
+              <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : undefined}>
                 {children}
               </View>
 
@@ -148,14 +160,22 @@ export function FormSheetShell({
               ) : null}
             </ScrollView>
 
-            {onSave && saveLabel && !isReadOnly ? (
-              <StickyActionFooter
-                onSave={onSave}
-                saveLabel={saveLabel}
-                saving={saving}
-                saveDisabled={saveDisabled}
-                accentColor={accentColor}
-              />
+            {onSave && saveLabel ? (
+              isReadOnly ? (
+                <View style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#F8FAFC', borderTopWidth: 1, borderTopColor: '#E2E8F0', alignItems: 'center' }}>
+                  <AppText variant="bodySmall" weight="700" color="#64748B">
+                    You have view-only access to this pet's logs.
+                  </AppText>
+                </View>
+              ) : (
+                <StickyActionFooter
+                  onSave={onSave}
+                  saveLabel={saveLabel}
+                  saving={saving}
+                  saveDisabled={saveDisabled}
+                  accentColor={accentColor}
+                />
+              )
             ) : null}
 
             {Object.values(overlays)}

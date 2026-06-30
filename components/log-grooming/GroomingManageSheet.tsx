@@ -127,6 +127,7 @@ export function GroomingManageSheet({
         saving={saving}
         saveDisabled={deleting}
         error={error}
+        isReadOnly={isReadOnly}
         compact
       >
         <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? styles.readOnlyContainer : null}>

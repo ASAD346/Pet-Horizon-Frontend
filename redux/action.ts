@@ -13,6 +13,7 @@ import {
   AUTH_SET_SESSION,
   HIDE_TOAST,
   SHOW_TOAST,
+  SET_FORM_READ_ONLY,
 } from './action-types';
 import type { AppState, ToastState } from './types';
 
@@ -45,12 +46,18 @@ export interface HideToastAction {
   type: typeof HIDE_TOAST;
 }
 
+export interface SetFormReadOnlyAction {
+  type: typeof SET_FORM_READ_ONLY;
+  payload: boolean;
+}
+
 export type AppAction =
   | SetSessionAction
   | ClearSessionAction
   | BootstrapCompleteAction
   | ShowToastAction
-  | HideToastAction;
+  | HideToastAction
+  | SetFormReadOnlyAction;
 
 export const setSessionAction = (session: AuthSession): SetSessionAction => ({
   type: AUTH_SET_SESSION,
@@ -72,6 +79,11 @@ export const showToastAction = (message: string, type: ToastState['type'] = 'inf
 
 export const hideToastAction = (): HideToastAction => ({
   type: HIDE_TOAST,
+});
+
+export const setFormReadOnlyAction = (isReadOnly: boolean): SetFormReadOnlyAction => ({
+  type: SET_FORM_READ_ONLY,
+  payload: isReadOnly,
 });
 
 export function bootstrapAuth(): AppThunk {

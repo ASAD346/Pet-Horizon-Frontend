@@ -24,6 +24,9 @@ export class ApiError extends Error {
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
   if (error instanceof ApiError) {
+    if (error.isForbidden) {
+      return "You do not have permission to perform this action.";
+    }
     return error.message;
   }
   if (error instanceof Error) {

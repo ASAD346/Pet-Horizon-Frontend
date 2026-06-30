@@ -5,8 +5,9 @@ import {
   AUTH_SET_SESSION,
   HIDE_TOAST,
   SHOW_TOAST,
+  SET_FORM_READ_ONLY,
 } from './action-types';
-import type { AppState, AuthState, ToastState } from './types';
+import type { AppState, AuthState, ToastState, UiState } from './types';
 
 const initialAuthState: AuthState = {
   user: null,
@@ -16,6 +17,10 @@ const initialAuthState: AuthState = {
 
 const initialToastState: ToastState = {
   message: null,
+};
+
+const initialUiState: UiState = {
+  isFormReadOnly: false,
 };
 
 function authReducer(state = initialAuthState, action: AnyAction): AuthState {
@@ -53,15 +58,26 @@ function toastReducer(state = initialToastState, action: AnyAction): ToastState 
   }
 }
 
+function uiReducer(state = initialUiState, action: AnyAction): UiState {
+  switch (action.type) {
+    case SET_FORM_READ_ONLY:
+      return { ...state, isFormReadOnly: action.payload };
+    default:
+      return state;
+  }
+}
+
 export const rootReducer = combineReducers({
   auth: authReducer,
   toast: toastReducer,
+  ui: uiReducer,
 });
 
-export type { AppState, AuthState, ToastState } from './types';
+export type { AppState, AuthState, ToastState, UiState } from './types';
 export const selectAuthUser = (state: AppState) => state.auth.user;
 export const selectAuthToken = (state: AppState) => state.auth.token;
 export const selectIsAuthenticated = (state: AppState) => Boolean(state.auth.token);
 export const selectIsBootstrapping = (state: AppState) => state.auth.isBootstrapping;
 export const selectToastMessage = (state: AppState) => state.toast.message;
 export const selectToastType = (state: AppState) => state.toast.type;
+export const selectIsFormReadOnly = (state: AppState) => state.ui.isFormReadOnly;

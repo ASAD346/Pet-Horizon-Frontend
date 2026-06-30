@@ -216,31 +216,22 @@ export function LogFoodSheet({
       isReadOnly={!hasPermission}
       compact
     >
-      {!hasPermission && (
-        <View style={{ backgroundColor: '#FFFDE7', padding: 12, borderRadius: 8, marginBottom: 16 }}>
-          <AppText variant="bodySmall" color="#F57C00">
-            You don't have permission to manage this pet's feeding.
-          </AppText>
-        </View>
+      {featuresLoading ? (
+        <SkeletonChipGrid count={4} />
+      ) : (
+        <FeedingEntryCard
+          entry={entry}
+          index={0}
+          accentColor={FOOD_THEME.color}
+          accentBg={FOOD_THEME.bg}
+          mealTypeOptions={mealTypeOptions}
+          unitOptions={unitOptions}
+          canRemove={false}
+          embeddedInSheet
+          onChange={setEntry}
+          onRemove={() => {}}
+        />
       )}
-      <View style={!hasPermission ? { opacity: 0.5 } : undefined} pointerEvents={!hasPermission ? 'none' : 'auto'}>
-        {featuresLoading ? (
-          <SkeletonChipGrid count={4} />
-        ) : (
-          <FeedingEntryCard
-            entry={entry}
-            index={0}
-            accentColor={FOOD_THEME.color}
-            accentBg={FOOD_THEME.bg}
-            mealTypeOptions={mealTypeOptions}
-            unitOptions={unitOptions}
-            canRemove={false}
-            embeddedInSheet
-            onChange={setEntry}
-            onRemove={() => {}}
-          />
-        )}
-      </View>
     </FormSheetShell>
   );
 }

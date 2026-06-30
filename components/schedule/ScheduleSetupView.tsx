@@ -837,6 +837,7 @@ export function ScheduleSetupView({
             if (pet?._id) void reloadSchedules(pet._id);
           }}
           onClose={closeEditor}
+          hasPermission={canEditSchedule('feeding')}
         />
       ) : null}
 
@@ -851,6 +852,7 @@ export function ScheduleSetupView({
             if (pet?._id) void reloadSchedules(pet._id);
           }}
           onClose={closeEditor}
+          isReadOnly={!canEditSchedule('walk')}
         />
       ) : null}
 
@@ -865,6 +867,7 @@ export function ScheduleSetupView({
             if (pet?._id) void reloadSchedules(pet._id);
           }}
           onClose={closeEditor}
+          isReadOnly={!canEditSchedule('medicine')}
         />
       ) : null}
 
@@ -879,6 +882,7 @@ export function ScheduleSetupView({
             if (pet?._id) void reloadSchedules(pet._id);
           }}
           onClose={closeEditor}
+          isReadOnly={!canEditSchedule('vaccination')}
         />
       ) : null}
 
@@ -895,6 +899,7 @@ export function ScheduleSetupView({
             if (pet?._id) void reloadSchedules(pet._id);
           }}
           onClose={closeEditor}
+          isReadOnly={!canEditSchedule('grooming')}
         />
       ) : null}
 

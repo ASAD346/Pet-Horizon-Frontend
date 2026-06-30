@@ -11,7 +11,12 @@ export interface ToastState {
   type?: 'success' | 'error' | 'info';
 }
 
+export interface UiState {
+  isFormReadOnly: boolean;
+}
+
 export interface AppState {
   auth: AuthState;
   toast: ToastState;
+  ui: UiState;
 }

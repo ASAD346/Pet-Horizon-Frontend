@@ -7,6 +7,8 @@ import { CustomButton } from '@/components/ui/AppButton';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { FormSheetColors } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
+import { useAppSelector } from '@/redux/store';
+import { selectIsFormReadOnly } from '@/redux/reducer';
 
 
 interface BaseInputProps {
@@ -62,6 +64,7 @@ export function FormTextInput({
 }: FormTextInputProps) {
   const { accentColor } = useAppThemeColor();
   const [focused, setFocused] = React.useState(false);
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
 
   return (
     <View style={styles.fieldContainer}>
@@ -81,11 +84,13 @@ export function FormTextInput({
         textAlignVertical={multiline ? 'top' : 'center'}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        editable={!isReadOnly}
         style={[
           styles.input,
           multiline ? styles.multilineInput : styles.standardHeight,
           focused && { borderColor: accentColor },
           error ? { borderColor: '#E53935' } : null,
+          isReadOnly ? { backgroundColor: '#F3F4F6', color: '#9CA3AF' } : null,
         ]}
       />
       {error ? (
@@ -115,6 +120,7 @@ export function FormNumberInput({
 }: FormNumberInputProps) {
   const { accentColor } = useAppThemeColor();
   const [focused, setFocused] = React.useState(false);
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
 
   return (
     <View style={styles.fieldContainer}>
@@ -129,6 +135,7 @@ export function FormNumberInput({
           styles.standardHeight,
           focused && { borderColor: accentColor },
           error ? { borderColor: '#E53935' } : null,
+          isReadOnly ? { backgroundColor: '#F3F4F6' } : null,
         ]}
       >
         <TextInput
@@ -139,7 +146,8 @@ export function FormNumberInput({
           keyboardType="decimal-pad"
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          style={styles.flexInput}
+          editable={!isReadOnly}
+          style={[styles.flexInput, isReadOnly ? { color: '#9CA3AF' } : null]}
         />
         {unit ? (
           <View style={styles.unitBadge}>
@@ -165,6 +173,7 @@ interface FormDateInputProps extends BaseInputProps {
 }
 
 export function FormDateInput({ label, value, onPress, error }: FormDateInputProps) {
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
       {label ? (
@@ -173,11 +182,12 @@ export function FormDateInput({ label, value, onPress, error }: FormDateInputPro
         </AppText>
       ) : null}
       <TouchableOpacity
-        style={[styles.inputContainerRow, styles.standardHeight]}
+        style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
         activeOpacity={0.8}
+        disabled={isReadOnly}
       >
-        <AppText variant="bodySmall" weight="600" color={FormSheetColors.text} style={styles.pickerText}>
+        <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text} style={styles.pickerText}>
           {value.toLocaleDateString()}
         </AppText>
         <Ionicons name="calendar-outline" size={16} color={FormSheetColors.label} style={styles.rightIcon} />
@@ -199,6 +209,7 @@ interface FormTimeInputProps extends BaseInputProps {
 
 export function FormTimeInput({ label, value, onPress, error }: FormTimeInputProps) {
   const formattedTime = value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
       {label ? (
@@ -207,11 +218,12 @@ export function FormTimeInput({ label, value, onPress, error }: FormTimeInputPro
         </AppText>
       ) : null}
       <TouchableOpacity
-        style={[styles.inputContainerRow, styles.standardHeight]}
+        style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
         activeOpacity={0.8}
+        disabled={isReadOnly}
       >
-        <AppText variant="bodySmall" weight="600" color={FormSheetColors.text} style={styles.pickerText}>
+        <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text} style={styles.pickerText}>
           {formattedTime}
         </AppText>
         <Ionicons name="time-outline" size={16} color={FormSheetColors.label} style={styles.rightIcon} />
@@ -233,6 +245,7 @@ interface FormSelectInputProps extends BaseInputProps {
 }
 
 export function FormSelectInput({ label, valueLabel, onPress, icon = 'chevron-down', error }: FormSelectInputProps) {
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
       {label ? (
@@ -241,11 +254,12 @@ export function FormSelectInput({ label, valueLabel, onPress, icon = 'chevron-do
         </AppText>
       ) : null}
       <TouchableOpacity
-        style={[styles.inputContainerRow, styles.standardHeight]}
+        style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
         activeOpacity={0.8}
+        disabled={isReadOnly}
       >
-        <AppText variant="bodySmall" weight="600" color={FormSheetColors.text} style={styles.pickerText}>
+        <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text} style={styles.pickerText}>
           {valueLabel}
         </AppText>
         <Ionicons name={icon} size={16} color={FormSheetColors.label} style={styles.rightIcon} />
@@ -273,6 +287,7 @@ export function FormSegmentedControl({
   onSelect,
   error,
 }: FormSegmentedControlProps) {
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
       {label ? (
@@ -280,7 +295,7 @@ export function FormSegmentedControl({
           {label}
         </AppText>
       ) : null}
-      <View style={styles.segmentedContainer}>
+      <View style={[styles.segmentedContainer, isReadOnly ? { opacity: 0.65 } : null]}>
         {options.map((option) => {
           const isSelected = selected === option.value;
           return (
@@ -289,6 +304,7 @@ export function FormSegmentedControl({
               style={[styles.segmentButton, isSelected && styles.segmentButtonActive]}
               onPress={() => onSelect(option.value)}
               activeOpacity={0.9}
+              disabled={isReadOnly}
             >
               <AppText
                 variant="caption"
@@ -321,11 +337,12 @@ interface FormToggleRowProps {
 
 export function FormToggleRow({ label, value, onValueChange, icon }: FormToggleRowProps) {
   const { accentColor } = useAppThemeColor();
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.toggleRow}>
       <View style={styles.toggleLeft}>
         {icon ? <Ionicons name={icon} size={18} color={FormSheetColors.label} /> : null}
-        <AppText variant="bodySmall" weight="600" color={FormSheetColors.text}>
+        <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text}>
           {label}
         </AppText>
       </View>
@@ -335,6 +352,7 @@ export function FormToggleRow({ label, value, onValueChange, icon }: FormToggleR
         trackColor={{ false: '#E5E7EB', true: accentColor }}
         thumbColor={HomeTheme.white}
         ios_backgroundColor="#E5E7EB"
+        disabled={isReadOnly}
       />
     </View>
   );
