@@ -207,8 +207,8 @@ export function ExpenseTrackerView({
             if (savedPeriod) {
               setPeriodType(savedPeriod);
             }
-            reloadBudget(true);
-            reloadExpenses(true);
+            reloadBudget(true, true);
+            reloadExpenses(true, true);
           }}
         />
       ) : null}
@@ -225,8 +225,7 @@ export function ExpenseTrackerView({
             if (newExpense) {
               addLocalExpense(newExpense);
             }
-            reloadExpenses(true);
-            reloadBudget(true);
+            reloadBudget(true, true);
           }}
         />
       ) : null}

@@ -50,6 +50,7 @@ export function buildFamilyMembersList(
     subtitle: 'ADMIN 👑',
     isAdmin: true,
     avatarColor: AVATAR_COLORS[0],
+    profilePicture: owner.profileImage ?? undefined,
   };
 
   const memberRows = members.map((member, index) => {
@@ -66,6 +67,7 @@ export function buildFamilyMembersList(
       subtitle,
       isAdmin: member.accessLevel === 'admin',
       avatarColor: AVATAR_COLORS[(index + 1) % AVATAR_COLORS.length],
+      profilePicture: user.profileImage ?? undefined,
     };
   });
 
@@ -87,7 +89,8 @@ export function buildGuestMemberDisplay(
     subtitle,
     isAdmin: accessLevel === 'admin',
     avatarColor: AVATAR_COLORS[1],
-    hostBadge: hostName ? `Joined via ${hostName}'s invitation` : 'Joined via Invitation',
+    hostBadge: hostName ? `Invited by ${hostName}` : 'Joined via Invitation',
+    profilePicture: user.profileImage ?? undefined,
   };
 }
 

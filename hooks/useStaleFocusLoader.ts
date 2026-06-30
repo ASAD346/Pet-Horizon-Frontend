@@ -47,7 +47,7 @@ export function useStaleFocusLoader<T>({
     lastLoadedRef.current = 0;
   }, [scopeKey]);
 
-  const reload = useCallback(async (force = false) => {
+  const reload = useCallback(async (force = false, silent = false) => {
     if (!enabled) {
       reset();
       onClearRef.current();
@@ -61,7 +61,7 @@ export function useStaleFocusLoader<T>({
       return;
     }
 
-    const block = shouldBlockUI() || force;
+    const block = (shouldBlockUI() || force) && !silent;
 
     if (block) {
       if (shouldBlockUI()) {

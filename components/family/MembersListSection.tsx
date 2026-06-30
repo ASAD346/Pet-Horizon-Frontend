@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { SkeletonList } from '@/components/ui/skeletons';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import type { FamilyMemberDisplay } from '@/types/family';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 interface MembersListSectionProps {
   members: FamilyMemberDisplay[];
@@ -17,7 +18,18 @@ interface MembersListSectionProps {
   currentUserId?: string | null;
 }
 
-function MemberAvatar({ color }: { color: string }) {
+function MemberAvatar({ color, pictureUrl }: { color: string; pictureUrl?: string }) {
+  if (pictureUrl) {
+    const resolvedUrl = resolveMediaUrl(pictureUrl);
+    if (resolvedUrl) {
+      return (
+        <View style={[styles.avatarOuter, { borderColor: color }]}>
+          <Image source={{ uri: resolvedUrl }} style={styles.avatarImage} />
+        </View>
+      );
+    }
+  }
+
   return (
     <View style={[styles.avatarOuter, { borderColor: color }]}>
       <View style={[styles.avatarInner, { backgroundColor: color }]}>
@@ -96,7 +108,7 @@ export function MembersListSection({
               activeOpacity={isPressable ? 0.85 : 1}
               onPress={isPressable ? () => onMemberSettingsPress?.(member.id) : undefined}
             >
-              <MemberAvatar color={member.avatarColor} />
+              <MemberAvatar color={member.avatarColor} pictureUrl={member.profilePicture} />
               
               <View style={styles.memberInfo}>
                 <AppText variant="body" weight="800" color={HomeTheme.text}>
@@ -205,6 +217,11 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  avatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
   },
   memberInfo: {
     flex: 1,
