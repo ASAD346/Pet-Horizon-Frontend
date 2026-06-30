@@ -71,7 +71,7 @@ export function MemberPermissionsSheet({
   const targetUserId = member?.userId?._id || (member as any)?.id || (member as any)?._id || '';
 
   const memberName =
-    member?.userId?.fullName?.trim() || member?.userId?.email?.split('@')[0] || (member as any)?.name || 'Member';
+    member?.userId?.fullName || (member as any)?.fullName || (member as any)?.name || "Care Member";
 
   useEffect(() => {
     if (visible && member) {
@@ -100,15 +100,25 @@ export function MemberPermissionsSheet({
 
   const getLivePermission = (key: string) => {
     if (!member) return false;
-    
-    // Extract directly from our serialized backend object
+
+    // 1. Direct extraction path from core permissions layer
     if (member.permissions && typeof (member.permissions as any)[key] !== 'undefined') {
       return Boolean((member.permissions as any)[key]);
     }
     
-    // Fallback to allowedModules if permissions is not set (e.g. hitting stale remote backend)
-    const allowed = member.allowedModules ?? [];
-    return allowed.includes(key);
+    // 2. Fallback lookup: Check if it's nested directly under member object properties
+    if (typeof (member as any)[key] !== 'undefined') {
+      return Boolean((member as any)[key]);
+    }
+
+    // 3. Array Fallback lookup (Case Insensitive / Standard Match)
+    const modulesArray = member.allowedModules || (member.userId as any)?.allowedModules;
+    if (Array.isArray(modulesArray)) {
+      const targetMatch = key.charAt(0).toUpperCase() + key.slice(1); // e.g., 'feeding' -> 'Feeding'
+      return modulesArray.includes(key) || modulesArray.includes(targetMatch);
+    }
+
+    return false; // Safe lock boundary
   };
 
   const getPermissionValue = (moduleId: string) => {

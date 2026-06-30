@@ -275,8 +275,12 @@ export function FamilyHubView() {
                   }
                 } else if (user && memberId === user._id) {
                   const clickedMemberRow = displayMembers.find((m) => m.id === memberId);
-                  const verifiedMember = (guestPermissions?.member || clickedMemberRow) as any;
-                  setSelectedMember(verifiedMember);
+                  const unifiedPayload = {
+                    ...clickedMemberRow,
+                    permissions: guestPermissions?.permissions || guestPermissions?.member?.permissions || (clickedMemberRow as any)?.permissions,
+                    allowedModules: guestPermissions?.member?.allowedModules || (clickedMemberRow as any)?.allowedModules || guestPermissions?.allowedModules || []
+                  };
+                  setSelectedMember(unifiedPayload as any);
                   setPermissionsVisible(true);
                 }
               }}
