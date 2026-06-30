@@ -6,7 +6,8 @@ import { clearSession, loadSession, saveSession } from '@/services/auth/authStor
 import type { AuthSession } from '@/types/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeActivePetCache } from '@/lib/pet/activePetCache';
-import { initializePetPermissionCache } from '@/lib/pet/petPermissionCache';
+import { initializePetPermissionCache, clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
+import { queryClient } from '@/app/_layout';
 import {
   AUTH_BOOTSTRAP_COMPLETE,
   AUTH_CLEAR_SESSION,
@@ -181,6 +182,8 @@ export function loginWithGoogle(idToken: string): AppThunk<Promise<AuthSession>>
 
 export function logout(): AppThunk<Promise<void>> {
   return async (dispatch) => {
+    clearPetPermissionCache();
+    queryClient.clear();
     await clearSession();
     dispatch(clearSessionAction());
     log.ok('Auth', 'Logged out');

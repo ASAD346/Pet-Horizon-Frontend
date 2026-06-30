@@ -20,7 +20,7 @@ void ensureNotificationHandler();
 // Prevent the native splash screen from automatically hiding
 void SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,

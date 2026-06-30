@@ -67,6 +67,8 @@ export interface PetPermissionsResponse {
   accessLevel: string;
   allowedModules: string[];
   lockedModules: string[];
+  permissions?: Record<string, boolean>;
   speciesFeatures: SpeciesFeatures;
   ownerName?: string;
+  member?: any;
 }

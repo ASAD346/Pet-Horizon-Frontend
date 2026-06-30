@@ -129,8 +129,15 @@ export function buildPetAccessControls(params: {
   const canView = (moduleId: AppModuleId): boolean => {
     if (!isSpeciesModuleVisible(moduleId, species, remoteHidden)) return false;
     if (isOwner) return true;
-    if (lockedModules.includes(moduleId)) return false;
-    return allowedModules.includes(moduleId);
+
+    // Explicitly read from the live session workspace permissions mapped from the database
+    const serverPermissions = permissions?.permissions;
+
+    if (!serverPermissions || typeof serverPermissions[moduleId] === 'undefined') {
+      return false; // Absolute Fail-Safe: If not explicitly true from DB, it is strictly FALSE/LOCKED
+    }
+
+    return !!serverPermissions[moduleId];
   };
 
   const canEdit = (moduleId: AppModuleId): boolean => {

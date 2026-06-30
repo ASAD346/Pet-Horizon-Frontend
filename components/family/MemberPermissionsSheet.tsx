@@ -49,6 +49,12 @@ export function MemberPermissionsSheet({
   onClose,
   onUpdated,
 }: MemberPermissionsSheetProps) {
+  console.log('DEBUG_MEMBER_PERMISSIONS:', {
+    incomingMemberProp: member,
+    resolvedPermissions: member?.permissions,
+    legacyModules: member?.allowedModules
+  });
+
   const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
   const [feeding, setFeeding] = useState(false);
   const [walks, setWalks] = useState(false);
@@ -78,13 +84,13 @@ export function MemberPermissionsSheet({
         setExpenses(!!member.permissions.expenses);
       } else {
         const allowed = member.allowedModules ?? [];
-        setFeeding(allowed.includes('feeding'));
-        setWalks(allowed.includes('walks'));
-        setMedicine(allowed.includes('medicine'));
-        setGrooming(allowed.includes('grooming'));
-        setVaccination(allowed.includes('vaccination'));
-        setJournal(allowed.includes('journal'));
-        setExpenses(allowed.includes('expenses'));
+        setFeeding(!!allowed.includes('feeding'));
+        setWalks(!!allowed.includes('walks'));
+        setMedicine(!!allowed.includes('medicine'));
+        setGrooming(!!allowed.includes('grooming'));
+        setVaccination(!!allowed.includes('vaccination'));
+        setJournal(!!allowed.includes('journal'));
+        setExpenses(!!allowed.includes('expenses'));
       }
       setError(null);
     }

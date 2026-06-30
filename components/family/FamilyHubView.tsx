@@ -274,18 +274,11 @@ export function FamilyHubView() {
                     setPermissionsVisible(true);
                   }
                 } else if (user && memberId === user._id) {
-                  const fakeRow: PetMemberRow = {
-                    userId: {
-                      _id: user._id,
-                      fullName: user.fullName,
-                      email: user.email,
-                      profileImage: user.profileImage,
-                    },
-                    accessLevel: guestPermissions?.accessLevel ?? 'readonly',
-                    allowedModules: guestPermissions?.allowedModules ?? [],
-                  };
-                  setSelectedMember(fakeRow);
-                  setPermissionsVisible(true);
+                  const realRecord = guestPermissions?.member;
+                  if (realRecord) {
+                    setSelectedMember(realRecord);
+                    setPermissionsVisible(true);
+                  }
                 }
               }}
             />
