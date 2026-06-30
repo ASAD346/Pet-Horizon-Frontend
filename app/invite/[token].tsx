@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   ScrollView,
   StyleSheet,
@@ -11,6 +10,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,11 +34,17 @@ export default function InviteAcceptScreen() {
   const [loading, setLoading] = useState(true);
   const [isValidating, setIsValidating] = useState(true);
   const [accepting, setAccepting] = useState(false);
-  const { showErrorToast } = useToast();
+
+  // Confirmation modal state
+  const [confirmVisible, setConfirmVisible] = useState(false);
+
+  const { showErrorToast, showSuccessToast } = useToast();
 
   const currentUserId = user?._id;
   const invitationCreatorId = info?.invitedBy || info?.creatorId;
   const isOwnInvite = !!(currentUserId && invitationCreatorId && currentUserId === invitationCreatorId);
+
+  const petName = info?.pet?.name ?? 'the pet family';
 
   const loadInfo = useCallback(async () => {
     if (!inviteToken) {
@@ -72,7 +78,8 @@ export default function InviteAcceptScreen() {
     }
   }, [loading, isOwnInvite, showErrorToast, router]);
 
-  const handleAccept = async () => {
+  // Called when "Accept Invitation" button is pressed — opens confirm modal
+  const handleAcceptPress = () => {
     if (!inviteToken) return;
 
     if (!isAuthenticated) {
@@ -85,8 +92,14 @@ export default function InviteAcceptScreen() {
       return;
     }
 
-    if (!authToken) return;
+    setConfirmVisible(true);
+  };
+
+  // Called when user confirms in the modal
+  const handleConfirmAccept = async () => {
+    if (!authToken || !inviteToken) return;
     setAccepting(true);
+    setConfirmVisible(false);
     try {
       const result = await acceptPetInvite(authToken, inviteToken);
       const joinedPetId = result.petId ?? info?.pet?.petId;
@@ -101,9 +114,9 @@ export default function InviteAcceptScreen() {
         });
       }
 
-      Alert.alert('Welcome!', result.message || 'You joined the pet care team.', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') },
-      ]);
+      // 🎉 Success toast then navigate home
+      showSuccessToast(`🎉 Congratulations! You are now a family member of ${petName}!`);
+      setTimeout(() => router.replace('/(tabs)'), 600);
     } catch (err) {
       showErrorToast(getErrorMessage(err));
     } finally {
@@ -176,7 +189,7 @@ export default function InviteAcceptScreen() {
 
             <CustomButton
               title={isAuthenticated ? 'Accept Invitation' : 'Sign in to Accept'}
-              onPress={handleAccept}
+              onPress={handleAcceptPress}
               isLoading={accepting}
               disabled={!info.valid}
               style={styles.acceptBtn}
@@ -190,6 +203,19 @@ export default function InviteAcceptScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      {/* Confirmation Modal */}
+      <AppConfirmModal
+        visible={confirmVisible}
+        title="Join Pet Family?"
+        message={`You are about to join ${petName}'s care team. You will get access to the assigned care modules. Ready to join?`}
+        confirmLabel="Yes, Join Now"
+        cancelLabel="Not Now"
+        variant="success"
+        loading={accepting}
+        onConfirm={handleConfirmAccept}
+        onCancel={() => setConfirmVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -201,9 +227,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.lg,
-  },
-  loader: {
-    marginTop: Spacing.xxl,
   },
   title: {
     marginBottom: Spacing.lg,

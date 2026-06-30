@@ -22,6 +22,7 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { usePetMembers } from '@/hooks/usePetMembers';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { LogJournalSheet } from '@/components/journal';
+import { QrScannerModal } from '@/components/family/QrScannerModal';
 import { generatePetInvite } from '@/services/family/familyApi';
 import { fetchPremiumStatus } from '@/services/premium/premiumApi';
 import {
@@ -40,9 +41,11 @@ import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
 import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
+import { useRouter } from 'expo-router';
 
 export function FamilyHubView() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { notificationCount, onNotificationsPress } = useTabHeaderActions();
   const { token, user } = useAuth();
@@ -60,6 +63,7 @@ export function FamilyHubView() {
 
   const { canViewJournal, ownerName } = usePetPermissions(token, pet, user?._id);
   const [journalVisible, setJournalVisible] = useState(false);
+  const [qrScannerVisible, setQrScannerVisible] = useState(false);
 
   const [inviteSheetVisible, setInviteSheetVisible] = useState(false);
   const [invite, setInvite] = useState<GenerateInviteResponse | null>(null);
@@ -204,6 +208,7 @@ export function FamilyHubView() {
         onNotificationsPress={onNotificationsPress}
         onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
         showJournal={canViewJournal}
+        onQrScanPress={!isOwner ? () => setQrScannerVisible(true) : undefined}
         isPremium={isPremium}
         topInset={insets.top}
       />
@@ -320,6 +325,17 @@ export function FamilyHubView() {
       <LogJournalSheet
         visible={journalVisible}
         onClose={() => setJournalVisible(false)}
+      />
+
+      <QrScannerModal
+        visible={qrScannerVisible}
+        onClose={() => setQrScannerVisible(false)}
+        onScanSuccess={(scannedToken) => {
+          setQrScannerVisible(false);
+          if (scannedToken) {
+            router.push(`/invite/${encodeURIComponent(scannedToken)}` as any);
+          }
+        }}
       />
     </View>
   );

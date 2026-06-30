@@ -353,7 +353,7 @@ export function PremiumHubContent() {
     outputRange: [0.7, 1.1],
   });
 
-  const userName = user?.name?.split(' ')[0] ?? 'there';
+  const userName = user?.fullName?.split(' ')[0] ?? 'there';
 
   // ── Plan Card ─────────────────────────────────────────────────────────
   const renderPlanCard = (plan: PremiumPlan | undefined, isRecommended = false) => {
@@ -652,7 +652,6 @@ export function PremiumHubContent() {
         onClose={() => setCheckoutVisible(false)}
         onConfirm={handleConfirmPayment}
         loading={checkoutLoading}
-        error={checkoutError}
       />
 
       {/* ── Legal Sheets ─────────────────────────────────────────── */}
@@ -786,9 +785,7 @@ export function PremiumHubContent() {
                 onPress={scrollToBenefits}
                 activeOpacity={0.7}
               >
-                <AppText variant="bodySmall" weight="700" color="#1E5838">
-                  View All Premium Features
-                </AppText>
+                
               </TouchableOpacity>
             </ScrollView>
           </Animated.View>

@@ -7,6 +7,7 @@ import {
   ScrollView,
   Keyboard,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
+import { QrScannerModal } from '@/components/family/QrScannerModal';
 import {
   BirthdayField,
   BreedSelector,
@@ -76,6 +78,8 @@ export default function RegisterPetScreen() {
   const [fieldErrors, setFieldErrors] = useState<RegisterPetFieldErrors>({});
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [hasEditPermission, setHasEditPermission] = useState(true);
+  const [chosenTrack, setChosenTrack] = useState<'none' | 'add' | 'join'>((isAddMode || isEditMode) ? 'add' : 'none');
+  const [scannerVisible, setScannerVisible] = useState(false);
   const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
@@ -354,6 +358,69 @@ export default function RegisterPetScreen() {
   return (
     <View style={styles.root}>
       <LoginHeaderDecor />
+
+      {/* QR Scanner modal — shown from either entry track */}
+      <QrScannerModal
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onScanSuccess={(scannedToken) => {
+          setScannerVisible(false);
+          router.replace(`/invite/${encodeURIComponent(scannedToken)}` as any);
+        }}
+      />
+
+      {/* ─── Track-selection landing (only on first launch, not add/edit mode) ─── */}
+      {chosenTrack === 'none' ? (
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          <View style={styles.trackContainer}>
+            <View style={styles.trackHeader}>
+              <AppText variant="h2" weight="800" align="center" color="#1A2B4E" style={styles.trackTitle}>
+                Welcome! 🐾
+              </AppText>
+              <AppText variant="bodySmall" align="center" color="#64748B" style={styles.trackSubtitle}>
+                How would you like to get started?
+              </AppText>
+            </View>
+
+            <View style={styles.trackCards}>
+              {/* Add New Pet */}
+              <TouchableOpacity
+                style={styles.trackCard}
+                activeOpacity={0.88}
+                onPress={() => setChosenTrack('add')}
+              >
+                <View style={[styles.trackIconBg, { backgroundColor: '#EDFDF2' }]}>
+                  <Ionicons name="paw" size={32} color="#2E7D32" />
+                </View>
+                <AppText variant="body" weight="800" color="#1A2B4E" style={styles.trackCardTitle}>
+                  Add New Pet
+                </AppText>
+                <AppText variant="caption" color="#64748B" align="center" style={styles.trackCardDesc}>
+                  Create a profile for your furry friend and start tracking their care.
+                </AppText>
+              </TouchableOpacity>
+
+              {/* Join a Pet Family */}
+              <TouchableOpacity
+                style={[styles.trackCard, styles.trackCardJoin]}
+                activeOpacity={0.88}
+                onPress={() => setScannerVisible(true)}
+              >
+                <View style={[styles.trackIconBg, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="qr-code-outline" size={32} color="#4F46E5" />
+                </View>
+                <AppText variant="body" weight="800" color="#1A2B4E" style={styles.trackCardTitle}>
+                  Join a Pet Family
+                </AppText>
+                <AppText variant="caption" color="#64748B" align="center" style={styles.trackCardDesc}>
+                  Scan a QR code from an invitation to join an existing care team.
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      ) : (
+
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -481,6 +548,8 @@ export default function RegisterPetScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
 
+      )}
+
       <AppConfirmModal
         visible={deleteConfirmVisible}
         title="Delete Pet"
@@ -591,5 +660,65 @@ const styles = StyleSheet.create({
   viewOnlyText: {
     marginLeft: 8,
     flex: 1,
+  },
+  // ── Track-selection landing ──────────────────────────────────
+  trackContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.xxl,
+  },
+  trackHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  trackTitle: {
+    fontSize: 28,
+    lineHeight: 34,
+  },
+  trackSubtitle: {
+    lineHeight: 18,
+    maxWidth: 240,
+  },
+  trackCards: {
+    width: '100%',
+    gap: Spacing.md,
+  },
+  trackCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: Spacing.lg,
+    alignItems: 'center',
+    gap: Spacing.sm,
+    borderWidth: 1.5,
+    borderColor: '#E8F5E9',
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  trackCardJoin: {
+    borderColor: '#E8EAF6',
+    shadowColor: '#4F46E5',
+  },
+  trackIconBg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
+  trackCardTitle: {
+    fontSize: 17,
+    lineHeight: 22,
+    textAlign: 'center',
+  },
+  trackCardDesc: {
+    lineHeight: 16,
+    maxWidth: 220,
   },
 });

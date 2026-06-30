@@ -8,6 +8,7 @@ interface HeaderActionButtonsProps {
   notificationCount?: number;
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
+  onQrScanPress?: () => void;
   showJournal?: boolean;
   /** When true, renders icon buttons as dark-themed (white icons on navy) */
   dark?: boolean;
@@ -17,6 +18,7 @@ export function HeaderActionButtons({
   notificationCount = 0,
   onJournalPress,
   onNotificationsPress,
+  onQrScanPress,
   showJournal = true,
   dark = false,
 }: HeaderActionButtonsProps) {
@@ -27,6 +29,17 @@ export function HeaderActionButtons({
 
   return (
     <View style={styles.actions}>
+      {onQrScanPress ? (
+        <TouchableOpacity
+          style={[styles.iconBtn, btnStyle]}
+          activeOpacity={0.75}
+          onPress={onQrScanPress}
+          accessibilityLabel="Scan invite QR code"
+        >
+          <Ionicons name="qr-code-outline" size={18} color={iconColor} />
+        </TouchableOpacity>
+      ) : null}
+
       {showJournal && onJournalPress ? (
         <TouchableOpacity
           style={[styles.iconBtn, btnStyle]}

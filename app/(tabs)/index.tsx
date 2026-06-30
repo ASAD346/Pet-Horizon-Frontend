@@ -346,6 +346,7 @@ export default function HomeScreen() {
 
   const [groomingManageRecord, setGroomingManageRecord] = useState<GroomingRecord | null>(null);
 
+
   const openGroomingManage = useCallback((recordId: string) => {
     const record = groomingRecords.find((item) => item._id === recordId) ?? null;
     setGroomingManageRecord(record);
@@ -641,6 +642,7 @@ export default function HomeScreen() {
           onSelectPet={handleSwitchPet}
           onAddPet={handleAddPet}
         />
+
     </View>
   );
 }
