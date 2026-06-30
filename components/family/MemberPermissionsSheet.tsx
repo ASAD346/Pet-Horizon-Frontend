@@ -50,7 +50,13 @@ export function MemberPermissionsSheet({
   onUpdated,
 }: MemberPermissionsSheetProps) {
   const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
-  const [modules, setModules] = useState<string[]>([]);
+  const [feeding, setFeeding] = useState(false);
+  const [walks, setWalks] = useState(false);
+  const [medicine, setMedicine] = useState(false);
+  const [grooming, setGrooming] = useState(false);
+  const [vaccination, setVaccination] = useState(false);
+  const [journal, setJournal] = useState(false);
+  const [expenses, setExpenses] = useState(false);
   const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,17 +68,51 @@ export function MemberPermissionsSheet({
   useEffect(() => {
     if (visible && member) {
       setAccessLevel(member.accessLevel === 'edit' ? 'edit' : 'readonly');
-      setModules(member.allowedModules ?? []);
+      if (member.permissions) {
+        setFeeding(!!member.permissions.feeding);
+        setWalks(!!member.permissions.walks);
+        setMedicine(!!member.permissions.medicine);
+        setGrooming(!!member.permissions.grooming);
+        setVaccination(!!member.permissions.vaccination);
+        setJournal(!!member.permissions.journal);
+        setExpenses(!!member.permissions.expenses);
+      } else {
+        const allowed = member.allowedModules ?? [];
+        setFeeding(allowed.includes('feeding'));
+        setWalks(allowed.includes('walks'));
+        setMedicine(allowed.includes('medicine'));
+        setGrooming(allowed.includes('grooming'));
+        setVaccination(allowed.includes('vaccination'));
+        setJournal(allowed.includes('journal'));
+        setExpenses(allowed.includes('expenses'));
+      }
       setError(null);
     }
   }, [visible, member]);
 
-  const toggleModule = (moduleId: string) => {
-    setModules((current) =>
-      current.includes(moduleId)
-        ? current.filter((item) => item !== moduleId)
-        : [...current, moduleId],
-    );
+  const getPermissionValue = (moduleId: string) => {
+    switch (moduleId) {
+      case 'feeding': return feeding;
+      case 'walks': return walks;
+      case 'medicine': return medicine;
+      case 'grooming': return grooming;
+      case 'vaccination': return vaccination;
+      case 'journal': return journal;
+      case 'expenses': return expenses;
+      default: return false;
+    }
+  };
+
+  const togglePermissionValue = (moduleId: string) => {
+    switch (moduleId) {
+      case 'feeding': setFeeding(!feeding); break;
+      case 'walks': setWalks(!walks); break;
+      case 'medicine': setMedicine(!medicine); break;
+      case 'grooming': setGrooming(!grooming); break;
+      case 'vaccination': setVaccination(!vaccination); break;
+      case 'journal': setJournal(!journal); break;
+      case 'expenses': setExpenses(!expenses); break;
+    }
   };
 
   const handleSave = async () => {
@@ -80,15 +120,31 @@ export function MemberPermissionsSheet({
     setSaving(true);
     setError(null);
     try {
-      await updatePetMemberPermissions(token, petId, member.userId._id, {
+      const updatedPermissions = {
+        feeding,
+        walks,
+        medicine,
+        grooming,
+        vaccination,
+        journal,
+        expenses,
+      };
+      const allowedModules = Object.keys(updatedPermissions).filter(
+        (key) => updatedPermissions[key as keyof typeof updatedPermissions],
+      );
+
+      const res = await updatePetMemberPermissions(token, petId, member.userId._id, {
         accessLevel,
-        allowedModules: modules,
-      });
+        allowedModules,
+        permissions: updatedPermissions,
+      } as any);
+
       showSuccessToast("Member permissions updated successfully.");
       onUpdated({
         ...member,
         accessLevel,
-        allowedModules: modules,
+        allowedModules,
+        permissions: res.member?.permissions || updatedPermissions,
       });
       onClose();
     } catch (err) {
@@ -142,13 +198,13 @@ export function MemberPermissionsSheet({
 
       <FormSection title="Allowed Modules">
         {MODULE_OPTIONS.map((module) => {
-          const isEnabled = modules.includes(module.id);
+          const isEnabled = getPermissionValue(module.id);
           return (
             <FormToggleRow
               key={module.id}
               label={module.label}
               value={isEnabled}
-              onValueChange={() => toggleModule(module.id)}
+              onValueChange={() => togglePermissionValue(module.id)}
             />
           );
         })}
