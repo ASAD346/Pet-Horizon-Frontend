@@ -18,7 +18,7 @@ async function getBackend(): Promise<StorageBackend> {
   return value === 'async' ? 'async' : 'secure';
 }
 
-async function writeItem(key: string, value: string): Promise<void> {
+export async function writeItem(key: string, value: string): Promise<void> {
   try {
     if (await SecureStore.isAvailableAsync()) {
       await SecureStore.setItemAsync(key, value);
@@ -35,7 +35,7 @@ async function writeItem(key: string, value: string): Promise<void> {
   await markBackend('async');
 }
 
-async function readItem(key: string): Promise<string | null> {
+export async function readItem(key: string): Promise<string | null> {
   const backend = await getBackend();
 
   if (backend === 'async') {
@@ -57,7 +57,7 @@ async function readItem(key: string): Promise<string | null> {
   return AsyncStorage.getItem(key);
 }
 
-async function deleteItem(key: string): Promise<void> {
+export async function deleteItem(key: string): Promise<void> {
   const isSecureAvailable = await SecureStore.isAvailableAsync();
   if (isSecureAvailable) {
     await Promise.allSettled([

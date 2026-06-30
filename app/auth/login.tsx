@@ -7,9 +7,9 @@ import {
   Keyboard,
   ScrollView,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as SecureStore from 'expo-secure-store';
+import { readItem, writeItem, deleteItem } from '@/services/auth/authStorage';
 import {
   LoginBranding,
   LoginFooterBar,
@@ -42,20 +42,25 @@ export default function LoginScreen() {
   const [rememberMe, setRememberMe] = useState(false);
   const loginInFlightRef = useRef(false);
 
-  React.useEffect(() => {
-    async function hydrateRememberMe() {
-      try {
-        const storedEmail = await SecureStore.getItemAsync('REMEMBER_ME_EMAIL');
-        if (storedEmail) {
-          setEmail(storedEmail);
-          setRememberMe(true);
+  useFocusEffect(
+    useCallback(() => {
+      async function hydrateRememberMe() {
+        try {
+          const storedEmail = await readItem('REMEMBER_ME_EMAIL');
+          if (storedEmail) {
+            setEmail(storedEmail);
+            setRememberMe(true);
+          } else {
+            setEmail('');
+            setRememberMe(false);
+          }
+        } catch (err) {
+          log.warn('Login', 'Failed to hydrate remember me email', err instanceof Error ? err.message : String(err));
         }
-      } catch (err) {
-        log.warn('Login', 'Failed to hydrate remember me email', err);
       }
-    }
-    void hydrateRememberMe();
-  }, []);
+      void hydrateRememberMe();
+    }, [])
+  );
 
   React.useEffect(() => {
     const verified = params.verified === '1' || params.verified === 'true';
@@ -117,12 +122,12 @@ export default function LoginScreen() {
       // Securely persist or wipe the email flag for the next launch
       try {
         if (rememberMe) {
-          await SecureStore.setItemAsync('REMEMBER_ME_EMAIL', email.trim());
+          await writeItem('REMEMBER_ME_EMAIL', email.trim());
         } else {
-          await SecureStore.deleteItemAsync('REMEMBER_ME_EMAIL');
+          await deleteItem('REMEMBER_ME_EMAIL');
         }
       } catch (storageErr) {
-        log.warn('Login', 'Failed to update secure store', storageErr);
+        log.warn('Login', 'Failed to update secure store', storageErr instanceof Error ? storageErr.message : String(storageErr));
       }
 
       log.ok('Login', 'UI success — routing', {
