@@ -54,13 +54,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     void loadCache();
   }, [petId]);
 
-  const localDateStr = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const localDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.000Z`;
 
   const query = useQuery({
-    queryKey: ['dashboard', petId, localDateStr],
+    queryKey: ['dashboard', petId, localDateStr.split('T')[0]],
     queryFn: async () => {
       console.log('[useDashboardQuery] Fetching dashboard from API...');
-      return fetchUnifiedDashboard(token!);
+      return fetchUnifiedDashboard(token!, localDateStr);
     },
     enabled: Boolean(token && petId && petId !== 'fallback-pet-id-123' && !isSwitching),
     staleTime: 1000 * 60 * 5,

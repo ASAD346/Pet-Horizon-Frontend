@@ -35,11 +35,14 @@ export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]
   }
 }
 
-export async function fetchUnifiedDashboard(token: string): Promise<UnifiedDashboardData> {
+export async function fetchUnifiedDashboard(token: string, clientDate?: string): Promise<UnifiedDashboardData> {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const localDate = new Date().toISOString().split('T')[0];
   const offset = new Date().getTimezoneOffset();
-  const queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
+  let queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
+  if (clientDate) {
+    queryParams += `&clientDate=${encodeURIComponent(clientDate)}`;
+  }
 
   log.info(SCOPE, `GET /dashboard${queryParams}`);
   try {
