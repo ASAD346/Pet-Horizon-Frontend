@@ -38,6 +38,15 @@ function isToday(dateStr: string | undefined): boolean {
   );
 }
 
+function formatRawString(text: string) {
+  if (!text) return '';
+  return text
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 export const RecentActivitySection = React.memo(function RecentActivitySection({
   activities = [],
   isPremium = false,
@@ -84,7 +93,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                   {item.actorName}
                 </Text>
                 <Text style={{ color: HomeTheme.textMuted }}>
-                  {' '}{item.actionText}
+                  {' '}{formatRawString(item.actionText)}
                 </Text>
               </AppText>
               <AppText variant="caption" color={HomeTheme.textMuted}>

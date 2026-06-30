@@ -152,7 +152,7 @@ export function PetProfileCard({
           </View>
           <View style={styles.info}>
             <View style={styles.nameRow}>
-              <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name}>
+              <AppText variant="h3" weight="800" color={HomeTheme.white} style={styles.name} ellipsizeMode="tail" numberOfLines={1}>
                 {name}
               </AppText>
               {isPremium && (
@@ -362,6 +362,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 26,
     letterSpacing: 0.2,
+    maxWidth: '85%',
   },
   meta: {
     opacity: 0.95,
