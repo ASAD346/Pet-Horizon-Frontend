@@ -55,9 +55,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   }, [petId]);
 
   const now = new Date();
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const localDateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.000Z`;
-
+  const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const query = useQuery({
     queryKey: ['dashboard', petId, localDateStr.split('T')[0]],
     queryFn: async () => {

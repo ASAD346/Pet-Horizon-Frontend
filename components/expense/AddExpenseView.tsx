@@ -86,7 +86,7 @@ export function AddExpenseView({
       const now = new Date();
       // Ensure backend uses the local month by formatting the local time precisely, keeping the local hour/min/sec
       const pad = (n: number) => String(n).padStart(2, '0');
-      const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.000Z`;
+      const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
       
       const data = await createExpense(token, {
         petId,

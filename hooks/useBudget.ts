@@ -18,7 +18,7 @@ export function useBudget(token: string | null, petId: string | null | undefined
       
       const now = new Date();
       const pad = (n: number) => String(n).padStart(2, '0');
-      const clientDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}.000Z`;
+      const clientDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
       const data = await fetchRemainingBudget(token, petId, clientDate);
       const rows = data.budgets ?? [];
