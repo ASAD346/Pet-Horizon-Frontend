@@ -92,7 +92,13 @@ export function categoryToMaterialIcon(category: Exclude<JournalCategory, 'all'>
 }
 
 export function formatEntryTitle(entry: ApiJournalEntry): string {
-  const note = entry.note?.trim();
+  let note = entry.note?.trim() || '';
+  if (note.toLowerCase().startsWith('skipped')) {
+    note = note.slice(7).trim();
+    if (note) {
+      note = note.charAt(0).toUpperCase() + note.slice(1);
+    }
+  }
   if (note) return note;
   const type = entry.activityType?.trim() || 'Activity';
   return type.charAt(0).toUpperCase() + type.slice(1);
@@ -100,11 +106,12 @@ export function formatEntryTitle(entry: ApiJournalEntry): string {
 
 export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
   const category = mapActivityTypeToCategory(entry.activityType);
+  const isSkipped = (entry.note || '').toLowerCase().startsWith('skipped');
   return {
     id: entry._id,
     time: formatTimeLabel(entry.createdAt),
     title: formatEntryTitle(entry),
-    status: 'completed',
+    status: isSkipped ? 'skipped' : 'completed',
     category,
     materialIcon: categoryToMaterialIcon(category),
     imageUrl: entry.imagePath ?? null,

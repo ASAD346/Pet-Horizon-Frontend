@@ -30,6 +30,7 @@ function TimelineRow({
   onPress?: (eventId: string) => void;
 }) {
   const completed = event.status === 'completed';
+  const skipped = event.status === 'skipped';
   const { user } = useAuth();
   const isPremium = user?.premiumStatus === 'premium';
   
@@ -40,6 +41,23 @@ function TimelineRow({
     ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
 
+  let badgeBg = '#FEF3C7';
+  let badgeText = '#D97706';
+  let badgeLabel = 'SCHEDULED';
+  let dotColor = brandColor;
+
+  if (completed) {
+    badgeBg = '#DCFCE7';
+    badgeText = '#16A34A';
+    badgeLabel = 'COMPLETED';
+    dotColor = '#16A34A';
+  } else if (skipped) {
+    badgeBg = '#FEE2E2';
+    badgeText = '#EF4444';
+    badgeLabel = 'SKIPPED';
+    dotColor = '#EF4444';
+  }
+
   return (
     <View style={styles.row}>
       {/* Time column */}
@@ -49,8 +67,8 @@ function TimelineRow({
 
       {/* Timeline line and outer ring */}
       <View style={styles.timelineCol}>
-        <View style={[styles.dotOuter, { borderColor: completed ? '#16A34A' : brandColor }]}>
-          <View style={[styles.dotInner, { backgroundColor: completed ? '#16A34A' : brandColor }]} />
+        <View style={[styles.dotOuter, { borderColor: dotColor }]}>
+          <View style={[styles.dotInner, { backgroundColor: dotColor }]} />
         </View>
         {!isLast ? <View style={styles.line} /> : null}
       </View>
@@ -75,9 +93,9 @@ function TimelineRow({
         </View>
         
         {/* Right side status indicator */}
-        <View style={[styles.statusBadge, { backgroundColor: completed ? '#DCFCE7' : '#FEF3C7' }]}>
-          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : '#D97706'} style={styles.statusText}>
-            {completed ? 'COMPLETED' : 'SCHEDULED'}
+        <View style={[styles.statusBadge, { backgroundColor: badgeBg }]}>
+          <AppText variant="caption" weight="800" color={badgeText} style={styles.statusText}>
+            {badgeLabel}
           </AppText>
         </View>
       </TouchableOpacity>
