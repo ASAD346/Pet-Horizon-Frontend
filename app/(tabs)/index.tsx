@@ -32,6 +32,8 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { usePets } from '@/hooks/usePets';
 import { useDashboardQuery } from '@/hooks/useDashboardQuery';
+import { useTimezone } from '@/hooks/useTimezone';
+import { formatInTimeZone } from '@/lib/timezone';
 import { useToast } from '@/hooks/useToast';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
 
@@ -75,18 +77,8 @@ import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
 
 
 
-function formatDateLabel(date: Date): string {
-
-  return date.toLocaleDateString('en-US', {
-
-    weekday: 'long',
-
-    month: 'long',
-
-    day: 'numeric',
-
-  });
-
+function formatDateLabel(date: Date, timezone: string): string {
+  return formatInTimeZone(date, timezone, 'EEEE, MMMM d');
 }
 
 
@@ -101,6 +93,7 @@ const ACTIVITY_COLORS: Record<string, { color: string; bg: string }> = {
 };
 
 export default function HomeScreen() {
+  const { timezone } = useTimezone();
   const { clearance: tabBarClearance } = useTabBarLayout();
   const insets = useSafeAreaInsets();
 
@@ -293,10 +286,12 @@ export default function HomeScreen() {
       const colors = ACTIVITY_COLORS[category] || ACTIVITY_COLORS.general;
       
       const date = new Date(entry.createdAt);
-      const isToday = new Date().toDateString() === date.toDateString();
+      const dayEntry = formatInTimeZone(date, timezone, 'yyyy-MM-dd');
+      const dayNow = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
+      const isToday = dayEntry === dayNow;
       const timeLabel = isToday
-        ? date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-        : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        ? formatInTimeZone(date, timezone, 'h:mm a')
+        : formatInTimeZone(date, timezone, 'MMM d');
 
       const actorName = entry.userId?._id === user?._id || entry.userId === user?._id 
         ? 'You' 
@@ -446,7 +441,7 @@ export default function HomeScreen() {
         <StatusBar style="light" />
         <HomeHeader
           userName={userName}
-          dateLabel={formatDateLabel(new Date())}
+          dateLabel={formatDateLabel(new Date(), timezone)}
           notificationCount={unreadCount}
           onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
           onNotificationsPress={() => router.push('/notifications' as Href)}
@@ -468,7 +463,7 @@ export default function HomeScreen() {
       {/* Sticky header — lives outside ScrollView, extends behind status bar */}
       <HomeHeader
         userName={userName}
-        dateLabel={formatDateLabel(new Date())}
+        dateLabel={formatDateLabel(new Date(), timezone)}
         notificationCount={unreadCount}
         onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
         onNotificationsPress={() => router.push('/notifications' as Href)}

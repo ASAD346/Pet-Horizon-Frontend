@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ApiExpense, BudgetRemainingItem } from '@/types/expense';
+import { formatInTimeZone } from '@/lib/timezone';
 
 type MciIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -67,27 +68,25 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
   }).format(val);
 }
 
-export function formatExpenseDateLabel(iso: string): string {
+export function formatExpenseDateLabel(iso: string, timezone: string): string {
   if (!iso) return 'Unknown Date';
   const date = new Date(iso);
   if (isNaN(date.getTime())) return 'Invalid Date';
+  
   const now = new Date();
-  const sameDay =
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate();
+  const dayDate = formatInTimeZone(date, timezone, 'yyyy-MM-dd');
+  const dayNow = formatInTimeZone(now, timezone, 'yyyy-MM-dd');
+  
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
-  const isYesterday =
-    date.getFullYear() === yesterday.getFullYear() &&
-    date.getMonth() === yesterday.getMonth() &&
-    date.getDate() === yesterday.getDate();
+  const dayYesterday = formatInTimeZone(yesterday, timezone, 'yyyy-MM-dd');
 
-  const dayLabel = sameDay ? 'Today' : isYesterday ? 'Yesterday' : date.toLocaleDateString();
-  return dayLabel;
+  if (dayDate === dayNow) return 'Today';
+  if (dayDate === dayYesterday) return 'Yesterday';
+  return formatInTimeZone(date, timezone, 'yyyy-MM-dd');
 }
 
-export function mapExpenseToTransaction(expense: ApiExpense): ExpenseTransaction {
+export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC'): ExpenseTransaction {
   const category = normalizeExpenseCategory(expense.category);
   const style = CATEGORY_STYLE[category];
   const note = expense.note?.trim();
@@ -95,7 +94,7 @@ export function mapExpenseToTransaction(expense: ApiExpense): ExpenseTransaction
   return {
     id: expense._id,
     title,
-    subtitle: `${formatExpenseDateLabel(expense.expenseDate)} • ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+    subtitle: `${formatExpenseDateLabel(expense.expenseDate, timezone)} • ${category.charAt(0).toUpperCase() + category.slice(1)}`,
     amount: `-${formatCurrency(expense.amount)}`,
     amountVal: expense.amount,
     category,
@@ -105,10 +104,8 @@ export function mapExpenseToTransaction(expense: ApiExpense): ExpenseTransaction
   };
 }
 
-export function currentMonthKey(date = new Date()): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  return `${y}-${m}`;
+export function currentMonthKey(date = new Date(), timezone = 'UTC'): string {
+  return formatInTimeZone(date, timezone, 'yyyy-MM');
 }
 
 export function mapBudgetDisplay(

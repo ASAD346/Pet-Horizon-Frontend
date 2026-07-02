@@ -12,6 +12,7 @@ export interface ApiUser {
   activePetId?: string | null;
   emailVerified?: boolean;
   premiumStatus?: 'free' | 'premium';
+  timezone?: string;
   settings?: UserSettings;
   createdAt?: string;
   updatedAt?: string;

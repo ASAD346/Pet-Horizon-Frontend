@@ -146,3 +146,19 @@ export async function deleteAccount(
     throw error;
   }
 }
+
+export async function updateTimezone(token: string, timezone: string): Promise<ApiUser> {
+  log.info(SCOPE, 'POST /user/update-timezone', { timezone });
+  try {
+    const data = await apiRequest<ApiUser>(API_ENDPOINTS.users.updateTimezone, {
+      method: 'POST',
+      token,
+      body: { timezone },
+    });
+    log.ok(SCOPE, 'Timezone synchronized', { timezone });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Timezone sync failed', getErrorMessage(error));
+    throw error;
+  }
+}

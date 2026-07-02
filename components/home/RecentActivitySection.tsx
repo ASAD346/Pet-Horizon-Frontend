@@ -6,6 +6,8 @@ import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
 import { HomeTheme, Spacing } from '../../constants/theme';
+import { useTimezone } from '@/hooks/useTimezone';
+import { formatInTimeZone } from '@/lib/timezone';
 
 export interface RecentActivityItem {
   id: string;
@@ -27,17 +29,6 @@ interface RecentActivitySectionProps {
   todayOnly?: boolean;
 }
 
-function isToday(dateStr: string | undefined): boolean {
-  if (!dateStr) return true; // pass-through if no date info
-  const d = new Date(dateStr);
-  const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
-}
-
 function formatRawString(text: string) {
   if (!text) return '';
   return text
@@ -53,6 +44,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
   onViewAll,
   todayOnly = true,
 }: RecentActivitySectionProps) {
+  const { timezone } = useTimezone();
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border
@@ -60,9 +52,18 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
   const iconColor = isPremium ? '#184F2E' : '#2E7D32';
   const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
 
+  const isActivityToday = (dateStr: string | undefined): boolean => {
+    if (!dateStr) return true;
+    const d = new Date(dateStr);
+    const now = new Date();
+    const dayD = formatInTimeZone(d, timezone, 'yyyy-MM-dd');
+    const dayNow = formatInTimeZone(now, timezone, 'yyyy-MM-dd');
+    return dayD === dayNow;
+  };
+
   // Filter to today-only when on the home screen
   const visibleActivities = todayOnly
-    ? activities.filter((a) => isToday(a.createdAt))
+    ? activities.filter((a) => isActivityToday(a.createdAt))
     : activities;
 
   return (

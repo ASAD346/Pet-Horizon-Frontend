@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
     changeEmail: '/users/change-email',
     verifyEmailChange: '/users/verify-email-change',
     deviceToken: '/users/device-token',
+    updateTimezone: '/user/update-timezone',
   },
   pets: {
     list: '/pets',

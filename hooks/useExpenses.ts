@@ -7,6 +7,7 @@ import {
   type ExpenseTransaction,
 } from '@/lib/expense/expenseMappers';
 import { fetchExpenses } from '@/services/expense/expenseApi';
+import { useTimezone } from '@/hooks/useTimezone';
 
 export function useExpenses(
   token: string | null,
@@ -14,6 +15,7 @@ export function useExpenses(
   month: string,
 ) {
   const queryClient = useQueryClient();
+  const { timezone } = useTimezone();
   const queryKey = ['expenses', petId, month];
 
   const { data, isFetching, error, refetch } = useQuery({
@@ -21,17 +23,17 @@ export function useExpenses(
     queryFn: async () => {
       if (!token || !petId) return [];
       const rows = await fetchExpenses(token, petId, month);
-      return rows.map(mapExpenseToTransaction);
+      return rows.map((row) => mapExpenseToTransaction(row, timezone));
     },
     enabled: Boolean(token && petId),
     staleTime: 0,
   });
 
   const addLocalExpense = useCallback((newApiExpense: ApiExpense) => {
-    const newTx = mapExpenseToTransaction(newApiExpense);
+    const newTx = mapExpenseToTransaction(newApiExpense, timezone);
     // Optimistically update the cache so it appears immediately
     queryClient.setQueryData(queryKey, (old: ExpenseTransaction[] = []) => [newTx, ...old]);
-  }, [queryClient, queryKey]);
+  }, [queryClient, queryKey, timezone]);
 
   return {
     expenses: data ?? [],

@@ -4,8 +4,10 @@ import { bootstrapAuth } from '@/redux/action';
 import { selectAuthToken, selectIsBootstrapping } from '@/redux/reducer';
 import { useQueryClient } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
+import { useTimezone } from '@/hooks/useTimezone';
 
 export function AuthBootstrap() {
+  useTimezone();
   const dispatch = useAppDispatch();
   const token = useAppSelector(selectAuthToken);
   const isBootstrapping = useAppSelector(selectIsBootstrapping);
