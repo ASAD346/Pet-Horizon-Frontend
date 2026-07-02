@@ -14,6 +14,7 @@ interface ScheduleEntrySummaryCardProps {
   onDelete: () => void;
   deleting?: boolean;
   readOnly?: boolean;
+  isPremium?: boolean;
   iconName?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 }
 
@@ -26,10 +27,15 @@ export function ScheduleEntrySummaryCard({
   onDelete,
   deleting,
   readOnly = false,
+  isPremium = false,
   iconName = 'clock-outline',
 }: ScheduleEntrySummaryCardProps) {
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
       <View style={[styles.iconWrap, { backgroundColor: accentBg }]}>
         <MaterialCommunityIcons name={iconName} size={20} color={accentColor} />
       </View>
@@ -76,15 +82,6 @@ const styles = StyleSheet.create({
     padding: Spacing.sm,
     marginBottom: Spacing.sm,
     gap: Spacing.sm,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 3,
-      },
-      android: { elevation: 1 },
-    }),
   },
   iconWrap: {
     width: 40,

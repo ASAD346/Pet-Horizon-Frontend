@@ -34,6 +34,10 @@ function TimelineRow({
   const brandColor = isPremium ? '#184F2E' : '#2E7D32';
   const brandBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
 
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
+
   return (
     <View style={styles.row}>
       {/* Time column */}
@@ -51,7 +55,7 @@ function TimelineRow({
 
       {/* Modern, minimalist border-only card */}
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { borderColor: cardBorderColor }]}
         activeOpacity={onPress ? 0.85 : 1}
         disabled={!onPress}
         onPress={() => onPress?.(event.id)}
@@ -196,13 +200,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     padding: Spacing.sm + 1,
     marginBottom: Spacing.xs,
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 3 },
-      android: { elevation: 1 },
-    }),
   },
   iconContainer: {
     width: 34,

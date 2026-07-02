@@ -749,6 +749,7 @@ export function ScheduleSetupView({
                       onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
                       deleting={!!remoteId && deletingId === remoteId}
                       readOnly={!canEdit}
+                      isPremium={isPremium}
                     />
                   );
                 })
