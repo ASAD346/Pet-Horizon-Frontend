@@ -6,13 +6,12 @@ import { AppText } from '../ui/AppText';
 import { Skeleton } from '@/components/ui/skeletons';
 import { Radius, Spacing } from '../../constants/theme';
 
-// Free plan: vibrant brand green (matches HomeHeader free gradient)
-const FREE_GRAD: readonly [string, string] = ['#3A8F3B', '#5CB35D'];
-const FREE_SHADOW = '#1B5E20';
+// Professional gradient styling
+const FREE_GRAD: readonly [string, string] = ['#2E7D32', '#4CAF50'];
+const FREE_SHADOW = 'rgba(46, 125, 50, 0.2)';
 
-// Premium plan: dark luxurious emerald (matches HomeHeader premium gradient)
-const PREM_GRAD: readonly [string, string, string] = ['#0E3821', '#184F2E', '#267343'];
-const PREM_SHADOW = '#082113';
+const PREM_GRAD: readonly [string, string, string] = ['#0A2518', '#123C27', '#1B5436'];
+const PREM_SHADOW = 'rgba(10, 37, 24, 0.25)';
 
 interface WeeklySpendingCardProps {
   periodLabel: string;
@@ -47,116 +46,122 @@ export function WeeklySpendingCard({
   const gradientColors = isPremium ? PREM_GRAD : FREE_GRAD;
   const shadowColor = isPremium ? PREM_SHADOW : FREE_SHADOW;
 
-  // Premium uses gold accent for the chip border and progress bar
-  const progressColor = isOver ? '#EF9A9A' : (isPremium ? '#FFF176' : '#A5D6A7');
+  // Premium gets gold progress fills, Free gets soft green
+  const progressColor = isOver ? '#F87171' : (isPremium ? '#D4A017' : '#A5D6A7');
 
   const isExpired = periodEnd ? new Date(periodEnd).getTime() < Date.now() : false;
 
-  let editButtonLabel = 'Edit Budget';
-  if (isExpired) {
-    editButtonLabel = 'Add New';
-  } else if (isOver) {
-    editButtonLabel = 'New Budget';
-  }
-
   const formattedEnd = periodEnd
-    ? new Date(periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     : '';
 
   return (
-    <View style={[styles.wrapper, { shadowColor }]}>
+    <View style={[
+      styles.wrapper, 
+      { shadowColor }, 
+      isPremium && { borderWidth: 1.5, borderColor: '#D4A017', borderRadius: Radius.lg }
+    ]}>
       <LinearGradient
         colors={gradientColors as any}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
-        {/* Decorative rings */}
+        {/* Decorative glassmorphic background highlights */}
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
-          <View style={styles.bgRing1} />
-          <View style={styles.bgRing2} />
+          <View style={styles.bgGlow} />
         </View>
 
-        {/* Top Row: period label + status badge */}
+        {/* Top Header Row */}
         <View style={styles.topRow}>
           <View style={styles.topLeft}>
-            <AppText variant="bodySmall" weight="700" color="rgba(255,255,255,0.85)">
-              {periodLabel}
+            <AppText variant="caption" weight="800" color="rgba(255,255,255,0.75)" style={styles.metaTitle}>
+              {periodLabel.toUpperCase()}
             </AppText>
-          </View>
-          {hasBudget ? (
-            <View style={[styles.statusBadge, isOver && styles.statusOver]}>
-              <Ionicons
-                name={isOver ? 'alert-circle' : 'checkmark-circle'}
-                size={13}
-                color={isOver ? '#FFCDD2' : '#C8E6C9'}
-              />
-              <AppText variant="caption" weight="800" color={isOver ? '#FFCDD2' : '#C8E6C9'}>
-                {status}
+            {formattedEnd ? (
+              <AppText variant="caption" color="rgba(255,255,255,0.45)" style={styles.expiryLabel}>
+                • Ends {formattedEnd}
               </AppText>
-            </View>
+            ) : null}
+          </View>
+          {onEditPress ? (
+            <TouchableOpacity
+              style={styles.actionBtn}
+              activeOpacity={0.8}
+              onPress={() => onEditPress(isExpired || isOver)}
+            >
+              <Ionicons name="ellipsis-horizontal" size={16} color="rgba(255,255,255,0.8)" />
+            </TouchableOpacity>
           ) : null}
         </View>
 
         {loading ? (
           <View style={styles.skeletonBody}>
-            <Skeleton width="55%" height={36} tone="dark" />
-            <Skeleton width="100%" height={8} borderRadius={4} tone="dark" style={styles.skeletonGap} />
+            <Skeleton width="45%" height={32} tone="dark" />
+            <Skeleton width="100%" height={6} borderRadius={3} tone="dark" style={styles.skeletonGap} />
             <View style={styles.bottomRow}>
-              <Skeleton width="45%" height={12} tone="dark" />
-              <Skeleton width={88} height={28} borderRadius={Radius.full} tone="dark" />
+              <Skeleton width="30%" height={12} tone="dark" />
+              <Skeleton width="20%" height={12} tone="dark" />
             </View>
           </View>
         ) : (
           <>
-            {/* Big budget amount */}
-            <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.limitAmount}>
-              {limitLabel}
-            </AppText>
-
-            {/* Progress bar */}
-            <View style={styles.progressTrack}>
-              {hasBudget ? (
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${clampedPercent}%`, backgroundColor: progressColor },
-                  ]}
-                />
-              ) : null}
+            {/* Center Area: Actionable remaining balance focus */}
+            <View style={styles.balanceContainer}>
+              <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.balanceText}>
+                {hasBudget ? remainingLabel : 'No Budget Set'}
+              </AppText>
+              {hasBudget && (
+                <AppText variant="caption" color="rgba(255,255,255,0.55)" style={styles.subtext}>
+                  Available remaining balance
+                </AppText>
+              )}
             </View>
 
-            {/* Bottom: remaining label + edit button */}
-            <View style={styles.bottomRow}>
-              <View style={styles.remainingRow}>
-                {!hasBudget ? <View style={[styles.dot, { backgroundColor: progressColor }]} /> : null}
-                <View style={styles.remainingTextContainer}>
-                  <AppText variant="bodySmall" weight="600" color="rgba(255,255,255,0.9)">
-                    {remainingLabel}
-                  </AppText>
-                  {formattedEnd ? (
-                    <AppText variant="caption" color="rgba(255,255,255,0.65)" style={styles.expiryText}>
-                      Expires {formattedEnd}
-                    </AppText>
-                  ) : null}
+            {/* Premium, sleek indicator bar */}
+            {hasBudget && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressTrack}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      { width: `${clampedPercent}%`, backgroundColor: progressColor },
+                    ]}
+                  />
                 </View>
               </View>
-              {onEditPress ? (
+            )}
+
+            {/* Bottom Info Row */}
+            <View style={styles.bottomRow}>
+              {hasBudget ? (
+                <>
+                  <AppText variant="caption" weight="700" color="rgba(255,255,255,0.8)">
+                    Limit: {limitLabel}
+                  </AppText>
+                  <View style={[
+                    styles.statusTag, 
+                    isOver && styles.statusTagOver,
+                    isPremium && !isOver && { borderColor: 'rgba(212, 160, 23, 0.3)' }
+                  ]}>
+                    <View style={[styles.statusDot, { backgroundColor: progressColor }]} />
+                    <AppText variant="caption" weight="800" color={isOver ? '#F87171' : (isPremium ? '#FFF176' : '#A7F3D0')} style={styles.statusText}>
+                      {isOver ? 'Over Limit' : `${spentPercent}% Spent`}
+                    </AppText>
+                  </View>
+                </>
+              ) : (
                 <TouchableOpacity
-                  style={[styles.editBtn, isPremium && styles.editBtnPremium]}
-                  activeOpacity={0.85}
-                  onPress={() => onEditPress(isExpired || isOver)}
+                  style={[styles.setupBtn, isPremium && styles.setupBtnPremium]}
+                  activeOpacity={0.8}
+                  onPress={() => onEditPress?.(true)}
                 >
-                  <Ionicons name="pencil" size={13} color={isPremium ? '#D4A017' : '#FFFFFF'} />
-                  <AppText
-                    variant="caption"
-                    weight="700"
-                    color={isPremium ? '#FFF176' : '#FFFFFF'}
-                  >
-                    {editButtonLabel}
+                  <Ionicons name="add-circle" size={16} color={isPremium ? '#FFF176' : '#FFFFFF'} />
+                  <AppText variant="bodySmall" weight="800" color={isPremium ? '#FFF176' : '#FFFFFF'}>
+                    Set a Spending Limit
                   </AppText>
                 </TouchableOpacity>
-              ) : null}
+              )}
             </View>
           </>
         )}
@@ -168,141 +173,131 @@ export function WeeklySpendingCard({
 const styles = StyleSheet.create({
   wrapper: {
     borderRadius: Radius.lg,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.md + 4,
     ...Platform.select({
       ios: {
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.3,
-        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
       },
-      android: { elevation: 6 },
+      android: { elevation: 4 },
     }),
   },
   card: {
-    borderRadius: Radius.lg,
-    padding: Spacing.lg,
+    borderRadius: Radius.lg - 2,
+    padding: Spacing.lg - 2,
     overflow: 'hidden',
   },
-  bgRing1: {
+  bgGlow: {
     position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    top: -80,
-    right: -60,
-  },
-  bgRing2: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 250,
+    height: 250,
+    borderRadius: 125,
     backgroundColor: 'rgba(255,255,255,0.03)',
-    bottom: -40,
-    left: -30,
+    top: -100,
+    right: -50,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   topLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 6,
   },
-  premiumBadge: {
-    flexDirection: 'row',
+  metaTitle: {
+    letterSpacing: 1.2,
+  },
+  expiryLabel: {
+    fontSize: 11,
+  },
+  actionBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(212,160,23,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(212,160,23,0.3)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-  },
-  premiumText: {
-    fontSize: 9,
-    letterSpacing: 0.6,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(200,230,201,0.18)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(200,230,201,0.25)',
-  },
-  statusOver: {
-    backgroundColor: 'rgba(198,40,40,0.25)',
-    borderColor: 'rgba(255,205,210,0.25)',
+    justifyContent: 'center',
   },
   skeletonBody: {
-    marginTop: Spacing.sm,
+    marginVertical: Spacing.sm,
   },
   skeletonGap: {
     marginVertical: Spacing.md,
   },
-  limitAmount: {
-    fontSize: 38,
-    lineHeight: 44,
-    marginBottom: Spacing.md,
+  balanceContainer: {
+    marginVertical: Spacing.xs,
+  },
+  balanceText: {
+    fontSize: 32,
+    lineHeight: 38,
     letterSpacing: -0.5,
   },
+  subtext: {
+    marginTop: 2,
+    letterSpacing: 0.2,
+  },
+  progressContainer: {
+    marginVertical: Spacing.md,
+  },
   progressTrack: {
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     overflow: 'hidden',
-    marginBottom: Spacing.md,
   },
   progressFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 3,
   },
   bottomRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 2,
   },
-  remainingRow: {
+  statusTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    flex: 1,
-    paddingRight: Spacing.sm,
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  statusTagOver: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: 'rgba(239, 68, 68, 0.15)',
   },
-  remainingTextContainer: {
-    flex: 1,
-    gap: 1,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
-  expiryText: {
-    fontSize: 10,
-    lineHeight: 12,
+  statusText: {
+    fontSize: 11,
+    letterSpacing: 0.2,
   },
-  editBtn: {
+  setupBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    borderRadius: Radius.full,
+    borderRadius: Radius.md,
+    width: '100%',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
-  editBtnPremium: {
-    backgroundColor: 'rgba(212,160,23,0.18)',
-    borderColor: 'rgba(212,160,23,0.4)',
+  setupBtnPremium: {
+    backgroundColor: 'rgba(212, 160, 23, 0.12)',
+    borderColor: 'rgba(212, 160, 23, 0.25)',
   },
 });
