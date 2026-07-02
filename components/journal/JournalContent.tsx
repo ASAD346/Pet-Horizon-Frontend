@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useToast } from '@/hooks/useToast';
@@ -29,7 +33,7 @@ import {
 } from '@/lib/journal/journalMappers';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
-import { createJournalEntry } from '@/services/journal/journalApi';
+import { createJournalEntry, deleteJournalEntry, updateJournalEntry } from '@/services/journal/journalApi';
 import { uploadJournalImage } from '@/services/journal/uploadJournalImage';
 import { ActivityTimelineSection } from './ActivityTimelineSection';
 import { JournalEntryEditSheet } from './JournalEntryEditSheet';
@@ -37,7 +41,7 @@ import { JournalCategoryChips } from './JournalCategoryChips';
 import { JournalDateStrip } from './JournalDateStrip';
 import { JournalMonthHeader } from './JournalMonthHeader';
 import { JOURNAL_CATEGORY_CHIPS, type JournalCategory } from './journalData';
-import { TodaysPhotosSection } from './TodaysPhotosSection';
+import { TodaysPhotosSection, type JournalPhoto } from './TodaysPhotosSection';
 import { JournalTheme, Spacing } from '../../constants/theme';
 import { SkeletonJournalScreen } from '@/components/ui/skeletons';
 
@@ -79,6 +83,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
+  const [activePhoto, setActivePhoto] = useState<JournalPhoto | null>(null);
 
   const dateStrip = useMemo(() => buildDateStrip(weekStart), [weekStart]);
   const selectedDate = useMemo(() => parseDateKey(selectedDateId), [selectedDateId]);
@@ -99,10 +104,50 @@ export function JournalContent({ active = true }: JournalContentProps) {
     [dayEntries],
   );
 
-  const photoUrls = useMemo(
-    () => extractPhotoUrls(dayEntries).map((path) => resolveMediaUrl(path)).filter(Boolean) as string[],
-    [dayEntries],
-  );
+  const photos = useMemo(() => {
+    return dayEntries
+      .filter((entry) => entry.imagePath)
+      .map((entry) => ({
+        uri: resolveMediaUrl(entry.imagePath!)!,
+        entryId: entry._id,
+        entry,
+      }))
+      .filter((p) => p.uri);
+  }, [dayEntries]);
+
+  const handleDeletePhoto = useCallback((photo: JournalPhoto) => {
+    if (!token) return;
+    Alert.alert(
+      'Delete Photo',
+      'Are you sure you want to delete this photo from the journal?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const entry = photo.entry;
+              // If it's a general entry created specifically for the photo, delete the entry itself.
+              if (
+                entry.activityType === 'General' &&
+                (entry.note === 'Journal photo' || !entry.note)
+              ) {
+                await deleteJournalEntry(token, entry._id);
+              } else {
+                // Otherwise, clear the imagePath but keep the entry.
+                await updateJournalEntry(token, entry._id, { imagePath: null });
+              }
+              setActivePhoto(null);
+              await queryClient.invalidateQueries({ queryKey: ['journalEntries', pet?._id] });
+            } catch (err) {
+              showErrorToast(getErrorMessage(err));
+            }
+          },
+        },
+      ]
+    );
+  }, [token, queryClient, pet?._id, showErrorToast]);
 
   const isSelectedToday = isSameCalendarDay(selectedDate, new Date());
   const canAddPhoto = isSelectedToday && canEditJournal;
@@ -233,10 +278,12 @@ export function JournalContent({ active = true }: JournalContentProps) {
       />
       <TodaysPhotosSection
         title={isSelectedToday ? "Today's Photos" : 'Photos'}
-        photoUrls={photoUrls}
+        photos={photos}
         canAddPhoto={canAddPhoto}
         uploading={uploadingPhoto}
         onAddPhoto={handleAddPhoto}
+        onPhotoPress={setActivePhoto}
+        onDeletePhoto={handleDeletePhoto}
       />
     </ScrollView>
     <JournalEntryEditSheet
@@ -246,6 +293,31 @@ export function JournalContent({ active = true }: JournalContentProps) {
       onClose={() => setEditEntryId(null)}
       onSaved={() => queryClient.invalidateQueries({ queryKey: ['journalEntries', pet?._id] })}
     />
+    <Modal
+      visible={Boolean(activePhoto)}
+      transparent
+      animationType="fade"
+      onRequestClose={() => setActivePhoto(null)}
+    >
+      <View style={styles.modalContainer}>
+        <TouchableOpacity style={styles.modalCloseArea} activeOpacity={1} onPress={() => setActivePhoto(null)} />
+        {activePhoto && (
+          <View style={styles.modalContent}>
+            <Image source={{ uri: activePhoto.uri }} style={styles.modalImage} contentFit="contain" />
+            <View style={styles.modalOverlay}>
+              <TouchableOpacity style={styles.modalCloseButton} onPress={() => setActivePhoto(null)}>
+                <Ionicons name="close" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+              {canEditJournal && (
+                <TouchableOpacity style={styles.modalDeleteButton} onPress={() => handleDeletePhoto(activePhoto)}>
+                  <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+    </Modal>
     </>
   );
 }
@@ -259,6 +331,54 @@ const styles = StyleSheet.create({
   },
   loaderWrap: {
     paddingVertical: Spacing.xxl,
+    alignItems: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseArea: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  modalContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '90%',
+    height: '75%',
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalDeleteButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(239, 68, 68, 0.8)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
 });

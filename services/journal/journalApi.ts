@@ -48,7 +48,7 @@ export async function createJournalEntry(
 export async function updateJournalEntry(
   token: string,
   entryId: string,
-  payload: { note?: string; activityType?: string },
+  payload: { note?: string; activityType?: string; imagePath?: string | null },
 ): Promise<ApiJournalEntry> {
   log.info(SCOPE, 'PUT /journal/:id', { entryId });
   try {

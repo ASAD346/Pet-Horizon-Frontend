@@ -69,12 +69,15 @@ export default function GetStartedScreen() {
   useAuthEntryRedirect();
 
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     AsyncStorage.getItem('HAS_SEEN_ONBOARDING')
       .then((val) => {
         if (val === 'true') {
           setHasSeenOnboarding(true);
           if (!isAuthenticated && !isBootstrapping) {
-            router.replace('/auth/login');
+            timer = setTimeout(() => {
+              router.replace('/auth/login');
+            }, 10);
           }
         } else {
           setHasSeenOnboarding(false);
@@ -83,6 +86,9 @@ export default function GetStartedScreen() {
       .catch(() => {
         setHasSeenOnboarding(false);
       });
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [isAuthenticated, isBootstrapping, router]);
 
   const scrollHandler = useAnimatedScrollHandler({

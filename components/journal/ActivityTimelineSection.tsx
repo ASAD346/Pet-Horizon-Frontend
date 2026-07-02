@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { AppText } from '../ui/AppText';
 import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import type { JournalCategory, TimelineEvent } from './journalData';
@@ -64,7 +66,7 @@ function TimelineRow({
           <MaterialCommunityIcons name={event.materialIcon} size={18} color={brandColor} />
         </View>
         <View style={styles.cardText}>
-          <AppText variant="bodySmall" weight="700" color="#111827">
+          <AppText variant="bodySmall" weight="700" color="#1F2937">
             {event.title}
           </AppText>
           <AppText variant="caption" color={brandColor} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
@@ -73,9 +75,8 @@ function TimelineRow({
         </View>
         
         {/* Right side status indicator */}
-        <View style={styles.statusCol}>
-          <View style={[styles.statusDot, { backgroundColor: completed ? '#16A34A' : brandColor }]} />
-          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : brandColor} style={styles.statusText}>
+        <View style={[styles.statusBadge, { backgroundColor: completed ? '#DCFCE7' : '#FEF3C7' }]}>
+          <AppText variant="caption" weight="800" color={completed ? '#16A34A' : '#D97706'} style={styles.statusText}>
             {completed ? 'COMPLETED' : 'SCHEDULED'}
           </AppText>
         </View>
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
   },
   time: {
     width: 60,
-    paddingTop: 15,
+    paddingTop: 11,
     fontSize: 11,
     textAlign: 'right',
     paddingRight: 10,
@@ -168,24 +169,24 @@ const styles = StyleSheet.create({
     marginRight: Spacing.xs,
   },
   dotOuter: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 15,
+    marginTop: 13,
     backgroundColor: '#FFFFFF',
     zIndex: 2,
   },
   dotInner: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   line: {
     position: 'absolute',
-    top: 28,
+    top: 24,
     bottom: -12,
     width: 1,
     backgroundColor: '#E5E7EB',
@@ -198,36 +199,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.md,
+    borderRadius: 12,
     borderWidth: 1,
-    padding: Spacing.sm + 1,
-    marginBottom: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 8,
+    marginBottom: 6,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
+    elevation: 1,
   },
   iconContainer: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardText: {
     flex: 1,
     marginLeft: Spacing.sm,
-    gap: 1,
+    justifyContent: 'center',
   },
-  statusCol: {
-    flexDirection: 'row',
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'center',
     marginLeft: Spacing.xs,
   },
-  statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
   statusText: {
-    fontSize: 8,
-    letterSpacing: 0.4,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
 });
