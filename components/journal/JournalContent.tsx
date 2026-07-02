@@ -44,6 +44,7 @@ import { JOURNAL_CATEGORY_CHIPS, type JournalCategory } from './journalData';
 import { TodaysPhotosSection, type JournalPhoto } from './TodaysPhotosSection';
 import { JournalTheme, Spacing } from '../../constants/theme';
 import { SkeletonJournalScreen } from '@/components/ui/skeletons';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 
 interface JournalContentProps {
   active?: boolean;
@@ -84,6 +85,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [activePhoto, setActivePhoto] = useState<JournalPhoto | null>(null);
+  const [deleteConfirmPhoto, setDeleteConfirmPhoto] = useState<JournalPhoto | null>(null);
 
   const dateStrip = useMemo(() => buildDateStrip(weekStart), [weekStart]);
   const selectedDate = useMemo(() => parseDateKey(selectedDateId), [selectedDateId]);
@@ -116,38 +118,8 @@ export function JournalContent({ active = true }: JournalContentProps) {
   }, [dayEntries]);
 
   const handleDeletePhoto = useCallback((photo: JournalPhoto) => {
-    if (!token) return;
-    Alert.alert(
-      'Delete Photo',
-      'Are you sure you want to delete this photo from the journal?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const entry = photo.entry;
-              // If it's a general entry created specifically for the photo, delete the entry itself.
-              if (
-                entry.activityType === 'General' &&
-                (entry.note === 'Journal photo' || !entry.note)
-              ) {
-                await deleteJournalEntry(token, entry._id);
-              } else {
-                // Otherwise, clear the imagePath but keep the entry.
-                await updateJournalEntry(token, entry._id, { imagePath: null });
-              }
-              setActivePhoto(null);
-              await queryClient.invalidateQueries({ queryKey: ['journalEntries', pet?._id] });
-            } catch (err) {
-              showErrorToast(getErrorMessage(err));
-            }
-          },
-        },
-      ]
-    );
-  }, [token, queryClient, pet?._id, showErrorToast]);
+    setDeleteConfirmPhoto(photo);
+  }, []);
 
   const isSelectedToday = isSameCalendarDay(selectedDate, new Date());
   const canAddPhoto = isSelectedToday && canEditJournal;
@@ -318,6 +290,34 @@ export function JournalContent({ active = true }: JournalContentProps) {
         )}
       </View>
     </Modal>
+    <AppConfirmModal
+      visible={Boolean(deleteConfirmPhoto)}
+      title="Delete Photo"
+      message="Are you sure you want to permanently delete this photo from the journal? This action cannot be undone."
+      confirmLabel="Delete"
+      cancelLabel="Cancel"
+      variant="danger"
+      onConfirm={async () => {
+        if (!deleteConfirmPhoto || !token) return;
+        try {
+          const entry = deleteConfirmPhoto.entry;
+          if (
+            entry.activityType === 'General' &&
+            (entry.note === 'Journal photo' || !entry.note)
+          ) {
+            await deleteJournalEntry(token, entry._id);
+          } else {
+            await updateJournalEntry(token, entry._id, { imagePath: null });
+          }
+          setDeleteConfirmPhoto(null);
+          setActivePhoto(null);
+          await queryClient.invalidateQueries({ queryKey: ['journalEntries', pet?._id] });
+        } catch (err) {
+          showErrorToast(getErrorMessage(err));
+        }
+      }}
+      onCancel={() => setDeleteConfirmPhoto(null)}
+    />
     </>
   );
 }
