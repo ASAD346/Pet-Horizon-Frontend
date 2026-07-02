@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 
 import { StatusBar } from 'expo-status-bar';
+import { useIsFocused } from '@react-navigation/native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { log } from '@/lib/log';
@@ -93,6 +94,7 @@ const ACTIVITY_COLORS: Record<string, { color: string; bg: string }> = {
 };
 
 export default function HomeScreen() {
+  const isFocused = useIsFocused();
   const { timezone } = useTimezone();
   const { clearance: tabBarClearance } = useTabBarLayout();
   const insets = useSafeAreaInsets();
@@ -438,7 +440,7 @@ export default function HomeScreen() {
   if (petCardLoading) {
     return (
       <View style={styles.root}>
-        <StatusBar style="light" />
+        <StatusBar style={isFocused ? "light" : "dark"} />
         <HomeHeader
           userName={userName}
           dateLabel={formatDateLabel(new Date(), timezone)}
@@ -458,7 +460,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style={isFocused ? "light" : "dark"} />
 
       {/* Sticky header — lives outside ScrollView, extends behind status bar */}
       <HomeHeader
