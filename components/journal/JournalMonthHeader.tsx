@@ -23,7 +23,7 @@ export function JournalMonthHeader({ monthLabel, onPrevious, onNext }: JournalMo
           accessibilityLabel="Previous week"
           onPress={onPrevious}
         >
-          <Ionicons name="chevron-back" size={22} color={JournalTheme.text} />
+          <Ionicons name="chevron-back" size={18} color={JournalTheme.text} />
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navBtn}
@@ -31,7 +31,7 @@ export function JournalMonthHeader({ monthLabel, onPrevious, onNext }: JournalMo
           accessibilityLabel="Next week"
           onPress={onNext}
         >
-          <Ionicons name="chevron-forward" size={22} color={JournalTheme.text} />
+          <Ionicons name="chevron-forward" size={18} color={JournalTheme.text} />
         </TouchableOpacity>
       </View>
     </View>
@@ -43,14 +43,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm + 2,
+    marginTop: 2,
   },
   nav: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: Spacing.xs + 2,
   },
   navBtn: {
-    padding: Spacing.xs,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

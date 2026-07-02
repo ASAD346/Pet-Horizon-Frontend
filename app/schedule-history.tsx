@@ -197,10 +197,12 @@ const ScheduleCard = React.memo(function ScheduleCard({
   item,
   brandColor,
   brandBg,
+  isPremium = false,
 }: {
   item: ScheduleHistoryItem;
   brandColor: string;
   brandBg: string;
+  isPremium?: boolean;
 }) {
   const config = KIND_CONFIG[item.kind] ?? { icon: 'calendar-check' };
   const status = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
@@ -209,8 +211,12 @@ const ScheduleCard = React.memo(function ScheduleCard({
     ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
 
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { borderColor: cardBorderColor }]}>
       <View style={styles.cardLeft}>
         {/* Uniform brand-colored icon container */}
         <View style={[styles.iconContainer, { backgroundColor: brandBg }]}>
@@ -334,8 +340,8 @@ export default function ScheduleHistoryScreen() {
   };
 
   const renderItem = useCallback(({ item }: { item: ScheduleHistoryItem }) => (
-    <ScheduleCard item={item} brandColor={brandColor} brandBg={brandBg} />
-  ), [brandColor, brandBg]);
+    <ScheduleCard item={item} brandColor={brandColor} brandBg={brandBg} isPremium={isPremium} />
+  ), [brandColor, brandBg, isPremium]);
 
   const keyExtractor = useCallback((item: ScheduleHistoryItem) => item._id, []);
 
@@ -627,13 +633,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     padding: Spacing.sm + 2,
     marginBottom: Spacing.sm,
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 3 },
-      android: { elevation: 1 },
-    }),
   },
   cardLeft: {
     flexDirection: 'row',

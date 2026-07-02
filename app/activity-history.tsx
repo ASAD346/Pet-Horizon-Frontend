@@ -233,10 +233,12 @@ const ActivityCard = React.memo(function ActivityCard({
   entry,
   brandColor,
   brandBg,
+  isPremium = false,
 }: {
   entry: ApiJournalEntry;
   brandColor: string;
   brandBg: string;
+  isPremium?: boolean;
 }) {
   const category = mapActivityTypeToCategory(entry.activityType).toLowerCase();
   const config = KIND_CONFIG[category] ?? KIND_CONFIG.general;
@@ -251,8 +253,12 @@ const ActivityCard = React.memo(function ActivityCard({
   const statusColor = skipped ? RED : GREEN;
   const statusLabel = skipped ? 'SKIPPED' : 'COMPLETED';
 
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
+    : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
+
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { borderColor: cardBorderColor }]}>
       <View style={styles.cardLeft}>
         {/* Uniform brand-colored icon container */}
         <View style={[styles.iconContainer, { backgroundColor: brandBg }]}>
@@ -383,8 +389,8 @@ export default function ActivityHistoryScreen() {
   const sections = useMemo(() => groupByDate(items), [items]);
 
   const renderItem = useCallback(({ item }: { item: ApiJournalEntry }) => (
-    <ActivityCard entry={item} brandColor={brandColor} brandBg={brandBg} />
-  ), [brandColor, brandBg]);
+    <ActivityCard entry={item} brandColor={brandColor} brandBg={brandBg} isPremium={isPremium} />
+  ), [brandColor, brandBg, isPremium]);
 
   const renderSectionHeader = useCallback(({ section }: { section: DateSection }) => (
     <SectionDateHeader title={section.title} brandColor={brandColor} />
@@ -701,13 +707,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     padding: Spacing.sm + 2,
     marginBottom: Spacing.sm,
-    ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 3 },
-      android: { elevation: 1 },
-    }),
   },
   cardLeft: {
     flexDirection: 'row',
