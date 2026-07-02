@@ -79,10 +79,10 @@ export function usePetPermissions(
 
     void reload();
 
-    // Aggressive polling / background-sync to catch admin permission updates in real-time
+    // Check for permission updates in background every 60 seconds
     const intervalId = setInterval(() => {
       void reload();
-    }, 5000);
+    }, 60000);
 
     return () => {
       clearInterval(intervalId);
