@@ -43,6 +43,14 @@ export function AddExpenseView({
   const { currency } = useLocalization();
   const { showToast } = useToast();
 
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    USD: '$',
+    GBP: '£',
+    CAD: '$',
+    AUD: '$',
+  };
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || '$';
+
   const [category, setCategory] = useState('Food');
   const [pickerVisible, setPickerVisible] = useState(false);
   const [amount, setAmount] = useState('');
@@ -147,7 +155,7 @@ export function AddExpenseView({
               color={activeField === 'amount' ? BRAND_GREEN : '#94A3B8'}
               style={styles.currency}
             >
-              {currency === 'GBP' ? '£' : '$'}
+              {currencySymbol}
             </AppText>
             <TextInput
               ref={amountRef}

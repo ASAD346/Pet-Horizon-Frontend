@@ -86,7 +86,7 @@ export function formatExpenseDateLabel(iso: string, timezone: string): string {
   return formatInTimeZone(date, timezone, 'yyyy-MM-dd');
 }
 
-export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC'): ExpenseTransaction {
+export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC', currency = 'USD'): ExpenseTransaction {
   const category = normalizeExpenseCategory(expense.category);
   const style = CATEGORY_STYLE[category];
   const note = expense.note?.trim();
@@ -95,7 +95,7 @@ export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC'): 
     id: expense._id,
     title,
     subtitle: `${formatExpenseDateLabel(expense.expenseDate, timezone)} • ${category.charAt(0).toUpperCase() + category.slice(1)}`,
-    amount: `-${formatCurrency(expense.amount)}`,
+    amount: `-${formatCurrency(expense.amount, currency)}`,
     amountVal: expense.amount,
     category,
     materialIcon: style.icon,

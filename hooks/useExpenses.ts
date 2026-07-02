@@ -8,6 +8,7 @@ import {
 } from '@/lib/expense/expenseMappers';
 import { fetchExpenses } from '@/services/expense/expenseApi';
 import { useTimezone } from '@/hooks/useTimezone';
+import { useLocalization } from '@/hooks/useLocalization';
 
 export function useExpenses(
   token: string | null,
@@ -15,6 +16,7 @@ export function useExpenses(
   month: string,
 ) {
   const { timezone } = useTimezone();
+  const { currency } = useLocalization();
   const queryKey = ['expenses', petId, month];
 
   const { data, isFetching, error, refetch } = useQuery({
@@ -22,7 +24,7 @@ export function useExpenses(
     queryFn: async () => {
       if (!token || !petId) return [];
       const rows = await fetchExpenses(token, petId, month);
-      return rows.map((row) => mapExpenseToTransaction(row, timezone));
+      return rows.map((row) => mapExpenseToTransaction(row, timezone, currency));
     },
     enabled: Boolean(token && petId),
     staleTime: 0,
