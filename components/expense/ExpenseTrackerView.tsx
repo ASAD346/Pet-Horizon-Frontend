@@ -78,12 +78,12 @@ export function ExpenseTrackerView({
     return match ? match.label : '';
   }, [selectedMonth, monthOptions]);
 
-  const { expenses, loading: expensesLoading, error, reload: reloadExpenses, addLocalExpense } = useExpenses(
+  const { expenses, loading: expensesLoading, error, reload: reloadExpenses } = useExpenses(
     token,
     pet?._id,
     selectedMonth,
   );
-  const { budget, loading: budgetLoading, periodType, setPeriodType, reload: reloadBudget, decrementLocalBudget, updateLocalBudgetStatus } = useBudget(
+  const { budget, loading: budgetLoading, periodType, setPeriodType, reload: reloadBudget } = useBudget(
     token,
     pet?._id,
   );
@@ -220,13 +220,10 @@ export function ExpenseTrackerView({
           token={token}
           isPremium={isPremium}
           onClose={() => setAddExpenseVisible(false)}
-          onSaved={(newExpense, budgetStatus) => {
+          onSaved={() => {
             setAddExpenseVisible(false);
-            if (newExpense) {
-              addLocalExpense(newExpense);
-              // Always optimistically update local budget to bypass backend read-after-write replication lag
-              decrementLocalBudget(newExpense.amount);
-            }
+            void reloadExpenses();
+            void reloadBudget();
           }}
         />
       ) : null}

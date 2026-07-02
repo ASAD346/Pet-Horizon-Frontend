@@ -5,9 +5,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { useToast } from '@/hooks/useToast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { token, user } = useAuth();
   const { pet } = useActivePet(token);
   const { canEditExpenses } = usePetPermissions(token, pet, user?._id);
@@ -33,7 +35,11 @@ export default function AddExpenseScreen() {
       token={token}
       isPremium={isPremium}
       onClose={() => router.back()}
-      onSaved={() => router.back()}
+      onSaved={() => {
+        void queryClient.resetQueries({ queryKey: ['expenses'] });
+        void queryClient.resetQueries({ queryKey: ['budget'] });
+        router.back();
+      }}
     />
   );
 }

@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/api/errors';
 import { mapBudgetDisplay } from '@/lib/expense/expenseMappers';
 import { fetchRemainingBudget } from '@/services/expense/expenseApi';
 import type { BudgetRemainingItem } from '@/types/expense';
 
 export function useBudget(token: string | null, petId: string | null | undefined) {
-  const queryClient = useQueryClient();
   const queryKey = ['budget', petId];
 
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>('weekly');
@@ -47,21 +46,6 @@ export function useBudget(token: string | null, petId: string | null | undefined
     return mapBudgetDisplay(active, periodType);
   }, [budgets, periodType]);
 
-  const decrementLocalBudget = (amount: number) => {
-    queryClient.setQueryData(queryKey, (old: BudgetRemainingItem[] | undefined) => {
-      if (!old) return [];
-      return old.map(b => ({
-        ...b,
-        totalSpent: b.totalSpent + amount,
-        remaining: Math.max(0, b.remaining - amount),
-      }));
-    });
-  };
-
-  const updateLocalBudgetStatus = (newBudgets: BudgetRemainingItem[]) => {
-    queryClient.setQueryData(queryKey, newBudgets);
-  };
-
   return {
     budget: display,
     periodType,
@@ -69,7 +53,5 @@ export function useBudget(token: string | null, petId: string | null | undefined
     loading: isFetching,
     error: error ? getErrorMessage(error) : null,
     reload: () => refetch(),
-    decrementLocalBudget,
-    updateLocalBudgetStatus,
   };
 }

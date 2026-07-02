@@ -14,7 +14,6 @@ export function useExpenses(
   petId: string | null | undefined,
   month: string,
 ) {
-  const queryClient = useQueryClient();
   const { timezone } = useTimezone();
   const queryKey = ['expenses', petId, month];
 
@@ -29,18 +28,11 @@ export function useExpenses(
     staleTime: 0,
   });
 
-  const addLocalExpense = useCallback((newApiExpense: ApiExpense) => {
-    const newTx = mapExpenseToTransaction(newApiExpense, timezone);
-    // Optimistically update the cache so it appears immediately
-    queryClient.setQueryData(queryKey, (old: ExpenseTransaction[] = []) => [newTx, ...old]);
-  }, [queryClient, queryKey, timezone]);
-
   return {
     expenses: data ?? [],
     loading: isFetching,
     error: error ? getErrorMessage(error) : null,
     reload: () => refetch(),
     month,
-    addLocalExpense,
   };
 }
