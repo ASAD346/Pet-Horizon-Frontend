@@ -4,9 +4,10 @@ import { SafeModal } from '@/components/ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
-import { useLocalization, CurrencyType, UnitSystemType } from '@/hooks/useLocalization';
+import { useLocalization, CurrencyType } from '@/hooks/useLocalization';
 import { Radius, Spacing, Palette } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
+import { useTimezone } from '@/hooks/useTimezone';
 
 interface LocalizationSheetProps {
   visible: boolean;
@@ -15,19 +16,32 @@ interface LocalizationSheetProps {
 
 export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) {
   const insets = useSafeAreaInsets();
-  const { currency, unitSystem, setCurrency, setUnitSystem } = useLocalization();
+  const { currency, setCurrency } = useLocalization();
+  const { timezone } = useTimezone();
 
-  const currencies: { value: CurrencyType; label: string; symbol: string }[] = [
-    { value: 'USD', label: 'United States Dollar', symbol: '$' },
-    { value: 'GBP', label: 'United Kingdom Pound', symbol: '£' },
-    { value: 'CAD', label: 'Canadian Dollar', symbol: '$' },
-    { value: 'AUD', label: 'Australian Dollar', symbol: '$' },
+  const currencies: { value: CurrencyType; label: string; symbol: string; flag: string }[] = [
+    { value: 'USD', label: 'United States Dollar', symbol: '$', flag: '🇺🇸' },
+    { value: 'GBP', label: 'United Kingdom Pound', symbol: '£', flag: '🇬🇧' },
+    { value: 'CAD', label: 'Canadian Dollar', symbol: '$', flag: '🇨🇦' },
+    { value: 'AUD', label: 'Australian Dollar', symbol: '$', flag: '🇦🇺' },
   ];
 
-  const units: { value: UnitSystemType; label: string; description: string }[] = [
-    { value: 'metric', label: 'Metric System', description: 'Kilograms (kg), Kilometers (km)' },
-    { value: 'imperial', label: 'Imperial System', description: 'Pounds (lbs), Miles (mi)' },
-  ];
+  // Helper to format GMT offset (e.g. GMT+5)
+  const getGmtOffset = (tzString: string) => {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: tzString,
+        timeZoneName: 'shortOffset',
+      });
+      const parts = formatter.formatToParts(new Date());
+      const tzPart = parts.find((p) => p.type === 'timeZoneName');
+      return tzPart ? tzPart.value : '';
+    } catch {
+      return '';
+    }
+  };
+
+  const offset = getGmtOffset(timezone);
 
   return (
     <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -41,15 +55,35 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
               Localization Settings
             </AppText>
             <Pressable onPress={onClose} hitSlop={8} style={styles.closeBtn}>
-              <Ionicons name="close" size={22} color={ProfileTheme.text} />
+              <Ionicons name="close" size={20} color={ProfileTheme.text} />
             </Pressable>
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
             
-            {/* Currency Selection */}
-            <AppText variant="bodySmall" weight="700" color={Palette.gray[600]} style={styles.sectionTitle}>
-              CURRENCY
+            {/* Timezone Info */}
+            <AppText variant="bodySmall" weight="700" color={Palette.gray[500]} style={styles.sectionTitle}>
+              SYNCHRONIZED TIMEZONE
+            </AppText>
+            <View style={styles.infoCard}>
+              <View style={styles.rowLeft}>
+                <View style={styles.globeBadge}>
+                  <Ionicons name="globe-outline" size={20} color="#184F2E" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <AppText variant="body" weight="800" color={ProfileTheme.text}>
+                    {timezone}
+                  </AppText>
+                  <AppText variant="caption" color={Palette.gray[500]}>
+                    {offset ? `Active Offset: ${offset}` : 'Auto-detected region'} • Read-Only
+                  </AppText>
+                </View>
+              </View>
+            </View>
+
+            {/* Currency Section */}
+            <AppText variant="bodySmall" weight="700" color={Palette.gray[500]} style={styles.sectionTitle}>
+              SELECT CURRENCY
             </AppText>
             <View style={styles.group}>
               {currencies.map((item) => {
@@ -62,54 +96,27 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
                     activeOpacity={0.7}
                   >
                     <View style={styles.rowLeft}>
-                      <View style={[styles.symbolBadge, selected && styles.symbolBadgeSelected]}>
-                        <AppText variant="body" weight="700" color={selected ? '#FFFFFF' : Palette.gray[600]}>
-                          {item.symbol}
-                        </AppText>
+                      <View style={styles.flagContainer}>
+                        <AppText style={styles.flagText}>{item.flag}</AppText>
                       </View>
                       <View>
-                        <AppText variant="body" weight="700" color={ProfileTheme.text}>
-                          {item.value}
-                        </AppText>
+                        <View style={styles.codeRow}>
+                          <AppText variant="body" weight="800" color={ProfileTheme.text}>
+                            {item.value}
+                          </AppText>
+                          <AppText variant="bodySmall" weight="700" color={Palette.gray[400]}>
+                            ({item.symbol})
+                          </AppText>
+                        </View>
                         <AppText variant="caption" color={Palette.gray[500]}>
                           {item.label}
                         </AppText>
                       </View>
                     </View>
-                    {selected && (
-                      <Ionicons name="checkmark-circle" size={22} color={Palette.success} />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Units Selection */}
-            <AppText variant="bodySmall" weight="700" color={Palette.gray[600]} style={styles.sectionTitle}>
-              MEASUREMENT UNITS
-            </AppText>
-            <View style={styles.group}>
-              {units.map((item) => {
-                const selected = unitSystem === item.value;
-                return (
-                  <TouchableOpacity
-                    key={item.value}
-                    style={[styles.row, selected && styles.rowSelected]}
-                    onPress={() => void setUnitSystem(item.value)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.rowLeft}>
-                      <View style={styles.rowText}>
-                        <AppText variant="body" weight="700" color={ProfileTheme.text}>
-                          {item.label}
-                        </AppText>
-                        <AppText variant="caption" color={Palette.gray[500]}>
-                          {item.description}
-                        </AppText>
-                      </View>
-                    </View>
-                    {selected && (
-                      <Ionicons name="checkmark-circle" size={22} color={Palette.success} />
+                    {selected ? (
+                      <Ionicons name="checkmark-circle" size={24} color="#2E7D32" />
+                    ) : (
+                      <View style={styles.radioUnselected} />
                     )}
                   </TouchableOpacity>
                 );
@@ -130,29 +137,31 @@ const styles = StyleSheet.create({
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10, 15, 30, 0.45)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
   },
   sheet: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
-    maxHeight: '80%',
+    maxHeight: '75%',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   handle: {
     alignSelf: 'center',
-    width: 36,
-    height: 4,
+    width: 38,
+    height: 5,
     borderRadius: Radius.full,
     backgroundColor: Palette.gray[200],
-    marginTop: Spacing.sm,
+    marginTop: Spacing.sm + 2,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.md + 2,
     borderBottomWidth: 1,
     borderBottomColor: Palette.gray[100],
   },
@@ -160,7 +169,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Palette.gray[50],
+    backgroundColor: Palette.gray[100],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -168,29 +177,44 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   sectionTitle: {
-    letterSpacing: 0.8,
+    letterSpacing: 1.0,
     marginBottom: Spacing.sm,
-    marginLeft: 4,
+    marginLeft: 2,
+  },
+  infoCard: {
+    backgroundColor: 'rgba(46, 125, 50, 0.06)',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.12)',
+    padding: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  globeBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(46, 125, 50, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   group: {
     backgroundColor: Palette.gray[50],
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Palette.gray[200],
-    marginBottom: Spacing.lg,
     overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md - 2,
+    paddingHorizontal: Spacing.md + 2,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Palette.gray[200],
   },
   rowSelected: {
-    backgroundColor: Palette.successLight,
+    backgroundColor: 'rgba(46, 125, 50, 0.04)',
   },
   rowLeft: {
     flexDirection: 'row',
@@ -198,18 +222,30 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     flex: 1,
   },
-  rowText: {
-    flex: 1,
-  },
-  symbolBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: Palette.gray[200],
+  flagContainer: {
+    width: 38,
+    height: 38,
+    borderRadius: Radius.sm,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: Palette.gray[200],
   },
-  symbolBadgeSelected: {
-    backgroundColor: Palette.success,
+  flagText: {
+    fontSize: 22,
+  },
+  codeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  radioUnselected: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: Palette.gray[300],
+    backgroundColor: '#FFFFFF',
   },
 });
