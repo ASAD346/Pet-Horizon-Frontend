@@ -7,29 +7,44 @@ import { ProfileModalShell } from './ProfileModalShell';
 
 const SECTIONS = [
   {
-    title: 'Subscription & Billing',
+    title: '1. Acceptance of Terms',
     body:
-      'Premium subscriptions are billed in advance on a monthly or yearly basis. Prices shown in the app are before applicable taxes. Your payment method is charged at the start of each billing period.',
+      'By downloading, installing, or using the PetHorizon mobile application, you agree to comply with and be bound by these Terms & Conditions. If you do not agree to these terms, please do not use the application.',
   },
   {
-    title: 'Auto-Renewal',
+    title: '2. User Eligibility & Accounts',
     body:
-      'Subscriptions renew automatically unless cancelled at least 24 hours before the end of the current period. Renewal charges use the same payment method on file.',
+      'You must be at least 13 years of age to create an account on PetHorizon. You are solely responsible for maintaining the confidentiality of your account authentication credentials and for all activities that occur under your profile.',
   },
   {
-    title: 'Cancellation & Refunds',
+    title: '3. Google Play Store Subscriptions & Billing',
     body:
-      'You may cancel anytime from Billing & Subscription in My Hub. Cancellation takes effect at the end of the current billing period. Refunds are handled according to platform store policies unless required otherwise by law.',
+      'Premium subscription plans (Monthly and Yearly) are purchased and billed directly through your Google Play Store account. Prices shown are exclusive of applicable local sales taxes, which will be calculated and collected by Google Play. Recurring charges will apply at the start of each billing period (monthly or yearly) until cancelled.',
   },
   {
-    title: 'Premium Features',
+    title: '4. Auto-Renewal & Cancellation',
     body:
-      'Premium unlocks additional pets, advanced stats, and enhanced reminders. Feature availability may change as the product evolves; core care tracking remains available on free accounts.',
+      'Subscriptions will automatically renew for the same duration and price unless auto-renewal is turned off or the subscription is cancelled through your Google Play Store account settings at least 24 hours prior to the end of the current billing cycle. Uninstalling the app does not cancel your subscription.',
   },
   {
-    title: 'Privacy Policy',
+    title: '5. Refunds & Purchases',
     body:
-      'We use your account and pet data to provide scheduling, reminders, and subscription services. We do not sell personal data. Contact support for data or account deletion requests.',
+      'All transactions are handled securely by Google. Refund requests, payment disputes, or billing questions must be submitted directly through the Google Play Store support console and are subject to Google Play Store Refund Policies.',
+  },
+  {
+    title: '6. Veterinary Advice Disclaimer',
+    body:
+      'PetHorizon is a tool designed to help you track care logs, log entries, medications, budgets, and scheduling for your pets. The content, scheduling recommendations, and tracking tools provided in the app do not constitute professional veterinary medical advice, diagnosis, or treatment. Always consult a licensed veterinarian for health-related questions.',
+  },
+  {
+    title: '7. Data Policy & Conduct',
+    body:
+      'You represent that you own or have the right to input all information, text, notes, and photos you add to the app. You agree not to upload offensive, illegal, or copy-protected content. We reserve the right to delete content or suspend accounts that violate these guidelines.',
+  },
+  {
+    title: '8. Contact Information',
+    body:
+      'For support inquiries, legal notices, or feedback, please reach out to us at support@pethorizon.app.',
   },
 ];
 
@@ -43,8 +58,7 @@ export function TermsAndConditionsSheet({ visible, onClose }: TermsAndConditions
     <ProfileModalShell visible={visible} onClose={onClose} title="Terms & Conditions">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.intro}>
-          Please read these terms carefully, especially sections related to payments and
-          subscriptions.
+          Last Updated: July 2026. Please read these Terms & Conditions carefully before activating premium plans or logging pet records.
         </AppText>
         {SECTIONS.map((section) => (
           <View key={section.title} style={styles.section}>
@@ -68,7 +82,7 @@ const styles = StyleSheet.create({
   },
   intro: {
     marginBottom: Spacing.md,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   section: {
     marginBottom: Spacing.md,

@@ -10,15 +10,19 @@ import { CustomButton } from '@/components/ui/AppButton';
 const FAQS = [
   {
     question: 'How do I add a new pet?',
-    answer: 'Navigate to the Home tab and click on the pet selector or Add Pet button in your dashboard settings.',
+    answer: 'Go to the Home tab, tap the pet selector header at the top of your dashboard, and select "Add Pet".',
   },
   {
     question: 'Can I share my pet hub with family?',
-    answer: 'Yes! Navigate to Profile > Family Sharing to invite members to view and collaborate on your pet schedules.',
+    answer: 'Yes! Open the Family tab from the bottom navigation bar. From there, you can view your care team, generate invitation codes, or show a QR code for other members to scan and join.',
   },
   {
-    question: 'How do I cancel my premium subscription?',
-    answer: 'You can manage or cancel subscriptions anytime via "Billing & Subscription" inside your profile screen.',
+    question: 'How do I manage or cancel my premium subscription?',
+    answer: 'Your active plan is listed under Profile > Billing & Subscription. Subscription renewals, payments, and cancellations are handled securely via your Google Play Store account settings under the "Subscriptions" section.',
+  },
+  {
+    question: 'How can I request my account and data to be deleted?',
+    answer: 'You can delete your account instantly by going to Profile > Profile Information (Edit Profile) and selecting "Delete Account" under the actions block. This will permanently wipe all your account, pet, schedule, budget, and journal photo records from our databases.',
   },
 ];
 
@@ -105,6 +109,7 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
 
 const styles = StyleSheet.create({
   content: {
+    paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xl,
   },
   supportBox: {
