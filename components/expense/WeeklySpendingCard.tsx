@@ -59,7 +59,7 @@ export function WeeklySpendingCard({
     <View style={[
       styles.wrapper, 
       { shadowColor }, 
-      isPremium && { borderWidth: 1.5, borderColor: '#D4A017', borderRadius: Radius.lg }
+      isPremium && { borderWidth: 1.5, borderColor: '#D4A017', borderRadius: 20 }
     ]}>
       <LinearGradient
         colors={gradientColors as any}
@@ -108,7 +108,7 @@ export function WeeklySpendingCard({
           <>
             {/* Center Area: Actionable remaining balance focus */}
             <View style={styles.balanceContainer}>
-              <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.balanceText}>
+              <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.balanceText} ellipsizeMode="tail" numberOfLines={1}>
                 {hasBudget ? remainingLabel : 'No Budget Set'}
               </AppText>
               {hasBudget && (
@@ -136,7 +136,7 @@ export function WeeklySpendingCard({
             <View style={styles.bottomRow}>
               {hasBudget ? (
                 <>
-                  <AppText variant="caption" weight="700" color="rgba(255,255,255,0.8)">
+                  <AppText variant="caption" weight="700" color="rgba(255,255,255,0.8)" style={{ flexShrink: 1, marginRight: 8 }} ellipsizeMode="tail" numberOfLines={1}>
                     Limit: {limitLabel}
                   </AppText>
                   <View style={[
@@ -145,7 +145,7 @@ export function WeeklySpendingCard({
                     isPremium && !isOver && { borderColor: 'rgba(212, 160, 23, 0.3)' }
                   ]}>
                     <View style={[styles.statusDot, { backgroundColor: progressColor }]} />
-                    <AppText variant="caption" weight="800" color={isOver ? '#F87171' : (isPremium ? '#FFF176' : '#A7F3D0')} style={styles.statusText}>
+                    <AppText variant="caption" weight="800" color={isOver ? '#F87171' : (isPremium ? '#FFF176' : '#A7F3D0')} style={styles.statusText} ellipsizeMode="tail" numberOfLines={1}>
                       {isOver ? 'Over Limit' : `${spentPercent}% Spent`}
                     </AppText>
                   </View>
@@ -170,21 +170,23 @@ export function WeeklySpendingCard({
   );
 }
 
+const cardShadow = Platform.select({
+  ios: {
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+  android: { elevation: 4 },
+});
+
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: Radius.lg,
+    borderRadius: 20,
     marginBottom: Spacing.md + 4,
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-      },
-      android: { elevation: 4 },
-    }),
+    ...cardShadow,
   },
   card: {
-    borderRadius: Radius.lg - 2,
+    borderRadius: 20,
     padding: Spacing.lg - 2,
     overflow: 'hidden',
   },

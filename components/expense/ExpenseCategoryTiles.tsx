@@ -62,6 +62,8 @@ export function ExpenseCategoryTiles({ selected, onSelect }: ExpenseCategoryTile
                 weight="700"
                 color={active ? '#FFFFFF' : HomeTheme.text}
                 style={styles.label}
+                numberOfLines={1}
+                ellipsizeMode="tail"
               >
                 {item.label}
               </AppText>
@@ -98,8 +100,8 @@ const styles = StyleSheet.create({
     paddingBottom: 4, // allow shadow to show
   },
   tile: {
-    width: 76,
-    height: 76,
+    width: 84,
+    height: 84,
     borderRadius: Radius.md + 2,
     alignItems: 'center',
     justifyContent: 'center',
@@ -130,6 +132,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 11,
     textAlign: 'center',
+    paddingHorizontal: 4,
   },
   activeDot: {
     position: 'absolute',
