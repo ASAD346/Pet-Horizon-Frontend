@@ -11,6 +11,7 @@ import {
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
@@ -144,6 +145,8 @@ export function JournalContent({ active = true }: JournalContentProps) {
     setWeekStart((current) => shiftWeekStart(current, 1));
   }, []);
 
+  const router = useRouter();
+
   const handleAddPhoto = useCallback(async () => {
     if (!token || !pet?._id) {
       Alert.alert('Journal', 'Select a pet before adding a photo.');
@@ -151,6 +154,26 @@ export function JournalContent({ active = true }: JournalContentProps) {
     }
     if (!isSelectedToday) {
       Alert.alert('Journal', 'Photos can only be added for today.');
+      return;
+    }
+
+    const isPremium = user?.premiumStatus === 'premium';
+    const currentPhotoCount = photos.length;
+
+    if (!isPremium && currentPhotoCount >= 1) {
+      Alert.alert(
+        'Premium Feature',
+        'Upgrade to Premium to add up to 5 daily photos to your journal!',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => router.push('/profile/premium') }
+        ]
+      );
+      return;
+    }
+
+    if (isPremium && currentPhotoCount >= 5) {
+      Alert.alert('Limit Reached', 'Premium limit reached: Maximum 5 daily photos allowed.');
       return;
     }
 

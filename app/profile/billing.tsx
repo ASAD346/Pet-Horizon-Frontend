@@ -120,81 +120,125 @@ export default function BillingScreen() {
       <ProfileScreenHeader title="Billing" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Current plan stylized card */}
-        <View style={styles.ticketCard}>
-          <LinearGradient
-            colors={status?.isPremium ? ['#0E3821', '#184F2E', '#267343'] : ['#E8F5E9', '#C8E6C9']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.ticketGradient}
+        {/* Plans List */}
+        <View style={styles.plansSection}>
+          <View style={styles.labelContainer}>
+            <View style={[styles.labelDot, status?.isPremium && styles.labelDotActive]} />
+            <AppText variant="caption" weight="800" color={status?.isPremium ? '#2E7D32' : '#64748B'} style={styles.labelText}>
+              MEMBERSHIP PLANS
+            </AppText>
+          </View>
+          
+          {/* 1. Free Plan Card */}
+          <View 
+            style={[
+              styles.planCard, 
+              !status?.isPremium && styles.planCardActive
+            ]}
           >
-            {/* Header row */}
-            <View style={styles.ticketHeader}>
-              <View style={status?.isPremium ? styles.premiumBadge : styles.freeBadge}>
-                <Ionicons name={status?.isPremium ? 'diamond' : 'paw'} size={12} color={status?.isPremium ? '#D4A017' : '#2E7D32'} />
-                <AppText variant="caption" weight="800" color={status?.isPremium ? '#FFF9E6' : '#2E7D32'} style={styles.badgeText}>
-                  {status?.isPremium ? 'PREMIUM ACTIVE' : 'FREE ACCOUNT'}
+            <View style={styles.planCardHeader}>
+              <View style={styles.planTitleContainer}>
+                <Ionicons name="paw" size={16} color={!status?.isPremium ? '#2E7D32' : '#64748B'} />
+                <AppText variant="body" weight="800" color={!status?.isPremium ? '#1B5E20' : '#334155'} style={{ marginLeft: 6 }}>
+                  Free Plan
                 </AppText>
               </View>
-              {status?.isPremium && (
-                <Ionicons name="star" size={18} color="#D4A017" />
+              {!status?.isPremium && (
+                <View style={styles.activePlanBadge}>
+                  <AppText variant="caption" weight="800" color="#FFFFFF">ACTIVE</AppText>
+                </View>
               )}
             </View>
-
-            {/* Plan Info */}
-            <AppText variant="h2" weight="800" color={status?.isPremium ? '#FFFFFF' : '#1B5E20'} style={styles.ticketPlanTitle}>
-              {displayPlanName}
+            <AppText variant="caption" color="#475569" style={styles.planAccessText}>
+              • Basic pet tracking and care log schedules
+              {"\n"}• Limit 1 daily photo upload in Journal
+              {"\n"}• Single pet profile limit
             </AppText>
-
-            {status?.isPremium ? (
-              <AppText variant="bodySmall" color="rgba(255,255,255,0.75)" style={styles.ticketDesc}>
-                Unlimited pet registrations, advanced analytics, and smart notifications.
-              </AppText>
-            ) : (
-              <AppText variant="bodySmall" color="#4E704F" style={styles.ticketDesc}>
-                Basic pet tracking and scheduling features.
-              </AppText>
-            )}
-
-            <View style={status?.isPremium ? styles.ticketDividerPremium : styles.ticketDividerFree} />
-
-            {/* Footer row */}
-            <View style={styles.ticketFooter}>
-              <View>
-                <AppText variant="caption" color={status?.isPremium ? 'rgba(255,255,255,0.6)' : '#668068'} weight="700">
-                  BILLING TERMS
-                </AppText>
-                <AppText variant="bodySmall" weight="800" color={status?.isPremium ? '#FFFFFF' : '#1B5E20'} style={styles.ticketFooterVal}>
-                  {displayRenewLabel}
-                </AppText>
-              </View>
-              <View style={styles.alignEnd}>
-                <AppText variant="caption" color={status?.isPremium ? 'rgba(255,255,255,0.6)' : '#668068'} weight="700">
-                  PRICE
-                </AppText>
-                <AppText variant="bodySmall" weight="800" color={status?.isPremium ? '#FFF176' : '#1B5E20'} style={styles.ticketFooterVal}>
-                  {status?.isPremium ? '$9.99/mo' : 'Free'}
-                </AppText>
-              </View>
+            <View style={styles.planPriceRow}>
+              <AppText variant="bodySmall" weight="800" color="#334155">Price: Free</AppText>
             </View>
-          </LinearGradient>
+          </View>
+
+          {/* 2. Monthly Premium Card */}
+          <TouchableOpacity 
+            style={[
+              styles.planCard, 
+              (status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && styles.planCardActive
+            ]}
+            activeOpacity={0.8}
+            onPress={() => !(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && router.push('/profile/premium')}
+          >
+            <View style={styles.planCardHeader}>
+              <View style={styles.planTitleContainer}>
+                <Ionicons name="diamond" size={16} color={(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') ? '#D4A017' : '#64748B'} />
+                <AppText variant="body" weight="800" color={(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') ? '#1B5E20' : '#334155'} style={{ marginLeft: 6 }}>
+                  Monthly Premium
+                </AppText>
+              </View>
+              {(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && (
+                <View style={[styles.activePlanBadge, { backgroundColor: '#D4A017' }]}>
+                  <AppText variant="caption" weight="800" color="#FFFFFF">ACTIVE</AppText>
+                </View>
+              )}
+            </View>
+            <AppText variant="caption" color="#475569" style={styles.planAccessText}>
+              • Unlimited pet registrations
+              {"\n"}• Up to 5 daily photo uploads in Journal
+              {"\n"}• Smart notifications & reminders
+              {"\n"}• Caregiver permissions and custom access controls
+            </AppText>
+            <View style={styles.planPriceRow}>
+              <AppText variant="bodySmall" weight="800" color="#334155">Price: $9.99 / month</AppText>
+              {!(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && (
+                <AppText variant="caption" weight="700" color="#2E7D32">Tap to Upgrade</AppText>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          {/* 3. Yearly Premium Card */}
+          <TouchableOpacity 
+            style={[
+              styles.planCard, 
+              (status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && styles.planCardActive
+            ]}
+            activeOpacity={0.8}
+            onPress={() => !(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && router.push('/profile/premium')}
+          >
+            <View style={styles.planCardHeader}>
+              <View style={styles.planTitleContainer}>
+                <Ionicons name="star" size={16} color={(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) ? '#D4A017' : '#64748B'} />
+                <AppText variant="body" weight="800" color={(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) ? '#1B5E20' : '#334155'} style={{ marginLeft: 6 }}>
+                  Yearly Premium
+                </AppText>
+              </View>
+              {(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && (
+                <View style={[styles.activePlanBadge, { backgroundColor: '#D4A017' }]}>
+                  <AppText variant="caption" weight="800" color="#FFFFFF">ACTIVE</AppText>
+                </View>
+              )}
+            </View>
+            <AppText variant="caption" color="#475569" style={styles.planAccessText}>
+              • Best Value (Get 2 Months Free!)
+              {"\n"}• All Monthly Premium features included
+              {"\n"}• Dedicated Priority Customer Support
+            </AppText>
+            <View style={styles.planPriceRow}>
+              <AppText variant="bodySmall" weight="800" color="#334155">Price: $79.99 / year</AppText>
+              {!(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && (
+                <AppText variant="caption" weight="700" color="#2E7D32">Tap to Upgrade</AppText>
+              )}
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {status?.isPremium ? (
+        {status?.isPremium && (
           <CustomButton
             title="Cancel Auto-Renewal"
             onPress={handleCancel}
             isLoading={cancelling}
             variant="outline"
-            style={{ marginBottom: Spacing.lg, borderColor: '#E53935' }}
+            style={{ marginBottom: Spacing.lg, borderColor: '#E53935', marginTop: Spacing.xs }}
             textStyle={{ color: '#E53935' }}
-          />
-        ) : (
-          <CustomButton
-            title="Upgrade to Premium"
-            onPress={() => router.push('/profile/premium')}
-            variant="primary"
-            style={{ marginBottom: Spacing.lg }}
           />
         )}
 
