@@ -1,19 +1,7 @@
-import { Platform, StatusBar as RNStatusBar } from 'react-native';
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { HomeTheme } from '@/constants/theme';
 
-/** Ensures system status bar icons and background are visible on all screens. */
+/** Ensures system status bar icons are dark and background matches page. */
 export function AppStatusBar() {
-  return (
-    <>
-      {Platform.OS === 'android' ? (
-        <RNStatusBar
-          barStyle="dark-content"
-          backgroundColor={HomeTheme.background}
-          translucent={false}
-        />
-      ) : null}
-      <StatusBar style="dark" backgroundColor={HomeTheme.background} />
-    </>
-  );
+  return <StatusBar style="dark" />;
 }

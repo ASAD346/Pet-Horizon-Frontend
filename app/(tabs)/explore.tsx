@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter, type Href } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ScheduleSetupView } from '@/components/schedule';
 import { LogJournalSheet } from '@/components/journal';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,6 +14,7 @@ export default function ScheduleScreen() {
 
   return (
     <>
+      <StatusBar style="dark" />
       <ScheduleSetupView
         onJournalPress={() => setJournalVisible(true)}
         onNotificationsPress={() => router.push('/notifications' as Href)}

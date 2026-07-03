@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useRouter, type Href } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { ExpenseTrackerView } from '@/components/expense';
 import { LogJournalSheet } from '@/components/journal';
 
@@ -9,6 +10,7 @@ export default function ExpenseTrackerScreen() {
 
   return (
     <>
+      <StatusBar style="dark" />
       <ExpenseTrackerView
         onJournalPress={() => setJournalVisible(true)}
         onNotificationsPress={() => router.push('/notifications' as Href)}

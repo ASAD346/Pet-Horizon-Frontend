@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { JournalContent } from '@/components/journal';
 import { JournalTheme, Spacing } from '@/constants/theme';
 
@@ -8,6 +9,7 @@ import { JournalTheme, Spacing } from '@/constants/theme';
 export default function PetJournalScreen() {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <StatusBar style="dark" />
       <JournalContent active />
     </SafeAreaView>
   );

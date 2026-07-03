@@ -1,5 +1,11 @@
 import { FamilyHubView } from '@/components/family';
+import { StatusBar } from 'expo-status-bar';
 
 export default function FamilyScreen() {
-  return <FamilyHubView />;
+  return (
+    <>
+      <StatusBar style="dark" />
+      <FamilyHubView />
+    </>
+  );
 }
