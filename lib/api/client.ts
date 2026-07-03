@@ -26,6 +26,39 @@ async function parseErrorMessage(response: Response): Promise<string> {
   }
 }
 
+function sanitizeBsonIds(obj: any): any {
+  if (obj === null || typeof obj !== 'object') return obj;
+  if (Array.isArray(obj)) return obj.map(sanitizeBsonIds);
+
+  if ('buffer' in obj && typeof obj.buffer === 'object' && obj.buffer !== null) {
+    const buf = obj.buffer as Record<string, number>;
+    if (Object.keys(buf).length >= 12 && '0' in buf && '11' in buf) {
+      let hex = '';
+      for (let i = 0; i < 12; i++) {
+        const val = buf[String(i)];
+        if (typeof val === 'number') {
+          hex += val.toString(16).padStart(2, '0');
+        } else {
+          hex = ''; break;
+        }
+      }
+      if (hex.length === 24) return hex;
+    }
+  }
+
+  if (obj.type === 'Buffer' && Array.isArray(obj.data) && obj.data.length === 12) {
+    return obj.data.map((n: number) => n.toString(16).padStart(2, '0')).join('');
+  }
+
+  const result: any = {};
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      result[key] = sanitizeBsonIds(obj[key]);
+    }
+  }
+  return result;
+}
+
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const {
     method = 'GET',
@@ -81,7 +114,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       return undefined as T;
     }
 
-    return (await response.json()) as T;
+    const rawData = await response.json();
+    return sanitizeBsonIds(rawData) as T;
   } catch (error) {
     clearTimeout(timeoutId);
 

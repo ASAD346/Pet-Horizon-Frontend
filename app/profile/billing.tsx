@@ -3,22 +3,16 @@ import {
   Alert,
   ScrollView,
   StyleSheet,
-  TextInput,
   View,
-  Platform,
   TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
-import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme, formatPlanPrice } from '@/components/profile/profileTheme';
-import { SectionLabel, SheetColors } from '@/components/sheets';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { SkeletonBillingHistory } from '@/components/ui/skeletons';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
@@ -27,20 +21,133 @@ import {
   cancelPremium,
   fetchPaymentInvoices,
   fetchPremiumStatus,
-  updatePaymentMethod,
 } from '@/services/premium/premiumApi';
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
-import { homeCardShadow } from '@/components/home/homeStyles';
+const FREE_FEATURES = [
+  'Basic pet tracking and care schedules',
+  'Limit 1 daily photo upload in Journal',
+  'Single pet profile',
+];
+
+const MONTHLY_FEATURES = [
+  'Unlimited pet registrations',
+  'Up to 5 daily photo uploads in Journal',
+  'Smart notifications & reminders',
+  'Caregiver permissions & access controls',
+];
+
+const YEARLY_FEATURES = [
+  'Best Value — get 2 months free!',
+  'All Monthly Premium features included',
+  'Dedicated Priority Customer Support',
+];
+
+interface PlanCardProps {
+  title: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  features: string[];
+  price: string;
+  isActive: boolean;
+  onPress?: () => void;
+  renewLabel?: string;
+}
+
+function PlanCard({
+  title, icon, features, price,
+  isActive, onPress, renewLabel,
+}: PlanCardProps) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.planCard,
+        isActive && styles.planCardActive,
+      ]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.8 : 1}
+      disabled={!onPress}
+    >
+      <View style={styles.planCardHeader}>
+        <View style={styles.planTitleRow}>
+          <Ionicons name={icon} size={20} color={isActive ? ProfileTheme.green : '#64748B'} />
+          <AppText variant="body" weight="800" color={isActive ? ProfileTheme.green : '#334155'}>
+            {title}
+          </AppText>
+        </View>
+        {isActive ? (
+          <View style={styles.activeBadge}>
+            <AppText variant="caption" weight="800" color={ProfileTheme.green}>
+              ACTIVE
+            </AppText>
+          </View>
+        ) : onPress ? (
+          <AppText variant="caption" weight="700" color={ProfileTheme.green}>
+            Upgrade
+          </AppText>
+        ) : null}
+      </View>
+
+      <View style={styles.featureList}>
+        {features.map((f, i) => (
+          <View key={i} style={styles.featureRow}>
+            <AppText variant="caption" color="#475569" style={styles.featureText}>
+              • {f}
+            </AppText>
+          </View>
+        ))}
+      </View>
+
+      <View style={styles.planPriceRow}>
+        <AppText variant="bodySmall" weight="800" color="#334155">
+          {price}
+        </AppText>
+        {renewLabel ? (
+          <AppText variant="caption" color={ProfileTheme.green}>
+            {renewLabel}
+          </AppText>
+        ) : null}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+function InvoiceRow({ invoice }: { invoice: PaymentInvoice }) {
+  const statusColor =
+    invoice.status === 'paid' ? '#22C55E' :
+    invoice.status === 'pending' ? '#F59E0B' : '#EF4444';
+
+  return (
+    <View style={styles.invoiceRow}>
+      <View style={styles.invoiceLeft}>
+        <AppText variant="bodySmall" weight="700" color="#1E293B">
+          #{invoice.id.slice(-6).toUpperCase()}
+        </AppText>
+        <AppText variant="caption" color="#64748B">
+          {invoice.date}
+        </AppText>
+      </View>
+      <View style={styles.invoiceRight}>
+        <AppText variant="bodySmall" weight="700">
+          {formatPlanPrice(invoice.amount)}
+        </AppText>
+        <AppText variant="caption" weight="700" color={statusColor}>
+          {invoice.status.toUpperCase()}
+        </AppText>
+      </View>
+    </View>
+  );
+}
 
 export default function BillingScreen() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [status, setStatus] = useState<PremiumStatusResponse | null>(null);
   const [invoices, setInvoices] = useState<PaymentInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const { showToast, showErrorToast } = useToast();
+
+  const isPremium = status?.isPremium ?? user?.premiumStatus === 'premium';
 
   const reload = useCallback(async () => {
     if (!token) return;
@@ -59,9 +166,7 @@ export default function BillingScreen() {
     }
   }, [token]);
 
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  useEffect(() => { reload(); }, [reload]);
 
   const handleCancel = () => {
     if (!token) return;
@@ -90,201 +195,87 @@ export default function BillingScreen() {
     );
   };
 
+  const planKey = status?.plan ?? '';
+  const isMonthlyActive = isPremium && planKey !== 'yearly' && planKey !== 'annual';
+  const isYearlyActive = isPremium && (planKey === 'yearly' || planKey === 'annual');
 
-
-  const displayPlanName = status?.isPremium ? (status.plan ?? 'Premium').toUpperCase() : 'FREE PLAN';
-  const displayRenewLabel = status?.expiresAt 
-    ? `${status.autoRenew ? 'Next Renewal' : 'Expires on'} ${new Date(status.expiresAt).toLocaleDateString()}`
-    : 'No renewal date';
+  const renewLabel = status?.expiresAt
+    ? `${status.autoRenew ? 'Renews' : 'Expires'} ${new Date(status.expiresAt).toLocaleDateString()}`
+    : undefined;
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ProfileScreenHeader title="Billing" onBack={() => router.back()} />
+      <ProfileScreenHeader title="Billing & Subscription" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Plans List */}
-        <View style={styles.plansSection}>
-          <View style={styles.labelContainer}>
-            <View style={[styles.labelDot, status?.isPremium && styles.labelDotActive]} />
-            <AppText variant="caption" weight="800" color={status?.isPremium ? '#2E7D32' : '#64748B'} style={styles.labelText}>
-              MEMBERSHIP PLANS
-            </AppText>
-          </View>
-          
-          {/* 1. Free Plan Card */}
-          <View 
-            style={[
-              styles.planCard, 
-              !status?.isPremium && styles.planCardActive
-            ]}
-          >
-            <View style={styles.planCardHeader}>
-              <View style={styles.planTitleContainer}>
-                <Ionicons name="paw" size={16} color={!status?.isPremium ? '#2E7D32' : '#64748B'} />
-                <AppText variant="body" weight="800" color={!status?.isPremium ? '#1B5E20' : '#334155'} style={{ marginLeft: 6 }}>
-                  Free Plan
-                </AppText>
-              </View>
-              {!status?.isPremium && (
-                <View style={styles.activePlanBadge}>
-                  <AppText variant="caption" weight="800" color="#FFFFFF">ACTIVE</AppText>
-                </View>
-              )}
-            </View>
-            <AppText variant="caption" color="#475569" style={styles.planAccessText}>
-              • Basic pet tracking and care log schedules
-              {"\n"}• Limit 1 daily photo upload in Journal
-              {"\n"}• Single pet profile limit
-            </AppText>
-            <View style={styles.planPriceRow}>
-              <AppText variant="bodySmall" weight="800" color="#334155">Price: Free</AppText>
-            </View>
-          </View>
 
-          {/* 2. Monthly Premium Card */}
-          <TouchableOpacity 
-            style={[
-              styles.planCard, 
-              (status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && styles.planCardActive
-            ]}
-            activeOpacity={0.8}
-            onPress={() => !(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && router.push('/profile/premium')}
-          >
-            <View style={styles.planCardHeader}>
-              <View style={styles.planTitleContainer}>
-                <Ionicons name="diamond" size={16} color={(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') ? '#D4A017' : '#64748B'} />
-                <AppText variant="body" weight="800" color={(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') ? '#1B5E20' : '#334155'} style={{ marginLeft: 6 }}>
-                  Monthly Premium
-                </AppText>
-              </View>
-              {(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && (
-                <View style={[styles.activePlanBadge, { backgroundColor: '#D4A017' }]}>
-                  <AppText variant="caption" weight="800" color="#FFFFFF">ACTIVE</AppText>
-                </View>
-              )}
-            </View>
-            <AppText variant="caption" color="#475569" style={styles.planAccessText}>
-              • Unlimited pet registrations
-              {"\n"}• Up to 5 daily photo uploads in Journal
-              {"\n"}• Smart notifications & reminders
-              {"\n"}• Caregiver permissions and custom access controls
-            </AppText>
-            <View style={styles.planPriceRow}>
-              <AppText variant="bodySmall" weight="800" color="#334155">Price: $4.99 / month</AppText>
-              {!(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && (
-                <AppText variant="caption" weight="700" color="#2E7D32">Tap to Upgrade</AppText>
-              )}
-            </View>
-          </TouchableOpacity>
+        <AppText variant="bodySmall" weight="700" color="#64748B" style={styles.sectionTitle}>
+          MEMBERSHIP PLANS
+        </AppText>
 
-          {/* 3. Yearly Premium Card */}
-          <TouchableOpacity 
-            style={[
-              styles.planCard, 
-              (status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && styles.planCardActive
-            ]}
-            activeOpacity={0.8}
-            onPress={() => !(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && router.push('/profile/premium')}
-          >
-            <View style={styles.planCardHeader}>
-              <View style={styles.planTitleContainer}>
-                <Ionicons name="star" size={16} color={(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) ? '#D4A017' : '#64748B'} />
-                <AppText variant="body" weight="800" color={(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) ? '#1B5E20' : '#334155'} style={{ marginLeft: 6 }}>
-                  Yearly Premium
-                </AppText>
-              </View>
-              {(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && (
-                <View style={[styles.activePlanBadge, { backgroundColor: '#D4A017' }]}>
-                  <AppText variant="caption" weight="800" color="#FFFFFF">ACTIVE</AppText>
-                </View>
-              )}
-            </View>
-            <AppText variant="caption" color="#475569" style={styles.planAccessText}>
-              • Best Value (Get 2 Months Free!)
-              {"\n"}• All Monthly Premium features included
-              {"\n"}• Dedicated Priority Customer Support
-            </AppText>
-            <View style={styles.planPriceRow}>
-              <AppText variant="bodySmall" weight="800" color="#334155">Price: $49.99 / year</AppText>
-              {!(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && (
-                <AppText variant="caption" weight="700" color="#2E7D32">Tap to Upgrade</AppText>
-              )}
-            </View>
-          </TouchableOpacity>
+        <View style={styles.planContainer}>
+          <PlanCard
+            title="Free Plan"
+            icon="paw-outline"
+            features={FREE_FEATURES}
+            price="Free forever"
+            isActive={!isPremium}
+          />
+
+          <PlanCard
+            title="Monthly Premium"
+            icon="star-outline"
+            features={MONTHLY_FEATURES}
+            price="$4.99 / month"
+            isActive={isMonthlyActive}
+            renewLabel={isMonthlyActive ? renewLabel : undefined}
+            onPress={!isMonthlyActive ? () => router.push('/profile/premium') : undefined}
+          />
+
+          <PlanCard
+            title="Yearly Premium"
+            icon="ribbon-outline"
+            features={YEARLY_FEATURES}
+            price="$49.99 / year  ·  Save 17%"
+            isActive={isYearlyActive}
+            renewLabel={isYearlyActive ? renewLabel : undefined}
+            onPress={!isYearlyActive ? () => router.push('/profile/premium') : undefined}
+          />
         </View>
 
-        {status?.isPremium && (
-          <CustomButton
-            title="Cancel Auto-Renewal"
-            onPress={handleCancel}
-            isLoading={cancelling}
-            variant="outline"
-            style={{ marginBottom: Spacing.lg, borderColor: '#E53935', marginTop: Spacing.xs }}
-            textStyle={{ color: '#E53935' }}
-          />
+        {isPremium && (
+          <TouchableOpacity style={styles.cancelCard} onPress={handleCancel} activeOpacity={0.8} disabled={cancelling}>
+            <AppText variant="bodySmall" weight="700" color="#EF4444">
+              Cancel Auto-Renewal
+            </AppText>
+            <AppText variant="caption" color="#94A3B8" style={{ marginTop: 2 }}>
+              Keep premium access until the end of your billing cycle
+            </AppText>
+          </TouchableOpacity>
         )}
 
-        {/* Google In-App Purchase details banner */}
-        <View style={styles.formCard}>
-          <View style={styles.labelContainer}>
-            <View style={[styles.labelDot, styles.labelDotActive]} />
-            <AppText variant="caption" weight="800" color="#2E7D32" style={styles.labelText}>
-              GOOGLE PLAY SUBSCRIPTION
-            </AppText>
-          </View>
-          <AppText variant="caption" color={HomeTheme.textMuted} style={styles.stubNote}>
-            Your premium membership is billed securely via Google Play In-App Purchases. Payment methods, invoices, and active cycles are managed directly under your Google Play Store account settings.
+        <View style={styles.infoBanner}>
+          <Ionicons name="logo-google-playstore" size={16} color="#64748B" />
+          <AppText variant="caption" color="#64748B" style={styles.infoText}>
+            Payment methods, invoices, and billing cycles are managed securely via your Google Play Store account settings.
           </AppText>
         </View>
 
-        {/* Billing History Section */}
-        <View style={styles.historyLabelContainer}>
-          <View style={styles.labelDotHistory} />
-          <AppText variant="caption" weight="800" color="#64748B" style={styles.labelText}>
-            BILLING HISTORY
-          </AppText>
-        </View>
+        <AppText variant="bodySmall" weight="700" color="#64748B" style={[styles.sectionTitle, { marginTop: Spacing.md }]}>
+          BILLING HISTORY
+        </AppText>
+
         <View style={styles.historyCard}>
           {loading ? (
             <SkeletonBillingHistory count={3} />
           ) : invoices.length === 0 ? (
             <View style={styles.emptyContainer}>
-              <Ionicons name="receipt-outline" size={32} color="#CBD5E1" />
-              <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.emptyText}>
-                No invoices found on this account.
+              <AppText variant="bodySmall" color="#94A3B8">
+                No invoices on this account yet
               </AppText>
             </View>
           ) : (
-            invoices.map((invoice, index) => (
-              <View key={invoice.id} style={styles.invoiceItem}>
-                {index > 0 && <View style={styles.invoiceDivider} />}
-                <View style={styles.invoiceRow}>
-                  <View style={styles.invoiceLeft}>
-                    <View style={styles.receiptBadge}>
-                      <Ionicons name="document-text-outline" size={16} color="#2E7D32" />
-                    </View>
-                    <View>
-                      <AppText variant="bodySmall" weight="800" color={ProfileTheme.text}>
-                        Invoice #{invoice.id.slice(-6).toUpperCase()}
-                      </AppText>
-                      <AppText variant="caption" color={ProfileTheme.textMuted} style={styles.invoiceDate}>
-                        {invoice.date}
-                      </AppText>
-                    </View>
-                  </View>
-                  <View style={styles.invoiceRight}>
-                    <AppText variant="body" weight="800" color={ProfileTheme.green}>
-                      {formatPlanPrice(invoice.amount)}
-                    </AppText>
-                    <View style={styles.statusPill}>
-                      <AppText variant="caption" weight="800" color="#2E7D32" style={styles.statusText}>
-                        {invoice.status.toUpperCase()}
-                      </AppText>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            ))
+            invoices.map((inv) => <InvoiceRow key={inv.id} invoice={inv} />)
           )}
         </View>
       </ScrollView>
@@ -293,56 +284,57 @@ export default function BillingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: ProfileTheme.background,
-  },
+  container: { flex: 1, backgroundColor: ProfileTheme.background },
   content: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
-  banner: {
+  sectionTitle: {
     marginBottom: Spacing.md,
-    borderRadius: Radius.md,
+    letterSpacing: 0.5,
   },
-  plansSection: {
-    marginBottom: Spacing.lg,
+  planContainer: {
     gap: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   planCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    ...homeCardShadow,
   },
   planCardActive: {
-    borderColor: '#2E7D32',
-    backgroundColor: '#FCFDFC',
-    borderWidth: 2,
+    borderColor: ProfileTheme.green,
+    backgroundColor: 'rgba(46,125,50,0.02)',
   },
   planCardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  planTitleContainer: {
+  planTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  activePlanBadge: {
-    backgroundColor: '#2E7D32',
+  activeBadge: {
+    backgroundColor: 'rgba(46,125,50,0.1)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: Radius.sm,
   },
-  planAccessText: {
-    lineHeight: 18,
-    color: '#475569',
-    marginBottom: Spacing.sm,
+  featureList: {
+    gap: 4,
+    marginBottom: Spacing.md,
+  },
+  featureRow: {
+    flexDirection: 'row',
+  },
+  featureText: {
+    flex: 1,
   },
   planPriceRow: {
     flexDirection: 'row',
@@ -350,146 +342,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
-    paddingTop: Spacing.xs,
+    paddingTop: Spacing.sm,
   },
-  formCard: {
+  cancelCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
     marginBottom: Spacing.lg,
-    ...homeCardShadow,
   },
-  labelContainer: {
+  infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.xs,
-    paddingLeft: 2,
-  },
-  labelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#CBD5E1',
-  },
-  labelDotActive: {
-    backgroundColor: '#2E7D32',
-  },
-  labelText: {
-    fontSize: 11,
-    letterSpacing: 0.8,
-  },
-  stubNote: {
-    marginBottom: Spacing.md,
-    lineHeight: 16,
-    color: '#64748B',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: '#FFFFFF',
+    gap: 12,
+    padding: Spacing.md,
+    backgroundColor: '#F8FAFC',
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.lg,
-    minHeight: 48,
+    marginBottom: Spacing.xl,
   },
-  inputRowActive: {
-    borderColor: '#2E7D32',
-    backgroundColor: '#FCFDFC',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#2E7D32',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.12,
-        shadowRadius: 5,
-      },
-      android: {
-        elevation: 1.5,
-      },
-    }),
-  },
-  input: {
+  infoText: {
     flex: 1,
-    fontSize: 14,
-    color: SheetColors.inputText,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-  },
-  historyLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.sm,
-    paddingLeft: 2,
-  },
-  labelDotHistory: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#CBD5E1',
+    lineHeight: 18,
   },
   historyCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.lg,
-    ...homeCardShadow,
-  },
-  invoiceItem: {
-    width: '100%',
-  },
-  invoiceDivider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
   },
   invoiceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.md,
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   invoiceLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  receiptBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(46, 125, 50, 0.06)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  invoiceDate: {
-    marginTop: 2,
+    gap: 4,
   },
   invoiceRight: {
     alignItems: 'flex-end',
     gap: 4,
   },
-  statusPill: {
-    backgroundColor: 'rgba(46, 125, 50, 0.08)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 8,
-    letterSpacing: 0.5,
-  },
   emptyContainer: {
+    padding: Spacing.xl,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.xl,
-    gap: Spacing.xs,
-  },
-  emptyText: {
-    textAlign: 'center',
   },
 });

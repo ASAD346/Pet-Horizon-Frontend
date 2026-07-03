@@ -26,7 +26,8 @@ export function useTimezone() {
       .then((updatedUser) => {
         setSession({
           token,
-          user: updatedUser,
+          // Preserve activePetId — updateTimezone returns ApiUser without it
+          user: { ...updatedUser, activePetId: user.activePetId },
         });
         setSynced(true);
         log.ok(SCOPE, 'Timezone synced successfully', { localTimezone });

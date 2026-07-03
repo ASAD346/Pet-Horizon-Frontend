@@ -3,9 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View, Linking, Alert } from '
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
-import { ProfileTheme } from './profileTheme';
 import { ProfileModalShell } from './ProfileModalShell';
-import { CustomButton } from '@/components/ui/AppButton';
 
 const FAQS = [
   {
@@ -17,14 +15,58 @@ const FAQS = [
     answer: 'Yes! Open the Family tab from the bottom navigation bar. From there, you can view your care team, generate invitation codes, or show a QR code for other members to scan and join.',
   },
   {
-    question: 'How do I manage or cancel my premium subscription?',
-    answer: 'Your active plan is listed under Profile > Billing & Subscription. Subscription renewals, payments, and cancellations are handled securely via your Google Play Store account settings under the "Subscriptions" section.',
+    question: 'How do I manage my premium subscription?',
+    answer: 'Your active plan is listed under Profile > Billing & Subscription. Subscription renewals and cancellations are handled securely via your Google Play Store account settings.',
   },
   {
-    question: 'How can I request my account and data to be deleted?',
-    answer: 'You can delete your account instantly by going to Profile > Profile Information (Edit Profile) and selecting "Delete Account" under the actions block. This will permanently wipe all your account, pet, schedule, budget, and journal photo records from our databases.',
+    question: 'How can I request my account to be deleted?',
+    answer: 'You can delete your account instantly by going to Profile > Profile Information (Edit Profile) and selecting "Delete Account" under the actions block.',
   },
 ];
+
+function FaqItem({ faq, isExpanded, onToggle }: { faq: typeof FAQS[number]; isExpanded: boolean; onToggle: () => void }) {
+  return (
+    <View style={faqStyles.card}>
+      <TouchableOpacity style={faqStyles.header} onPress={onToggle} activeOpacity={0.7}>
+        <AppText variant="body" weight="700" color="#1E293B" style={faqStyles.question}>
+          {faq.question}
+        </AppText>
+        <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={20} color="#94A3B8" />
+      </TouchableOpacity>
+      {isExpanded && (
+        <View style={faqStyles.body}>
+          <AppText variant="bodySmall" color="#475569" style={faqStyles.answer}>
+            {faq.answer}
+          </AppText>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const faqStyles = StyleSheet.create({
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    gap: 12,
+  },
+  question: { flex: 1, lineHeight: 20 },
+  body: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+    paddingTop: 0,
+  },
+  answer: { lineHeight: 20 },
+});
 
 interface HelpSupportSheetProps {
   visible: boolean;
@@ -37,71 +79,43 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
   const handleContactSupport = () => {
     const email = 'support@pethorizon.app';
     const subject = 'Pet Horizon Support Request';
-    const body = 'Please write details of your issue here...';
-    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
+    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert(
-        'Support Contact',
-        'Could not open your email client. Please reach us at support@pethorizon.app'
-      );
+      Alert.alert('Support Contact', 'Could not open your email client. Please reach us at support@pethorizon.app');
     });
   };
 
   return (
     <ProfileModalShell visible={visible} onClose={onClose} title="Help & Support">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.supportBox}>
-          <Ionicons name="mail-unread-outline" size={28} color={ProfileTheme.green} />
-          <View style={styles.supportText}>
-            <AppText variant="body" weight="700" color={ProfileTheme.text}>
+        <View style={styles.contactCard}>
+          <View style={styles.contactText}>
+            <AppText variant="body" weight="800" color="#1E293B">
               Contact Support Team
             </AppText>
-            <AppText variant="bodySmall" color={ProfileTheme.textMuted}>
-              Available 24/7 at support@pethorizon.app
+            <AppText variant="caption" color="#64748B">
+              We're available 24/7 to help you
             </AppText>
           </View>
+          <TouchableOpacity style={styles.emailBtn} onPress={handleContactSupport} activeOpacity={0.8}>
+            <AppText variant="bodySmall" weight="700" color="#1E293B">
+              support@pethorizon.app
+            </AppText>
+          </TouchableOpacity>
         </View>
 
-        <CustomButton
-          title="Email Support"
-          onPress={handleContactSupport}
-          variant="primary"
-          style={styles.contactBtn}
-        />
-
-        <AppText variant="body" weight="800" color={ProfileTheme.text} style={styles.faqTitle}>
-          Frequently Asked Questions
+        <AppText variant="bodySmall" weight="700" color="#64748B" style={styles.faqLabel}>
+          FREQUENTLY ASKED QUESTIONS
         </AppText>
 
-        {FAQS.map((faq, index) => {
-          const isExpanded = expandedIndex === index;
-          return (
-            <View key={index} style={styles.faqCard}>
-              <TouchableOpacity
-                style={styles.faqHeader}
-                onPress={() => setExpandedIndex(isExpanded ? null : index)}
-                activeOpacity={0.7}
-              >
-                <AppText variant="body" weight="700" color={ProfileTheme.text} style={{ flex: 1 }}>
-                  {faq.question}
-                </AppText>
-                <Ionicons
-                  name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={18}
-                  color={ProfileTheme.textMuted}
-                />
-              </TouchableOpacity>
-              {isExpanded && (
-                <View style={styles.faqBody}>
-                  <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.faqAnswer}>
-                    {faq.answer}
-                  </AppText>
-                </View>
-              )}
-            </View>
-          );
-        })}
+        {FAQS.map((faq, index) => (
+          <FaqItem
+            key={index}
+            faq={faq}
+            isExpanded={expandedIndex === index}
+            onToggle={() => setExpandedIndex(expandedIndex === index ? null : index)}
+          />
+        ))}
       </ScrollView>
     </ProfileModalShell>
   );
@@ -109,48 +123,33 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
 
 const styles = StyleSheet.create({
   content: {
-    paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xl,
+    paddingTop: Spacing.sm,
   },
-  supportBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: ProfileTheme.background,
-    borderRadius: Radius.lg,
+  contactCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: Radius.md,
     padding: Spacing.md,
-    gap: 12,
-    marginBottom: Spacing.lg,
-  },
-  supportText: {
-    flex: 1,
-    gap: 2,
-  },
-  contactBtn: {
     marginBottom: Spacing.xl,
-  },
-  faqTitle: {
-    marginBottom: Spacing.md,
-  },
-  faqCard: {
-    backgroundColor: ProfileTheme.background,
-    borderRadius: Radius.lg,
-    marginBottom: Spacing.sm,
-    overflow: 'hidden',
-  },
-  faqHeader: {
-    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.md,
+    gap: Spacing.sm,
   },
-  faqBody: {
+  contactText: { alignItems: 'center', gap: 2 },
+  emailBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: Radius.sm,
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    paddingVertical: 10,
+    marginTop: Spacing.sm,
+    width: '100%',
+    alignItems: 'center',
   },
-  faqAnswer: {
-    lineHeight: 18,
-    paddingTop: 8,
+  faqLabel: {
+    marginBottom: Spacing.md,
+    letterSpacing: 0.5,
   },
 });

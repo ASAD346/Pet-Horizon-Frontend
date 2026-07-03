@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { useToast } from '@/hooks/useToast';
-import { Radius, Spacing, Palette } from '@/constants/theme';
-import { ProfileTheme } from './profileTheme';
+import { Spacing } from '@/constants/theme';
 import { submitFeedback } from '@/services/feedback/feedbackApi';
 import { CustomButton } from '@/components/ui/AppButton';
 import { ProfileModalShell } from './ProfileModalShell';
 import { FormTextInput } from '../sheets';
+import { ProfileTheme } from './profileTheme';
 
 interface FeedbackSheetProps {
   visible: boolean;
@@ -23,10 +23,7 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   const handleSubmit = async () => {
-    if (rating === 0) {
-      showToast('Please select a star rating');
-      return;
-    }
+    if (rating === 0) { showToast('Please select a rating'); return; }
     setSubmitting(true);
     try {
       const response = await submitFeedback(token, { rating, comment });
@@ -38,7 +35,7 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
       } else {
         showToast(response.message || 'Submission failed');
       }
-    } catch (err) {
+    } catch {
       showToast('Failed to submit feedback');
     } finally {
       setSubmitting(false);
@@ -51,89 +48,67 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
       onClose={onClose}
       title="Rate Us & Feedback"
     >
-      <View style={styles.infoContainer}>
-        <AppText variant="bodySmall" color={ProfileTheme.textMuted} style={styles.description}>
-          We're always improving Pet Horizon. Share your ideas, suggestions, or report an issue. We'd love to hear from you.
-        </AppText>
-      </View>
+      <AppText variant="bodySmall" color="#64748B" style={styles.intro}>
+        We're always improving PetHorizon. Share your ideas or suggestions with us.
+      </AppText>
 
-      <View style={styles.ratingSection}>
-        <AppText variant="caption" weight="800" color={ProfileTheme.text} style={styles.sectionLabel}>
-          RATE YOUR EXPERIENCE
+      <View style={styles.ratingCard}>
+        <AppText variant="bodySmall" weight="700" color="#334155" style={styles.ratingLabel}>
+          Rate your experience
         </AppText>
-        
+
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
-            <TouchableOpacity
+            <Ionicons
               key={star}
+              name={star <= rating ? 'star' : 'star-outline'}
+              size={32}
+              color={star <= rating ? ProfileTheme.green : '#CBD5E1'}
               onPress={() => setRating(star)}
-              activeOpacity={0.7}
-              style={styles.starTouch}
-            >
-              <Ionicons
-                name={star <= rating ? 'star' : 'star-outline'}
-                size={32}
-                color={star <= rating ? Palette.premium.gold : Palette.gray[300]}
-              />
-            </TouchableOpacity>
+              suppressHighlighting
+            />
           ))}
         </View>
-        
-        <AppText variant="caption" weight="800" color={Palette.premium.gold} style={styles.ratingText}>
-          {rating === 5 ? 'EXCELLENT' : rating === 4 ? 'VERY GOOD' : rating === 3 ? 'GOOD' : rating === 2 ? 'FAIR' : 'POOR'}
-        </AppText>
       </View>
 
       <FormTextInput
-        label="YOUR THOUGHTS (OPTIONAL)"
+        label="Comments (Optional)"
         value={comment}
         onChangeText={setComment}
-        placeholder="What can we improve? What do you love most about Pet Horizon?"
+        placeholder="What can we improve?"
         multiline
       />
 
       <CustomButton
-        title="Submit Feedback"
+        title={submitting ? 'Submitting…' : 'Submit Feedback'}
         onPress={handleSubmit}
         isLoading={submitting}
         variant="primary"
-        style={{ marginTop: Spacing.md }}
+        style={styles.ctaBtn}
       />
     </ProfileModalShell>
   );
 }
 
 const styles = StyleSheet.create({
-  infoContainer: {
-    marginBottom: Spacing.md,
+  intro: {
+    lineHeight: 20,
+    marginBottom: Spacing.xl,
   },
-  description: {
-    lineHeight: 18,
-  },
-  ratingSection: {
+  ratingCard: {
+    marginBottom: Spacing.xl,
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-    borderRadius: Radius.md,
-    padding: Spacing.md,
-    marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    gap: Spacing.sm,
   },
-  sectionLabel: {
-    letterSpacing: 0.8,
+  ratingLabel: {
     marginBottom: Spacing.xs,
-    alignSelf: 'flex-start',
   },
   starsRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginVertical: Spacing.xs,
+    gap: Spacing.md,
+    justifyContent: 'center',
   },
-  starTouch: {
-    padding: 2,
-  },
-  ratingText: {
-    letterSpacing: 1,
-    marginTop: 2,
+  ctaBtn: {
+    marginTop: Spacing.md,
   },
 });

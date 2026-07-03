@@ -319,7 +319,7 @@ export function PremiumHubContent() {
       await createPaymentIntent(token, selectedPlan.planId, 'pm_stub_ui');
       await subscribePremium(token, { planId: selectedPlan.planId });
       const profile = await fetchUserProfile(token, user._id);
-      await setSession({ token, user: { ...profile, premiumStatus: 'premium' } });
+      await setSession({ token, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
       setIsPremium(true);
       setCheckoutVisible(false);
       setSuccessVisible(true);

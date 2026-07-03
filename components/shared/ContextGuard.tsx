@@ -3,31 +3,45 @@ import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePetContext } from '@/hooks/usePetContext';
 import { AppText } from '@/components/ui/AppText';
+import { clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
 
 interface ContextGuardProps {
   children: React.ReactNode;
 }
 
-import { clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
-
 export function ContextGuard({ children }: ContextGuardProps) {
   const { activePetId } = usePetContext();
   const queryClient = useQueryClient();
-  const prevPetIdRef = useRef<string | null>(activePetId);
+
+  // Use a sentinel so the *first* arrival of an activePetId doesn't trigger reconciliation.
+  // Only an actual switch from one known pet ID to a different known pet ID should fire.
+  const prevPetIdRef = useRef<string | null | undefined>(undefined);
   const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
-    if (activePetId && prevPetIdRef.current !== activePetId) {
-      setResetting(true);
-      clearPetPermissionCache();
-      queryClient.resetQueries()
-        .then(() => {
-          prevPetIdRef.current = activePetId;
-        })
-        .finally(() => {
-          setResetting(false);
-        });
+    const prev = prevPetIdRef.current;
+
+    // Skip on first mount (prev === undefined) or when the id hasn't changed.
+    if (prev === undefined || !activePetId || prev === activePetId) {
+      prevPetIdRef.current = activePetId;
+      return;
     }
+
+    // Actual pet switch detected — update the ref immediately (synchronously)
+    // so that if this effect re-fires before the async work completes it won't re-enter.
+    prevPetIdRef.current = activePetId;
+
+    setResetting(true);
+    clearPetPermissionCache();
+
+    // Use invalidateQueries instead of resetQueries:
+    //  - resetQueries aborts in-flight requests → causes "6000ms timeout exceeded" toasts
+    //  - invalidateQueries marks data as stale and refetches when each query is next observed
+    queryClient
+      .invalidateQueries()
+      .finally(() => {
+        setResetting(false);
+      });
   }, [activePetId, queryClient]);
 
   if (resetting) {

@@ -87,6 +87,11 @@ export async function loadSession(): Promise<AuthSession | null> {
     if (!user?._id || !user.email) {
       throw new Error('Stored user is incomplete');
     }
+    // Clean up corrupted activePetId from previous backend BSON bug
+    if (user.activePetId && typeof user.activePetId === 'object') {
+      log.warn('AuthStorage', 'Discarding corrupted cached user.activePetId');
+      user.activePetId = undefined;
+    }
     return { token, user };
   } catch (error) {
     log.fail('AuthStorage', 'Invalid stored session — clearing', {

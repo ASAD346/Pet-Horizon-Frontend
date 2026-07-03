@@ -1,10 +1,13 @@
 /** Parse birthday from API (YYYY-MM-DD or ISO) using calendar date parts. */
 export function parseBirthdayParts(
-  birthday?: string | null,
+  birthday?: string | null | Date | number,
 ): { year: number; month: number; day: number } | null {
   if (!birthday) return null;
 
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(birthday.trim());
+  // Coerce non-string values (e.g. Date objects from Mongoose) to ISO string
+  const birthdayStr = typeof birthday === 'string' ? birthday : String(birthday instanceof Date ? birthday.toISOString() : birthday);
+
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(birthdayStr.trim());
   if (dateOnly) {
     return {
       year: Number(dateOnly[1]),

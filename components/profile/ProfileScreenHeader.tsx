@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme, Spacing, Radius } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ProfileScreenHeaderProps {
   title: string;
@@ -13,6 +14,9 @@ interface ProfileScreenHeaderProps {
   rightDisabled?: boolean;
 }
 
+const GREEN = '#2E7D32';
+const GREEN_MUTED = 'rgba(46,125,50,0.12)';
+
 export function ProfileScreenHeader({
   title,
   onBack,
@@ -20,88 +24,77 @@ export function ProfileScreenHeader({
   onRightPress,
   rightDisabled,
 }: ProfileScreenHeaderProps) {
-  return (
-    <View style={styles.header}>
-      <TouchableOpacity 
-        style={styles.backButtonContainer} 
-        onPress={onBack} 
-        hitSlop={12} 
-        activeOpacity={0.7}
-        accessibilityLabel="Go back"
-      >
-        <Ionicons name="chevron-back" size={22} color={ProfileTheme.green} />
-      </TouchableOpacity>
+  const insets = useSafeAreaInsets();
 
-      <AppText variant="h3" weight="800" color={ProfileTheme.text} style={styles.title} numberOfLines={1}>
+  return (
+    <View style={styles.container}>
+      <Pressable onPress={onBack} hitSlop={12} style={styles.backBtn}>
+        <Ionicons name="chevron-back" size={24} color="#0E3821" />
+      </Pressable>
+
+      <AppText variant="h3" weight="800" color="#0E3821" style={styles.title} numberOfLines={1}>
         {title}
       </AppText>
 
-      {rightLabel && onRightPress ? (
-        <TouchableOpacity
-          style={styles.rightButton}
+      {rightLabel ? (
+        <Pressable
           onPress={onRightPress}
           disabled={rightDisabled}
-          activeOpacity={0.7}
-          hitSlop={12}
+          style={[styles.rightBtn, rightDisabled && styles.rightBtnDisabled]}
         >
           <AppText
-            variant="body"
+            variant="bodySmall"
             weight="800"
-            color={rightDisabled ? HomeTheme.textMuted : ProfileTheme.green}
+            color={rightDisabled ? '#94A3B8' : GREEN}
           >
             {rightLabel}
           </AppText>
-        </TouchableOpacity>
+        </Pressable>
       ) : (
-        <View style={styles.sidePlaceholder} />
+        <View style={styles.placeholder} />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8F3E8',
-    backgroundColor: '#FFFFFF',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1B5E20',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
+    backgroundColor: ProfileTheme.background,
   },
-  backButtonContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(46, 125, 50, 0.06)',
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  rightButton: {
-    minWidth: 44,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  sidePlaceholder: {
-    width: 38,
+    borderWidth: 1,
+    borderColor: '#E2EBE2',
+    ...Platform.select({
+      ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      android: { elevation: 2 },
+    }),
   },
   title: {
     flex: 1,
     textAlign: 'center',
     fontSize: 18,
-    letterSpacing: 0.1,
+    marginHorizontal: Spacing.sm,
+  },
+  placeholder: {
+    width: 40,
+  },
+  rightBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: GREEN_MUTED,
+  },
+  rightBtnDisabled: {
+    backgroundColor: '#F1F5F9',
   },
 });
-

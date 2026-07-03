@@ -360,10 +360,32 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   );
 });
 
-function parseDateString(str: string | undefined | null): Date | null {
-  if (!str) return null;
+function parseDateString(val: string | Date | number | undefined | null): Date | null {
+  if (!val) return null;
+  
+  if (val instanceof Date) {
+    const d = new Date(val.getTime());
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+  
+  if (typeof val === 'number') {
+    const d = new Date(val);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  const str = String(val);
   const parts = str.split('T')[0].split('-');
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+    return null;
+  }
+  
   const y = parseInt(parts[0], 10);
   const m = parseInt(parts[1], 10) - 1;
   const d = parseInt(parts[2], 10);

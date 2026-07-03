@@ -81,7 +81,10 @@ export function ProfileHubView() {
         fetchUserProfile(token, user._id),
         fetchPremiumStatus(token),
       ]);
-      await setSession({ token, user: profile });
+      // Preserve activePetId — the /users/:id endpoint doesn't return it,
+      // so naively overwriting the session would clear it and trigger
+      // the ContextGuard reconciliation screen on every profile visit.
+      await setSession({ token, user: { ...profile, activePetId: user.activePetId } });
       setPremiumStatus(status);
       markLoaded();
     } catch (error) {

@@ -111,8 +111,13 @@ export function bootstrapAuth(): AppThunk {
           const cachedPetJson = await AsyncStorage.getItem('pet_horizon_cached_active_pet');
           if (cachedPetJson) {
             const pet = JSON.parse(cachedPetJson);
-            initializeActivePetCache(stored.token, pet);
-            log.ok('Auth', 'Cached active pet restored', { petId: pet._id });
+            if (pet && typeof pet._id === 'string') {
+              initializeActivePetCache(stored.token, pet);
+              log.ok('Auth', 'Cached active pet restored', { petId: pet._id });
+            } else {
+              log.warn('Auth', 'Discarding corrupted cached active pet', { petId: pet?._id });
+              await AsyncStorage.removeItem('pet_horizon_cached_active_pet');
+            }
           }
         } catch (e) {
           log.warn('Auth', 'Failed to load cached pet on bootstrap', {
