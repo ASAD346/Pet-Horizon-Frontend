@@ -5,6 +5,7 @@ import {
   FormTextInput,
 } from '@/components/sheets';
 import { CustomButton } from '@/components/ui/AppButton';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
@@ -35,6 +36,9 @@ export function GroomingManageSheet({
   onUpdated,
   isReadOnly = false,
 }: GroomingManageSheetProps) {
+  const { canEdit } = usePermissionGuard(record?.petId, 'grooming');
+  const resolvedReadOnly = isReadOnly || !canEdit;
+
   const [notes, setNotes] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
@@ -52,17 +56,17 @@ export function GroomingManageSheet({
   }, [visible, record]);
 
   const handleSave = () => {
-    if (!token || !record) return;
+    if (!token || !record || resolvedReadOnly) return;
     Alert.alert(
       "Modify Schedule?",
       "Are you sure you want to proceed with this action? This change cannot be undone.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Yes, Proceed",
+          text: "Modify",
+          style: "default",
           onPress: async () => {
             setSaving(true);
-            setError(null);
             try {
               await updateGroomingRecord(token, record._id, {
                 notes: notes.trim(),
@@ -71,8 +75,8 @@ export function GroomingManageSheet({
               showSuccessToast("Grooming task modified successfully.");
               onUpdated();
               onClose();
-            } catch (err) {
-              const errMsg = getErrorMessage(err);
+            } catch (err: any) {
+              const errMsg = err?.message || getErrorMessage(err) || "Failed to update record.";
               setError(errMsg);
               showErrorToast(errMsg);
             } finally {
@@ -85,24 +89,24 @@ export function GroomingManageSheet({
   };
 
   const handleDelete = () => {
-    if (!token || !record) return;
+    if (!token || !record || resolvedReadOnly) return;
     Alert.alert(
-      "Delete Schedule Entry?",
-      "Are you sure you want to proceed with this action? This change cannot be undone.",
+      "Remove Task?",
+      "Are you sure you want to delete this grooming task? This change is permanent.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Yes, Proceed",
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             setDeleting(true);
-            setError(null);
             try {
               await deleteGroomingRecord(token, record._id);
               showSuccessToast("Grooming task deleted successfully.");
               onUpdated();
               onClose();
             } catch (err: any) {
-              const errMsg = err?.message || getErrorMessage(err) || "Failed to delete the grooming task.";
+              const errMsg = err?.message || getErrorMessage(err) || "Failed to delete record.";
               setError(errMsg);
               showErrorToast(errMsg);
             } finally {
@@ -119,17 +123,17 @@ export function GroomingManageSheet({
       <FormSheetShell
         visible={visible}
         onClose={onClose}
-        title="Manage Grooming"
-        subtitle={record?.groomingType ?? 'Edit scheduled task'}
+        title="Grooming settings"
+        subtitle={record?.groomingType ?? 'Grooming Record'}
         icon="content-cut"
-        saveLabel={isReadOnly ? undefined : "Save Changes"}
-        onSave={isReadOnly ? undefined : handleSave}
+        saveLabel={resolvedReadOnly ? undefined : "Save changes"}
+        onSave={resolvedReadOnly ? undefined : handleSave}
         saving={saving}
         saveDisabled={deleting}
         error={error}
         compact
       >
-        <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? styles.readOnlyContainer : null}>
+        <View pointerEvents={resolvedReadOnly ? "none" : "auto"} style={resolvedReadOnly ? styles.readOnlyContainer : null}>
           <FormDateInput
             label="Scheduled Date"
             value={scheduledDate ?? new Date()}
@@ -145,7 +149,7 @@ export function GroomingManageSheet({
           />
         </View>
 
-        {!isReadOnly ? (
+        {!resolvedReadOnly ? (
           <View style={styles.deleteSection}>
             <CustomButton
               title="Delete Grooming Task"

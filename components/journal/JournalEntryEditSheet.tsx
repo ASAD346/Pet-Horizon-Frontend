@@ -8,6 +8,7 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { deleteJournalEntry, updateJournalEntry } from '@/services/journal/journalApi';
 import type { ApiJournalEntry } from '@/types/journal';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 interface JournalEntryEditSheetProps {
   visible: boolean;
@@ -24,6 +25,9 @@ export function JournalEntryEditSheet({
   onClose,
   onSaved,
 }: JournalEntryEditSheetProps) {
+  const { canEdit } = usePermissionGuard(entry?.petId || (entry as any)?.pet, 'journal');
+  const resolvedReadOnly = !canEdit;
+
   const [note, setNote] = useState('');
   const [activityType, setActivityType] = useState('');
   const [saving, setSaving] = useState(false);
@@ -39,7 +43,7 @@ export function JournalEntryEditSheet({
   }, [visible, entry]);
 
   const handleSave = async () => {
-    if (!token || !entry) return;
+    if (!token || !entry || resolvedReadOnly) return;
     setSaving(true);
     setError(null);
     try {
@@ -57,7 +61,7 @@ export function JournalEntryEditSheet({
   };
 
   const handleDelete = async () => {
-    if (!token || !entry) return;
+    if (!token || !entry || resolvedReadOnly) return;
     setDeleting(true);
     setError(null);
     try {
@@ -75,13 +79,14 @@ export function JournalEntryEditSheet({
     <FormSheetShell
       visible={visible}
       onClose={onClose}
-      title="Edit Entry"
-      icon="book-open-outline"
-      saveLabel="Save Changes"
-      onSave={handleSave}
+      title="Edit Journal Entry"
+      icon="book-open"
+      saveLabel={resolvedReadOnly ? undefined : "Save Changes"}
+      onSave={resolvedReadOnly ? undefined : handleSave}
       saving={saving}
-      saveDisabled={deleting}
+      saveDisabled={deleting || resolvedReadOnly}
       error={error}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       <FormTextInput
@@ -99,17 +104,19 @@ export function JournalEntryEditSheet({
         multiline
       />
 
-      <View style={styles.deleteSection}>
-        <CustomButton
-          title="Delete Journal Entry"
-          onPress={handleDelete}
-          isLoading={deleting}
-          disabled={saving}
-          variant="outline"
-          style={styles.deleteBtn}
-          textStyle={styles.deleteText}
-        />
-      </View>
+      {!resolvedReadOnly ? (
+        <View style={styles.deleteSection}>
+          <CustomButton
+            title="Delete Journal Entry"
+            onPress={handleDelete}
+            isLoading={deleting}
+            disabled={saving}
+            variant="outline"
+            style={styles.deleteBtn}
+            textStyle={styles.deleteText}
+          />
+        </View>
+      ) : null}
     </FormSheetShell>
   );
 }

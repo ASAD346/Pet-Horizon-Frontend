@@ -147,6 +147,15 @@ export function FormSheetShell({
                 />
               ) : null}
 
+              {isReadOnly ? (
+                <View style={{ marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D', borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 6 }} />
+                  <AppText variant="caption" weight="700" color="#B45309">
+                    Request access from admin to edit.
+                  </AppText>
+                </View>
+              ) : null}
+
               <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : undefined}>
                 {children}
               </View>
@@ -162,9 +171,10 @@ export function FormSheetShell({
 
             {onSave && saveLabel ? (
               isReadOnly ? (
-                <View style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#F8FAFC', borderTopWidth: 1, borderTopColor: '#E2E8F0', alignItems: 'center' }}>
-                  <AppText variant="bodySmall" weight="700" color="#64748B">
-                    You have view-only access to this pet's logs.
+                <View style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FEF3C7', borderTopWidth: 1, borderTopColor: '#FCD34D', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                  <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 6 }} />
+                  <AppText variant="bodySmall" weight="700" color="#B45309">
+                    Request access from admin to edit.
                   </AppText>
                 </View>
               ) : (

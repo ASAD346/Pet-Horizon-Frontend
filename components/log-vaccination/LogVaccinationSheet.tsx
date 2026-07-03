@@ -25,6 +25,7 @@ import type {
 import { VaccinationEntryCard } from '../schedule/entries/VaccinationEntryCard';
 import type { VaccinationEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const VACCINATION_THEME = LOG_SHEET_THEMES.vaccination;
 
@@ -47,6 +48,9 @@ export function LogVaccinationSheet({
   initialEntry,
   isReadOnly = false,
 }: LogVaccinationSheetProps) {
+  const { canEdit } = usePermissionGuard(petId, 'vaccination');
+  const resolvedReadOnly = isReadOnly || !canEdit;
+
   const [entry, setEntry] = useState<VaccinationEntryState>(() => initialEntry ?? {
     id: 'draft',
     vaccineName: '',
@@ -109,7 +113,7 @@ export function LogVaccinationSheet({
   }, [visible, resetForm, loadHistory]);
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a vaccination.');
       return;
@@ -153,8 +157,8 @@ export function LogVaccinationSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Vaccination'}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={!entry.vaccineName.trim()}
-      isReadOnly={isReadOnly}
+      saveDisabled={!entry.vaccineName.trim() || resolvedReadOnly}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       <VaccinationEntryCard

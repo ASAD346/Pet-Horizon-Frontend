@@ -11,6 +11,7 @@ import {
 import { getErrorMessage } from '@/lib/api/errors';
 import { setBudget, updateBudget } from '@/services/expense/expenseApi';
 import { useToast } from '@/hooks/useToast';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 interface EditBudgetSheetProps {
   visible: boolean;
@@ -39,6 +40,9 @@ export function EditBudgetSheet({
   periodStart,
   periodEnd,
 }: EditBudgetSheetProps) {
+  const { canEdit } = usePermissionGuard(petId, 'expenses');
+  const resolvedReadOnly = !canEdit;
+
   const [amount, setAmount] = useState('');
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>(initialPeriodType);
   const [saving, setSaving] = useState(false);
@@ -54,11 +58,11 @@ export function EditBudgetSheet({
   }, [visible, currentLimit, initialPeriodType]);
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || resolvedReadOnly) return;
     if (!token || !petId) return;
     const limit = Number(amount);
     if (!limit || Number.isNaN(limit) || limit <= 0) {
-      setError('Enter a valid budget amount.');
+      setError('Please enter a valid budget limit amount.');
       return;
     }
 
@@ -70,13 +74,11 @@ export function EditBudgetSheet({
       } else {
         await setBudget(token, { petId, amountLimit: limit, periodType });
       }
-      showToast('Budget saved successfully!');
+      showToast('Budget configured successfully!');
       onSaved(periodType);
       onClose();
     } catch (err) {
-      const errMsg = getErrorMessage(err);
-      setError(errMsg);
-      showToast(`Failed to save budget: ${errMsg}`);
+      setError(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -89,10 +91,12 @@ export function EditBudgetSheet({
       title={budgetId ? 'Edit Budget' : 'Set Budget'}
       subtitle="Configure your spending limit"
       icon="wallet-outline"
-      saveLabel="Save Budget"
-      onSave={handleSave}
+      saveLabel={resolvedReadOnly ? undefined : "Save Budget"}
+      onSave={resolvedReadOnly ? undefined : handleSave}
       saving={saving}
+      saveDisabled={resolvedReadOnly}
       error={error}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       {periodStart && periodEnd ? (

@@ -25,6 +25,7 @@ import { FeedingEntryCard } from '../schedule/entries/FeedingEntryCard';
 import type { FeedingEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 import { getPetPermissionCache } from '@/lib/pet/petPermissionCache';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const FOOD_THEME = LOG_SHEET_THEMES.food;
 
@@ -51,6 +52,9 @@ export function LogFoodSheet({
   unitOptions: propsUnitOptions,
   hasPermission = true,
 }: LogFoodSheetProps) {
+  const { canEdit } = usePermissionGuard(petId, 'feeding');
+  const resolvedReadOnly = !hasPermission || !canEdit;
+
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [featuresLoading, setFeaturesLoading] = useState(false);

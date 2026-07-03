@@ -20,6 +20,7 @@ import { FormSheetShell } from '../sheets';
 import { MedicineEntryCard } from '../schedule/entries/MedicineEntryCard';
 import type { MedicineEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const MEDICINE_THEME = LOG_SHEET_THEMES.medicine;
 
@@ -42,6 +43,9 @@ export function LogMedicineSheet({
   initialEntry,
   isReadOnly = false,
 }: LogMedicineSheetProps) {
+  const { canEdit } = usePermissionGuard(petId, 'medicine');
+  const resolvedReadOnly = isReadOnly || !canEdit;
+
   const [entry, setEntry] = useState<MedicineEntryState>(() => initialEntry ?? {
     id: 'draft',
     medicineName: '',
@@ -87,7 +91,7 @@ export function LogMedicineSheet({
   }, [visible, resetForm]);
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a medicine schedule.');
       return;
@@ -95,11 +99,12 @@ export function LogMedicineSheet({
 
     const name = entry.medicineName.trim();
     if (!name) {
-      showErrorToast('Enter a medicine name.');
+      showErrorToast('Medicine name is required.');
       return;
     }
 
-    const dose = buildDoseString(entry.doseAmount, entry.doseForm);
+    const amountNum = parseFloat(entry.doseAmount);
+    const dose = buildDoseString(amountNum, entry.doseForm);
     if (!dose) {
       showErrorToast('Enter a valid dose amount.');
       return;
@@ -155,7 +160,7 @@ export function LogMedicineSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Medicine'}
       onSave={handleSave}
       saving={saving}
-      isReadOnly={isReadOnly}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       <MedicineEntryCard

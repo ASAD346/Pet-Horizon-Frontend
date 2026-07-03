@@ -20,6 +20,7 @@ import { FormSheetShell } from '../sheets';
 import { WalkEntryCard } from '../schedule/entries/WalkEntryCard';
 import type { WalkEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const WALK_THEME = LOG_SHEET_THEMES.walk;
 
@@ -42,6 +43,9 @@ export function LogWalkSheet({
   initialEntry,
   isReadOnly = false,
 }: LogWalkSheetProps) {
+  const { canEdit } = usePermissionGuard(petId, 'walks');
+  const resolvedReadOnly = isReadOnly || !canEdit;
+
   const [entry, setEntry] = useState<WalkEntryState>(() => ({
     id: 'draft',
     walkTime: WALK_TIME_OPTIONS[0].value,
@@ -79,7 +83,7 @@ export function LogWalkSheet({
   }, [visible, resetForm]);
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a walk schedule.');
       return;
@@ -124,7 +128,7 @@ export function LogWalkSheet({
       saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Walk'}
       onSave={handleSave}
       saving={saving}
-      isReadOnly={isReadOnly}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       <WalkEntryCard

@@ -18,6 +18,7 @@ import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 import { useLocalization } from '@/hooks/useLocalization';
 import { FormSheetShell, FormSection, FormSelectInput, SheetOptionPicker } from '../sheets';
 import { useToast } from '@/hooks/useToast';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const BRAND_GREEN = '#2E7D32';
 
@@ -42,6 +43,9 @@ export function AddExpenseView({
 }: AddExpenseViewProps) {
   const { currency } = useLocalization();
   const { showToast } = useToast();
+
+  const { canEdit } = usePermissionGuard(petId, 'expenses');
+  const resolvedReadOnly = !canEdit;
 
   const CURRENCY_SYMBOLS: Record<string, string> = {
     USD: '$',
@@ -76,7 +80,7 @@ export function AddExpenseView({
   }, []);
 
   const handleSubmit = async () => {
-    if (saving) return;
+    if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       setError('Select a pet before adding an expense.');
       return;
@@ -121,11 +125,12 @@ export function AddExpenseView({
       title="Add Expense"
       subtitle="Track your pet's spending"
       icon="plus-circle-outline"
-      saveLabel="Add Expense"
+      saveLabel={resolvedReadOnly ? undefined : "Add Expense"}
       onSave={handleSubmit}
       saving={saving}
-      saveDisabled={saving || !amount}
+      saveDisabled={saving || !amount || resolvedReadOnly}
       error={error}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       <ScrollView
@@ -167,6 +172,7 @@ export function AddExpenseView({
               placeholderTextColor={SheetColors.placeholder}
               onFocus={() => setActiveField('amount')}
               onBlur={() => setActiveField(null)}
+              editable={!resolvedReadOnly}
             />
           </Pressable>
         </FormSection>
@@ -192,6 +198,7 @@ export function AddExpenseView({
                 placeholderTextColor={SheetColors.placeholder}
                 onFocus={() => setActiveField('merchant')}
                 onBlur={() => setActiveField(null)}
+                editable={!resolvedReadOnly}
               />
             </Pressable>
 
@@ -205,6 +212,7 @@ export function AddExpenseView({
               textAlignVertical="top"
               onFocus={() => setActiveField('note')}
               onBlur={() => setActiveField(null)}
+              editable={!resolvedReadOnly}
             />
           </View>
         </FormSection>

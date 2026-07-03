@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { updateMemberPermissionsSuccess } from '@/redux/action';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
@@ -53,24 +53,10 @@ export function MemberPermissionsSheet({
   onClose,
   onUpdated,
 }: MemberPermissionsSheetProps) {
-  console.log('DEBUG_MEMBER_PERMISSIONS:', {
-    incomingMemberProp: member,
-    resolvedPermissions: member?.permissions,
-    legacyModules: member?.allowedModules
-  });
-
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
 
   const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
-  const [feeding, setFeeding] = useState(false);
-  const [walks, setWalks] = useState(false);
-  const [medicine, setMedicine] = useState(false);
-  const [grooming, setGrooming] = useState(false);
-  const [vaccination, setVaccination] = useState(false);
-  const [journal, setJournal] = useState(false);
-  const [expenses, setExpenses] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showSuccessToast, showErrorToast } = useToast();
@@ -85,6 +71,34 @@ export function MemberPermissionsSheet({
 
   const memberName =
     member?.userId?.fullName || (member as any)?.fullName || (member as any)?.name || "Care Member";
+
+  // useQuery to track the family permissions
+  const { data: memberPermissions } = useQuery({
+    queryKey: ['family-permissions', targetUserId],
+    queryFn: async () => {
+      const targetRecord = activeCachedMember || member;
+      if (!targetRecord) return {};
+      const currentPerms = targetRecord.permissions || {};
+      const allowed = targetRecord.allowedModules ?? [];
+      const getCheck = (key: string) => {
+        if ((currentPerms as any)[key] !== undefined) return !!(currentPerms as any)[key];
+        if ((targetRecord as any)[key] !== undefined) return !!(targetRecord as any)[key];
+        const targetMatch = key.charAt(0).toUpperCase() + key.slice(1);
+        return !!(allowed.includes(key) || allowed.includes(targetMatch));
+      };
+
+      return {
+        feeding: getCheck('feeding'),
+        walks: getCheck('walks'),
+        medicine: getCheck('medicine'),
+        grooming: getCheck('grooming'),
+        vaccination: getCheck('vaccination'),
+        journal: getCheck('journal'),
+        expenses: getCheck('expenses'),
+      };
+    },
+    enabled: Boolean(visible && targetUserId),
+  });
 
   useEffect(() => {
     const targetRecord = activeCachedMember || member;
@@ -101,124 +115,98 @@ export function MemberPermissionsSheet({
         return !!(allowed.includes(key) || allowed.includes(targetMatch));
       };
 
-      setFeeding(getCheck('feeding'));
-      setWalks(getCheck('walks'));
-      setMedicine(getCheck('medicine'));
-      setGrooming(getCheck('grooming'));
-      setVaccination(getCheck('vaccination'));
-      setJournal(getCheck('journal'));
-      setExpenses(getCheck('expenses'));
+      const initialPerms = {
+        feeding: getCheck('feeding'),
+        walks: getCheck('walks'),
+        medicine: getCheck('medicine'),
+        grooming: getCheck('grooming'),
+        vaccination: getCheck('vaccination'),
+        journal: getCheck('journal'),
+        expenses: getCheck('expenses'),
+      };
+
+      queryClient.setQueryData(['family-permissions', targetUserId], initialPerms);
       setError(null);
     }
-  }, [member, visible, activeCachedMember]);
-
-  const getLivePermission = (key: string) => {
-    const targetRecord = activeCachedMember || member;
-    if (!targetRecord) return false;
-
-    // 1. Direct extraction path from core permissions layer
-    if (targetRecord.permissions && typeof (targetRecord.permissions as any)[key] !== 'undefined') {
-      return Boolean((targetRecord.permissions as any)[key]);
-    }
-    
-    // 2. Fallback lookup: Check if it's nested directly under member object properties
-    if (typeof (targetRecord as any)[key] !== 'undefined') {
-      return Boolean((targetRecord as any)[key]);
-    }
-
-    // 3. Array Fallback lookup (Case Insensitive / Standard Match)
-    const modulesArray = targetRecord.allowedModules || (targetRecord.userId as any)?.allowedModules;
-    if (Array.isArray(modulesArray)) {
-      const targetMatch = key.charAt(0).toUpperCase() + key.slice(1); // e.g., 'feeding' -> 'Feeding'
-      return modulesArray.includes(key) || modulesArray.includes(targetMatch);
-    }
-
-    return false; // Safe lock boundary
-  };
+  }, [member, visible, activeCachedMember, targetUserId, queryClient]);
 
   const getPermissionValue = (moduleId: string) => {
-    switch (moduleId) {
-      case 'feeding': return feeding;
-      case 'walks': return walks;
-      case 'medicine': return medicine;
-      case 'grooming': return grooming;
-      case 'vaccination': return vaccination;
-      case 'journal': return journal;
-      case 'expenses': return expenses;
-      default: return false;
-    }
+    return !!memberPermissions?.[moduleId as keyof typeof memberPermissions];
   };
 
   const togglePermissionValue = (moduleId: string) => {
-    switch (moduleId) {
-      case 'feeding': setFeeding(!feeding); break;
-      case 'walks': setWalks(!walks); break;
-      case 'medicine': setMedicine(!medicine); break;
-      case 'grooming': setGrooming(!grooming); break;
-      case 'vaccination': setVaccination(!vaccination); break;
-      case 'journal': setJournal(!journal); break;
-      case 'expenses': setExpenses(!expenses); break;
-    }
+    const currentVal = getPermissionValue(moduleId);
+    const updated = {
+      ...(memberPermissions || {}),
+      [moduleId]: !currentVal,
+    };
+    queryClient.setQueryData(['family-permissions', targetUserId], updated);
   };
 
-  const handleSave = async () => {
-    if (!token || !petId || !member) return;
-    setError(null);
-
-    const updatedPermissionsObj = {
-      feeding,
-      walks,
-      medicine,
-      grooming,
-      vaccination,
-      journal,
-      expenses,
-    };
-    const allowedModules = Object.keys(updatedPermissionsObj).filter(
-      (key) => updatedPermissionsObj[key as keyof typeof updatedPermissionsObj],
-    );
-
-    // 1. INSTANT ACTION: Synchronously overwrite Redux global store first
-    dispatch({
-      type: 'family/updateMemberPermissionsSuccess',
-      payload: { memberId: targetUserId, permissions: updatedPermissionsObj }
-    });
-
-    // 2. INSTANT ACTION: Synchronously overwrite React Query cache line immediately
-    queryClient.setQueryData(['petMembers', petId], (oldMembersList: any) => {
-      if (!oldMembersList || !Array.isArray(oldMembersList)) return oldMembersList;
-      return oldMembersList.map((m: any) =>
-        String(m._id || m.id || m.userId?._id) === String(targetUserId)
-          ? { ...m, permissions: updatedPermissionsObj, allowedModules }
-          : m
+  const mutation = useMutation({
+    mutationFn: async (updatedPermissionsObj: Record<string, boolean>) => {
+      if (!token || !petId || !member) throw new Error("Required variables missing");
+      const allowedModules = Object.keys(updatedPermissionsObj).filter(
+        (key) => updatedPermissionsObj[key],
       );
-    });
 
-    // 3. Inform parent component instantly
-    onUpdated({
-      ...member,
-      accessLevel,
-      allowedModules,
-      permissions: updatedPermissionsObj,
-    });
+      // Trigger Redux sync optimistically
+      dispatch({
+        type: 'family/updateMemberPermissionsSuccess',
+        payload: { memberId: targetUserId, permissions: updatedPermissionsObj }
+      });
 
-    // 4. Dismiss the UI sheet overlay instantly so the layout transition looks seamless
-    onClose();
-
-    // 5. Fire off the backend network request quietly in the background
-    try {
-      await updatePetMemberPermissions(token, petId, targetUserId, {
+      return await updatePetMemberPermissions(token, petId, targetUserId, {
         accessLevel,
         allowedModules,
         permissions: updatedPermissionsObj,
       } as any);
+    },
+    onMutate: async (updatedPermissionsObj) => {
+      await queryClient.cancelQueries({ queryKey: ['family-permissions', targetUserId] });
+      const previousPermissions = queryClient.getQueryData(['family-permissions', targetUserId]);
+      queryClient.setQueryData(['family-permissions', targetUserId], updatedPermissionsObj);
+      return { previousPermissions };
+    },
+    onError: (err, newPermissions, context) => {
+      if (context?.previousPermissions) {
+        queryClient.setQueryData(['family-permissions', targetUserId], context.previousPermissions);
+      }
+      setError(getErrorMessage(err));
+      showErrorToast(getErrorMessage(err));
+    },
+    onSuccess: (data) => {
+      const serverPermissions = data.member?.permissions || data.permissions || memberPermissions;
+      queryClient.setQueryData(['family-permissions', targetUserId], serverPermissions);
+      
+      const allowedModules = Object.keys(serverPermissions).filter((k) => serverPermissions[k]);
 
-      // Quietly trigger background validation once server settles
+      // Atomic cache update for petMembers query list
+      queryClient.setQueryData(['petMembers', petId], (oldMembersList: any) => {
+        if (!oldMembersList || !Array.isArray(oldMembersList)) return oldMembersList;
+        return oldMembersList.map((m: any) =>
+          String(m._id || m.id || m.userId?._id) === String(targetUserId)
+            ? { ...m, permissions: serverPermissions, allowedModules, accessLevel }
+            : m
+        );
+      });
+
       queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
       queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
-    } catch (err) {
-      console.error("BACKGROUND_PERSISTENCE_DELAY_OR_ERROR:", err);
-    }
+      
+      showSuccessToast("Permissions saved successfully.");
+      onUpdated({
+        ...member,
+        accessLevel,
+        allowedModules,
+        permissions: serverPermissions,
+      } as any);
+      onClose();
+    },
+  });
+
+  const handleSave = () => {
+    mutation.mutate(memberPermissions || {});
   };
 
   const handleRemove = async () => {
@@ -228,7 +216,6 @@ export function MemberPermissionsSheet({
     try {
       await removePetMember(token, petId, targetUserId);
 
-      // CRITICAL: Invalidate and refetch immediately to kill the stale data bug
       await queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
       await queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
 
@@ -253,7 +240,7 @@ export function MemberPermissionsSheet({
       icon="account"
       saveLabel={isReadOnly ? undefined : "Save Permissions"}
       onSave={isReadOnly ? undefined : handleSave}
-      saving={saving}
+      saving={mutation.isPending}
       saveDisabled={removing}
       error={error}
       isReadOnly={isReadOnly}
@@ -261,7 +248,7 @@ export function MemberPermissionsSheet({
     >
       <FormSection title="Allowed Modules">
         {MODULE_OPTIONS.map((module) => {
-          const isEnabled = isReadOnly ? getLivePermission(module.id) : getPermissionValue(module.id);
+          const isEnabled = getPermissionValue(module.id);
           return (
             <FormToggleRow
               key={module.id}
@@ -279,7 +266,7 @@ export function MemberPermissionsSheet({
             title="Remove Member from Family"
             onPress={handleRemove}
             isLoading={removing}
-            disabled={saving}
+            disabled={mutation.isPending}
             variant="outline"
             style={styles.removeBtn}
             textStyle={styles.removeText}

@@ -20,6 +20,7 @@ import { HomeTheme } from '../../constants/theme';
 import { GroomingEntryCard } from '../schedule/entries/GroomingEntryCard';
 import type { GroomingEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 const GROOMING_THEME = LOG_SHEET_THEMES.grooming;
 
@@ -46,6 +47,9 @@ export function LogGroomingSheet({
   groomingVisible: propsGroomingVisible = true,
   isReadOnly = false,
 }: LogGroomingSheetProps) {
+  const { canEdit } = usePermissionGuard(petId, 'grooming');
+  const resolvedReadOnly = isReadOnly || !canEdit;
+
   const [typeOptions, setTypeOptions] = useState<GroomingTypeOption[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
   const [loadingTypes, setLoadingTypes] = useState(false);
@@ -133,7 +137,7 @@ export function LogGroomingSheet({
   }, [visible, resetForm, loadTypes]);
 
   const handleSave = async () => {
-    if (saving) return;
+    if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a grooming task.');
       return;
@@ -180,8 +184,8 @@ export function LogGroomingSheet({
       saveLabel={entry.recordId ? 'Save Changes' : 'Save Grooming'}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={loadingTypes || !groomingVisible || !entry.groomingType}
-      isReadOnly={isReadOnly}
+      saveDisabled={loadingTypes || !groomingVisible || !entry.groomingType || resolvedReadOnly}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       {loadingTypes ? (
