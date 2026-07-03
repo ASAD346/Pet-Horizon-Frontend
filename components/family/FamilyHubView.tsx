@@ -30,13 +30,11 @@ import { QrScannerModal } from '@/components/family/QrScannerModal';
 import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
 import { generatePetInvite } from '@/services/family/familyApi';
 import { fetchPremiumStatus } from '@/services/premium/premiumApi';
-import { AppBrandModal } from '@/components/ui/AppBrandModal';
 import {
   buildFamilyMembersList,
   buildGuestMemberDisplay,
   formatJoinCode,
   isPetOwner,
-  mapModuleNameToLabel,
 } from '@/lib/family/formatters';
 import {
   buildInviteShareMessage,
@@ -69,8 +67,7 @@ export function FamilyHubView() {
     }
   }, [membersError, showErrorToast]);
 
-  const { canViewJournal, ownerName, allowedModules = [] } = usePetPermissions(token, pet, user?._id);
-  const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const { canViewJournal, ownerName } = usePetPermissions(token, pet, user?._id);
   const [journalVisible, setJournalVisible] = useState(false);
   const [qrScannerVisible, setQrScannerVisible] = useState(false);
   const [scannedToken, setScannedToken] = useState<string | null>(null);
@@ -286,8 +283,6 @@ export function FamilyHubView() {
               isOwner={isOwner}
               hostName={ownerName}
               currentUserId={user?._id}
-              allowedModules={allowedModules}
-              onInfoPress={() => setInfoModalVisible(true)}
               onMemberSettingsPress={(memberId) => {
                 const found = members.find(
                   (m) => String(m.userId?._id || (m as any).id || (m as any)._id) === String(memberId)
@@ -390,18 +385,6 @@ export function FamilyHubView() {
           if (reloadMembers) void reloadMembers(true);
           if (reloadPet) void reloadPet();
         }}
-      />
-
-      <AppBrandModal
-        visible={infoModalVisible}
-        title="Your Guest Access"
-        message={`As a guest member, you have edit access for the following modules:\n\n${
-          allowedModules && allowedModules.length > 0
-            ? allowedModules.map((m) => `• ${mapModuleNameToLabel(m)}`).join('\n')
-            : '• None (View Only Access)'
-        }\n\nAll other modules are view-only.`}
-        confirmLabel="Got it"
-        onConfirm={() => setInfoModalVisible(false)}
       />
     </View>
   );

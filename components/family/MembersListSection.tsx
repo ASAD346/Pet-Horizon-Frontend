@@ -69,16 +69,6 @@ export function MembersListSection({
           <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
             Care Team {!isOwner ? '(Guest Access)' : ''}
           </AppText>
-          {!isOwner && onInfoPress && (
-            <TouchableOpacity
-              onPress={onInfoPress}
-              activeOpacity={0.7}
-              style={styles.infoIconBtn}
-              accessibilityLabel="View Access Information"
-            >
-              <Ionicons name="information-circle-outline" size={18} color={themeGreen} />
-            </TouchableOpacity>
-          )}
         </View>
         <View style={[styles.activeBadge, { backgroundColor: isPremium ? '#E8F5E9' : '#EEF8EE' }]}>
           <AppText variant="caption" weight="800" color={themeGreen}>
@@ -86,53 +76,6 @@ export function MembersListSection({
           </AppText>
         </View>
       </View>
-
-      {!isOwner && (
-        <View style={styles.guestBannerContainer}>
-          <View style={styles.guestInfoBanner}>
-            <Ionicons name="information-circle-outline" size={16} color={themeGreen} style={{ marginRight: 6 }} />
-            <AppText variant="caption" weight="700" color={themeGreen} style={styles.guestInfoText}>
-              You have guest editing access. Contact {hostName || 'the owner'} to manage permissions.
-            </AppText>
-          </View>
-
-          {/* My Access Section */}
-          <View style={styles.myAccessContainer}>
-            <AppText variant="caption" weight="800" color={HomeTheme.textMuted} style={styles.myAccessTitle}>
-              MY ACCESS CONFIGURATION:
-            </AppText>
-            <View style={styles.chipsWrapper}>
-              {['feeding', 'walks', 'medicine', 'grooming', 'vaccination', 'journal', 'expenses'].map((mod) => {
-                const isAllowed = allowedModules.includes(mod);
-                return (
-                  <View
-                    key={mod}
-                    style={[
-                      styles.accessChip,
-                      isAllowed ? styles.chipAllowed : styles.chipDenied
-                    ]}
-                  >
-                    <Ionicons
-                      name={isAllowed ? "checkmark-circle" : "eye-sharp"}
-                      size={12}
-                      color={isAllowed ? "#1B5E20" : "#64748B"}
-                      style={{ marginRight: 4 }}
-                    />
-                    <AppText
-                      variant="caption"
-                      weight="700"
-                      color={isAllowed ? "#1B5E20" : "#64748B"}
-                      style={{ fontSize: 11 }}
-                    >
-                      {mapModuleNameToLabel(mod)}{isAllowed ? '' : ' (View Only)'}
-                    </AppText>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        </View>
-      )}
 
       {loading ? (
         <SkeletonList count={3} cardStyle={styles.memberCard} />
@@ -152,6 +95,21 @@ export function MembersListSection({
           const isSelf = currentUserId && member.id === currentUserId;
           const isPressable = canManage || isSelf;
           const CardContainer = isPressable ? TouchableOpacity : View;
+
+          const lowercaseAllowed = (member.allowedModules ?? []).map(m => m.toLowerCase().trim());
+          const uniqueModules = [...new Set(lowercaseAllowed)];
+          
+          const normalizedModules = uniqueModules.map(m => {
+            if (m === 'walk') return 'walks';
+            if (m === 'food') return 'feeding';
+            return m;
+          });
+          
+          const uniqueNormalized = [...new Set(normalizedModules)];
+
+          const printableModules = uniqueNormalized.filter(
+            (m) => m !== 'journal' && m !== 'expenses' && m !== 'expense'
+          );
 
           return (
             <CardContainer
@@ -214,23 +172,6 @@ export function MembersListSection({
                 </View>
               </View>
 
-              {/* Access Details section for guest member */}
-              {!member.isAdmin && member.allowedModules && member.allowedModules.length > 0 && (
-                <View style={styles.accessDetailsSection}>
-                  <AppText variant="caption" weight="800" color={HomeTheme.textMuted} style={{ fontSize: 10, marginBottom: 4 }}>
-                    EDIT PERMISSIONS:
-                  </AppText>
-                  <View style={styles.miniChipsRow}>
-                    {member.allowedModules.map((m) => (
-                      <View key={m} style={styles.miniChip}>
-                        <AppText variant="caption" weight="700" color="#2E7D32" style={{ fontSize: 10 }}>
-                          {mapModuleNameToLabel(m)}
-                        </AppText>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
             </CardContainer>
           );
         })
@@ -426,6 +367,14 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: '#C8E6C9',
+  },
+  miniChipReadOnly: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   hostBadgeRow: {
     flexDirection: 'row',

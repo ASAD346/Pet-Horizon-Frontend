@@ -27,10 +27,16 @@ export function formatJoinCode(token: string): string {
 }
 
 export function formatAllowedModules(modules: string[]): string {
-  if (!modules.length) {
-    return 'View only';
+  const cleanModules = modules
+    .map((m) => m.toLowerCase().trim())
+    .filter((m) => m !== 'journal' && m !== 'expenses' && m !== 'expense');
+    
+  const uniqueClean = [...new Set(cleanModules.map((m) => (m === 'walk' ? 'walks' : m === 'food' ? 'feeding' : m)))];
+
+  if (!uniqueClean.length) {
+    return 'Care Modules View-Only';
   }
-  const labels = modules.map((module) => MODULE_LABELS[module] ?? module);
+  const labels = uniqueClean.map((module) => MODULE_LABELS[module] ?? module);
   if (labels.length === 1) {
     return `${labels[0]} only`;
   }
