@@ -41,6 +41,7 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [showVerifyAction, setShowVerifyAction] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const loginInFlightRef = useRef(false);
 
   useFocusEffect(
@@ -73,6 +74,7 @@ export default function LoginScreen() {
 
   const clearErrors = useCallback(() => {
     setShowVerifyAction(false);
+    setFieldErrors({});
   }, []);
 
   const handleEmailChange = useCallback(
@@ -114,6 +116,15 @@ export default function LoginScreen() {
     Keyboard.dismiss();
     clearErrors();
 
+    if (!email.trim()) {
+      setFieldErrors({ email: 'Email address is required.' });
+      return;
+    }
+    if (!password) {
+      setFieldErrors({ password: 'Password is required.' });
+      return;
+    }
+
     loginInFlightRef.current = true;
     setLoading(true);
 
@@ -138,7 +149,12 @@ export default function LoginScreen() {
     } catch (error) {
       const message = getAuthLoginErrorMessage(error);
       log.fail('Login', 'UI error', message);
-      showToast(message);
+      
+      if (error instanceof ApiError && error.isUnauthorized) {
+        setFieldErrors({ password: "Incorrect password or email. Please try again." });
+      } else {
+        showToast(message);
+      }
 
       if (error instanceof ApiError && error.isForbidden) {
         setShowVerifyAction(true);
@@ -201,6 +217,7 @@ export default function LoginScreen() {
                   }
                   onSignup={() => router.push('/auth/signup')}
                   onVerifyEmail={handleVerifyEmail}
+                  fieldErrors={fieldErrors}
                 />
 
                 <SocialLoginButtons

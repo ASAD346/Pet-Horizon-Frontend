@@ -72,7 +72,7 @@ export function FamilyOverviewCard({
 
         <View style={styles.content}>
           <View style={styles.headerRow}>
-            <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.familyName}>
+            <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.familyName} ellipsizeMode="tail" numberOfLines={1}>
               {familyName}
             </AppText>
             {isPremium ? (
