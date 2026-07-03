@@ -9,6 +9,7 @@ const SCOPE = 'UserAPI';
 export interface UpdateUserRequest {
   fullName?: string;
   settings?: ApiUser['settings'];
+  preferredLanguage?: 'en' | 'de' | 'es' | 'fr';
 }
 
 export interface ChangePasswordRequest {
@@ -159,6 +160,25 @@ export async function updateTimezone(token: string, timezone: string): Promise<A
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Timezone sync failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function patchUserProfile(
+  token: string,
+  payload: UpdateUserRequest,
+): Promise<ApiUser> {
+  log.info(SCOPE, 'PATCH /user/profile');
+  try {
+    const data = await apiRequest<ApiUser>(API_ENDPOINTS.users.patchProfile, {
+      method: 'PATCH',
+      token,
+      body: payload,
+    });
+    log.ok(SCOPE, 'Profile patched');
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Profile patch failed', getErrorMessage(error));
     throw error;
   }
 }

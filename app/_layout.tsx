@@ -11,6 +11,7 @@ import { ToastHost } from '@/components/ui/ToastHost';
 import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
 import { store } from '@/redux/store';
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { LanguageProvider } from '@/components/ui/LanguageProvider';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -58,11 +59,13 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <SafeAreaProvider>
-          <AuthBootstrap />
-          <ToastHost />
-          <InnerLayout />
-        </SafeAreaProvider>
+        <LanguageProvider>
+          <SafeAreaProvider>
+            <AuthBootstrap />
+            <ToastHost />
+            <InnerLayout />
+          </SafeAreaProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     </Provider>
   );

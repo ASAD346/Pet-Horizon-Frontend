@@ -1,8 +1,16 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Platform, Modal, Pressable } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { useLanguage, type LanguageCode } from './LanguageProvider';
+
+const LANGUAGES: { code: LanguageCode; label: string }[] = [
+  { code: 'en', label: 'English' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'es', label: 'Español' },
+  { code: 'fr', label: 'Français' },
+];
 
 interface HeaderActionButtonsProps {
   notificationCount?: number;
@@ -26,6 +34,9 @@ export function HeaderActionButtons({
 
   const btnStyle = dark ? styles.iconBtnDark : styles.iconBtnLight;
   const iconColor = dark ? '#FFFFFF' : HomeTheme.text;
+
+  const { locale, changeLanguage, t } = useLanguage();
+  const [modalVisible, setModalVisible] = useState(false);
 
   return (
     <View style={styles.actions}>
@@ -67,6 +78,59 @@ export function HeaderActionButtons({
           </View>
         ) : null}
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.iconBtn, btnStyle]}
+        activeOpacity={0.75}
+        onPress={() => setModalVisible(true)}
+        accessibilityLabel="Select language"
+      >
+        <AppText variant="caption" weight="800" color={iconColor} style={{ fontSize: 11 }}>
+          {locale.toUpperCase()}
+        </AppText>
+      </TouchableOpacity>
+
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+          <View style={styles.modalDropdownPanel}>
+            <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.modalTitle}>
+              {t('selectLanguage', 'Select Language')}
+            </AppText>
+            <View style={styles.modalList}>
+              {LANGUAGES.map((lang) => {
+                const isSelected = lang.code === locale;
+                return (
+                  <TouchableOpacity
+                    key={lang.code}
+                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                    onPress={async () => {
+                      await changeLanguage(lang.code);
+                      setModalVisible(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <AppText
+                      variant="bodySmall"
+                      weight={isSelected ? '800' : '500'}
+                      color={isSelected ? '#E28743' : HomeTheme.text}
+                    >
+                      {lang.label}
+                    </AppText>
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color="#E28743" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -124,5 +188,40 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 8,
     lineHeight: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalDropdownPanel: {
+    width: 250,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: Spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  modalTitle: {
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  modalList: {
+    gap: 4,
+  },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  modalItemSelected: {
+    backgroundColor: 'rgba(226, 135, 67, 0.06)',
   },
 });

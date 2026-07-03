@@ -13,6 +13,7 @@ export interface ApiUser {
   emailVerified?: boolean;
   premiumStatus?: 'free' | 'premium';
   timezone?: string;
+  preferredLanguage?: 'en' | 'de' | 'es' | 'fr';
   settings?: UserSettings;
   createdAt?: string;
   updatedAt?: string;
