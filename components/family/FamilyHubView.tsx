@@ -35,6 +35,7 @@ import {
   buildGuestMemberDisplay,
   formatJoinCode,
   isPetOwner,
+  mapModuleNameToLabel,
 } from '@/lib/family/formatters';
 import {
   buildInviteShareMessage,
@@ -67,7 +68,7 @@ export function FamilyHubView() {
     }
   }, [membersError, showErrorToast]);
 
-  const { canViewJournal, ownerName } = usePetPermissions(token, pet, user?._id);
+  const { canViewJournal, ownerName, allowedModules = [] } = usePetPermissions(token, pet, user?._id);
   const [journalVisible, setJournalVisible] = useState(false);
   const [qrScannerVisible, setQrScannerVisible] = useState(false);
   const [scannedToken, setScannedToken] = useState<string | null>(null);
@@ -429,5 +430,39 @@ const styles = StyleSheet.create({
   joinTextContainer: {
     flex: 1,
     gap: 2,
+  },
+  myAccessContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: Spacing.sm,
+  },
+  myAccessTitle: {
+    fontSize: 11,
+    letterSpacing: 0.5,
+    marginBottom: Spacing.sm,
+  },
+  chipsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  accessChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+  },
+  chipAllowed: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#C8E6C9',
+  },
+  chipDenied: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
 });

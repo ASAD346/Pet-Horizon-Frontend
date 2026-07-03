@@ -343,12 +343,6 @@ export function ProfileHubView() {
             onPress={() => router.push('/profile/change-password' as Href)}
           />
           <ProfileMenuRow
-            icon="people-outline"
-            title="Family Sharing"
-            subtitle="Manage hub members"
-            onPress={() => router.push('/(tabs)/community')}
-          />
-          <ProfileMenuRow
             icon="globe-outline"
             title="Localization Settings"
             subtitle="Currency and measurement units"

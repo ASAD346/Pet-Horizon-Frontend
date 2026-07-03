@@ -203,23 +203,21 @@ export default function EditProfileScreen() {
             </View>
             <View style={[
               styles.inputRow,
-              activeField === 'email' && styles.inputRowActive
+              styles.inputRowDisabled
             ]}>
               <Ionicons 
                 name="mail-outline" 
                 size={18} 
-                color={activeField === 'email' ? '#2E7D32' : '#94A3B8'} 
+                color="#94A3B8" 
               />
               <TextInput
                 value={email}
-                onChangeText={setEmail}
+                editable={false}
                 placeholder="you@example.com"
                 placeholderTextColor={SheetColors.placeholder}
-                style={styles.input}
+                style={[styles.input, styles.disabledInput]}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                onFocus={() => setActiveField('email')}
-                onBlur={() => setActiveField(null)}
               />
             </View>
 
@@ -371,5 +369,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: SheetColors.inputText,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+  },
+  disabledInput: {
+    color: '#64748B',
+  },
+  inputRowDisabled: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
 });
