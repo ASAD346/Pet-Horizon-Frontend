@@ -21,6 +21,8 @@ import { MedicineEntryCard } from '../schedule/entries/MedicineEntryCard';
 import type { MedicineEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { View } from 'react-native';
 
 const MEDICINE_THEME = LOG_SHEET_THEMES.medicine;
 
@@ -43,7 +45,7 @@ export function LogMedicineSheet({
   initialEntry,
   isReadOnly = false,
 }: LogMedicineSheetProps) {
-  const { canEdit } = usePermissionGuard(petId, 'medicine');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'medicine');
   const resolvedReadOnly = isReadOnly || !canEdit;
 
   const [entry, setEntry] = useState<MedicineEntryState>(() => initialEntry ?? {
@@ -91,6 +93,10 @@ export function LogMedicineSheet({
   }, [visible, resetForm]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a medicine schedule.');
@@ -103,8 +109,7 @@ export function LogMedicineSheet({
       return;
     }
 
-    const amountNum = parseFloat(entry.doseAmount);
-    const dose = buildDoseString(amountNum, entry.doseForm);
+    const dose = buildDoseString(entry.doseAmount, entry.doseForm);
     if (!dose) {
       showErrorToast('Enter a valid dose amount.');
       return;
@@ -149,6 +154,32 @@ export function LogMedicineSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title={entry.scheduleId ? 'Edit Medicine' : 'Log Medicine'}
+        icon={MEDICINE_THEME.icon}
+        accentColor={MEDICINE_THEME.color}
+        accentBg={MEDICINE_THEME.bg}
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -157,7 +188,7 @@ export function LogMedicineSheet({
       icon={MEDICINE_THEME.icon}
       accentColor={MEDICINE_THEME.color}
       accentBg={MEDICINE_THEME.bg}
-      saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Medicine'}
+      saveLabel={resolvedReadOnly ? undefined : (entry.scheduleId ? 'Save Changes' : 'Save Medicine')}
       onSave={handleSave}
       saving={saving}
       isReadOnly={resolvedReadOnly}

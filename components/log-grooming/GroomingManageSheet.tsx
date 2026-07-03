@@ -18,6 +18,7 @@ import {
 import type { GroomingRecord } from '@/types/grooming';
 import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface GroomingManageSheetProps {
   visible: boolean;
@@ -36,7 +37,7 @@ export function GroomingManageSheet({
   onUpdated,
   isReadOnly = false,
 }: GroomingManageSheetProps) {
-  const { canEdit } = usePermissionGuard(record?.petId, 'grooming');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(record?.petId, 'grooming');
   const resolvedReadOnly = isReadOnly || !canEdit;
 
   const [notes, setNotes] = useState('');
@@ -45,7 +46,7 @@ export function GroomingManageSheet({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { showSuccessToast, showErrorToast } = useToast();
+  const { showSuccessToast, showErrorToast, showToast } = useToast();
 
   useEffect(() => {
     if (visible && record) {
@@ -56,6 +57,10 @@ export function GroomingManageSheet({
   }, [visible, record]);
 
   const handleSave = () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (!token || !record || resolvedReadOnly) return;
     Alert.alert(
       "Modify Schedule?",
@@ -89,6 +94,10 @@ export function GroomingManageSheet({
   };
 
   const handleDelete = () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (!token || !record || resolvedReadOnly) return;
     Alert.alert(
       "Remove Task?",
@@ -118,6 +127,31 @@ export function GroomingManageSheet({
     );
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Grooming settings"
+        subtitle={record?.groomingType ?? 'Grooming Record'}
+        icon="content-cut"
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <>
       <FormSheetShell
@@ -127,10 +161,11 @@ export function GroomingManageSheet({
         subtitle={record?.groomingType ?? 'Grooming Record'}
         icon="content-cut"
         saveLabel={resolvedReadOnly ? undefined : "Save changes"}
-        onSave={resolvedReadOnly ? undefined : handleSave}
+        onSave={handleSave}
         saving={saving}
-        saveDisabled={deleting}
+        saveDisabled={deleting || resolvedReadOnly}
         error={error}
+        isReadOnly={resolvedReadOnly}
         compact
       >
         <View pointerEvents={resolvedReadOnly ? "none" : "auto"} style={resolvedReadOnly ? styles.readOnlyContainer : null}>

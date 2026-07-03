@@ -9,6 +9,8 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { deleteJournalEntry, updateJournalEntry } from '@/services/journal/journalApi';
 import type { ApiJournalEntry } from '@/types/journal';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { useToast } from '@/hooks/useToast';
 
 interface JournalEntryEditSheetProps {
   visible: boolean;
@@ -25,7 +27,7 @@ export function JournalEntryEditSheet({
   onClose,
   onSaved,
 }: JournalEntryEditSheetProps) {
-  const { canEdit } = usePermissionGuard(entry?.petId || (entry as any)?.pet, 'journal');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(entry?.petId || (entry as any)?.pet, 'journal');
   const resolvedReadOnly = !canEdit;
 
   const [note, setNote] = useState('');
@@ -33,6 +35,7 @@ export function JournalEntryEditSheet({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (visible && entry) {
@@ -43,6 +46,10 @@ export function JournalEntryEditSheet({
   }, [visible, entry]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (!token || !entry || resolvedReadOnly) return;
     setSaving(true);
     setError(null);
@@ -61,6 +68,10 @@ export function JournalEntryEditSheet({
   };
 
   const handleDelete = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (!token || !entry || resolvedReadOnly) return;
     setDeleting(true);
     setError(null);
@@ -75,6 +86,30 @@ export function JournalEntryEditSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Edit Journal Entry"
+        icon="book-open"
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -82,7 +117,7 @@ export function JournalEntryEditSheet({
       title="Edit Journal Entry"
       icon="book-open"
       saveLabel={resolvedReadOnly ? undefined : "Save Changes"}
-      onSave={resolvedReadOnly ? undefined : handleSave}
+      onSave={handleSave}
       saving={saving}
       saveDisabled={deleting || resolvedReadOnly}
       error={error}

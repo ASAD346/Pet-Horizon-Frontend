@@ -8,17 +8,15 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
-  buildVaccinationDatePayload,
   createDefaultScheduleDate,
   validateScheduleDate,
 } from '@/lib/schedule/scheduleDate';
-import { SkeletonList } from '@/components/ui/skeletons';
+import { Skeleton, SkeletonList } from '@/components/ui/skeletons';
 import {
-  dateToTimeHHmm,
   defaultDueDate,
   defaultReminderTimeDate,
 } from '@/lib/vaccination/vaccinationForm';
-import { createVaccinationSchedule, fetchVaccinationHistory } from '@/services/schedules/vaccinationApi';
+import { fetchVaccinationHistory } from '@/services/schedules/vaccinationApi';
 import type {
   VaccinationHistoryItem,
 } from '@/types/vaccination';
@@ -48,7 +46,7 @@ export function LogVaccinationSheet({
   initialEntry,
   isReadOnly = false,
 }: LogVaccinationSheetProps) {
-  const { canEdit } = usePermissionGuard(petId, 'vaccination');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'vaccination');
   const resolvedReadOnly = isReadOnly || !canEdit;
 
   const [entry, setEntry] = useState<VaccinationEntryState>(() => initialEntry ?? {
@@ -113,6 +111,10 @@ export function LogVaccinationSheet({
   }, [visible, resetForm, loadHistory]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a vaccination.');
@@ -146,6 +148,32 @@ export function LogVaccinationSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title={entry.scheduleId ? 'Edit Vaccination' : 'Log Vaccination'}
+        icon={VACCINATION_THEME.icon}
+        accentColor={VACCINATION_THEME.color}
+        accentBg={VACCINATION_THEME.bg}
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -154,7 +182,7 @@ export function LogVaccinationSheet({
       icon={VACCINATION_THEME.icon}
       accentColor={VACCINATION_THEME.color}
       accentBg={VACCINATION_THEME.bg}
-      saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Vaccination'}
+      saveLabel={resolvedReadOnly ? undefined : (entry.scheduleId ? 'Save Changes' : 'Save Vaccination')}
       onSave={handleSave}
       saving={saving}
       saveDisabled={!entry.vaccineName.trim() || resolvedReadOnly}
@@ -171,31 +199,27 @@ export function LogVaccinationSheet({
         onChange={setEntry}
         onRemove={() => {}}
       />
-
-      <FormSection
-        title="Vaccination history"
-        icon="history"
-      >
-        {historyLoading ? (
-          <SkeletonList count={2} />
-        ) : history.length === 0 ? (
-          <AppText variant="bodySmall" color={HomeTheme.textMuted}>
-            No completed vaccinations yet.
-          </AppText>
-        ) : (
-          history.map((item, index) => (
-            <View key={`${item.vaccineName}-${item.administeredDate}-${index}`} style={formSheetStyles.historyRow}>
-              <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
-                {item.vaccineName}
-              </AppText>
-              <AppText variant="caption" color={HomeTheme.textMuted}>
-                {new Date(item.administeredDate).toLocaleDateString()}
-                {item.vetName ? ` · ${item.vetName}` : ''}
-              </AppText>
-            </View>
-          ))
-        )}
-      </FormSection>
+      {history.length > 0 && (
+        <View style={{ marginTop: 16 }}>
+          <FormSection title="Recent History">
+            {historyLoading ? (
+              <SkeletonList count={2} />
+            ) : (
+              history.map((h, i) => (
+                <View key={`${h.vaccineName}-${h.administeredDate}-${i}`} style={formSheetStyles.historyRow}>
+                  <AppText variant="bodySmall" weight="700" color={HomeTheme.text}>
+                    {h.vaccineName}
+                  </AppText>
+                  <AppText variant="caption" color={HomeTheme.textMuted}>
+                    {new Date(h.administeredDate).toLocaleDateString()}
+                    {h.vetName ? ` · ${h.vetName}` : ''}
+                  </AppText>
+                </View>
+              ))
+            )}
+          </FormSection>
+        </View>
+      )}
     </FormSheetShell>
   );
 }

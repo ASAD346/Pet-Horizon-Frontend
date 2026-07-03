@@ -26,6 +26,7 @@ import type { FeedingEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 import { getPetPermissionCache } from '@/lib/pet/petPermissionCache';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 const FOOD_THEME = LOG_SHEET_THEMES.food;
 
@@ -52,7 +53,7 @@ export function LogFoodSheet({
   unitOptions: propsUnitOptions,
   hasPermission = true,
 }: LogFoodSheetProps) {
-  const { canEdit } = usePermissionGuard(petId, 'feeding');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'feeding');
   const resolvedReadOnly = !hasPermission || !canEdit;
 
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
@@ -165,6 +166,10 @@ export function LogFoodSheet({
   }, [visible, resetForm, loadSpeciesFeatures]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a feeding schedule.');
@@ -205,6 +210,32 @@ export function LogFoodSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title={entry.scheduleId ? 'Edit Feeding' : 'Log Food'}
+        icon={FOOD_THEME.icon}
+        accentColor={FOOD_THEME.color}
+        accentBg={FOOD_THEME.bg}
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -213,11 +244,11 @@ export function LogFoodSheet({
       icon={FOOD_THEME.icon}
       accentColor={FOOD_THEME.color}
       accentBg={FOOD_THEME.bg}
-      saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Feeding'}
+      saveLabel={resolvedReadOnly ? undefined : (entry.scheduleId ? 'Save Changes' : 'Save Feeding')}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={featuresLoading || !entry.mealType || !entry.unit || !hasPermission}
-      isReadOnly={!hasPermission}
+      saveDisabled={featuresLoading || !entry.mealType || !entry.unit || resolvedReadOnly}
+      isReadOnly={resolvedReadOnly}
       compact
     >
       {featuresLoading ? (

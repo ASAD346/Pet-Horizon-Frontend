@@ -19,6 +19,7 @@ import { useLocalization } from '@/hooks/useLocalization';
 import { FormSheetShell, FormSection, FormSelectInput, SheetOptionPicker } from '../sheets';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 const BRAND_GREEN = '#2E7D32';
 
@@ -44,7 +45,7 @@ export function AddExpenseView({
   const { currency } = useLocalization();
   const { showToast } = useToast();
 
-  const { canEdit } = usePermissionGuard(petId, 'expenses');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'expenses');
   const resolvedReadOnly = !canEdit;
 
   const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -80,6 +81,10 @@ export function AddExpenseView({
   }, []);
 
   const handleSubmit = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       setError('Select a pet before adding an expense.');
@@ -117,6 +122,31 @@ export function AddExpenseView({
       setSaving(false);
     }
   };
+
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title="Add Expense"
+        subtitle="Track your pet's spending"
+        icon="plus-circle-outline"
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
 
   return (
     <FormSheetShell

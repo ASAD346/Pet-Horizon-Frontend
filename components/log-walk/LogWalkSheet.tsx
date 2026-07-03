@@ -21,6 +21,8 @@ import { WalkEntryCard } from '../schedule/entries/WalkEntryCard';
 import type { WalkEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { View } from 'react-native';
 
 const WALK_THEME = LOG_SHEET_THEMES.walk;
 
@@ -43,7 +45,7 @@ export function LogWalkSheet({
   initialEntry,
   isReadOnly = false,
 }: LogWalkSheetProps) {
-  const { canEdit } = usePermissionGuard(petId, 'walks');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'walks');
   const resolvedReadOnly = isReadOnly || !canEdit;
 
   const [entry, setEntry] = useState<WalkEntryState>(() => ({
@@ -83,6 +85,10 @@ export function LogWalkSheet({
   }, [visible, resetForm]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a walk schedule.');
@@ -117,6 +123,32 @@ export function LogWalkSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title={entry.scheduleId ? 'Edit Walk' : 'Log Walk'}
+        icon={WALK_THEME.icon}
+        accentColor={WALK_THEME.color}
+        accentBg={WALK_THEME.bg}
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -125,7 +157,7 @@ export function LogWalkSheet({
       icon={WALK_THEME.icon}
       accentColor={WALK_THEME.color}
       accentBg={WALK_THEME.bg}
-      saveLabel={entry.scheduleId ? 'Save Changes' : 'Save Walk'}
+      saveLabel={resolvedReadOnly ? undefined : (entry.scheduleId ? 'Save Changes' : 'Save Walk')}
       onSave={handleSave}
       saving={saving}
       isReadOnly={resolvedReadOnly}

@@ -21,6 +21,8 @@ import { GroomingEntryCard } from '../schedule/entries/GroomingEntryCard';
 import type { GroomingEntryState } from '@/lib/schedule/types';
 import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { View } from 'react-native';
 
 const GROOMING_THEME = LOG_SHEET_THEMES.grooming;
 
@@ -47,7 +49,7 @@ export function LogGroomingSheet({
   groomingVisible: propsGroomingVisible = true,
   isReadOnly = false,
 }: LogGroomingSheetProps) {
-  const { canEdit } = usePermissionGuard(petId, 'grooming');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'grooming');
   const resolvedReadOnly = isReadOnly || !canEdit;
 
   const [typeOptions, setTypeOptions] = useState<GroomingTypeOption[]>([]);
@@ -137,6 +139,10 @@ export function LogGroomingSheet({
   }, [visible, resetForm, loadTypes]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving || resolvedReadOnly) return;
     if (!petId || !token) {
       showErrorToast('Add a pet before saving a grooming task.');
@@ -173,6 +179,32 @@ export function LogGroomingSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title={entry.recordId ? 'Edit Grooming' : 'Log Grooming'}
+        icon={GROOMING_THEME.icon}
+        accentColor={GROOMING_THEME.color}
+        accentBg={GROOMING_THEME.bg}
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -181,7 +213,7 @@ export function LogGroomingSheet({
       icon={GROOMING_THEME.icon}
       accentColor={GROOMING_THEME.color}
       accentBg={GROOMING_THEME.bg}
-      saveLabel={entry.recordId ? 'Save Changes' : 'Save Grooming'}
+      saveLabel={resolvedReadOnly ? undefined : (entry.recordId ? 'Save Changes' : 'Save Grooming')}
       onSave={handleSave}
       saving={saving}
       saveDisabled={loadingTypes || !groomingVisible || !entry.groomingType || resolvedReadOnly}

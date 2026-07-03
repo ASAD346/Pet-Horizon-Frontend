@@ -12,6 +12,7 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { setBudget, updateBudget } from '@/services/expense/expenseApi';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface EditBudgetSheetProps {
   visible: boolean;
@@ -40,7 +41,7 @@ export function EditBudgetSheet({
   periodStart,
   periodEnd,
 }: EditBudgetSheetProps) {
-  const { canEdit } = usePermissionGuard(petId, 'expenses');
+  const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'expenses');
   const resolvedReadOnly = !canEdit;
 
   const [amount, setAmount] = useState('');
@@ -58,6 +59,10 @@ export function EditBudgetSheet({
   }, [visible, currentLimit, initialPeriodType]);
 
   const handleSave = async () => {
+    if (!canEdit) {
+      showToast("Read-only access: You cannot modify this entry.");
+      return;
+    }
     if (saving || resolvedReadOnly) return;
     if (!token || !petId) return;
     const limit = Number(amount);
@@ -84,6 +89,31 @@ export function EditBudgetSheet({
     }
   };
 
+  if (permissionsLoading) {
+    return (
+      <FormSheetShell
+        visible={visible}
+        onClose={onClose}
+        title={budgetId ? 'Edit Budget' : 'Set Budget'}
+        subtitle="Configure your spending limit"
+        icon="wallet-outline"
+        saveLabel={undefined}
+        onSave={undefined}
+        saving={false}
+        error={null}
+        isReadOnly={true}
+        compact
+      >
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton width="40%" height={16} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+          <Skeleton width="30%" height={16} style={{ marginTop: 8 }} />
+          <Skeleton width="100%" height={48} borderRadius={8} />
+        </View>
+      </FormSheetShell>
+    );
+  }
+
   return (
     <FormSheetShell
       visible={visible}
@@ -92,7 +122,7 @@ export function EditBudgetSheet({
       subtitle="Configure your spending limit"
       icon="wallet-outline"
       saveLabel={resolvedReadOnly ? undefined : "Save Budget"}
-      onSave={resolvedReadOnly ? undefined : handleSave}
+      onSave={handleSave}
       saving={saving}
       saveDisabled={resolvedReadOnly}
       error={error}
