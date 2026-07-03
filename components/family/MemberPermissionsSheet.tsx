@@ -23,8 +23,6 @@ const MODULE_OPTIONS = [
   { id: 'medicine', label: 'Medicine' },
   { id: 'grooming', label: 'Grooming' },
   { id: 'vaccination', label: 'Vaccination' },
-  { id: 'journal', label: 'Journal' },
-  { id: 'expenses', label: 'Expenses' },
 ] as const;
 
 const ACCESS_LEVELS = [
@@ -93,8 +91,8 @@ export function MemberPermissionsSheet({
         medicine: getCheck('medicine'),
         grooming: getCheck('grooming'),
         vaccination: getCheck('vaccination'),
-        journal: getCheck('journal'),
-        expenses: getCheck('expenses'),
+        journal: true,
+        expenses: true,
       };
     },
     enabled: Boolean(visible && targetUserId),
@@ -121,8 +119,8 @@ export function MemberPermissionsSheet({
         medicine: getCheck('medicine'),
         grooming: getCheck('grooming'),
         vaccination: getCheck('vaccination'),
-        journal: getCheck('journal'),
-        expenses: getCheck('expenses'),
+        journal: true,
+        expenses: true,
       };
 
       queryClient.setQueryData(['family-permissions', targetUserId], initialPerms);
@@ -146,20 +144,22 @@ export function MemberPermissionsSheet({
   const mutation = useMutation({
     mutationFn: async (updatedPermissionsObj: Record<string, boolean>) => {
       if (!token || !petId || !member) throw new Error("Required variables missing");
-      const allowedModules = Object.keys(updatedPermissionsObj).filter(
-        (key) => updatedPermissionsObj[key],
-      );
+      const allowedModules = [
+        ...Object.keys(updatedPermissionsObj).filter((key) => updatedPermissionsObj[key]),
+        'journal',
+        'expenses'
+      ];
 
       // Trigger Redux sync optimistically
       dispatch({
         type: 'family/updateMemberPermissionsSuccess',
-        payload: { memberId: targetUserId, permissions: updatedPermissionsObj }
+        payload: { memberId: targetUserId, permissions: { ...updatedPermissionsObj, journal: true, expenses: true } }
       });
 
       return await updatePetMemberPermissions(token, petId, targetUserId, {
         accessLevel,
         allowedModules,
-        permissions: updatedPermissionsObj,
+        permissions: { ...updatedPermissionsObj, journal: true, expenses: true },
       } as any);
     },
     onMutate: async (updatedPermissionsObj) => {

@@ -8,6 +8,8 @@ interface ContextGuardProps {
   children: React.ReactNode;
 }
 
+import { clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
+
 export function ContextGuard({ children }: ContextGuardProps) {
   const { activePetId } = usePetContext();
   const queryClient = useQueryClient();
@@ -17,6 +19,7 @@ export function ContextGuard({ children }: ContextGuardProps) {
   useEffect(() => {
     if (activePetId && prevPetIdRef.current !== activePetId) {
       setResetting(true);
+      clearPetPermissionCache();
       queryClient.resetQueries()
         .then(() => {
           prevPetIdRef.current = activePetId;

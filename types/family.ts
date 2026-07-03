@@ -81,4 +81,5 @@ export interface FamilyMemberDisplay {
   avatarColor: string;
   hostBadge?: string;
   profilePicture?: string;
+  allowedModules?: string[];
 }

@@ -6,6 +6,7 @@ import { SkeletonList } from '@/components/ui/skeletons';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import type { FamilyMemberDisplay } from '@/types/family';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { mapModuleNameToLabel } from '@/lib/family/formatters';
 
 interface MembersListSectionProps {
   members: FamilyMemberDisplay[];
@@ -16,6 +17,8 @@ interface MembersListSectionProps {
   isOwner?: boolean;
   hostName?: string | null;
   currentUserId?: string | null;
+  onInfoPress?: () => void;
+  allowedModules?: string[];
 }
 
 function MemberAvatar({ color, pictureUrl }: { color: string; pictureUrl?: string }) {
@@ -48,6 +51,8 @@ export function MembersListSection({
   isOwner = true,
   hostName = null,
   currentUserId = null,
+  onInfoPress,
+  allowedModules = [],
 }: MembersListSectionProps) {
   const activeCount = members.length;
 
@@ -60,9 +65,21 @@ export function MembersListSection({
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-          Care Team {!isOwner ? '(Guest Access)' : ''}
-        </AppText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
+            Care Team {!isOwner ? '(Guest Access)' : ''}
+          </AppText>
+          {!isOwner && onInfoPress && (
+            <TouchableOpacity
+              onPress={onInfoPress}
+              activeOpacity={0.7}
+              style={styles.infoIconBtn}
+              accessibilityLabel="View Access Information"
+            >
+              <Ionicons name="information-circle-outline" size={18} color={themeGreen} />
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={[styles.activeBadge, { backgroundColor: isPremium ? '#E8F5E9' : '#EEF8EE' }]}>
           <AppText variant="caption" weight="800" color={themeGreen}>
             {activeCount} {activeCount === 1 ? 'MEMBER' : 'MEMBERS'}
@@ -71,11 +88,49 @@ export function MembersListSection({
       </View>
 
       {!isOwner && (
-        <View style={styles.guestInfoBanner}>
-          <Ionicons name="information-circle-outline" size={16} color={themeGreen} style={{ marginRight: 6 }} />
-          <AppText variant="caption" weight="700" color={themeGreen} style={styles.guestInfoText}>
-            You have guest editing access. Contact {hostName || 'the owner'} to manage permissions.
-          </AppText>
+        <View style={styles.guestBannerContainer}>
+          <View style={styles.guestInfoBanner}>
+            <Ionicons name="information-circle-outline" size={16} color={themeGreen} style={{ marginRight: 6 }} />
+            <AppText variant="caption" weight="700" color={themeGreen} style={styles.guestInfoText}>
+              You have guest editing access. Contact {hostName || 'the owner'} to manage permissions.
+            </AppText>
+          </View>
+
+          {/* My Access Section */}
+          <View style={styles.myAccessContainer}>
+            <AppText variant="caption" weight="800" color={HomeTheme.textMuted} style={styles.myAccessTitle}>
+              MY ACCESS CONFIGURATION:
+            </AppText>
+            <View style={styles.chipsWrapper}>
+              {['feeding', 'walks', 'medicine', 'grooming', 'vaccination', 'journal', 'expenses'].map((mod) => {
+                const isAllowed = allowedModules.includes(mod);
+                return (
+                  <View
+                    key={mod}
+                    style={[
+                      styles.accessChip,
+                      isAllowed ? styles.chipAllowed : styles.chipDenied
+                    ]}
+                  >
+                    <Ionicons
+                      name={isAllowed ? "checkmark-circle" : "eye-sharp"}
+                      size={12}
+                      color={isAllowed ? "#1B5E20" : "#64748B"}
+                      style={{ marginRight: 4 }}
+                    />
+                    <AppText
+                      variant="caption"
+                      weight="700"
+                      color={isAllowed ? "#1B5E20" : "#64748B"}
+                      style={{ fontSize: 11 }}
+                    >
+                      {mapModuleNameToLabel(mod)}{isAllowed ? '' : ' (View Only)'}
+                    </AppText>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
         </View>
       )}
 
@@ -103,59 +158,79 @@ export function MembersListSection({
               key={member.id}
               style={[
                 styles.memberCard,
-                { borderWidth: 1, borderColor: cardBorderColor }
+                { borderWidth: 1, borderColor: cardBorderColor, flexDirection: 'column', alignItems: 'stretch' }
               ]}
               activeOpacity={isPressable ? 0.85 : 1}
               onPress={isPressable ? () => onMemberSettingsPress?.(member.id) : undefined}
             >
-              <MemberAvatar color={member.avatarColor} pictureUrl={member.profilePicture} />
-              
-              <View style={styles.memberInfo}>
-                <AppText variant="body" weight="800" color={HomeTheme.text}>
-                  {member.name}
-                </AppText>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <MemberAvatar color={member.avatarColor} pictureUrl={member.profilePicture} />
                 
-                <AppText variant="caption" weight="500" color={HomeTheme.textMuted} numberOfLines={1}>
-                  {member.subtitle}
-                </AppText>
+                <View style={styles.memberInfo}>
+                  <AppText variant="body" weight="800" color={HomeTheme.text}>
+                    {member.name}
+                  </AppText>
+                  
+                  <AppText variant="caption" weight="500" color={HomeTheme.textMuted} numberOfLines={1}>
+                    {member.subtitle}
+                  </AppText>
 
-                {member.hostBadge ? (
-                  <View style={styles.hostBadgeRow}>
-                    <Ionicons name="link-outline" size={10} color={themeGreen} style={{ marginRight: 3 }} />
-                    <AppText variant="caption" weight="800" color={themeGreen} style={styles.hostBadgeText}>
-                      {member.hostBadge}
-                    </AppText>
-                  </View>
-                ) : null}
+                  {member.hostBadge ? (
+                    <View style={styles.hostBadgeRow}>
+                      <Ionicons name="link-outline" size={10} color={themeGreen} style={{ marginRight: 3 }} />
+                      <AppText variant="caption" weight="800" color={themeGreen} style={styles.hostBadgeText}>
+                        {member.hostBadge}
+                      </AppText>
+                    </View>
+                  ) : null}
+                </View>
+
+                <View style={styles.rightActionRow}>
+                  {member.isAdmin ? (
+                    <View style={[styles.roleBadge, { backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9', borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(92, 179, 93, 0.18)' }]}>
+                      <Ionicons name="shield-checkmark" size={11} color={isPremium ? '#D4A017' : HomeTheme.cardGreen} />
+                      <AppText variant="caption" weight="800" color={isPremium ? '#D4A017' : HomeTheme.cardGreen} style={styles.roleText}>
+                        ADMIN
+                      </AppText>
+                    </View>
+                  ) : (
+                    <View style={styles.roleBadgeNormal}>
+                      <AppText variant="caption" weight="700" color={HomeTheme.textMuted} style={styles.roleText}>
+                        MEMBER
+                      </AppText>
+                    </View>
+                  )}
+
+                  {canManage ? (
+                    <TouchableOpacity
+                      style={styles.settingsBtn}
+                      activeOpacity={0.7}
+                      accessibilityLabel="Member settings"
+                      onPress={() => onMemberSettingsPress?.(member.id)}
+                    >
+                      <Ionicons name="settings-sharp" size={16} color="#64748B" />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
               </View>
 
-              <View style={styles.rightActionRow}>
-                {member.isAdmin ? (
-                  <View style={[styles.roleBadge, { backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9', borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(92, 179, 93, 0.18)' }]}>
-                    <Ionicons name="shield-checkmark" size={11} color={isPremium ? '#D4A017' : HomeTheme.cardGreen} />
-                    <AppText variant="caption" weight="800" color={isPremium ? '#D4A017' : HomeTheme.cardGreen} style={styles.roleText}>
-                      ADMIN
-                    </AppText>
+              {/* Access Details section for guest member */}
+              {!member.isAdmin && member.allowedModules && member.allowedModules.length > 0 && (
+                <View style={styles.accessDetailsSection}>
+                  <AppText variant="caption" weight="800" color={HomeTheme.textMuted} style={{ fontSize: 10, marginBottom: 4 }}>
+                    EDIT PERMISSIONS:
+                  </AppText>
+                  <View style={styles.miniChipsRow}>
+                    {member.allowedModules.map((m) => (
+                      <View key={m} style={styles.miniChip}>
+                        <AppText variant="caption" weight="700" color="#2E7D32" style={{ fontSize: 10 }}>
+                          {mapModuleNameToLabel(m)}
+                        </AppText>
+                      </View>
+                    ))}
                   </View>
-                ) : (
-                  <View style={styles.roleBadgeNormal}>
-                    <AppText variant="caption" weight="700" color={HomeTheme.textMuted} style={styles.roleText}>
-                      MEMBER
-                    </AppText>
-                  </View>
-                )}
-
-                {canManage ? (
-                  <TouchableOpacity
-                    style={styles.settingsBtn}
-                    activeOpacity={0.7}
-                    accessibilityLabel="Member settings"
-                    onPress={() => onMemberSettingsPress?.(member.id)}
-                  >
-                    <Ionicons name="settings-sharp" size={16} color="#64748B" />
-                  </TouchableOpacity>
-                ) : null}
-              </View>
+                </View>
+              )}
             </CardContainer>
           );
         })
@@ -185,8 +260,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   memberCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.md,
@@ -279,6 +352,9 @@ const styles = StyleSheet.create({
     maxWidth: 250,
     marginTop: 2,
   },
+  guestBannerContainer: {
+    marginBottom: Spacing.md,
+  },
   guestInfoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -293,6 +369,63 @@ const styles = StyleSheet.create({
   guestInfoText: {
     flex: 1,
     lineHeight: 15,
+  },
+  myAccessContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: -Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  myAccessTitle: {
+    fontSize: 10,
+    letterSpacing: 0.5,
+    marginBottom: Spacing.sm,
+  },
+  chipsWrapper: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  accessChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+  },
+  chipAllowed: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#C8E6C9',
+  },
+  chipDenied: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  infoIconBtn: {
+    padding: 2,
+  },
+  accessDetailsSection: {
+    marginTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: Spacing.sm,
+  },
+  miniChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  miniChip: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
   hostBadgeRow: {
     flexDirection: 'row',

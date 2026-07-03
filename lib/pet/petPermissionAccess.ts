@@ -160,15 +160,15 @@ export function buildPetAccessControls(params: {
 
   const canView = (moduleId: AppModuleId): boolean => {
     if (!isSpeciesModuleVisible(moduleId, species, remoteHidden)) return false;
-    if (isOwner) return true;
-
-    return evaluateModuleAccess(permissions, moduleId, moduleId);
+    return true;
   };
 
   const canEdit = (moduleId: AppModuleId): boolean => {
     if (!canView(moduleId)) return false;
     if (isOwner) return true;
-    return canEditAccessLevel(accessLevel);
+    if (moduleId === 'journal' || moduleId === 'expenses') return true;
+
+    return canEditAccessLevel(accessLevel) && evaluateModuleAccess(permissions, moduleId, moduleId);
   };
 
   const canViewSchedule = (sectionKey: ScheduleSectionKey): boolean =>

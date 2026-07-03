@@ -40,6 +40,10 @@ export function formatAllowedModules(modules: string[]): string {
   return `${labels.slice(0, -1).join(', ')} & ${labels[labels.length - 1]}`;
 }
 
+export function mapModuleNameToLabel(module: string): string {
+  return MODULE_LABELS[module.toLowerCase().trim()] ?? (module.charAt(0).toUpperCase() + module.slice(1));
+}
+
 export function buildFamilyMembersList(
   owner: ApiUser,
   members: PetMemberRow[],
@@ -51,6 +55,7 @@ export function buildFamilyMembersList(
     isAdmin: true,
     avatarColor: AVATAR_COLORS[0],
     profilePicture: owner.profileImage ?? undefined,
+    allowedModules: ['feeding', 'walks', 'medicine', 'grooming', 'vaccination', 'journal', 'expenses'],
   };
 
   const memberRows = members.map((member, index) => {
@@ -68,6 +73,7 @@ export function buildFamilyMembersList(
       isAdmin: member.accessLevel === 'admin',
       avatarColor: AVATAR_COLORS[(index + 1) % AVATAR_COLORS.length],
       profilePicture: user.profileImage ?? undefined,
+      allowedModules: member.allowedModules ?? [],
     };
   });
 
@@ -91,6 +97,7 @@ export function buildGuestMemberDisplay(
     avatarColor: AVATAR_COLORS[1],
     hostBadge: hostName ? `Invited by ${hostName}` : 'Joined via Invitation',
     profilePicture: user.profileImage ?? undefined,
+    allowedModules,
   };
 }
 
