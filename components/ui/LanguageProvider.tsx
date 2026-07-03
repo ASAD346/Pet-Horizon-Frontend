@@ -8,10 +8,16 @@ import { en } from '../../constants/translations/en';
 import { de } from '../../constants/translations/de';
 import { es } from '../../constants/translations/es';
 import { fr } from '../../constants/translations/fr';
+import { it } from '../../constants/translations/it';
+import { pt } from '../../constants/translations/pt';
+import { ru } from '../../constants/translations/ru';
+import { tr } from '../../constants/translations/tr';
+import { ar } from '../../constants/translations/ar';
+import { zh } from '../../constants/translations/zh';
 
-export type LanguageCode = 'en' | 'de' | 'es' | 'fr';
+export type LanguageCode = 'en' | 'de' | 'es' | 'fr' | 'it' | 'pt' | 'ru' | 'tr' | 'ar' | 'zh';
 
-const translations: Record<LanguageCode, Record<string, string>> = { en, de, es, fr };
+const translations: Record<LanguageCode, Record<string, string>> = { en, de, es, fr, it, pt, ru, tr, ar, zh };
 
 interface LanguageContextType {
   locale: LanguageCode;
@@ -42,7 +48,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
       // 2. Check local storage
       const cached = await AsyncStorage.getItem('@user_preferred_language');
-      if (cached && ['en', 'de', 'es', 'fr'].includes(cached)) {
+      if (cached && ['en', 'de', 'es', 'fr', 'it', 'pt', 'ru', 'tr', 'ar', 'zh'].includes(cached)) {
         setLocale(cached as LanguageCode);
         return;
       }
@@ -51,7 +57,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
       const locales = Localization.getLocales();
       if (locales && locales.length > 0) {
         const sysLang = locales[0].languageCode?.toLowerCase() || '';
-        const matched = ['en', 'de', 'es', 'fr'].find((code) => sysLang.startsWith(code));
+        const matched = ['en', 'de', 'es', 'fr', 'it', 'pt', 'ru', 'tr', 'ar', 'zh'].find((code) => sysLang.startsWith(code));
         if (matched) {
           setLocale(matched as LanguageCode);
           await AsyncStorage.setItem('@user_preferred_language', matched);

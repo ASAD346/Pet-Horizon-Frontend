@@ -23,13 +23,15 @@ interface HomeHeaderProps {
   isPremium?: boolean;
 }
 
-function getGreeting(userName: string): string {
+import { useLanguage } from '@/components/ui/LanguageProvider';
+
+function getGreeting(userName: string, t: (key: string, def?: string) => string): string {
   const hours = new Date().getHours();
   const name = userName.trim();
-  if (hours >= 5 && hours < 12) return `Good morning, ${name} 👋`;
-  if (hours >= 12 && hours < 17) return `Good afternoon, ${name} 👋`;
-  if (hours >= 17 && hours < 22) return `Good evening, ${name} 👋`;
-  return `Good night, ${name} 🌙`;
+  if (hours >= 5 && hours < 12) return `${t('goodMorning', 'Good morning')}, ${name} 👋`;
+  if (hours >= 12 && hours < 17) return `${t('goodAfternoon', 'Good afternoon')}, ${name} 👋`;
+  if (hours >= 17 && hours < 22) return `${t('goodEvening', 'Good evening')}, ${name} 👋`;
+  return `${t('goodNight', 'Good night')} ${name} 🌙`;
 }
 
 export function HomeHeader({
@@ -44,10 +46,11 @@ export function HomeHeader({
 }: HomeHeaderProps) {
   const { user } = useAuth();
   const router = useRouter();
+  const { t } = useLanguage();
   const rawImage = user?.profileImage;
   const userImage = rawImage ? resolveMediaUrl(rawImage) : null;
 
-  const greeting = getGreeting(userName);
+  const greeting = getGreeting(userName, t);
   const insets = useSafeAreaInsets();
 
   const gradientColors = isPremium

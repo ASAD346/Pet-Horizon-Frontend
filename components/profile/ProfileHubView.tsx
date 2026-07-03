@@ -295,6 +295,7 @@ export function ProfileHubView() {
           notificationCount={notificationCount}
           onNotificationsPress={onNotificationsPress}
           showJournal={false}
+          showLanguageSelector={true}
           dark
         />
       </View>

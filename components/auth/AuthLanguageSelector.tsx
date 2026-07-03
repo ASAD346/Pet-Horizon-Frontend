@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, TouchableOpacity, View, Modal, Pressable } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Modal, Pressable, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage, type LanguageCode } from '@/components/ui/LanguageProvider';
 import { AppText } from '@/components/ui/AppText';
@@ -10,6 +10,12 @@ const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'de', label: 'Deutsch' },
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'pt', label: 'Português' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'zh', label: '中文' },
 ];
 
 export function AuthLanguageSelector() {
@@ -46,30 +52,32 @@ export function AuthLanguageSelector() {
             <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.title}>
               {t('selectLanguage', 'Select Language')}
             </AppText>
-            <View style={styles.list}>
-              {LANGUAGES.map((lang) => {
-                const isSelected = lang.code === locale;
-                return (
-                  <TouchableOpacity
-                    key={lang.code}
-                    style={[styles.item, isSelected && styles.itemSelected]}
-                    onPress={() => handleSelect(lang.code)}
-                    activeOpacity={0.7}
-                  >
-                    <AppText
-                      variant="bodySmall"
-                      weight={isSelected ? '800' : '500'}
-                      color={isSelected ? '#E28743' : HomeTheme.text}
+            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+              <View style={styles.list}>
+                {LANGUAGES.map((lang) => {
+                  const isSelected = lang.code === locale;
+                  return (
+                    <TouchableOpacity
+                      key={lang.code}
+                      style={[styles.item, isSelected && styles.itemSelected]}
+                      onPress={() => handleSelect(lang.code)}
+                      activeOpacity={0.7}
                     >
-                      {lang.label}
-                    </AppText>
-                    {isSelected && (
-                      <Ionicons name="checkmark" size={16} color="#E28743" />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                      <AppText
+                        variant="bodySmall"
+                        weight={isSelected ? '800' : '500'}
+                        color={isSelected ? '#E28743' : HomeTheme.text}
+                      >
+                        {lang.label}
+                      </AppText>
+                      {isSelected && (
+                        <Ionicons name="checkmark" size={16} color="#E28743" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
           </View>
         </Pressable>
       </Modal>
@@ -115,6 +123,9 @@ const styles = StyleSheet.create({
   title: {
     marginBottom: Spacing.sm,
     textAlign: 'center',
+  },
+  scrollView: {
+    maxHeight: 220,
   },
   list: {
     gap: 4,

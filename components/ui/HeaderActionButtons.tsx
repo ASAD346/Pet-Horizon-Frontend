@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, Modal, Pressable } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform, Modal, Pressable, ScrollView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
@@ -10,6 +10,12 @@ const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'de', label: 'Deutsch' },
   { code: 'es', label: 'Español' },
   { code: 'fr', label: 'Français' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'pt', label: 'Português' },
+  { code: 'ru', label: 'Русский' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'zh', label: '中文' },
 ];
 
 interface HeaderActionButtonsProps {
@@ -18,6 +24,7 @@ interface HeaderActionButtonsProps {
   onNotificationsPress?: () => void;
   onQrScanPress?: () => void;
   showJournal?: boolean;
+  showLanguageSelector?: boolean;
   /** When true, renders icon buttons as dark-themed (white icons on navy) */
   dark?: boolean;
 }
@@ -28,6 +35,7 @@ export function HeaderActionButtons({
   onNotificationsPress,
   onQrScanPress,
   showJournal = true,
+  showLanguageSelector = false,
   dark = false,
 }: HeaderActionButtonsProps) {
   const badgeLabel = notificationCount > 99 ? '99+' : String(notificationCount);
@@ -79,58 +87,64 @@ export function HeaderActionButtons({
         ) : null}
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.iconBtn, btnStyle]}
-        activeOpacity={0.75}
-        onPress={() => setModalVisible(true)}
-        accessibilityLabel="Select language"
-      >
-        <AppText variant="caption" weight="800" color={iconColor} style={{ fontSize: 11 }}>
-          {locale.toUpperCase()}
-        </AppText>
-      </TouchableOpacity>
-
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-          <View style={styles.modalDropdownPanel}>
-            <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.modalTitle}>
-              {t('selectLanguage', 'Select Language')}
+      {showLanguageSelector ? (
+        <>
+          <TouchableOpacity
+            style={[styles.iconBtn, btnStyle]}
+            activeOpacity={0.75}
+            onPress={() => setModalVisible(true)}
+            accessibilityLabel="Select language"
+          >
+            <AppText variant="caption" weight="800" color={iconColor} style={{ fontSize: 11 }}>
+              {locale.toUpperCase()}
             </AppText>
-            <View style={styles.modalList}>
-              {LANGUAGES.map((lang) => {
-                const isSelected = lang.code === locale;
-                return (
-                  <TouchableOpacity
-                    key={lang.code}
-                    style={[styles.modalItem, isSelected && styles.modalItemSelected]}
-                    onPress={async () => {
-                      await changeLanguage(lang.code);
-                      setModalVisible(false);
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <AppText
-                      variant="bodySmall"
-                      weight={isSelected ? '800' : '500'}
-                      color={isSelected ? '#E28743' : HomeTheme.text}
-                    >
-                      {lang.label}
-                    </AppText>
-                    {isSelected && (
-                      <Ionicons name="checkmark" size={16} color="#E28743" />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        </Pressable>
-      </Modal>
+          </TouchableOpacity>
+
+          <Modal
+            visible={modalVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <Pressable style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+              <View style={styles.modalDropdownPanel}>
+                <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.modalTitle}>
+                  {t('selectLanguage', 'Select Language')}
+                </AppText>
+                <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 220 }}>
+                  <View style={styles.modalList}>
+                    {LANGUAGES.map((lang) => {
+                      const isSelected = lang.code === locale;
+                      return (
+                        <TouchableOpacity
+                          key={lang.code}
+                          style={[styles.modalItem, isSelected && styles.modalItemSelected]}
+                          onPress={async () => {
+                            await changeLanguage(lang.code);
+                            setModalVisible(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <AppText
+                            variant="bodySmall"
+                            weight={isSelected ? '800' : '500'}
+                            color={isSelected ? '#E28743' : HomeTheme.text}
+                          >
+                            {lang.label}
+                          </AppText>
+                          {isSelected && (
+                            <Ionicons name="checkmark" size={16} color="#E28743" />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </ScrollView>
+              </View>
+            </Pressable>
+          </Modal>
+        </>
+      ) : null}
     </View>
   );
 }
