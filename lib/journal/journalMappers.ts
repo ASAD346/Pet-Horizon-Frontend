@@ -95,23 +95,44 @@ export function formatEntryTitle(entry: ApiJournalEntry): string {
   let note = entry.note?.trim() || '';
   if (note.toLowerCase().startsWith('skipped')) {
     note = note.slice(7).trim();
-    if (note) {
-      note = note.charAt(0).toUpperCase() + note.slice(1);
-    }
+    if (note.startsWith(':')) note = note.slice(1).trim();
+  } else if (note.toLowerCase().startsWith('missed')) {
+    note = note.slice(6).trim();
+    if (note.startsWith(':')) note = note.slice(1).trim();
+  } else if (note.toLowerCase().startsWith('not performed')) {
+    note = note.slice(13).trim();
+    if (note.startsWith(':')) note = note.slice(1).trim();
   }
-  if (note) return note;
+  if (note) {
+    note = note.charAt(0).toUpperCase() + note.slice(1);
+    return note;
+  }
   const type = entry.activityType?.trim() || 'Activity';
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
 export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
   const category = mapActivityTypeToCategory(entry.activityType);
-  const isSkipped = (entry.note || '').toLowerCase().startsWith('skipped');
+  let status: TimelineEvent['status'] = 'completed';
+  if (entry.status === 'skipped') {
+    status = 'skipped';
+  } else if (entry.status === 'missed') {
+    status = 'missed';
+  } else {
+    // Fallback to legacy string checking just in case
+    const lowerNote = (entry.note || '').toLowerCase();
+    if (lowerNote.startsWith('skipped')) {
+      status = 'skipped';
+    } else if (lowerNote.startsWith('missed') || lowerNote.startsWith('not performed')) {
+      status = 'missed';
+    }
+  }
+
   return {
     id: entry._id,
     time: formatTimeLabel(entry.createdAt),
     title: formatEntryTitle(entry),
-    status: isSkipped ? 'skipped' : 'completed',
+    status,
     category,
     materialIcon: categoryToMaterialIcon(category),
     imageUrl: entry.imagePath ?? null,

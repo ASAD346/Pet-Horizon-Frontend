@@ -6,6 +6,7 @@ export interface ApiJournalEntry {
   note: string;
   imagePath?: string | null;
   relatedScheduleLogId?: string | null;
+  status?: 'done' | 'skipped' | 'missed';
   canUploadImage?: boolean;
   createdAt: string;
   updatedAt?: string;

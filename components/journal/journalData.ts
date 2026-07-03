@@ -10,7 +10,7 @@ export type JournalCategory =
   | 'vaccination'
   | 'general';
 
-export type TimelineEventStatus = 'scheduled' | 'completed' | 'skipped';
+export type TimelineEventStatus = 'scheduled' | 'completed' | 'skipped' | 'missed';
 
 export type TimelineEvent = {
   id: string;

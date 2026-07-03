@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, AppState } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 
@@ -160,9 +160,41 @@ export default function HomeScreen() {
 
   const { showToast } = useToast();
 
+  const [isDataFresh, setIsDataFresh] = useState(true);
+  const lastSyncDateRef = useRef(new Date().toDateString());
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        const today = new Date().toDateString();
+        if (lastSyncDateRef.current !== today) {
+          setIsDataFresh(false);
+          lastSyncDateRef.current = today;
+          void refetchDashboard().finally(() => {
+            setIsDataFresh(true);
+          });
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [refetchDashboard]);
+
   useFocusEffect(
     useCallback(() => {
-      void refetchDashboard();
+      // Validate on focus
+      const today = new Date().toDateString();
+      if (lastSyncDateRef.current !== today) {
+        setIsDataFresh(false);
+        lastSyncDateRef.current = today;
+        void refetchDashboard().finally(() => {
+          setIsDataFresh(true);
+        });
+      } else {
+        void refetchDashboard();
+      }
     }, [refetchDashboard])
   );
 
@@ -174,7 +206,7 @@ export default function HomeScreen() {
   const dashboardTasks = dashboardData?.upcomingTasks ?? [];
   const unreadCount = dashboardData?.notifications?.unreadCount ?? 0;
   
-  const scheduleLoading = dashboardLoading;
+  const scheduleLoading = dashboardLoading || !isDataFresh;
 
   const visibleFeedingSchedules = canView('feeding') ? feedingSchedules : [];
   const visibleWalkSchedules = canView('walks') ? walkSchedules : [];

@@ -420,6 +420,35 @@ function isScheduleActiveToday(row: ScheduleRow): boolean {
   return true;
 }
 
+function isPastPendingRow(row: ScheduleRow): boolean {
+  const item = row.item as any;
+  const status = item.status || 'pending';
+  if (status === 'done' || status === 'skipped' || status === 'missed') {
+    return false;
+  }
+  
+  const explicitDateStr = item.date || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+  if (explicitDateStr) {
+    const taskDate = parseDateString(explicitDateStr) || new Date(explicitDateStr);
+    if (!isNaN(taskDate.getTime()) && taskDate.getTime() < startOfToday.getTime()) {
+      return true;
+    }
+  }
+
+  const isRecurring = item.recurrenceRule && item.recurrenceRule !== '' && item.recurrenceRule !== 'none';
+  if (!isRecurring && item.startDate) {
+    const startDate = parseDateString(item.startDate) || new Date(item.startDate);
+    if (!isNaN(startDate.getTime()) && startDate.getTime() < startOfToday.getTime()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 export function TodaysScheduleSection({
   feedingSchedules,
   walkSchedules = [],
@@ -445,7 +474,7 @@ export function TodaysScheduleSection({
         medicineSchedules,
         groomingRecords,
         vaccinationSchedules,
-      ).filter((row) => !rowIsDone(row) && !rowIsSkipped(row) && isScheduleActiveToday(row)),
+      ).filter((row) => !rowIsDone(row) && !rowIsSkipped(row) && isScheduleActiveToday(row) && !isPastPendingRow(row)),
     [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 

@@ -100,7 +100,11 @@ function groupByDate(items: ApiJournalEntry[]): DateSection[] {
 }
 
 function isEntrySkipped(entry: ApiJournalEntry): boolean {
-  return (entry.note || '').toLowerCase().startsWith('skipped');
+  return entry.status === 'skipped' || (entry.note || '').toLowerCase().startsWith('skipped');
+}
+
+function isEntryMissed(entry: ApiJournalEntry): boolean {
+  return entry.status === 'missed' || (entry.note || '').toLowerCase().startsWith('missed') || (entry.note || '').toLowerCase().startsWith('not performed');
 }
 
 // ─── Unified Filter Bottom Sheet ──────────────────────────────────────────────
@@ -243,15 +247,34 @@ const ActivityCard = React.memo(function ActivityCard({
   const category = mapActivityTypeToCategory(entry.activityType).toLowerCase();
   const config = KIND_CONFIG[category] ?? KIND_CONFIG.general;
   const skipped = isEntrySkipped(entry);
+  const missed = isEntryMissed(entry);
 
   const date = new Date(entry.createdAt);
   const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
   let noteText = (entry.note || '').trim();
+  if (noteText.toLowerCase().startsWith('skipped')) {
+    noteText = noteText.slice(7).trim();
+    if (noteText.startsWith(':')) noteText = noteText.slice(1).trim();
+  } else if (noteText.toLowerCase().startsWith('missed')) {
+    noteText = noteText.slice(6).trim();
+    if (noteText.startsWith(':')) noteText = noteText.slice(1).trim();
+  } else if (noteText.toLowerCase().startsWith('not performed')) {
+    noteText = noteText.slice(13).trim();
+    if (noteText.startsWith(':')) noteText = noteText.slice(1).trim();
+  }
   if (noteText.length > 0) noteText = noteText.charAt(0).toUpperCase() + noteText.slice(1);
 
-  const statusColor = skipped ? RED : GREEN;
-  const statusLabel = skipped ? 'SKIPPED' : 'COMPLETED';
+  let statusColor = GREEN;
+  let statusLabel = 'COMPLETED';
+
+  if (skipped) {
+    statusColor = RED;
+    statusLabel = 'SKIPPED';
+  } else if (missed) {
+    statusColor = '#94A3B8';
+    statusLabel = 'MISSED';
+  }
 
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium

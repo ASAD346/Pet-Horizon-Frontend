@@ -56,6 +56,11 @@ function TimelineRow({
     badgeText = '#EF4444';
     badgeLabel = 'SKIPPED';
     dotColor = '#EF4444';
+  } else if (event.status === 'missed') {
+    badgeBg = '#F3F4F6';
+    badgeText = '#4B5563';
+    badgeLabel = 'MISSED';
+    dotColor = '#9CA3AF';
   }
 
   return (

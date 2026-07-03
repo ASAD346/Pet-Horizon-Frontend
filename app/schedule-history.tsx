@@ -47,6 +47,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; dot: string 
   pending:  { label: 'Pending',   color: '#F5A623', dot: '#F5A623' },
   done:     { label: 'Completed', color: GREEN,     dot: GREEN },
   skipped:  { label: 'Skipped',   color: RED,       dot: RED },
+  missed:   { label: 'Missed',    color: '#64748B', dot: '#94A3B8' },
   disabled: { label: 'Disabled',  color: Palette.gray[500], dot: Palette.gray[400] },
   upcoming: { label: 'Upcoming',  color: '#673AB7', dot: '#673AB7' },
 };
@@ -205,7 +206,16 @@ const ScheduleCard = React.memo(function ScheduleCard({
   isPremium?: boolean;
 }) {
   const config = KIND_CONFIG[item.kind] ?? { icon: 'calendar-check' };
-  const status = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
+  let status = STATUS_CONFIG[item.status] ?? STATUS_CONFIG.pending;
+  if (item.status === 'pending' && item.date) {
+    const taskDate = new Date(item.date);
+    taskDate.setHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (taskDate.getTime() < today.getTime()) {
+      status = STATUS_CONFIG.missed;
+    }
+  }
   const timeLabel = formatTime(item.timeOfDay);
   const dateLabel = item.date
     ? new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
