@@ -1,26 +1,2 @@
-export const ar = {
-  login: "تسجيل الدخول",
-  email: "البريد الإلكتروني",
-  password: "كلمة المرور",
-  forgotPassword: "هل نسيت كلمة المرور؟",
-  signIn: "تسجيل الدخول",
-  signUp: "إنشاء حساب",
-  noAccount: "ليس لديك حساب؟",
-  hasAccount: "لديك حساب بالفعل؟",
-  fullName: "الاسم الكامل",
-  createAccount: "أنشئ حساباً",
-  selectLanguage: "اختر اللغة",
-  careSchedules: "جدول الرعاية",
-  dailyRoutine: "الروتين اليومي",
-  todaysSchedule: "جدول اليوم",
-  viewAll: "عرض الكل",
-  noTasksScheduled: "لا توجد مهام مجدولة اليوم",
-  clearScheduleDesc: "جدول رعاية حيوانك الأليف خالٍ اليوم.",
-  upNext: "التالي",
-  recentActivity: "النشاط الأخير",
-  home: "الرئيسية",
-  schedules: "الجداول",
-  family: "العائلة",
-  wallet: "المحفظة",
-  profile: "الملف الشخصي"
-};
+// REMOVED — Sprint 66 decommission
+export {};

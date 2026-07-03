@@ -9,7 +9,6 @@ const SCOPE = 'UserAPI';
 export interface UpdateUserRequest {
   fullName?: string;
   settings?: ApiUser['settings'];
-  preferredLanguage?: 'en' | 'de' | 'es' | 'fr' | 'it' | 'pt' | 'ru' | 'tr' | 'ar' | 'zh';
 }
 
 export interface ChangePasswordRequest {

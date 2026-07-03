@@ -5,7 +5,6 @@ import { CustomButton } from '../../ui/AppButton';
 import { AuthTextField } from '../AuthTextField';
 import { Palette, Spacing } from '../../../constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface LoginFormSectionProps {
   email: string;
@@ -39,26 +38,24 @@ export function LoginFormSection({
   onVerifyEmail,
   showVerifyAction,
 }: LoginFormSectionProps) {
-  const { t } = useLanguage();
-
   return (
     <View style={styles.container}>
       {/* Form Section Header */}
       <View style={styles.headerBlock}>
         <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.welcomeTitle}>
-          {t('welcomeBack', 'Welcome Back')} <Ionicons name="sparkles" size={18} color="#F48024" />
+          Welcome Back <Ionicons name="sparkles" size={18} color="#F48024" />
         </AppText>
         
         {/* Soft rounded accent line */}
         <View style={styles.accentLine} />
- 
+
         <AppText variant="bodySmall" color={Palette.gray[500]} weight="700" style={styles.headerDescription}>
-          {t('enterCredentials', 'Enter your credentials to continue')}
+          Enter your credentials to continue
         </AppText>
       </View>
 
       <AuthTextField
-        placeholder={t('email', 'Email Address')}
+        placeholder="Email Address"
         icon="mail-outline"
         value={email}
         onChangeText={onEmailChange}
@@ -69,7 +66,7 @@ export function LoginFormSection({
       />
 
       <AuthTextField
-        placeholder={t('password', 'Password')}
+        placeholder="Password"
         icon="lock-closed-outline"
         value={password}
         onChangeText={onPasswordChange}
@@ -82,7 +79,7 @@ export function LoginFormSection({
       {showVerifyAction && onVerifyEmail ? (
         <TouchableOpacity style={styles.verifyRow} onPress={onVerifyEmail}>
           <AppText variant="bodySmall" color="#5CB35D" weight="700">
-            {t('verifyEmailContinue', 'Verify your email to continue')}
+            Verify your email to continue
           </AppText>
         </TouchableOpacity>
       ) : null}
@@ -93,19 +90,19 @@ export function LoginFormSection({
             {rememberMe ? <Ionicons name="checkmark" size={14} color="#FFFFFF" /> : null}
           </View>
           <AppText variant="bodySmall" color={Palette.gray[600]} weight="600">
-            {t('rememberMe', 'Remember me')}
+            Remember me
           </AppText>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={onForgotPassword}>
           <AppText variant="bodySmall" color="#5CB35D" weight="700">
-            {t('forgotPassword', 'Forgot Password?')}
+            Forgot Password?
           </AppText>
         </TouchableOpacity>
       </View>
 
       <CustomButton
-        title={t('login', 'Login')}
+        title="Login"
         onPress={onLogin}
         isLoading={loading}
         disabled={loading}
@@ -114,11 +111,11 @@ export function LoginFormSection({
 
       <View style={styles.signupRow}>
         <AppText variant="bodySmall" color={Palette.gray[500]} weight="600">
-          {t('noAccount', "Don't have an account?")}{' '}
+          Don't have an account?{' '}
         </AppText>
         <TouchableOpacity onPress={onSignup} disabled={loading}>
           <AppText variant="bodySmall" color="#5CB35D" weight="800">
-            {t('signUp', 'Sign Up')}
+            Sign Up
           </AppText>
         </TouchableOpacity>
       </View>

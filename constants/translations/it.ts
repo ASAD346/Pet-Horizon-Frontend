@@ -1,26 +1,2 @@
-export const it = {
-  login: "Accedi",
-  email: "Indirizzo e-mail",
-  password: "Password",
-  forgotPassword: "Password dimenticata?",
-  signIn: "Accedi",
-  signUp: "Registrati",
-  noAccount: "Non hai un account?",
-  hasAccount: "Hai già un account?",
-  fullName: "Nome completo",
-  createAccount: "Crea account",
-  selectLanguage: "Seleziona lingua",
-  careSchedules: "Piani di cura",
-  dailyRoutine: "ROUTINE QUOTIDIANA",
-  todaysSchedule: "Programma di oggi",
-  viewAll: "MOSTRA TUTTO",
-  noTasksScheduled: "Nessuna attività programmata oggi",
-  clearScheduleDesc: "Il piano di cura del tuo animale domestico è vuoto oggi.",
-  upNext: "Successivo",
-  recentActivity: "Attività recente",
-  home: "Home",
-  schedules: "Programmi",
-  family: "Famiglia",
-  wallet: "Portafoglio",
-  profile: "Profilo"
-};
+// REMOVED — Sprint 66 decommission
+export {};

@@ -26,7 +26,6 @@ import { log } from '@/lib/log';
 import { Spacing } from '@/constants/theme';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
-import { AuthLanguageSelector } from '@/components/auth/AuthLanguageSelector';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -165,7 +164,7 @@ export default function LoginScreen() {
     <View style={styles.root}>
       <LoginHeaderDecor />
 
-      <AuthLanguageSelector />
+
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

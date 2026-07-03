@@ -43,7 +43,6 @@ function parseEmailParam(value: string | string[] | undefined): string {
   return typeof raw === 'string' ? raw : '';
 }
 
-import { AuthLanguageSelector } from '@/components/auth/AuthLanguageSelector';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -156,7 +155,7 @@ export default function SignupScreen() {
     <View style={styles.root}>
       <LoginHeaderDecor />
 
-      <AuthLanguageSelector />
+
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

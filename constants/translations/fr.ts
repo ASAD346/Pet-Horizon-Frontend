@@ -1,26 +1,2 @@
-export const fr = {
-  login: "Se Connecter",
-  email: "Adresse E-mail",
-  password: "Mot de passe",
-  forgotPassword: "Mot de passe oublié?",
-  signIn: "Connexion",
-  signUp: "S'inscrire",
-  noAccount: "Vous n'avez pas de compte?",
-  hasAccount: "Vous avez déjà un compte?",
-  fullName: "Nom Complet",
-  createAccount: "Créer un compte",
-  selectLanguage: "Choisir la langue",
-  careSchedules: "Calendrier de Soins",
-  dailyRoutine: "ROUTINE QUOTIDIENNE",
-  todaysSchedule: "Programme d'Aujourd'hui",
-  viewAll: "VOIR TOUT",
-  noTasksScheduled: "Aucune tâche planifiée aujourd'hui",
-  clearScheduleDesc: "Le programme de soins de votre animal est libre pour aujourd'hui.",
-  upNext: "À Suivre",
-  recentActivity: "Activité Récente",
-  home: "Accueil",
-  schedules: "Programmes",
-  family: "Famille",
-  wallet: "Portefeuille",
-  profile: "Profil"
-};
+// REMOVED — Sprint 66 decommission
+export {};

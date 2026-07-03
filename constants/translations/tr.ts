@@ -1,26 +1,2 @@
-export const tr = {
-  login: "Giriş Yap",
-  email: "E-posta Adresi",
-  password: "Şifre",
-  forgotPassword: "Şifremi Unuttum?",
-  signIn: "Giriş Yap",
-  signUp: "Kayıt Ol",
-  noAccount: "Hesabınız yok mu?",
-  hasAccount: "Zaten bir hesabınız var mı?",
-  fullName: "Ad Soyad",
-  createAccount: "Hesap Oluştur",
-  selectLanguage: "Dil Seçin",
-  careSchedules: "Bakım Programları",
-  dailyRoutine: "GÜNLÜK RUTİN",
-  todaysSchedule: "Bugünün Programı",
-  viewAll: "TÜMÜNÜ GÖR",
-  noTasksScheduled: "Bugün planlanmış görev yok",
-  clearScheduleDesc: "Evcil hayvanınızın bakım programı bugün için boş.",
-  upNext: "Sıradaki",
-  recentActivity: "Son Aktiviteler",
-  home: "Ana Sayfa",
-  schedules: "Programlar",
-  family: "Aile",
-  wallet: "Cüzdan",
-  profile: "Profil"
-};
+// REMOVED — Sprint 66 decommission
+export {};

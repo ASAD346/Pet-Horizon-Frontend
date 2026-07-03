@@ -6,7 +6,6 @@ import { AuthTextField } from '../AuthTextField';
 import { Palette, Spacing } from '../../../constants/theme';
 import type { SignupFieldErrors } from '../../../services/auth/validation';
 import { Ionicons } from '@expo/vector-icons';
-import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface SignupFormSectionProps {
   fullName: string;
@@ -38,26 +37,24 @@ export function SignupFormSection({
   onSignUp,
   onLogin,
 }: SignupFormSectionProps) {
-  const { t } = useLanguage();
-
   return (
     <View style={styles.container}>
       {/* Form Section Header */}
       <View style={styles.headerBlock}>
         <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.formTitle}>
-          {t('createAccount', 'Create Account')} <Ionicons name="paw" size={18} color="#5CB35D" />
+          Create Account <Ionicons name="paw" size={18} color="#5CB35D" />
         </AppText>
 
         {/* Soft rounded accent line */}
         <View style={styles.accentLine} />
 
         <AppText variant="bodySmall" color={Palette.gray[500]} weight="700" style={styles.headerDescription}>
-          {t('enterDetailsRegister', 'Enter your details to register a profile')}
+          Enter your details to register a profile
         </AppText>
       </View>
 
       <AuthTextField
-        placeholder={t('fullName', 'Full Name')}
+        placeholder="Full Name"
         icon="person-outline"
         value={fullName}
         onChangeText={onFullNameChange}
@@ -67,7 +64,7 @@ export function SignupFormSection({
       />
 
       <AuthTextField
-        placeholder={t('email', 'Email Address')}
+        placeholder="Email Address"
         icon="mail-outline"
         value={email}
         onChangeText={onEmailChange}
@@ -78,7 +75,7 @@ export function SignupFormSection({
       />
 
       <AuthTextField
-        placeholder={t('password', 'Password')}
+        placeholder="Password"
         icon="lock-closed-outline"
         value={password}
         onChangeText={onPasswordChange}
@@ -89,7 +86,7 @@ export function SignupFormSection({
       />
 
       <AuthTextField
-        placeholder={t('confirmPassword', 'Confirm Password')}
+        placeholder="Confirm Password"
         icon="lock-closed-outline"
         value={confirmPassword}
         onChangeText={onConfirmPasswordChange}
@@ -100,7 +97,7 @@ export function SignupFormSection({
       />
 
       <CustomButton
-        title={t('signUp', 'Sign Up')}
+        title="Sign Up"
         onPress={onSignUp}
         isLoading={loading}
         disabled={loading}
@@ -109,11 +106,11 @@ export function SignupFormSection({
 
       <View style={styles.loginRow}>
         <AppText variant="bodySmall" color={Palette.gray[500]} weight="600">
-          {t('hasAccount', 'Already have an account?')}{' '}
+          Already have an account?{' '}
         </AppText>
         <TouchableOpacity onPress={onLogin} disabled={loading}>
           <AppText variant="bodySmall" color="#5CB35D" weight="800">
-            {t('login', 'Login')}
+            Login
           </AppText>
         </TouchableOpacity>
       </View>
