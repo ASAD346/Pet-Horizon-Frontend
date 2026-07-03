@@ -24,6 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { usePetMembers } from '@/hooks/usePetMembers';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
+import { usePetContext } from '@/hooks/usePetContext';
 import { LogJournalSheet } from '@/components/journal';
 import { QrScannerModal } from '@/components/family/QrScannerModal';
 import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
@@ -53,10 +54,11 @@ export function FamilyHubView() {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { notificationCount, onNotificationsPress } = useTabHeaderActions();
   const { token, user } = useAuth();
+  const { activePetId } = usePetContext();
   const { pet, loading: petLoading, reload: reloadPet } = useActivePet(token);
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
   const { members, setMembers, loading: membersLoading, error: membersError, reload: reloadMembers } =
-    usePetMembers(token, pet?._id ?? null, true);
+    usePetMembers(token, activePetId ?? pet?._id ?? null, true);
   const { showErrorToast } = useToast();
 
   useEffect(() => {
@@ -318,7 +320,7 @@ export function FamilyHubView() {
       <InviteFamilySheet
         visible={inviteSheetVisible}
         onClose={() => setInviteSheetVisible(false)}
-        petId={pet?._id ?? null}
+        petId={activePetId}
         token={token}
         isPremium={isPremium}
         onInviteGenerated={(generated) => {
@@ -329,7 +331,7 @@ export function FamilyHubView() {
       <MemberPermissionsSheet
         visible={permissionsVisible}
         member={selectedMember}
-        petId={pet?._id ?? null}
+        petId={activePetId}
         token={token}
         isPremium={isPremium}
         isReadOnly={!isOwner}

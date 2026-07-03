@@ -32,6 +32,8 @@ function TabIcon({ focused, activeIcon, inactiveIcon }: TabIconProps) {
   );
 }
 
+import { ContextGuard } from '@/components/shared/ContextGuard';
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { bottomOffset, height } = getTabBarMetrics(insets.bottom);
@@ -51,64 +53,66 @@ export default function TabLayout() {
   );
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarShowLabel: false,
-        tabBarLabel: () => null,
-        tabBarStyle,
-        tabBarItemStyle: styles.tabBarItem,
-        tabBarIconStyle: styles.tabBarIcon,
-        tabBarLabelStyle: styles.tabBarLabel,
-        lazy: true,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} activeIcon="home" inactiveIcon="home-outline" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Schedule',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} activeIcon="calendar" inactiveIcon="calendar-outline" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="community"
-        options={{
-          title: 'Family',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} activeIcon="people" inactiveIcon="people-outline" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="wallet"
-        options={{
-          title: 'Expenses',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} activeIcon="cash" inactiveIcon="cash-outline" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} activeIcon="person" inactiveIcon="person-outline" />
-          ),
-        }}
-      />
-    </Tabs>
+    <ContextGuard>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarButton: HapticTab,
+          tabBarShowLabel: false,
+          tabBarLabel: () => null,
+          tabBarStyle,
+          tabBarItemStyle: styles.tabBarItem,
+          tabBarIconStyle: styles.tabBarIcon,
+          tabBarLabelStyle: styles.tabBarLabel,
+          lazy: true,
+        }}>
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon focused={focused} activeIcon="home" inactiveIcon="home-outline" />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: 'Schedule',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon focused={focused} activeIcon="calendar" inactiveIcon="calendar-outline" />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="community"
+          options={{
+            title: 'Family',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon focused={focused} activeIcon="people" inactiveIcon="people-outline" />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="wallet"
+          options={{
+            title: 'Expenses',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon focused={focused} activeIcon="cash" inactiveIcon="cash-outline" />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            tabBarIcon: ({ focused }) => (
+              <TabIcon focused={focused} activeIcon="person" inactiveIcon="person-outline" />
+            ),
+          }}
+        />
+      </Tabs>
+    </ContextGuard>
   );
 }
 

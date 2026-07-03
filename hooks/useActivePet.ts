@@ -10,8 +10,11 @@ import {
 import { fetchActivePetId, fetchPetById } from '@/services/pets/petApi';
 import type { ApiPet } from '@/types/pet';
 import { useFocusReload } from './useStaleLoadScope';
+import { useAppSelector } from '@/redux/store';
+import { selectActivePetId } from '@/redux/reducer';
 
 export function useActivePet(token: string | null) {
+  const activePetId = useAppSelector(selectActivePetId);
   const [pet, setPet] = useState<ApiPet | null>(() => getActivePetCache(token) || null);
   const [loading, setLoading] = useState(() => Boolean(token && !activePetCacheLoaded(token)));
 
@@ -37,14 +40,15 @@ export function useActivePet(token: string | null) {
     if (block) setLoading(true);
 
     try {
-      const { activePetId } = await fetchActivePetId(token);
-      if (!activePetId) {
+      const { activePetId: serverActivePetId } = await fetchActivePetId(token);
+      const targetId = activePetId || serverActivePetId;
+      if (!targetId) {
         setPet(null);
         clearActivePetCache();
         log.info('Home', 'No active pet');
         return;
       }
-      const active = await fetchPetById(token, activePetId);
+      const active = await fetchPetById(token, targetId);
       setPet(active);
       setActivePetCache(token, active);
     } catch (error) {
@@ -56,7 +60,7 @@ export function useActivePet(token: string | null) {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, activePetId]);
 
   useFocusReload(reload, Boolean(token));
 
@@ -66,7 +70,7 @@ export function useActivePet(token: string | null) {
     if (token) {
       void reload(true);
     }
-  }, [token, reload]);
+  }, [token, activePetId, reload]);
 
   return { pet, loading, reload };
 }
