@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -6,15 +6,14 @@ import {
   Platform,
   Pressable,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
-import { SectionLabel, SheetColors } from '@/components/sheets';
+import { SheetColors } from '@/components/sheets';
 import { Radius, Spacing } from '@/constants/theme';
 import type { PremiumPlan } from '@/types/premium';
 import { formatPlanPrice } from './profileTheme';
@@ -35,11 +34,6 @@ export function SecureCheckoutSheet({
   loading,
 }: SecureCheckoutSheetProps) {
   const insets = useSafeAreaInsets();
-  const [cardholder, setCardholder] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   // Processing animation
   const processingPulse = useRef(new Animated.Value(1)).current;
@@ -60,45 +54,13 @@ export function SecureCheckoutSheet({
     }
   }, [loading]);
 
-  // Reset fields when sheet closes
-  useEffect(() => {
-    if (!visible) {
-      setCardholder('');
-      setCardNumber('');
-      setExpiry('');
-      setCvv('');
-      setFocusedField(null);
-    }
-  }, [visible]);
-
-  const formatCardNumber = (value: string) =>
-    value
-      .replace(/\D/g, '')
-      .slice(0, 16)
-      .replace(/(\d{4})(?=\d)/g, '$1 ')
-      .trim();
-
-  const formatExpiry = (value: string) => {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    if (digits.length <= 2) return digits;
-    return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-  };
-
-  const canSubmit =
-    cardholder.trim().length >= 2 &&
-    cardNumber.replace(/\s/g, '').length >= 15 &&
-    expiry.length >= 4 &&
-    cvv.length >= 3;
-
   const handleConfirm = async () => {
-    if (!canSubmit || loading) return;
+    if (loading) return;
     await onConfirm();
   };
 
-  const inputStyle = (field: string) => [
-    styles.input,
-    focusedField === field && styles.inputFocused,
-  ];
+  const displayPriceText = plan?.planId === 'yearly' ? '$49.99/year' : '$4.99/month';
+  const displayPeriodText = plan?.planId === 'yearly' ? 'Yearly' : 'Monthly';
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
@@ -112,20 +74,16 @@ export function SecureCheckoutSheet({
 
           {/* ── Header ───────────────────────────────────────────── */}
           <View style={styles.header}>
-            {loading ? (
-              <View style={styles.headerSpacer} />
-            ) : (
+            {!loading && (
               <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.cancelBtn}>
-                <AppText variant="body" weight="600" color="#1E5838">
-                  Cancel
-                </AppText>
+                <Ionicons name="close" size={22} color="#5F6368" />
               </TouchableOpacity>
             )}
 
             <View style={styles.headerCenter}>
-              <Ionicons name="shield-checkmark" size={14} color="#1E5838" />
-              <AppText variant="h3" weight="800" color="#0A2419" style={styles.headerTitle}>
-                Secure Checkout
+              <Ionicons name="logo-google-playstore" size={16} color="#00A152" style={{ marginRight: 6 }} />
+              <AppText variant="bodySmall" weight="800" color="#5F6368" style={styles.headerTitle}>
+                Google Play Billing
               </AppText>
             </View>
 
@@ -142,139 +100,93 @@ export function SecureCheckoutSheet({
                 ]}
               >
                 <LinearGradient
-                  colors={['#1A4A2E', '#1E5838']}
+                  colors={['#00A152', '#00793F']}
                   style={styles.processingIconGradient}
                 >
-                  <Ionicons name="lock-closed" size={28} color="#FFFFFF" />
+                  <Ionicons name="logo-google-playstore" size={28} color="#FFFFFF" />
                 </LinearGradient>
               </Animated.View>
-              <AppText variant="body" weight="800" color="#0A2419" style={styles.processingTitle}>
-                Processing Payment
+              <AppText variant="body" weight="800" color="#202124" style={styles.processingTitle}>
+                Contacting Google Play…
               </AppText>
-              <AppText variant="bodySmall" color="#64748B" style={styles.processingSubtitle}>
-                Please wait while we securely activate your subscription…
+              <AppText variant="bodySmall" color="#5F6368" style={styles.processingSubtitle}>
+                Processing your subscription securely. Do not close the app.
               </AppText>
               <View style={styles.processingDotsRow}>
-                <ActivityIndicator size="small" color="#1E5838" />
-                <AppText variant="caption" color="#94A3B8" style={styles.processingDotsText}>
-                  This only takes a moment
-                </AppText>
+                <ActivityIndicator size="small" color="#00A152" />
               </View>
             </View>
           ) : (
             <>
-              {/* ── Plan Summary Banner ──────────────────────────── */}
-              {plan ? (
-                <View style={styles.summaryBanner}>
-                  <View style={styles.summaryLeft}>
-                    <View style={styles.summaryIconBox}>
-                      <Ionicons name="star" size={14} color="#D4A017" />
-                    </View>
-                    <View>
-                      <AppText variant="bodySmall" weight="800" color="#0A2419">
-                        {plan.name} Plan
-                      </AppText>
-                      <AppText variant="caption" color="#64748B">
-                        Pet Horizon Premium
-                      </AppText>
-                    </View>
+              {/* ── Google Play Purchase details ──────────────────── */}
+              <View style={styles.playPurchaseInfo}>
+                <View style={styles.appIconAndTitle}>
+                  <View style={styles.appIconBg}>
+                    <Ionicons name="paw" size={20} color="#FFFFFF" />
                   </View>
-                  <AppText variant="body" weight="800" color="#1E5838">
-                    {formatPlanPrice(plan.price)}
+                  <View style={styles.titleWrapper}>
+                    <AppText variant="body" weight="800" color="#202124">
+                      PetHorizon Premium ({displayPeriodText})
+                    </AppText>
+                    <AppText variant="caption" color="#5F6368">
+                      PetHorizon
+                    </AppText>
+                  </View>
+                </View>
+
+                <View style={styles.pricingSummaryRow}>
+                  <View>
+                    <AppText variant="bodySmall" weight="800" color="#202124">
+                      {displayPriceText} + tax
+                    </AppText>
+                    <AppText variant="caption" color="#5F6368" style={styles.renewNote}>
+                      Auto-renews every {plan?.planId === 'yearly' ? 'year' : 'month'}. Cancel anytime.
+                    </AppText>
+                  </View>
+                  <AppText variant="body" weight="800" color="#00A152">
+                    {plan ? formatPlanPrice(plan.price) : ''}
                   </AppText>
-                </View>
-              ) : null}
-
-              {/* ── Card Form ────────────────────────────────────── */}
-              <View style={styles.form}>
-                <SectionLabel text="CARDHOLDER NAME" />
-                <TextInput
-                  value={cardholder}
-                  onChangeText={setCardholder}
-                  placeholder="Sarah Johnson"
-                  placeholderTextColor={SheetColors.placeholder}
-                  style={inputStyle('name')}
-                  autoCapitalize="words"
-                  onFocus={() => setFocusedField('name')}
-                  onBlur={() => setFocusedField(null)}
-                />
-
-                <SectionLabel text="CARD NUMBER" />
-                <View style={styles.cardRow}>
-                  <TextInput
-                    value={cardNumber}
-                    onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-                    placeholder="0000 0000 0000 0000"
-                    placeholderTextColor={SheetColors.placeholder}
-                    style={[inputStyle('card'), styles.cardInput]}
-                    keyboardType="number-pad"
-                    maxLength={19}
-                    onFocus={() => setFocusedField('card')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                  <Ionicons name="card" size={20} color="#1E5838" style={styles.cardIcon} />
-                </View>
-
-                <View style={styles.splitRow}>
-                  <View style={styles.splitField}>
-                    <SectionLabel text="EXPIRY" />
-                    <TextInput
-                      value={expiry}
-                      onChangeText={(text) => setExpiry(formatExpiry(text))}
-                      placeholder="MM/YY"
-                      placeholderTextColor={SheetColors.placeholder}
-                      style={inputStyle('expiry')}
-                      keyboardType="number-pad"
-                      maxLength={5}
-                      onFocus={() => setFocusedField('expiry')}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
-                  <View style={styles.splitField}>
-                    <SectionLabel text="CVV" />
-                    <TextInput
-                      value={cvv}
-                      onChangeText={(text) => setCvv(text.replace(/\D/g, '').slice(0, 4))}
-                      placeholder="123"
-                      placeholderTextColor={SheetColors.placeholder}
-                      style={inputStyle('cvv')}
-                      keyboardType="number-pad"
-                      secureTextEntry
-                      maxLength={4}
-                      onFocus={() => setFocusedField('cvv')}
-                      onBlur={() => setFocusedField(null)}
-                    />
-                  </View>
                 </View>
               </View>
 
-              {/* ── Submit Button ─────────────────────────────────── */}
+              <View style={styles.divider} />
+
+              {/* ── Google Play Payment Method selector ────────────── */}
+              <View style={styles.gpayMethodRow}>
+                <View style={styles.gpayLabelWrapper}>
+                  <MaterialCommunityIcons name="google" size={16} color="#5F6368" style={{ marginRight: 4 }} />
+                  <AppText variant="caption" weight="800" color="#202124">GPay</AppText>
+                </View>
+                <View style={styles.cardDetailsWrapper}>
+                  <Ionicons name="card" size={14} color="#5F6368" style={{ marginRight: 6 }} />
+                  <AppText variant="caption" color="#202124" weight="700">Visa •••• 9876</AppText>
+                  <Ionicons name="chevron-forward" size={14} color="#5F6368" style={{ marginLeft: 6 }} />
+                </View>
+              </View>
+
+              <View style={styles.divider} />
+
+              <AppText variant="caption" color="#5F6368" style={styles.playDisclaimer}>
+                By clicking "Subscribe", you authorize Google Play to charge your selected payment method recurringly. You can cancel at any time under Subscriptions in Google Play Store settings.
+              </AppText>
+
+              {/* ── Subscribe Button ─────────────────────────────────── */}
               <TouchableOpacity
-                style={[styles.payBtn, (!canSubmit || loading) && styles.payBtnDisabled]}
+                style={styles.payBtn}
                 onPress={handleConfirm}
-                disabled={!canSubmit || loading}
-                activeOpacity={0.88}
+                activeOpacity={0.85}
               >
                 <LinearGradient
-                  colors={canSubmit ? ['#1A4A2E', '#1E5838'] : ['#94A3B8', '#94A3B8']}
+                  colors={['#00A152', '#008744']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                   style={styles.payBtnGradient}
                 >
-                  <Ionicons name="lock-closed" size={14} color="rgba(255,255,255,0.75)" />
-                  <AppText variant="body" weight="800" color="#FFFFFF">
-                    Authorize & Pay Securely
+                  <AppText variant="body" weight="800" color="#FFFFFF" style={styles.payBtnText}>
+                    Subscribe
                   </AppText>
                 </LinearGradient>
               </TouchableOpacity>
-
-              {/* ── Security Footer ──────────────────────────────── */}
-              <View style={styles.securityFooter}>
-                <Ionicons name="shield-checkmark" size={13} color="#94A3B8" />
-                <AppText variant="caption" color="#94A3B8" style={styles.securityText}>
-                  Secured with bank-grade 256-bit SSL encryption
-                </AppText>
-              </View>
             </>
           )}
         </Pressable>
@@ -286,192 +198,153 @@ export function SecureCheckoutSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: SheetColors.overlay,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'flex-end',
   },
   sheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 26,
-    borderTopRightRadius: 26,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
     paddingTop: Spacing.sm,
     paddingHorizontal: Spacing.lg,
     ...Platform.select({
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -6 }, shadowOpacity: 0.1, shadowRadius: 12 },
-      android: { elevation: 20 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.08, shadowRadius: 8 },
+      android: { elevation: 12 },
     }),
   },
   handle: {
-    alignSelf: 'center',
-    width: 38,
+    width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: '#E2E8F0',
-    marginBottom: Spacing.sm,
+    backgroundColor: '#E8EAED',
+    alignSelf: 'center',
+    marginBottom: Spacing.xs,
   },
-
-  // Header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    height: 40,
+    marginBottom: Spacing.sm,
   },
-  cancelBtn: {},
+  cancelBtn: {
+    padding: 4,
+  },
   headerCenter: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 13,
+    color: '#5F6368',
+    letterSpacing: 0.2,
   },
   headerSpacer: {
-    width: 55,
+    width: 24,
   },
-
-  // Plan summary banner
-  summaryBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F0FAF4',
-    borderWidth: 1,
-    borderColor: '#C4E8D2',
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  summaryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  summaryIconBox: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.md,
-    backgroundColor: '#FFF9E6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Error
-  errorBanner: {
-    marginBottom: Spacing.sm,
-  },
-
-  // Form
-  form: {
-    marginBottom: Spacing.md,
-  },
-  input: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-    borderWidth: 1.5,
-    borderRadius: Radius.md,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 13,
-    fontSize: 14,
-    color: '#0F172A',
-    marginBottom: Spacing.md,
-  },
-  inputFocused: {
-    borderColor: '#1E5838',
-    backgroundColor: '#FAFFFE',
-  },
-  cardRow: {
-    position: 'relative',
-    marginBottom: Spacing.md,
-  },
-  cardInput: {
-    marginBottom: 0,
-    paddingRight: 46,
-  },
-  cardIcon: {
-    position: 'absolute',
-    right: 14,
-    top: 14,
-  },
-  splitRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-  },
-  splitField: {
-    flex: 1,
-  },
-
-  // Pay button
-  payBtn: {
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-    ...Platform.select({
-      ios: { shadowColor: '#1E5838', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 },
-      android: { elevation: 4 },
-    }),
-  },
-  payBtnDisabled: {
-    opacity: 0.5,
-  },
-  payBtnGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 52,
-    borderRadius: Radius.full,
-  },
-
-  // Security footer
-  securityFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    marginBottom: Spacing.sm,
-  },
-  securityText: {
-    textAlign: 'center',
-  },
-
-  // Processing state
   processingContainer: {
     alignItems: 'center',
-    paddingVertical: Spacing.xl + 16,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
   processingIconRing: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    overflow: 'hidden',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(0, 161, 82, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: Spacing.md,
-    ...Platform.select({
-      ios: { shadowColor: '#1E5838', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12 },
-      android: { elevation: 6 },
-    }),
   },
   processingIconGradient: {
-    flex: 1,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
   },
   processingTitle: {
-    fontSize: 18,
+    fontSize: 16,
+    marginBottom: 6,
     textAlign: 'center',
   },
   processingSubtitle: {
     textAlign: 'center',
-    lineHeight: 20,
-    paddingHorizontal: Spacing.lg,
+    lineHeight: 16,
+    marginBottom: Spacing.lg,
   },
   processingDotsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: Spacing.sm,
   },
-  processingDotsText: {
-    textAlign: 'center',
+  playPurchaseInfo: {
+    paddingVertical: Spacing.sm,
+  },
+  appIconAndTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  appIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#1E5838',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  titleWrapper: {
+    flex: 1,
+  },
+  pricingSummaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  renewNote: {
+    fontSize: 11,
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E8EAED',
+    marginVertical: Spacing.sm,
+  },
+  gpayMethodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  gpayLabelWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardDetailsWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  playDisclaimer: {
+    fontSize: 10,
+    lineHeight: 14,
+    color: '#80868B',
+    marginVertical: Spacing.md,
+  },
+  payBtn: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: Spacing.md,
+  },
+  payBtnGradient: {
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  payBtnText: {
+    fontSize: 15,
+    letterSpacing: 0.2,
   },
 });

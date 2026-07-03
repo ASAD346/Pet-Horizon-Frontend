@@ -6,6 +6,7 @@ import {
   TextInput,
   View,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -37,14 +38,9 @@ export default function BillingScreen() {
   const { token } = useAuth();
   const [status, setStatus] = useState<PremiumStatusResponse | null>(null);
   const [invoices, setInvoices] = useState<PaymentInvoice[]>([]);
-  const [paymentMethodId, setPaymentMethodId] = useState('pm_stub_saved');
   const [loading, setLoading] = useState(true);
-  const [savingMethod, setSavingMethod] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const { showToast, showErrorToast } = useToast();
-
-  // Focus state for the text input
-  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const reload = useCallback(async () => {
     if (!token) return;
@@ -94,21 +90,7 @@ export default function BillingScreen() {
     );
   };
 
-  const handleUpdateMethod = async () => {
-    if (!token || !paymentMethodId.trim()) {
-      showErrorToast('Enter a payment method ID.');
-      return;
-    }
-    setSavingMethod(true);
-    try {
-      const result = await updatePaymentMethod(token, paymentMethodId.trim());
-      showToast(result.message);
-    } catch (err) {
-      showErrorToast(getErrorMessage(err));
-    } finally {
-      setSavingMethod(false);
-    }
-  };
+
 
   const displayPlanName = status?.isPremium ? (status.plan ?? 'Premium').toUpperCase() : 'FREE PLAN';
   const displayRenewLabel = status?.expiresAt 
@@ -188,7 +170,7 @@ export default function BillingScreen() {
               {"\n"}• Caregiver permissions and custom access controls
             </AppText>
             <View style={styles.planPriceRow}>
-              <AppText variant="bodySmall" weight="800" color="#334155">Price: $9.99 / month</AppText>
+              <AppText variant="bodySmall" weight="800" color="#334155">Price: $4.99 / month</AppText>
               {!(status?.isPremium && status?.plan !== 'yearly' && status?.plan !== 'annual') && (
                 <AppText variant="caption" weight="700" color="#2E7D32">Tap to Upgrade</AppText>
               )}
@@ -223,7 +205,7 @@ export default function BillingScreen() {
               {"\n"}• Dedicated Priority Customer Support
             </AppText>
             <View style={styles.planPriceRow}>
-              <AppText variant="bodySmall" weight="800" color="#334155">Price: $79.99 / year</AppText>
+              <AppText variant="bodySmall" weight="800" color="#334155">Price: $49.99 / year</AppText>
               {!(status?.isPremium && (status?.plan === 'yearly' || status?.plan === 'annual')) && (
                 <AppText variant="caption" weight="700" color="#2E7D32">Tap to Upgrade</AppText>
               )}
@@ -242,39 +224,17 @@ export default function BillingScreen() {
           />
         )}
 
-        {/* Update payment method form */}
+        {/* Google In-App Purchase details banner */}
         <View style={styles.formCard}>
           <View style={styles.labelContainer}>
-            <View style={[styles.labelDot, isInputFocused && styles.labelDotActive]} />
-            <AppText variant="caption" weight="800" color={isInputFocused ? '#2E7D32' : '#64748B'} style={styles.labelText}>
-              UPDATE PAYMENT METHOD
+            <View style={[styles.labelDot, styles.labelDotActive]} />
+            <AppText variant="caption" weight="800" color="#2E7D32" style={styles.labelText}>
+              GOOGLE PLAY SUBSCRIPTION
             </AppText>
           </View>
           <AppText variant="caption" color={HomeTheme.textMuted} style={styles.stubNote}>
-            Stripe integration is simulated on the backend. Enter a stub token (e.g. pm_stub_123) to verify.
+            Your premium membership is billed securely via Google Play In-App Purchases. Payment methods, invoices, and active cycles are managed directly under your Google Play Store account settings.
           </AppText>
-          <View style={[
-            styles.inputRow,
-            isInputFocused && styles.inputRowActive
-          ]}>
-            <Ionicons name="card-outline" size={18} color={isInputFocused ? '#2E7D32' : '#94A3B8'} />
-            <TextInput
-              value={paymentMethodId}
-              onChangeText={setPaymentMethodId}
-              style={styles.input}
-              placeholder="pm_stub_456"
-              placeholderTextColor={SheetColors.placeholder}
-              autoCapitalize="none"
-              onFocus={() => setIsInputFocused(true)}
-              onBlur={() => setIsInputFocused(false)}
-            />
-          </View>
-          <CustomButton
-            title="Save Payment Method"
-            onPress={handleUpdateMethod}
-            isLoading={savingMethod}
-            variant="primary"
-          />
         </View>
 
         {/* Billing History Section */}
@@ -346,76 +306,51 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
     borderRadius: Radius.md,
   },
-  ticketCard: {
-    borderRadius: Radius.xl,
-    overflow: 'hidden',
+  plansSection: {
     marginBottom: Spacing.lg,
+    gap: Spacing.md,
+  },
+  planCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
     ...homeCardShadow,
   },
-  ticketGradient: {
-    padding: Spacing.lg,
+  planCardActive: {
+    borderColor: '#2E7D32',
+    backgroundColor: '#FCFDFC',
+    borderWidth: 2,
   },
-  ticketHeader: {
+  planCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
-  premiumBadge: {
+  planTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(212, 160, 23, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 160, 23, 0.35)',
+  },
+  activePlanBadge: {
+    backgroundColor: '#2E7D32',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: Radius.full,
-    gap: 4,
+    borderRadius: Radius.sm,
   },
-  freeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(46, 125, 50, 0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-    gap: 4,
+  planAccessText: {
+    lineHeight: 18,
+    color: '#475569',
+    marginBottom: Spacing.sm,
   },
-  badgeText: {
-    fontSize: 9,
-    letterSpacing: 0.5,
-  },
-  ticketPlanTitle: {
-    fontSize: 24,
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  ticketDesc: {
-    lineHeight: 16,
-    marginBottom: Spacing.md,
-  },
-  ticketDividerPremium: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    marginBottom: Spacing.md,
-  },
-  ticketDividerFree: {
-    height: 1,
-    backgroundColor: 'rgba(46, 125, 50, 0.15)',
-    marginBottom: Spacing.md,
-  },
-  ticketFooter: {
+  planPriceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  ticketFooterVal: {
-    marginTop: 2,
-  },
-  alignEnd: {
-    alignItems: 'flex-end',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: Spacing.xs,
   },
   formCard: {
     backgroundColor: '#FFFFFF',
