@@ -107,3 +107,4 @@ export const selectIsBootstrapping = (state: AppState) => state.auth.isBootstrap
 export const selectToastMessage = (state: AppState) => state.toast.message;
 export const selectToastType = (state: AppState) => state.toast.type;
 export const selectIsFormReadOnly = (state: AppState) => state.ui.isFormReadOnly;
+export const selectActivePetId = (state: AppState) => state.auth.user?.activePetId || null;

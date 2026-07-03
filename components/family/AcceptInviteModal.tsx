@@ -92,6 +92,9 @@ export function AcceptInviteModal({
       // Invalidate queries to refresh the pets lists and current active workspaces
       queryClient.invalidateQueries({ queryKey: ['petsList'] });
       queryClient.invalidateQueries({ queryKey: ['pets'] });
+      queryClient.invalidateQueries({ queryKey: ['family-members', joinedPetId] });
+      queryClient.invalidateQueries({ queryKey: ['petMembers', joinedPetId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', joinedPetId] });
       
       if (onSuccess) {
         onSuccess();
@@ -113,7 +116,7 @@ export function AcceptInviteModal({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
-          <AppText variant="h2" weight="900" color={HomeTheme.text} style={styles.title}>
+          <AppText variant="h2" weight="800" color={HomeTheme.text} style={styles.title}>
             Family Invitation
           </AppText>
 

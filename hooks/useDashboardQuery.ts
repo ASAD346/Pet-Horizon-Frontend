@@ -189,6 +189,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
     },
   });
 
@@ -215,6 +216,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
     },
   });
 
@@ -241,6 +243,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
     },
   });
 
@@ -267,6 +270,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
     },
   });
 
@@ -293,6 +297,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
     },
   });
 
@@ -319,6 +324,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
     },
   });
 

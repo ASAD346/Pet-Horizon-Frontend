@@ -56,7 +56,7 @@ export function FamilyHubView() {
   const { pet, loading: petLoading, reload: reloadPet } = useActivePet(token);
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
   const { members, setMembers, loading: membersLoading, error: membersError, reload: reloadMembers } =
-    usePetMembers(token, pet?._id ?? null, isOwner);
+    usePetMembers(token, pet?._id ?? null, true);
   const { showErrorToast } = useToast();
 
   useEffect(() => {
@@ -107,12 +107,17 @@ export function FamilyHubView() {
     ? (userName ? `${userName}'s Family` : 'Your Family')
     : (ownerName ? `${ownerName}'s Family` : 'Shared Family');
   const displayMembers = useMemo(() => {
-    if (!user) return [];
-    if (isOwner) {
-      return buildFamilyMembersList(user, members);
-    }
-    return guestMembers;
-  }, [user, isOwner, members, guestMembers]);
+    if (!user || !pet) return [];
+    const ownerUser = isOwner
+      ? user
+      : ({
+          _id: pet.ownerUserId || '',
+          fullName: ownerName || 'Owner',
+          email: '',
+          profileImage: undefined,
+        } as any);
+    return buildFamilyMembersList(ownerUser, members);
+  }, [user, pet, members, isOwner, ownerName]);
 
   const [guestPermissions, setGuestPermissions] = useState<any | null>(null);
 
@@ -270,16 +275,20 @@ export function FamilyHubView() {
 
             <MembersListSection
               members={displayMembers}
-              loading={(membersLoading && isOwner) || (guestLoading && !isOwner)}
+              loading={membersLoading || guestLoading}
               manageableIds={isOwner ? manageableMemberIds : []}
               isPremium={isPremium}
               isOwner={isOwner}
               hostName={ownerName}
               currentUserId={user?._id}
               onMemberSettingsPress={(memberId) => {
-                // TEMPORARILY DISABLED: Bypass permission sheet modal mounting
-                console.log("Member settings modal is temporarily deactivated:", memberId);
-                return;
+                const found = members.find(
+                  (m) => String(m.userId?._id || (m as any).id || (m as any)._id) === String(memberId)
+                );
+                if (found) {
+                  setSelectedMember(found);
+                  setPermissionsVisible(true);
+                }
               }}
             />
 

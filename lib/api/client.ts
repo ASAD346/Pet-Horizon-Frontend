@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/constants/api';
 import { ApiError } from '@/lib/api/errors';
+import { store } from '@/redux/store';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -39,10 +40,19 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
+  // Retrieve isolated activePetId from Redux store
+  const state = store.getState();
+  const activePetId = state.auth.user?.activePetId;
+
   const requestHeaders: Record<string, string> = {
     Accept: 'application/json',
     ...headers,
   };
+
+  if (activePetId) {
+    requestHeaders['x-active-pet-id'] = activePetId;
+    requestHeaders['X-Active-Pet-Id'] = activePetId;
+  }
 
   if (body !== undefined) {
     requestHeaders['Content-Type'] = 'application/json';

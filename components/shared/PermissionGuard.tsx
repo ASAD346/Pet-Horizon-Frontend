@@ -35,11 +35,6 @@ export function PermissionGuard({
 
   return (
     <View style={[styles.container, style]}>
-      {/* Disable user interactions for all child components */}
-      <View pointerEvents="none" style={styles.disabledContent}>
-        {children}
-      </View>
-
       {/* Render optional Locked Overlay */}
       {showOverlay && (
         <View style={styles.overlay}>
