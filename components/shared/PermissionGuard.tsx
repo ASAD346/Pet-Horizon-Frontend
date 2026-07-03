@@ -6,6 +6,7 @@ import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 interface PermissionGuardProps {
   petId?: string | null;
+  petOwnerId?: string | null;
   moduleId: string;
   children: React.ReactNode;
   showOverlay?: boolean;
@@ -16,6 +17,7 @@ interface PermissionGuardProps {
 
 export function PermissionGuard({
   petId,
+  petOwnerId,
   moduleId,
   children,
   showOverlay = false,
@@ -23,7 +25,7 @@ export function PermissionGuard({
   customBannerMessage,
   style,
 }: PermissionGuardProps) {
-  const { canEdit, loading } = usePermissionGuard(petId, moduleId);
+  const { canEdit, loading } = usePermissionGuard(petId, moduleId, petOwnerId);
 
   if (loading) {
     return <View style={style}>{children}</View>;

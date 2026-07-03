@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
 import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -219,7 +219,6 @@ export function ScheduleSetupView({
   const [defaultMeal, setDefaultMeal] = useState('');
   const [defaultUnit, setDefaultUnit] = useState('');
   const [defaultGrooming, setDefaultGrooming] = useState('');
-  const [schedulesLoading, setSchedulesLoading] = useState(false);
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [editorSaving, setEditorSaving] = useState(false);
   const [editorError, setEditorError] = useState<string | null>(null);
@@ -246,44 +245,39 @@ export function ScheduleSetupView({
     setDefaultGrooming(options.defaultGrooming);
   }, []);
 
-  const reloadSchedules = useCallback(
-    async (
-      petId: string,
-      options?: { silent?: boolean; disabledCategories?: string[] },
-    ) => {
-      if (!token) return;
-
-      if (!options?.silent) {
-        setSchedulesLoading(true);
-      }
-
-      try {
-        // Always pass disabledCategories so enabled flags survive reload.
-        // If not provided, read from the current pet ref.
-        const disabled =
-          options?.disabledCategories ?? petRef.current?.disabledCategories ?? [];
-        const loaded = await loadExistingSchedules(token, petId, {
-          groomingVisible: groomingVisibleRef.current,
-          disabledCategories: disabled,
-        });
-        setSections(loaded);
-        setCachedSchedules(petId, loaded);
-      } catch (e) {
-        showErrorToast(e instanceof Error ? e.message : 'Unable to load schedules.');
-      } finally {
-        setSchedulesLoading(false);
-      }
+  const { data: querySections, isFetching: schedulesQueryLoading, refetch: refetchSchedules } = useQuery({
+    queryKey: ['schedules', pet?._id],
+    queryFn: async () => {
+      if (!token || !pet?._id) return createInitialScheduleState();
+      return loadExistingSchedules(token, pet._id, {
+        groomingVisible: groomingVisibleRef.current,
+        disabledCategories: pet.disabledCategories ?? [],
+      });
     },
-    [token],
+    enabled: Boolean(token && pet?._id && pet._id !== 'fallback-pet-id-123'),
+    staleTime: 0,
+  });
+
+  const schedulesLoading = schedulesQueryLoading;
+
+  useEffect(() => {
+    if (querySections) {
+      setSections(querySections);
+    }
+  }, [querySections]);
+
+  const reloadSchedules = useCallback(
+    async (petId: string) => {
+      await queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      await refetchSchedules();
+    },
+    [queryClient, refetchSchedules],
   );
 
   const focusReload = useCallback(() => {
     const currentPet = petRef.current;
     if (currentPet?._id) {
-      void reloadSchedules(currentPet._id, {
-        silent: true,
-        disabledCategories: currentPet.disabledCategories ?? [],
-      });
+      void reloadSchedules(currentPet._id);
     }
   }, [reloadSchedules]);
 
@@ -304,23 +298,13 @@ export function ScheduleSetupView({
     const localOptions = hydrateScheduleFeaturesFromSpecies(pet.species);
     applyFeatureOptions(localOptions);
 
-    const cached = getCachedSchedules(petId);
-    if (cached) {
-      setSections(cached);
-    }
-
     let cancelled = false;
 
     void (async () => {
-      setSchedulesLoading(!cached);
       try {
-        const [permsResult, groomingResult, schedulesResult] = await Promise.allSettled([
+        const [permsResult, groomingResult] = await Promise.allSettled([
           fetchPetPermissions(token, petId),
           fetchGroomingTypes(token, petId),
-          loadExistingSchedules(token, petId, {
-            groomingVisible: localOptions.groomingVisible,
-            disabledCategories: pet?.disabledCategories ?? [],
-          }),
         ]);
 
         if (cancelled) return;
@@ -355,27 +339,15 @@ export function ScheduleSetupView({
             groomingTypes: remoteGroomingTypes,
           }),
         );
-
-        if (schedulesResult.status === 'fulfilled') {
-          // enabled flags are already correct because we passed disabledCategories
-          // into loadExistingSchedules → buildScheduleSectionsState above.
-          const loaded = schedulesResult.value;
-          setSections(loaded);
-          setCachedSchedules(petId, loaded);
-        } else if (!cached) {
-          showErrorToast('Unable to load saved schedules.');
-        }
-      } finally {
-        if (!cancelled) {
-          setSchedulesLoading(false);
-        }
+      } catch (err) {
+        console.error('Failed to load setup features:', err);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [token, pet?._id, pet?.species, petLoading, applyFeatureOptions, pet?.disabledCategories]);
+  }, [token, pet?._id, pet?.species, petLoading, applyFeatureOptions]);
 
   const toggleSection = async (key: ScheduleSectionKey, enabled: boolean) => {
     if (!token || !pet?._id) return;
@@ -545,13 +517,13 @@ export function ScheduleSetupView({
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
       showToast('Schedule deleted.');
       // Reload in background to sync server state (no loading flash)
-      void reloadSchedules(pet._id, { silent: true });
+      void reloadSchedules(pet._id);
     } catch (e) {
       console.error('[handleDeleteEntry] API failed:', e);
       // Rollback optimistic removal on failure
       const err = e instanceof Error ? e.message : 'Unable to delete schedule.';
       showErrorToast(err);
-      void reloadSchedules(pet._id, { silent: true });
+      void reloadSchedules(pet._id);
     } finally {
       setDeletingId(null);
     }
