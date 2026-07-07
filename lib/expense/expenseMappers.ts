@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ApiExpense, BudgetRemainingItem } from '@/types/expense';
-import { formatInTimeZone } from '@/lib/timezone';
+import { formatInTimeZone, parseSafeDate } from '@/lib/timezone';
 
 type MciIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -70,7 +70,7 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
 
 export function formatExpenseDateLabel(iso: string, timezone: string): string {
   if (!iso) return 'Unknown Date';
-  const date = new Date(iso);
+  const date = parseSafeDate(iso);
   if (isNaN(date.getTime())) return 'Invalid Date';
   
   const now = new Date();

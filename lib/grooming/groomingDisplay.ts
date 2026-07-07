@@ -1,4 +1,5 @@
 import { formatDateLabel } from '@/lib/grooming/groomingForm';
+import { parseSafeDate } from '@/lib/timezone';
 import type { GroomingRecord } from '@/types/grooming';
 
 const GROOMING_COLORS = {
@@ -15,14 +16,14 @@ export function groomingRecordTitle(item: GroomingRecord): string {
 
 export function groomingRecordSubtitle(item: GroomingRecord): string {
   if (item.performedAt) {
-    const when = formatDateLabel(new Date(item.performedAt));
+    const when = formatDateLabel(parseSafeDate(item.performedAt));
     return `Completed ${when}`;
   }
 
   const parts: string[] = [];
 
   if (item.scheduledDate) {
-    const due = formatDateLabel(new Date(item.scheduledDate));
+    const due = formatDateLabel(parseSafeDate(item.scheduledDate));
     if (item.remainingDays === 0) parts.push(`Due today (${due})`);
     else if (item.remainingDays !== null && item.remainingDays !== undefined && item.remainingDays < 0) {
       parts.push(`Overdue · was ${due}`);
@@ -36,7 +37,7 @@ export function groomingRecordSubtitle(item: GroomingRecord): string {
   }
 
   if (item.nextDueDate) {
-    parts.push(`Next: ${formatDateLabel(new Date(item.nextDueDate))}`);
+    parts.push(`Next: ${formatDateLabel(parseSafeDate(item.nextDueDate))}`);
   }
 
   if (item.reminderEnabled === false) {
@@ -56,7 +57,7 @@ export function groomingRecordColors() {
 
 export function groomingSortKey(item: GroomingRecord): number {
   if (item.scheduledDate) {
-    return new Date(item.scheduledDate).getTime();
+    return parseSafeDate(item.scheduledDate).getTime();
   }
   return Number.MAX_SAFE_INTEGER;
 }
@@ -76,12 +77,13 @@ export function groomingDueTodayOrOverdue(items: GroomingRecord[]): GroomingReco
       if (item.remainingDays !== null && item.remainingDays !== undefined) {
         return item.remainingDays <= 0;
       }
-      if (!item.scheduledDate) return false;
-      const due = new Date(item.scheduledDate);
-      const today = new Date();
-      due.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-      return due.getTime() <= today.getTime();
+      if (item.scheduledDate) {
+        const due = parseSafeDate(item.scheduledDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return due.getTime() <= today.getTime();
+      }
+      return false;
     }),
   );
 }

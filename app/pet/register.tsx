@@ -38,6 +38,8 @@ import { LoginTheme, Palette, Spacing } from '@/constants/theme';
 import { log } from '@/lib/log';
 import { dateToApiDateString } from '@/lib/grooming/groomingForm';
 import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, fetchSpecies, updatePet } from '@/services/pets/petApi';
+import { parseSafeDate } from '@/lib/timezone';
+import { parseSafeDateOrNull } from '@/lib/pet/birthdayUtils';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { isPetOwner } from '@/lib/family/formatters';
 import { uploadPetImage } from '@/services/pets/uploadPetImage';
@@ -173,7 +175,7 @@ export default function RegisterPetScreen() {
         setSpecies(existing.species ?? '');
         setBreed(existing.breed ?? '');
         setGender((existing.gender as PetGender) || 'Male');
-        if (existing.birthday) setBirthday(new Date(existing.birthday));
+        setBirthday(parseSafeDateOrNull(existing.birthday));
         if (existing.weight != null) setWeight(String(existing.weight));
         if (existing.weightUnit === 'lbs' || existing.weightUnit === 'kg') {
           setWeightUnit(existing.weightUnit);
@@ -279,6 +281,12 @@ export default function RegisterPetScreen() {
           user: { ...user, activePetId: pet._id },
         });
       }
+
+      clearActivePetCache();
+      clearPetListCache();
+      queryClient.invalidateQueries({ queryKey: ['petsList'] });
+      queryClient.invalidateQueries({ queryKey: ['pets'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
       log.ok('AddPet', 'Done — navigating', { petId: pet._id, isAddMode, isEditMode });
 

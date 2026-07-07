@@ -16,7 +16,10 @@ export function useTimezone() {
 
     const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
     
-    if (user.timezone === localTimezone && synced) {
+    if (user.timezone === localTimezone) {
+      if (!synced) {
+        setSynced(true);
+      }
       return;
     }
 

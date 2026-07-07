@@ -1,3 +1,39 @@
+import { parseSafeDate } from '@/lib/timezone';
+import { differenceInMonths, differenceInYears } from 'date-fns';
+
+/** Parse a date safely, returning a valid Date object or null if invalid/null/undefined. */
+export function parseSafeDateOrNull(date?: string | Date | number | null): Date | null {
+  if (date === null || date === undefined || date === '') return null;
+  const d = parseSafeDate(date);
+  if (Number.isNaN(d.getTime())) return null;
+  return d;
+}
+
+/** Centralized date formatter with safe fallback. */
+export function formatDate(dateString?: string | Date | number | null, fallback: string = 'Not set'): string {
+  const d = parseSafeDateOrNull(dateString);
+  if (!d) return fallback;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** Age calculation logic returning months or years. */
+export function calculatePetAge(birthday?: string | Date | number | null): string {
+  const birthDate = parseSafeDateOrNull(birthday);
+  if (!birthDate) return 'Not set';
+  
+  const now = new Date();
+  const months = differenceInMonths(now, birthDate);
+  
+  if (months < 12) {
+    const displayMonths = Math.max(0, months);
+    return `${displayMonths} ${displayMonths === 1 ? 'month' : 'months'}`;
+  } else {
+    const years = differenceInYears(now, birthDate);
+    const displayYears = Math.max(1, years);
+    return `${displayYears} ${displayYears === 1 ? 'year' : 'years'}`;
+  }
+}
+
 /** Parse birthday from API (YYYY-MM-DD or ISO) using calendar date parts. */
 export function parseBirthdayParts(
   birthday?: string | null | Date | number,
@@ -16,7 +52,7 @@ export function parseBirthdayParts(
     };
   }
 
-  const parsed = new Date(birthday);
+  const parsed = parseSafeDate(birthday);
   if (Number.isNaN(parsed.getTime())) return null;
 
   return {

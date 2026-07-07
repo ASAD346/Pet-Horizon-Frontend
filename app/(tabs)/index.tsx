@@ -263,6 +263,7 @@ export default function HomeScreen() {
       baseProfile = {
         ...profileStats,
         species: profileStats.species || pet?.species || '—',
+        birthday: profileStats.birthday || pet?.birthday,
         activity: profileStats.plan ? String(profileStats.plan).toUpperCase() : 'FREE',
         health: profileStats.weight != null ? `${profileStats.weight} ${String(profileStats.weightUnit || 'kg').toUpperCase()}` : '—',
         mood: profileStats.isPremium ? 'Premium' : 'Free',

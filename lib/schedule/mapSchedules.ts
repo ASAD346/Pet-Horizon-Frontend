@@ -9,7 +9,7 @@ import {
   timeHHmmToDate,
 } from '@/lib/feeding/feedingForm';
 import { groomingTypeLabel } from '@/lib/grooming/groomingForm';
-import { formatDateLabel } from '@/lib/medicine/medicineForm';
+import { parseSafeDate } from '@/lib/timezone';
 import {
   getFrequencyLabel,
   parseDoseString,

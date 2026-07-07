@@ -13,6 +13,7 @@ import { setBudget, updateBudget } from '@/services/expense/expenseApi';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { formatDate } from '@/lib/pet/birthdayUtils';
 
 interface EditBudgetSheetProps {
   visible: boolean;
@@ -133,7 +134,7 @@ export function EditBudgetSheet({
         <View style={styles.activePeriodBox}>
           <Ionicons name="calendar-outline" size={14} color="#5C6470" />
           <AppText variant="caption" weight="700" color="#5C6470">
-            Active Period: {new Date(periodStart).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – {new Date(periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+            Active Period: {formatDate(periodStart)} – {formatDate(periodEnd)}
           </AppText>
         </View>
       ) : null}

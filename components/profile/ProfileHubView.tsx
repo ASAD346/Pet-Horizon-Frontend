@@ -35,6 +35,7 @@ import { PrivacyPolicySheet } from './PrivacyPolicySheet';
 import { HelpSupportSheet } from './HelpSupportSheet';
 import { FeedbackSheet } from './FeedbackSheet';
 import { LocalizationSheet } from './LocalizationSheet';
+import { calculatePetAge, formatDate } from '@/lib/pet/birthdayUtils';
 
 export function ProfileHubView() {
   const router = useRouter();

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Skeleton } from '@/components/ui/skeletons';
 import { Radius, Spacing } from '../../constants/theme';
+import { parseSafeDate } from '@/lib/timezone';
 
 // Professional gradient styling
 const FREE_GRAD: readonly [string, string] = ['#2E7D32', '#4CAF50'];
@@ -49,10 +50,10 @@ export function WeeklySpendingCard({
   // Premium gets gold progress fills, Free gets soft green
   const progressColor = isOver ? '#F87171' : (isPremium ? '#D4A017' : '#A5D6A7');
 
-  const isExpired = periodEnd ? new Date(periodEnd).getTime() < Date.now() : false;
+  const isExpired = periodEnd ? parseSafeDate(periodEnd).getTime() < Date.now() : false;
 
   const formattedEnd = periodEnd
-    ? new Date(periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    ? parseSafeDate(periodEnd).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
     : '';
 
   return (

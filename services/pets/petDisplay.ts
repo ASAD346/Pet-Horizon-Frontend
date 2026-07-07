@@ -1,26 +1,9 @@
 import type { ApiPet } from '@/types/pet';
-import { parseBirthdayParts } from '@/lib/pet/birthdayUtils';
+import { calculatePetAge } from '@/lib/pet/birthdayUtils';
 
 export function formatPetAge(birthday?: string | null): string {
-  const parts = parseBirthdayParts(birthday);
-  if (!parts) return '—';
-
-  const now = new Date();
-  let years = now.getFullYear() - parts.year;
-  if (
-    now.getMonth() < parts.month ||
-    (now.getMonth() === parts.month && now.getDate() < parts.day)
-  ) {
-    years -= 1;
-  }
-  if (years < 1) {
-    const months = Math.max(
-      0,
-      (now.getFullYear() - parts.year) * 12 + now.getMonth() - parts.month,
-    );
-    return months <= 1 ? '1 month' : `${months} months`;
-  }
-  return years === 1 ? '1 year' : `${years} years`;
+  const age = calculatePetAge(birthday);
+  return age === 'Not set' ? '—' : age;
 }
 
 export function formatPetWeight(weight?: number | null, unit?: string | null): string {

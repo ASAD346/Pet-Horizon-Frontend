@@ -3,6 +3,7 @@ import type { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { ApiJournalEntry } from '@/types/journal';
 import type { JournalCategory, TimelineEvent } from '@/components/journal/journalData';
 import type { JournalDateItem } from '@/components/journal/JournalDateStrip';
+import { parseSafeDate } from '@/lib/timezone';
 
 type MciIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -31,7 +32,7 @@ export function formatMonthLabel(date: Date): string {
 }
 
 export function formatTimeLabel(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', {
+  return parseSafeDate(iso).toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
     hour12: true,
@@ -139,9 +140,12 @@ export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
   };
 }
 
-export function filterEntriesByDate(entries: ApiJournalEntry[], dateKey: string): ApiJournalEntry[] {
-  const target = parseDateKey(dateKey);
-  return entries.filter((entry) => isSameCalendarDay(new Date(entry.createdAt), target));
+export function filterEntriesByDate(
+  entries: ApiJournalEntry[],
+  dateStr: string,
+): ApiJournalEntry[] {
+  const target = parseDateKey(dateStr);
+  return entries.filter((entry) => isSameCalendarDay(parseSafeDate(entry.createdAt), target));
 }
 
 export function filterTimelineByCategory(
