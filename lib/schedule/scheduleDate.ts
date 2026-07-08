@@ -31,9 +31,7 @@ export const SCHEDULE_DATE_MODE_OPTIONS: { value: ScheduleDateMode; label: strin
 ];
 
 function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  return new Date(new Date().toISOString().split('T')[0]);
 }
 
 function isSameCalendarDay(a: Date, b: Date): boolean {

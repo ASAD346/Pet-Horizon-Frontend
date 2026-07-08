@@ -15,8 +15,7 @@ export function formatDateLabel(date: Date): string {
 }
 
 export function defaultScheduledDate(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
+  const d = new Date(new Date().toISOString().split('T')[0]);
   d.setDate(d.getDate() + 7);
   return d;
 }

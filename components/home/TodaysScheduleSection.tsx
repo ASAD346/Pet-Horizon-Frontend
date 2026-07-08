@@ -558,18 +558,11 @@ export function TodaysScheduleSection({
       const filtered = merged.filter((row) => {
         const item = row.item as any;
         const status = item.status || 'pending';
-        const dateString = item.date || item.scheduledDate || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate;
+        const isComplete = rowIsDone(row) || item.isComplete === true;
         
-        const isMatch = dateString ? (isSameDay(dateString, new Date()) || new Date(dateString) < new Date()) : false;
+        console.log(`[TodaysSchedule] Rendering task: item=${item.title || row.kind}, status=${status}, isComplete=${isComplete}`);
         
-        console.log(`[TodaysSchedule] Normalization Alignment: item=${item.title || row.kind}, dateString=${dateString}, today=${new Date().toISOString()}, isSameDayOrPast=${isMatch}, status=${status}`);
-        
-        return (
-          status === 'pending' &&
-          !rowIsDone(row) &&
-          !rowIsSkipped(row) &&
-          isMatch
-        );
+        return status === 'pending' && !isComplete;
       });
 
       // Sort by rowSortKey
