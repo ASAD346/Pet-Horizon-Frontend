@@ -68,7 +68,9 @@ interface TodaysScheduleSectionProps {
   onCompleteFeeding?: (scheduleId: string) => void | Promise<void>;
   onSkipFeeding?: (scheduleId: string) => void | Promise<void>;
   onCompleteWalk?: (scheduleId: string) => void | Promise<void>;
+  onSkipWalk?: (scheduleId: string) => void | Promise<void>;
   onCompleteMedicine?: (scheduleId: string) => void | Promise<void>;
+  onSkipMedicine?: (scheduleId: string) => void | Promise<void>;
   onCompleteGrooming?: (recordId: string) => void | Promise<void>;
   onManageGrooming?: (recordId: string) => void | Promise<void>;
   onCompleteVaccination?: (scheduleId: string) => void | Promise<void>;
@@ -175,7 +177,9 @@ interface ScheduleRowCardProps {
   onCompleteFeeding?: (id: string) => void | Promise<void>;
   onSkipFeeding?: (id: string) => void | Promise<void>;
   onCompleteWalk?: (id: string) => void | Promise<void>;
+  onSkipWalk?: (id: string) => void | Promise<void>;
   onCompleteMedicine?: (id: string) => void | Promise<void>;
+  onSkipMedicine?: (id: string) => void | Promise<void>;
   onCompleteGrooming?: (id: string) => void | Promise<void>;
   onManageGrooming?: (id: string) => void | Promise<void>;
   onCompleteVaccination?: (id: string) => void | Promise<void>;
@@ -187,7 +191,9 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   onCompleteFeeding,
   onSkipFeeding,
   onCompleteWalk,
+  onSkipWalk,
   onCompleteMedicine,
+  onSkipMedicine,
   onCompleteGrooming,
   onManageGrooming,
   onCompleteVaccination,
@@ -277,14 +283,44 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
         <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
           Skipped
         </AppText>
-      ) : row.kind === 'feeding' && (onComplete || onSkipFeeding) ? (
+      ) : (row.kind === 'feeding' || row.kind === 'walk' || row.kind === 'medicine') && (onComplete || onSkipFeeding || onSkipWalk || onSkipMedicine) ? (
         <View style={styles.actionRow}>
-          {onSkipFeeding ? (
+          {((row.kind === 'feeding' && onSkipFeeding) ||
+            (row.kind === 'walk' && onSkipWalk) ||
+            (row.kind === 'medicine' && onSkipMedicine)) ? (
             <TouchableOpacity
               style={styles.skipBtn}
               activeOpacity={0.85}
               disabled={busy}
-              onPress={handleSkip}
+              onPress={
+                row.kind === 'feeding' ? handleSkip :
+                row.kind === 'walk' ? async () => {
+                  if (!onSkipWalk || clickedRef.current) return;
+                  clickedRef.current = true;
+                  setSkipBusy(true);
+                  try {
+                    await onSkipWalk(rowId(row));
+                  } catch (e: any) {
+                    Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
+                    clickedRef.current = false;
+                  } finally {
+                    setSkipBusy(false);
+                  }
+                } :
+                async () => {
+                  if (!onSkipMedicine || clickedRef.current) return;
+                  clickedRef.current = true;
+                  setSkipBusy(true);
+                  try {
+                    await onSkipMedicine(rowId(row));
+                  } catch (e: any) {
+                    Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
+                    clickedRef.current = false;
+                  } finally {
+                    setSkipBusy(false);
+                  }
+                }
+              }
             >
               {skipBusy ? (
                 <ActivityIndicator size="small" color="#7A869A" />
@@ -530,7 +566,9 @@ export function TodaysScheduleSection({
   onCompleteFeeding,
   onSkipFeeding,
   onCompleteWalk,
+  onSkipWalk,
   onCompleteMedicine,
+  onSkipMedicine,
   onCompleteGrooming,
   onManageGrooming,
   onCompleteVaccination,
@@ -605,7 +643,9 @@ export function TodaysScheduleSection({
               onCompleteFeeding={onCompleteFeeding}
               onSkipFeeding={onSkipFeeding}
               onCompleteWalk={onCompleteWalk}
+              onSkipWalk={onSkipWalk}
               onCompleteMedicine={onCompleteMedicine}
+              onSkipMedicine={onSkipMedicine}
               onCompleteGrooming={onCompleteGrooming}
               onManageGrooming={onManageGrooming}
               onCompleteVaccination={onCompleteVaccination}

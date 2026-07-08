@@ -145,7 +145,9 @@ export default function HomeScreen() {
     completeFeeding,
     skipFeeding,
     completeWalk,
+    skipWalk,
     completeMedicine,
+    skipMedicine,
     completeGrooming,
     completeVaccination,
   } = useDashboardQuery(token, targetPetId, isSwitching);
@@ -450,9 +452,17 @@ export default function HomeScreen() {
     await completeWalk(scheduleId);
   }, [completeWalk]);
 
+  const handleSkipWalk = useCallback(async (scheduleId: string) => {
+    await skipWalk(scheduleId);
+  }, [skipWalk]);
+
   const handleCompleteMedicine = useCallback(async (scheduleId: string) => {
     await completeMedicine(scheduleId);
   }, [completeMedicine]);
+
+  const handleSkipMedicine = useCallback(async (scheduleId: string) => {
+    await skipMedicine(scheduleId);
+  }, [skipMedicine]);
 
   const handleCompleteGrooming = useCallback(async (recordId: string) => {
     await completeGrooming(recordId);
@@ -578,7 +588,9 @@ export default function HomeScreen() {
           onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
           onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
           onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
+          onSkipWalk={canEdit('walks') ? handleSkipWalk : undefined}
           onCompleteMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
+          onSkipMedicine={canEdit('medicine') ? handleSkipMedicine : undefined}
           onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
           onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
           onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}

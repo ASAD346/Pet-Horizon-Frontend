@@ -190,17 +190,15 @@ export function useScheduleHistory(
   // Compute stats and paginated items
   const { items, stats, total, hasMore } = useMemo(() => {
     if (serverQuery.data) {
-      // Server returns pre-filtered data — stats are approximate
-      const serverStats: ScheduleHistoryStats = {
-        total: serverQuery.data.total,
-        pending: serverQuery.data.items.filter((i) => i.status === 'pending').length,
-        done: serverQuery.data.items.filter((i) => i.status === 'done').length,
-        skipped: serverQuery.data.items.filter((i) => i.status === 'skipped').length,
-        disabled: serverQuery.data.items.filter((i) => i.status === 'disabled').length,
-      };
       return {
         items: serverQuery.data.items,
-        stats: serverStats,
+        stats: serverQuery.data.stats || {
+          total: serverQuery.data.total,
+          pending: 0,
+          done: 0,
+          skipped: 0,
+          disabled: 0,
+        },
         total: serverQuery.data.total,
         hasMore: serverQuery.data.hasMore,
       };

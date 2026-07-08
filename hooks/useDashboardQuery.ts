@@ -349,6 +349,60 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
   });
 
+  // 7. Walk Skip Mutation
+  const skipWalkMutation = useMutation({
+    mutationFn: (scheduleId: string) => completeWalkSchedule(token!, scheduleId, { status: 'skipped' }),
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      let itemTitle = 'Walk';
+      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+        let updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'skipped');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
+        itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
+        return addCacheRecentActivity(updated, 'Walk', `skipped ${itemTitle}`);
+      });
+      showToast(`${itemTitle} skipped successfully!`);
+      return { previousDashboard };
+    },
+    onError: (err, scheduleId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+    },
+  });
+
+  // 8. Medicine Skip Mutation
+  const skipMedicineMutation = useMutation({
+    mutationFn: (scheduleId: string) => completeMedicineSchedule(token!, scheduleId, { status: 'skipped' }),
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      let itemTitle = 'Medicine';
+      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+        let updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'skipped');
+        updated = removeCacheUpcomingTask(updated, scheduleId);
+        itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
+        return addCacheRecentActivity(updated, 'Medicine', `skipped ${itemTitle}`);
+      });
+      showToast(`${itemTitle} skipped successfully!`);
+      return { previousDashboard };
+    },
+    onError: (err, scheduleId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+    },
+  });
+
   return {
     data,
     isLoading,
@@ -358,7 +412,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     completeFeeding: completeFeedingMutation.mutateAsync,
     skipFeeding: skipFeedingMutation.mutateAsync,
     completeWalk: completeWalkMutation.mutateAsync,
+    skipWalk: skipWalkMutation.mutateAsync,
     completeMedicine: completeMedicineMutation.mutateAsync,
+    skipMedicine: skipMedicineMutation.mutateAsync,
     completeGrooming: completeGroomingMutation.mutateAsync,
     completeVaccination: completeVaccinationMutation.mutateAsync,
   };

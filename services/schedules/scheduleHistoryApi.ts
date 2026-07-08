@@ -52,6 +52,13 @@ export interface ScheduleHistoryResponse {
   limit: number;
   total: number;
   hasMore: boolean;
+  stats?: {
+    total: number;
+    pending: number;
+    done: number;
+    skipped: number;
+    disabled: number;
+  };
 }
 
 /**
