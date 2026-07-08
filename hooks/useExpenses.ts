@@ -17,7 +17,7 @@ export function useExpenses(
 ) {
   const { timezone } = useTimezone();
   const { currency } = useLocalization();
-  const queryKey = ['expenses', petId, month];
+  const queryKey = ['expenses', petId, month, currency];
 
   const { data, isFetching, error, refetch } = useQuery({
     queryKey,

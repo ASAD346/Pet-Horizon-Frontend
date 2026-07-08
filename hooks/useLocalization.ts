@@ -15,59 +15,90 @@ const CURRENCY_SYMBOLS: Record<CurrencyType, string> = {
   AUD: '$',
 };
 
-export function useLocalization() {
-  const [currency, setCurrencyState] = useState<CurrencyType>('USD');
-  const [unitSystem, setUnitSystemState] = useState<UnitSystemType>('metric');
-  const [loading, setLoading] = useState(true);
 
-  // Load settings on mount
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const storedCurrency = await AsyncStorage.getItem(CURRENCY_KEY);
-        const storedUnit = await AsyncStorage.getItem(UNIT_SYSTEM_KEY);
+// Module-level global state to sync across all hook instances immediately
+let globalCurrency: CurrencyType = 'USD';
+let globalUnitSystem: UnitSystemType = 'metric';
+let globalLoading = true;
+let isInitialized = false;
 
-        if (storedCurrency) {
-          setCurrencyState(storedCurrency as CurrencyType);
-        } else {
-          // Detect device country/locale and set sensible default
-          const locales = Localization.getLocales();
-          const countryCode = locales[0]?.regionCode?.toUpperCase();
-          if (countryCode === 'GB') {
-            setCurrencyState('GBP');
-          } else if (countryCode === 'CA') {
-            setCurrencyState('CAD');
-          } else if (countryCode === 'AU') {
-            setCurrencyState('AUD');
-          } else {
-            setCurrencyState('USD');
-          }
-        }
+const currencySetters = new Set<(val: CurrencyType) => void>();
+const unitSystemSetters = new Set<(val: UnitSystemType) => void>();
+const loadingSetters = new Set<(val: boolean) => void>();
 
-        if (storedUnit) {
-          setUnitSystemState(storedUnit as UnitSystemType);
-        } else {
-          const locales = Localization.getLocales();
-          const countryCode = locales[0]?.regionCode?.toUpperCase();
-          // US uses Imperial by default
-          if (countryCode === 'US') {
-            setUnitSystemState('imperial');
-          } else {
-            setUnitSystemState('metric');
-          }
-        }
-      } catch (e) {
-        // Fallback silently
-      } finally {
-        setLoading(false);
+const initializeSettings = async () => {
+  if (isInitialized) return;
+  try {
+    const storedCurrency = await AsyncStorage.getItem(CURRENCY_KEY);
+    const storedUnit = await AsyncStorage.getItem(UNIT_SYSTEM_KEY);
+
+    if (storedCurrency) {
+      globalCurrency = storedCurrency as CurrencyType;
+    } else {
+      const locales = Localization.getLocales();
+      const countryCode = locales[0]?.regionCode?.toUpperCase();
+      if (countryCode === 'GB') {
+        globalCurrency = 'GBP';
+      } else if (countryCode === 'CA') {
+        globalCurrency = 'CAD';
+      } else if (countryCode === 'AU') {
+        globalCurrency = 'AUD';
+      } else {
+        globalCurrency = 'USD';
       }
+    }
+
+    if (storedUnit) {
+      globalUnitSystem = storedUnit as UnitSystemType;
+    } else {
+      const locales = Localization.getLocales();
+      const countryCode = locales[0]?.regionCode?.toUpperCase();
+      if (countryCode === 'US') {
+        globalUnitSystem = 'imperial';
+      } else {
+        globalUnitSystem = 'metric';
+      }
+    }
+  } catch (e) {
+    // Fail silently
+  } finally {
+    globalLoading = false;
+    isInitialized = true;
+    currencySetters.forEach((setter) => setter(globalCurrency));
+    unitSystemSetters.forEach((setter) => setter(globalUnitSystem));
+    loadingSetters.forEach((setter) => setter(globalLoading));
+  }
+};
+
+// Start load immediately
+void initializeSettings();
+
+export function useLocalization() {
+  const [currency, setLocalCurrency] = useState<CurrencyType>(globalCurrency);
+  const [unitSystem, setLocalUnitSystem] = useState<UnitSystemType>(globalUnitSystem);
+  const [loading, setLocalLoading] = useState<boolean>(globalLoading);
+
+  useEffect(() => {
+    currencySetters.add(setLocalCurrency);
+    unitSystemSetters.add(setLocalUnitSystem);
+    loadingSetters.add(setLocalLoading);
+
+    // Sync values in case they changed before this component mounted
+    setLocalCurrency(globalCurrency);
+    setLocalUnitSystem(globalUnitSystem);
+    setLocalLoading(globalLoading);
+
+    return () => {
+      currencySetters.delete(setLocalCurrency);
+      unitSystemSetters.delete(setLocalUnitSystem);
+      loadingSetters.delete(setLocalLoading);
     };
-    void loadSettings();
   }, []);
 
   const setCurrency = useCallback(async (newCurrency: CurrencyType) => {
     try {
-      setCurrencyState(newCurrency);
+      globalCurrency = newCurrency;
+      currencySetters.forEach((setter) => setter(newCurrency));
       await AsyncStorage.setItem(CURRENCY_KEY, newCurrency);
     } catch (e) {
       // Fail silently
@@ -76,7 +107,8 @@ export function useLocalization() {
 
   const setUnitSystem = useCallback(async (newUnitSystem: UnitSystemType) => {
     try {
-      setUnitSystemState(newUnitSystem);
+      globalUnitSystem = newUnitSystem;
+      unitSystemSetters.forEach((setter) => setter(newUnitSystem));
       await AsyncStorage.setItem(UNIT_SYSTEM_KEY, newUnitSystem);
     } catch (e) {
       // Fail silently
@@ -85,27 +117,25 @@ export function useLocalization() {
 
   const formatCurrency = useCallback((amount: number | string): string => {
     const numericAmount = typeof amount === 'string' ? parseFloat(amount) || 0 : amount;
-    const symbol = CURRENCY_SYMBOLS[currency] || '$';
+    const symbol = CURRENCY_SYMBOLS[globalCurrency] || '$';
     
-    // Renders currency suffix for CAD/AUD to distinguish from USD if preferred,
-    // or standard symbol. We will support clean App Store standard format.
-    if (currency === 'CAD') {
+    if (globalCurrency === 'CAD') {
       return `${symbol}${numericAmount.toFixed(2)} CAD`;
     }
-    if (currency === 'AUD') {
+    if (globalCurrency === 'AUD') {
       return `${symbol}${numericAmount.toFixed(2)} AUD`;
     }
     return `${symbol}${numericAmount.toFixed(2)}`;
-  }, [currency]);
+  }, []);
 
   const formatWeight = useCallback((weightInKg: number | string): string => {
     const kg = typeof weightInKg === 'string' ? parseFloat(weightInKg) || 0 : weightInKg;
-    if (unitSystem === 'imperial') {
+    if (globalUnitSystem === 'imperial') {
       const lbs = kg * 2.20462;
       return `${lbs.toFixed(1)} lbs`;
     }
     return `${kg.toFixed(1)} kg`;
-  }, [unitSystem]);
+  }, []);
 
   return {
     currency,
@@ -117,3 +147,5 @@ export function useLocalization() {
     loading,
   };
 }
+
+

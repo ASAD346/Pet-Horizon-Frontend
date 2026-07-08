@@ -21,12 +21,14 @@ interface EmptyStateProps {
   compact?: boolean;
 }
 
+import { Palette } from '@/constants/theme';
+
 const VARIANT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  primary: { bg: '#1E5838', text: '#FFFFFF', border: '#1E5838' },
-  success: { bg: '#1E5838', text: '#FFFFFF', border: '#1E5838' },
+  primary: { bg: Palette.primary.base, text: '#FFFFFF', border: Palette.primary.base },
+  success: { bg: Palette.success, text: '#FFFFFF', border: Palette.success },
   secondary: { bg: '#F1F5F9', text: '#475569', border: '#E2E8F0' },
-  danger: { bg: '#DC2626', text: '#FFFFFF', border: '#DC2626' },
-  outline: { bg: 'transparent', text: '#1E5838', border: '#1E5838' },
+  danger: { bg: Palette.error, text: '#FFFFFF', border: Palette.error },
+  outline: { bg: 'transparent', text: Palette.primary.base, border: Palette.primary.base },
   ghost: { bg: 'transparent', text: '#64748B', border: 'transparent' },
 };
 
@@ -131,7 +133,7 @@ const styles = StyleSheet.create({
     minWidth: 160,
     alignItems: 'center',
     ...Platform.select({
-      ios: { shadowColor: '#1E5838', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
+      ios: { shadowColor: Palette.primary.base, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
       android: { elevation: 3 },
     }),
   },

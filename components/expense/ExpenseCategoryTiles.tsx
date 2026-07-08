@@ -54,7 +54,7 @@ export function ExpenseCategoryTiles({ selected, onSelect }: ExpenseCategoryTile
 
               <MaterialCommunityIcons
                 name={item.materialIcon}
-                size={24}
+                size={18}
                 color={active ? '#FFFFFF' : BRAND_GREEN}
               />
               <AppText
@@ -100,12 +100,12 @@ const styles = StyleSheet.create({
     paddingBottom: 4, // allow shadow to show
   },
   tile: {
-    width: 84,
-    height: 84,
-    borderRadius: Radius.md + 2,
+    width: 64,
+    height: 64,
+    borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 4,
     overflow: 'visible',
   },
   tileInactive: {

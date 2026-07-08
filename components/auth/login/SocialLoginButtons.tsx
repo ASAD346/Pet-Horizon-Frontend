@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import { View, StyleSheet, Platform, Image } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
 import { AppButton } from '../../ui/AppButton'; // Social buttons keep brand-specific styles
 import { OrDivider } from '../OrDivider';
 import { Spacing, Palette } from '../../../constants/theme';
+
+const GOOGLE_ICON = require('../../../assets/images/Google_Icon.png');
 
 interface SocialLoginButtonsProps {
   onGooglePress: () => void;
@@ -33,7 +35,7 @@ export function SocialLoginButtons({
         disabled={googleLoading || googleDisabled}
         style={styles.googleButton}
         textStyle={styles.googleButtonText}
-        icon={<AntDesign name="google" size={18} color="#EA4335" />}
+        icon={<Image source={GOOGLE_ICON} style={styles.googleIconImage} />}
       />
 
       {Platform.OS === 'ios' ? (
@@ -68,6 +70,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 2,
   },
+  googleIconImage: {
+    width: 18,
+    height: 18,
+    resizeMode: 'contain',
+  },
   googleButtonText: {
     fontSize: 15,
     fontWeight: '700',
@@ -92,3 +99,4 @@ const styles = StyleSheet.create({
     color: Palette.white,
   },
 });
+
