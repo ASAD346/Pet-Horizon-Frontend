@@ -35,7 +35,7 @@ const SECTIONS = [
   },
   {
     title: 'Contact Information',
-    body: 'For support inquiries, legal notices, or feedback, please reach out to us at support@pethorizon.app.',
+    body: 'For support inquiries, legal notices, or feedback, please reach out to us at pethorizon2026@gmail.com.',
   },
 ];
 

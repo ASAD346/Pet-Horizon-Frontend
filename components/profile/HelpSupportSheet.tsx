@@ -77,11 +77,11 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
   const handleContactSupport = () => {
-    const email = 'support@pethorizon.app';
+    const email = 'pethorizon2026@gmail.com';
     const subject = 'Pet Horizon Support Request';
     const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     Linking.openURL(url).catch(() => {
-      Alert.alert('Support Contact', 'Could not open your email client. Please reach us at support@pethorizon.app');
+      Alert.alert('Support Contact', 'Could not open your email client. Please reach us at pethorizon2026@gmail.com');
     });
   };
 

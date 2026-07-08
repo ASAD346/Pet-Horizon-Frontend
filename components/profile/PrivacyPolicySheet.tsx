@@ -1,7 +1,7 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
+import React from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { ProfileModalShell } from './ProfileModalShell';
 
 const SECTIONS = [
