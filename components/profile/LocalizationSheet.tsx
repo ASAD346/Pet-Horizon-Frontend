@@ -13,11 +13,11 @@ interface LocalizationSheetProps {
   onClose: () => void;
 }
 
-const CURRENCIES: { value: CurrencyType; label: string; symbol: string }[] = [
-  { value: 'USD', label: 'United States Dollar', symbol: '$' },
-  { value: 'GBP', label: 'United Kingdom Pound', symbol: '£' },
-  { value: 'CAD', label: 'Canadian Dollar', symbol: '$' },
-  { value: 'AUD', label: 'Australian Dollar', symbol: '$' },
+const CURRENCIES: { value: CurrencyType; label: string; symbol: string; flag: string }[] = [
+  { value: 'USD', label: 'United States Dollar', symbol: '$', flag: '🇺🇸' },
+  { value: 'GBP', label: 'United Kingdom Pound', symbol: '£', flag: '🇬🇧' },
+  { value: 'CAD', label: 'Canadian Dollar', symbol: '$', flag: '🇨🇦' },
+  { value: 'AUD', label: 'Australian Dollar', symbol: '$', flag: '🇦🇺' },
 ];
 
 function getGmtOffset(tzString: string): string {
@@ -34,6 +34,26 @@ function getGmtOffset(tzString: string): string {
   }
 }
 
+function getTimezoneFlag(tzString: string): string {
+  const tz = String(tzString).toLowerCase();
+  if (tz.includes('karachi') || tz.includes('pakistan')) return '🇵🇰';
+  if (tz.includes('london') || tz.includes('europe/london') || tz.includes('gb')) return '🇬🇧';
+  if (tz.includes('new_york') || tz.includes('los_angeles') || tz.includes('chicago') || tz.includes('denver') || tz.includes('america')) {
+    if (tz.includes('toronto') || tz.includes('vancouver') || tz.includes('montreal')) return '🇨🇦';
+    if (tz.includes('mexico')) return '🇲🇽';
+    if (tz.includes('sao_paulo') || tz.includes('brazil')) return '🇧🇷';
+    return '🇺🇸';
+  }
+  if (tz.includes('sydney') || tz.includes('melbourne') || tz.includes('australia')) return '🇦🇺';
+  if (tz.includes('tokyo') || tz.includes('japan')) return '🇯🇵';
+  if (tz.includes('paris') || tz.includes('europe/paris')) return '🇫🇷';
+  if (tz.includes('berlin') || tz.includes('germany')) return '🇩🇪';
+  if (tz.includes('dubai') || tz.includes('asia/dubai')) return '🇦🇪';
+  if (tz.includes('singapore')) return '🇸🇬';
+  if (tz.includes('calcutta') || tz.includes('kolkata') || tz.includes('india')) return '🇮🇳';
+  return '🌐';
+}
+
 export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) {
   const { currency, setCurrency } = useLocalization();
   const { timezone } = useTimezone();
@@ -48,6 +68,9 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
         </AppText>
 
         <View style={styles.timezoneCard}>
+          <AppText style={{ fontSize: 24, marginRight: 12 }}>
+            {getTimezoneFlag(timezone)}
+          </AppText>
           <View style={styles.timezoneText}>
             <AppText variant="body" weight="700" color="#1E293B">
               {timezone}
@@ -78,6 +101,9 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
               >
                 <View style={styles.currencyTextBlock}>
                   <View style={styles.currencyCodeRow}>
+                    <AppText variant="body" style={{ marginRight: 4 }}>
+                      {item.flag}
+                    </AppText>
                     <AppText variant="body" weight="700" color={selected ? ProfileTheme.green : '#1E293B'}>
                       {item.value}
                     </AppText>

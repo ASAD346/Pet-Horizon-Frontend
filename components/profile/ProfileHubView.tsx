@@ -352,21 +352,12 @@ export function ProfileHubView() {
             subtitle="Currency and measurement units"
             onPress={() => setLocalizationVisible(true)}
           />
-          {!isPremium ? (
-            <ProfileMenuRow
-              icon="diamond-outline"
-              title="Premium Hub"
-              subtitle="Plans and billing"
-              onPress={() => router.push('/profile/premium' as Href)}
-            />
-          ) : (
-            <ProfileMenuRow
-              icon="card-outline"
-              title="Billing & Subscription"
-              subtitle="Invoices, payment method, cancel"
-              onPress={() => router.push('/profile/billing' as Href)}
-            />
-          )}
+          <ProfileMenuRow
+            icon="card-outline"
+            title="Billing & Subscription"
+            subtitle="Invoices, payment method, cancel"
+            onPress={() => router.push('/profile/billing' as Href)}
+          />
         </ProfileMenuSection>
 
         <ProfileMenuSection title="LEGAL & SUPPORT">

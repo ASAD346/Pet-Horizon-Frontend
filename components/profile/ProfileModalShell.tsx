@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     maxHeight: '92%',
-    flexShrink: 1,
+    width: '100%',
   },
   handleRow: {
     alignItems: 'center',
@@ -144,7 +144,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   contentContainer: {
-    flex: 1,
     paddingHorizontal: Spacing.lg,
     paddingBottom: 28,
     paddingTop: 12,
