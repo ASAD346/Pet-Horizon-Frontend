@@ -147,6 +147,7 @@ export function useScheduleHistory(
           search: filters.search,
           page,
           limit: PAGE_SIZE,
+          isHistoryTab: true,
         });
       } catch {
         setServerFailed(true);

@@ -30,6 +30,7 @@ export interface ScheduleHistoryParams {
   search?: string;
   page?: number;
   limit?: number;
+  isHistoryTab?: boolean;
 }
 
 export interface ScheduleHistoryItem {
@@ -72,6 +73,7 @@ export async function fetchScheduleHistory(
     search = '',
     page = 1,
     limit = 20,
+    isHistoryTab,
   } = params;
 
   log.info(SCOPE, 'GET /schedules/history', { petId, status, type, page });
@@ -86,6 +88,7 @@ export async function fetchScheduleHistory(
   if (startDate) qp.set('startDate', startDate);
   if (endDate) qp.set('endDate', endDate);
   if (search.trim()) qp.set('search', search.trim());
+  if (isHistoryTab) qp.set('isHistoryTab', 'true');
 
   try {
     const data = await apiRequest<ScheduleHistoryResponse>(

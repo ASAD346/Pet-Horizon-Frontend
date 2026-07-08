@@ -79,6 +79,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
   const requestHeaders: Record<string, string> = {
     Accept: 'application/json',
+    'x-timezone': Intl.DateTimeFormat().resolvedOptions().timeZone,
     ...headers,
   };
 

@@ -113,8 +113,6 @@ export default function HomeScreen() {
       (m: any) => String(m.userId || m.id) === String(currentUser?._id || currentUser?.id)
   )?.permissions || currentPetWorkspace?.permissions;
 
-  console.log("CRITICAL_HOME_GATEKEEPER_PROBE:", myPermissions);
-
   const petPermissions = usePetPermissions(token, pet, user?._id);
   const {
     canView,
@@ -123,12 +121,6 @@ export default function HomeScreen() {
     isOwner,
     accessBannerMessage,
   } = petPermissions;
-
-  console.log("HOME_SCREEN_PERMISSIONS_PROBE:", {
-      rawObject: petPermissions,
-      extractedNestedBlock: (petPermissions as any)?.permissions,
-      fallbackArray: petPermissions?.allowedModules
-  });
 
   const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
     token,
@@ -208,11 +200,11 @@ export default function HomeScreen() {
   
   const scheduleLoading = dashboardLoading || !isDataFresh;
 
-  const visibleFeedingSchedules = canView('feeding') ? feedingSchedules : [];
-  const visibleWalkSchedules = canView('walks') ? walkSchedules : [];
-  const visibleMedicineSchedules = canView('medicine') ? medicineSchedules : [];
-  const visibleGroomingRecords = canView('grooming') ? groomingRecords : [];
-  const visibleVaccinationSchedules = canView('vaccination') ? vaccinationSchedules : [];
+  const visibleFeedingSchedules = feedingSchedules;
+  const visibleWalkSchedules = walkSchedules;
+  const visibleMedicineSchedules = medicineSchedules;
+  const visibleGroomingRecords = groomingRecords;
+  const visibleVaccinationSchedules = vaccinationSchedules;
 
   const visibleDashboardTasks = useMemo(() => {
     const activeScheduleIds = new Set<string>();
@@ -390,7 +382,7 @@ export default function HomeScreen() {
 
 
   const openGroomingManage = useCallback((recordId: string) => {
-    const record = groomingRecords.find((item) => item._id === recordId) ?? null;
+    const record = groomingRecords.find((item: GroomingRecord) => item._id === recordId) ?? null;
     setGroomingManageRecord(record);
     setGroomingManageVisible(true);
   }, [groomingRecords]);

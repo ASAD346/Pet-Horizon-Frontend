@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UnifiedDashboardData } from '@/types/dashboard';
@@ -9,6 +9,19 @@ import { completeMedicineSchedule } from '@/services/schedules/medicineApi';
 import { completeGroomingRecord } from '@/services/grooming/groomingApi';
 import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
 import { useToast } from '@/hooks/useToast';
+import { deduplicateSchedules as globalDeduplicate } from '@/lib/schedule/scheduleUtils';
+
+const deduplicateSchedules = (schedulesObj: any) => {
+  if (!schedulesObj) return schedulesObj;
+  const result = { ...schedulesObj };
+  for (const category of Object.keys(result)) {
+    const list = result[category];
+    if (Array.isArray(list)) {
+      result[category] = globalDeduplicate(list);
+    }
+  }
+  return result;
+};
 
 export function useDashboardQuery(token: string | null, petId: string | null | undefined, isSwitching: boolean = false) {
   const queryClient = useQueryClient();
@@ -71,9 +84,10 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     if (query.data && petId) {
       console.log('[useDashboardQuery] Dashboard loaded successfully. Data keys:', Object.keys(query.data));
       const data = query.data;
+      console.log('API Schedules:', data);
       void Promise.all([
         data.activePet ? AsyncStorage.setItem(`@pet_profile_cache_${petId}`, JSON.stringify(data.activePet)) : Promise.resolve(),
-        data.todaySchedules ? AsyncStorage.setItem(`@today_schedule_cache_${petId}`, JSON.stringify(data.todaySchedules)) : Promise.resolve(),
+        data.todaySchedules ? AsyncStorage.setItem(`@today_schedule_cache_${petId}`, JSON.stringify(deduplicateSchedules(data.todaySchedules))) : Promise.resolve(),
         data.upcomingTasks ? AsyncStorage.setItem(`@upcoming_tasks_cache_${petId}`, JSON.stringify(data.upcomingTasks)) : Promise.resolve(),
         data.notifications ? AsyncStorage.setItem(`@notifications_cache_${petId}`, JSON.stringify(data.notifications)) : Promise.resolve(),
         data.recentActivities ? AsyncStorage.setItem(`@recent_activities_cache_${petId}`, JSON.stringify(data.recentActivities)) : Promise.resolve(),
@@ -90,7 +104,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   const isLoading = (query.isLoading && !currentCachedData) || isSwitching;
   const isFetching = query.isFetching;
   const error = query.error;
-  const data = query.data || currentCachedData;
+  const rawData = query.data || currentCachedData;
+  const data = useMemo(() => {
+    if (!rawData) return undefined;
+    return {
+      ...rawData,
+      todaySchedules: deduplicateSchedules(rawData.todaySchedules),
+    };
+  }, [rawData]);
 
   const refetch = useCallback(async () => {
     return query.refetch();

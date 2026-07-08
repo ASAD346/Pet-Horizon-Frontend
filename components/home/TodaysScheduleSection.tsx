@@ -360,6 +360,40 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   );
 });
 
+const isSameDay = (date1: Date | string | null | undefined, date2: Date | string | null | undefined): boolean => {
+  if (!date1 || !date2) return false;
+  const cleanDate = (val: Date | string) => {
+    if (typeof val === 'string') {
+      const trimmed = val.trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        return trimmed.replace(/-/g, '/');
+      }
+      return trimmed;
+    }
+    return val;
+  };
+  const d1 = new Date(cleanDate(date1));
+  const d2 = new Date(cleanDate(date2));
+  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return false;
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+};
+
+export const flattenSchedules = (data: any) => {
+  if (!data) return [];
+  const allSchedules: any[] = [];
+  Object.keys(data).forEach((key) => {
+    const list = data[key];
+    if (Array.isArray(list)) {
+      allSchedules.push(...list);
+    }
+  });
+  return allSchedules;
+};
+
 function parseDateString(val: string | Date | number | undefined | null): Date | null {
   if (!val) return null;
   
@@ -397,7 +431,6 @@ function parseDateString(val: string | Date | number | undefined | null): Date |
 function isScheduleActiveToday(row: ScheduleRow): boolean {
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
   const item = row.item as any;
 
@@ -406,13 +439,23 @@ function isScheduleActiveToday(row: ScheduleRow): boolean {
   if (scheduleType === 'single' || !scheduleType) {
     const explicitDateStr = item.date || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
     if (explicitDateStr) {
-      const itemDate = new Date(explicitDateStr);
-      if (!isNaN(itemDate.getTime())) {
-        return itemDate >= startOfToday && itemDate <= endOfToday;
+      let itemDate = typeof explicitDateStr === 'string' ? new Date(explicitDateStr) : explicitDateStr;
+      
+      // Normalize date string with local timezone to prevent UTC offset shifting
+      if (typeof explicitDateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(explicitDateStr.trim())) {
+        const localParsed = parseDateString(explicitDateStr);
+        if (localParsed) {
+          itemDate = localParsed;
+        }
       }
+      
+      if (itemDate instanceof Date && !isNaN(itemDate.getTime())) {
+        return isSameDay(itemDate, now);
+      }
+      
       const explicitDate = parseDateString(explicitDateStr);
       if (explicitDate) {
-        return explicitDate.getTime() === startOfToday.getTime();
+        return isSameDay(explicitDate, now);
       }
     }
   }
@@ -454,8 +497,14 @@ function isPastPendingRow(row: ScheduleRow): boolean {
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
   if (explicitDateStr) {
-    const taskDate = parseDateString(explicitDateStr) || new Date(explicitDateStr);
-    if (!isNaN(taskDate.getTime()) && taskDate.getTime() < startOfToday.getTime()) {
+    let taskDate = typeof explicitDateStr === 'string' ? new Date(explicitDateStr) : explicitDateStr;
+    if (typeof explicitDateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(explicitDateStr.trim())) {
+      const localParsed = parseDateString(explicitDateStr);
+      if (localParsed) {
+        taskDate = localParsed;
+      }
+    }
+    if (taskDate instanceof Date && !isNaN(taskDate.getTime()) && taskDate.getTime() < startOfToday.getTime()) {
       return true;
     }
   }
@@ -488,15 +537,47 @@ export function TodaysScheduleSection({
   isPremium = false,
   onViewAll,
 }: TodaysScheduleSectionProps) {
+  const todaySchedules = {
+    feeding: feedingSchedules,
+    walk: walkSchedules,
+    medicine: medicineSchedules,
+    grooming: groomingRecords,
+    vaccination: vaccinationSchedules,
+  };
+  console.log("DEBUG: Rendering TodaySchedules:", todaySchedules);
+
   const items = useMemo(
-    () =>
-      mergeScheduleRows(
+    () => {
+      const merged = mergeScheduleRows(
         feedingSchedules,
         walkSchedules,
         medicineSchedules,
         groomingRecords,
         vaccinationSchedules,
-      ).filter((row) => !rowIsDone(row) && !rowIsSkipped(row) && isScheduleActiveToday(row) && !isPastPendingRow(row)),
+      );
+      const filtered = merged.filter((row) => {
+        const item = row.item as any;
+        const status = item.status || 'pending';
+        const dateString = item.date || item.scheduledDate || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate;
+        
+        const isMatch = dateString ? (isSameDay(dateString, new Date()) || new Date(dateString) < new Date()) : false;
+        
+        console.log(`[TodaysSchedule] Normalization Alignment: item=${item.title || row.kind}, dateString=${dateString}, today=${new Date().toISOString()}, isSameDayOrPast=${isMatch}, status=${status}`);
+        
+        return (
+          status === 'pending' &&
+          !rowIsDone(row) &&
+          !rowIsSkipped(row) &&
+          isMatch
+        );
+      });
+
+      // Sort by rowSortKey
+      filtered.sort((a, b) => rowSortKey(a) - rowSortKey(b));
+
+      console.log('Filtered & Sorted Schedules:', filtered);
+      return filtered;
+    },
     [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
   );
 
