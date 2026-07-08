@@ -1,5 +1,3 @@
-import { PremiumHubContent } from '@/components/profile';
+import BillingScreen from './billing';
 
-export default function PremiumScreen() {
-  return <PremiumHubContent />;
-}
+export default BillingScreen;

@@ -1,78 +1,49 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
-import { ProfileTheme } from './profileTheme';
 
 interface PremiumUpgradeBannerProps {
   onUpgradePress: () => void;
 }
 
-const HIGHLIGHTS = [
-  { icon: 'paw' as const, label: 'Unlimited Pets' },
-  { icon: 'analytics' as const, label: 'Health Insights' },
-  { icon: 'people' as const, label: 'Family Sharing' },
-];
-
 export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerProps) {
   return (
     <View style={styles.wrapper}>
       <LinearGradient
-        colors={[ProfileTheme.premiumGradientStart, ProfileTheme.premiumGradientEnd]}
+        colors={['#071F11', '#0E3B21']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.banner}
       >
-        {/* Decorative bg rings */}
-        <View style={styles.bgRing1} />
-        <View style={styles.bgRing2} />
-
-        {/* Header row: crown icon + badge */}
-        <View style={styles.headerRow}>
-          <View style={styles.iconWrap}>
-            <MaterialCommunityIcons name="crown" size={20} color="#D4A017" />
-          </View>
-          <View style={styles.goldPill}>
-            <Ionicons name="sparkles" size={9} color="#D4A017" />
-            <AppText variant="caption" weight="800" color="#D4A017" style={styles.goldPillText}>
-              PET HORIZON PREMIUM
+        <View style={styles.contentCol}>
+          <View style={styles.badge}>
+            <Ionicons name="star" size={8} color="#D4A017" />
+            <AppText variant="caption" weight="800" color="#D4A017" style={styles.badgeText}>
+              PREMIUM
             </AppText>
           </View>
+          
+          <AppText variant="body" weight="800" color="#FFFFFF" style={styles.headline}>
+            Give Your Pets the Best Care
+          </AppText>
+          
+          <AppText variant="caption" color="rgba(255, 255, 255, 0.65)" style={styles.description}>
+            Includes unlimited pets, family sharing, and smart reminders.
+          </AppText>
         </View>
 
-        {/* Headline & description */}
-        <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headline}>
-          Give Your Pets the Best Care
-        </AppText>
-        <AppText variant="bodySmall" color="rgba(255,255,255,0.82)" style={styles.description}>
-          Unlock unlimited tracking, advanced health insights, family collaboration, and powerful tools designed for dedicated pet parents.
-        </AppText>
-
-        {/* Feature highlights */}
-        <View style={styles.highlightsRow}>
-          {HIGHLIGHTS.map((item) => (
-            <View key={item.label} style={styles.highlightChip}>
-              <Ionicons name={item.icon} size={12} color="rgba(255,255,255,0.9)" />
-              <AppText variant="caption" weight="700" color="rgba(255,255,255,0.9)" style={styles.highlightLabel}>
-                {item.label}
-              </AppText>
-            </View>
-          ))}
-        </View>
-
-        {/* CTA Button */}
         <TouchableOpacity
           style={styles.ctaBtn}
           onPress={onUpgradePress}
-          activeOpacity={0.88}
+          activeOpacity={0.85}
         >
-          <AppText variant="bodySmall" weight="800" color={ProfileTheme.premiumGoldDark} style={styles.ctaText}>
-            Upgrade to Premium
+          <AppText variant="caption" weight="800" color="#0E3B21" style={styles.ctaText}>
+            Upgrade
           </AppText>
-          <Ionicons name="arrow-forward" size={14} color={ProfileTheme.premiumGoldDark} />
+          <Ionicons name="arrow-forward" size={11} color="#0E3B21" />
         </TouchableOpacity>
       </LinearGradient>
     </View>
@@ -81,12 +52,12 @@ export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerPro
 
 const bannerShadow = Platform.select({
   ios: {
-    shadowColor: ProfileTheme.premiumGoldDark,
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
+    shadowColor: '#071F11',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
-  android: { elevation: 6 },
+  android: { elevation: 3 },
 });
 
 const styles = StyleSheet.create({
@@ -97,102 +68,60 @@ const styles = StyleSheet.create({
     ...bannerShadow,
   },
   banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     borderRadius: Radius.xl,
-    padding: Spacing.lg,
+    padding: Spacing.lg - 2,
     borderWidth: 1.5,
-    borderColor: 'rgba(212,160,23,0.4)',
-    overflow: 'hidden',
+    borderColor: 'rgba(212, 160, 23, 0.25)',
+    gap: Spacing.md,
   },
-  bgRing1: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    top: -60,
-    right: -40,
+  contentCol: {
+    flex: 1,
+    gap: 3,
   },
-  bgRing2: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    bottom: -40,
-    left: -20,
-  },
-  headerRow: {
+  badge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.sm,
-  },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(212,160,23,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(212,160,23,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  goldPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(212,160,23,0.15)',
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(212, 160, 23, 0.12)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: Radius.full,
+    gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(212,160,23,0.25)',
+    borderColor: 'rgba(212, 160, 23, 0.25)',
+    marginBottom: 2,
   },
-  goldPillText: {
+  badgeText: {
     fontSize: 9,
     letterSpacing: 0.8,
   },
   headline: {
-    fontSize: 18,
-    lineHeight: 24,
-    marginBottom: 6,
+    fontSize: 16,
+    lineHeight: 21,
   },
   description: {
-    lineHeight: 19,
-    marginBottom: Spacing.md,
-  },
-  highlightsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginBottom: Spacing.md,
-  },
-  highlightChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
-  },
-  highlightLabel: {
-    fontSize: 10,
+    fontSize: 11.5,
+    lineHeight: 16,
   },
   ctaBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
+    gap: 4,
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.full,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: 10,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 9,
   },
   ctaText: {
-    fontSize: 13,
+    fontSize: 11.5,
   },
 });
+
+
+
+
+
