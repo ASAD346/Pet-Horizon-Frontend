@@ -16,9 +16,9 @@ export function PushNotificationRegistrar() {
   const nativeTokenRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (isExpoGo()) return;
-
     void ensureNotificationHandler();
+
+    if (isExpoGo()) return;
 
     import('@/lib/push/registerPushToken')
       .then(({ ensureNativePushTokenRegistered }) => ensureNativePushTokenRegistered())
@@ -68,8 +68,6 @@ export function PushNotificationRegistrar() {
   }, [token, isAuthenticated, isBootstrapping]);
 
   useEffect(() => {
-    if (isExpoGo()) return;
-
     let responseSubscription: { remove: () => void } | undefined;
     let receivedSubscription: { remove: () => void } | undefined;
 
