@@ -374,7 +374,7 @@ export default function ScheduleHistoryScreen() {
 
             <View style={styles.headerRow}>
               <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+                <Ionicons name="chevron-back" size={24} color="#0E3821" />
               </TouchableOpacity>
               <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
                 History
@@ -557,10 +557,17 @@ const styles = StyleSheet.create({
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: Radius.full,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: -Spacing.xs,
+    borderWidth: 1,
+    borderColor: '#E2EBE2',
+    ...Platform.select({
+      ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      android: { elevation: 2 },
+    }),
   },
   headerTitle: {
     flex: 1,
