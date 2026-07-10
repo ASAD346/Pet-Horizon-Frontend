@@ -56,7 +56,7 @@ export function AddExpenseView({
   };
   const currencySymbol = CURRENCY_SYMBOLS[currency] || '$';
 
-  const [category, setCategory] = useState('Food');
+  const [category, setCategory] = useState<string | null>(null);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [amount, setAmount] = useState('');
   const [merchant, setMerchant] = useState('');
@@ -90,6 +90,10 @@ export function AddExpenseView({
       setError('Select a pet before adding an expense.');
       return;
     }
+    if (!category) {
+      setError('Select a category.');
+      return;
+    }
     const value = Number(amount);
     if (!value || Number.isNaN(value) || value <= 0) {
       setError('Enter a valid amount.');
@@ -113,6 +117,14 @@ export function AddExpenseView({
         date: localDate,
       });
       showToast('Expense added successfully!');
+      
+      // Reset state on successful submission
+      setAmount('');
+      setMerchant('');
+      setNote('');
+      setCategory(null);
+      setError(null);
+
       onSaved?.(data.expense, data.budgetStatus);
     } catch (err) {
       const errMsg = getErrorMessage(err);
@@ -122,6 +134,23 @@ export function AddExpenseView({
       setSaving(false);
     }
   };
+
+  React.useEffect(() => {
+    if (!visible) {
+      setAmount('');
+      setMerchant('');
+      setNote('');
+      setCategory(null);
+      setError(null);
+    }
+    return () => {
+      setAmount('');
+      setMerchant('');
+      setNote('');
+      setCategory(null);
+      setError(null);
+    };
+  }, [visible]);
 
   if (permissionsLoading) {
     return (
@@ -173,7 +202,7 @@ export function AddExpenseView({
         <FormSection title="Category">
           <FormSelectInput
             label=""
-            valueLabel={category}
+            valueLabel={category || 'Select Category'}
             onPress={() => setPickerVisible(true)}
           />
         </FormSection>
@@ -252,7 +281,7 @@ export function AddExpenseView({
         visible={pickerVisible}
         title="Select Category"
         options={dropdownOptions}
-        selectedValue={category}
+        selectedValue={category || ''}
         onClose={() => setPickerVisible(false)}
         onSelect={setCategory}
         useNativeModal={false}
