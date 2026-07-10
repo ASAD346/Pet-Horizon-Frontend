@@ -77,6 +77,15 @@ function getSectionTitle(dateStr: string): string {
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+function cleanText(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 function groupByDate(items: ApiJournalEntry[]): DateSection[] {
   const map = new Map<string, ApiJournalEntry[]>();
   for (const item of items) {
@@ -290,7 +299,7 @@ const ActivityCard = React.memo(function ActivityCard({
         
         <View style={styles.cardInfo}>
           <AppText variant="body" weight="700" color={HomeTheme.text} style={styles.cardTitle}>
-            {entry.activityType || 'Activity'}
+            {cleanText(entry.activityType) || 'Activity'}
           </AppText>
           
           <View style={styles.metaRow}>

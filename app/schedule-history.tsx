@@ -68,6 +68,15 @@ function formatTime(t?: string): string | null {
   return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
+function cleanText(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
 // ─── Unified Filter Bottom Sheet ──────────────────────────────────────────────
 function FilterSheet({
   visible,
@@ -235,7 +244,7 @@ const ScheduleCard = React.memo(function ScheduleCard({
         
         <View style={styles.cardInfo}>
           <AppText variant="body" weight="700" color={HomeTheme.text} style={styles.cardTitle}>
-            {item.title}
+            {cleanText(item.title)}
           </AppText>
           
           <View style={styles.metaRow}>

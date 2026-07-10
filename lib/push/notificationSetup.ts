@@ -15,7 +15,7 @@ async function getNotificationsModule() {
 }
 
 export async function ensureNotificationHandler(): Promise<void> {
-  if (handlerConfigured || isExpoGo()) return;
+  if (handlerConfigured) return;
 
   const Notifications = await getNotificationsModule();
   Notifications.setNotificationHandler({
