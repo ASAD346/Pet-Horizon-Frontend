@@ -177,76 +177,69 @@ export default function LoginScreen() {
   }
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <LoginHeaderDecor />
 
-
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.flex}
-          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            <View style={styles.contentWrapper}>
-              <View>
-                <LoginBranding compact={true} />
-              </View>
-
-              <View style={styles.formWrapper}>
-                <LoginFormSection
-                  email={email}
-                  password={password}
-                  loading={loading || googleLoading}
-                  showVerifyAction={showVerifyAction}
-                  rememberMe={rememberMe}
-                  onRememberMeChange={setRememberMe}
-                  onEmailChange={handleEmailChange}
-                  onPasswordChange={handlePasswordChange}
-                  onLogin={handleLogin}
-                  onForgotPassword={() =>
-                    router.push({
-                      pathname: '/auth/forgot-password',
-                      params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
-                    })
-                  }
-                  onSignup={() => router.push('/auth/signup')}
-                  onVerifyEmail={handleVerifyEmail}
-                  fieldErrors={fieldErrors}
-                />
-
-                <SocialLoginButtons
-                  compact={false}
-                  googleLoading={googleLoading}
-                  onGooglePress={() => {
-                    clearErrors();
-                    void handleGoogleSignIn(showToast);
-                  }}
-                  onApplePress={() => {}}
-                />
-              </View>
+          <View style={styles.contentWrapper}>
+            <View>
+              <LoginBranding compact={true} />
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
 
-      <LoginFooterBar />
-    </View>
+            <View style={styles.formWrapper}>
+              <LoginFormSection
+                email={email}
+                password={password}
+                loading={loading || googleLoading}
+                showVerifyAction={showVerifyAction}
+                rememberMe={rememberMe}
+                onRememberMeChange={setRememberMe}
+                onEmailChange={handleEmailChange}
+                onPasswordChange={handlePasswordChange}
+                onLogin={handleLogin}
+                onForgotPassword={() =>
+                  router.push({
+                    pathname: '/auth/forgot-password',
+                    params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
+                  })
+                }
+                onSignup={() => router.push('/auth/signup')}
+                onVerifyEmail={handleVerifyEmail}
+                fieldErrors={fieldErrors}
+              />
+
+              <SocialLoginButtons
+                compact={false}
+                googleLoading={googleLoading}
+                onGooglePress={() => {
+                  clearErrors();
+                  void handleGoogleSignIn(showToast);
+                }}
+                onApplePress={() => {}}
+              />
+            </View>
+          </View>
+          <LoginFooterBar />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#FFF9F5',
-  },
   safeArea: {
     flex: 1,
+    backgroundColor: '#FFF9F5',
   },
   flex: {
     flex: 1,
@@ -256,12 +249,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.xs,
     paddingBottom: Spacing.lg,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   contentWrapper: {
     width: '100%',
     alignItems: 'center',
     gap: Spacing.sm,
+    flex: 1,
+    justifyContent: 'center',
   },
   formWrapper: {
     width: '100%',

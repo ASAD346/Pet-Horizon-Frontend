@@ -37,9 +37,6 @@ export default function EditProfileScreen() {
   const [initialEmail, setInitialEmail] = useState('');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | undefined>();
-  const [emailOtp, setEmailOtp] = useState('');
-  const [emailChangePending, setEmailChangePending] = useState(false);
-  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
@@ -65,22 +62,19 @@ export default function EditProfileScreen() {
       if (localPhoto) nextUser = await uploadUserAvatar(token, localPhoto);
 
       const emailChanged = email.trim().toLowerCase() !== initialEmail.trim().toLowerCase();
-      if (emailChanged && !emailChangePending) {
+      if (emailChanged) {
         const response = await requestEmailChange(token, email.trim());
-        setEmailChangePending(true);
-        setDevOtpHint(response.devOtp ? `Dev code: ${response.devOtp}` : null);
-        Alert.alert('Verify new email', `${response.message}${response.devOtp ? `\n\nDev code: ${response.devOtp}` : ''}`);
         await setSession({ token, user: nextUser });
         setSaving(false);
+
+        router.push({
+          pathname: '/auth/verify-email',
+          params: {
+            email: email.trim().toLowerCase(),
+            devOtp: response.devOtp || '',
+          },
+        });
         return;
-      }
-      if (emailChangePending && emailOtp.trim()) {
-        await verifyEmailChange(token, emailOtp.trim());
-        nextUser = { ...nextUser, email: email.trim().toLowerCase() };
-        setInitialEmail(email.trim().toLowerCase());
-        setEmailChangePending(false);
-        setEmailOtp('');
-        setDevOtpHint(null);
       }
       await setSession({ token, user: nextUser });
       showToast('Profile updated successfully!');
@@ -90,7 +84,7 @@ export default function EditProfileScreen() {
     } finally {
       setSaving(false);
     }
-  }, [token, user, fullName, photoUri, email, initialEmail, emailChangePending, emailOtp, setSession, router]);
+  }, [token, user, fullName, photoUri, email, initialEmail, setSession, router]);
 
   const displayPhoto = photoUri ?? existingPhotoUrl ?? null;
 
@@ -123,8 +117,6 @@ export default function EditProfileScreen() {
             </AppText>
           </View>
 
-          {devOtpHint ? <View style={styles.banner}><AuthInfoBanner message={devOtpHint} /></View> : null}
-
           {/* Form Section */}
           <View style={styles.formSection}>
             <AppInput
@@ -143,16 +135,6 @@ export default function EditProfileScreen() {
                 keyboardType="email-address"
               />
             </View>
-
-            {emailChangePending ? (
-              <AppInput
-                label="Verification Code"
-                value={emailOtp}
-                onChangeText={setEmailOtp}
-                placeholder="Enter verification code"
-                keyboardType="numeric"
-              />
-            ) : null}
           </View>
 
           <CustomButton

@@ -203,7 +203,7 @@ export default function ForgotPasswordScreen() {
     <View style={styles.root}>
       <LoginHeaderDecor />
 
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
@@ -264,11 +264,10 @@ export default function ForgotPasswordScreen() {
                 )}
               </View>
             </View>
+            <LoginFooterBar />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-
-      <LoginFooterBar />
     </View>
   );
 }

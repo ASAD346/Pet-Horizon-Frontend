@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../../ui/AppText';
 import { CustomButton } from '../../ui/AppButton';
 import { AuthTextField } from '../AuthTextField';
+import { OtpInput } from '../../shared/OtpInput';
 import { Palette, Spacing } from '../../../constants/theme';
 import type { ResetPasswordFieldErrors } from '../../../services/auth/validation';
 
@@ -64,15 +65,13 @@ export function ResetPasswordFormSection({
         editable={!email.trim()}
       />
 
-      <AuthTextField
-        placeholder="Reset code"
-        icon="keypad-outline"
+      <AppText variant="bodySmall" color={Palette.gray[600]} weight="700" style={{ marginTop: Spacing.sm }}>
+        Reset Code
+      </AppText>
+      <OtpInput
         value={otp}
-        onChangeText={onOtpChange}
-        keyboardType="number-pad"
-        compact={false}
+        onChange={onOtpChange}
         error={fieldErrors?.otp}
-        maxLength={6}
       />
 
       <AuthTextField

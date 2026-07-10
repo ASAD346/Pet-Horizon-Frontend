@@ -156,7 +156,7 @@ export default function SignupScreen() {
       <LoginHeaderDecor />
 
 
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.flex}
@@ -202,6 +202,7 @@ export default function SignupScreen() {
                   />
                 ) : (
                   <VerifyEmailFormSection
+                    email={email}
                     otp={otp}
                     loading={loading}
                     resendLoading={resendLoading}
@@ -212,7 +213,7 @@ export default function SignupScreen() {
                     }}
                     onVerify={handleVerify}
                     onResendCode={handleResendCode}
-                    onLogin={handleLogin}
+                    onBack={() => setStep('signup')}
                   />
                 )}
 
@@ -229,11 +230,10 @@ export default function SignupScreen() {
                 ) : null}
               </View>
             </View>
+            <LoginFooterBar />
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-
-      <LoginFooterBar />
     </View>
   );
 }
