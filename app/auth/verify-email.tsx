@@ -81,6 +81,7 @@ export default function VerifyEmailScreen() {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.flex}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -200}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -125,8 +126,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.xs,
-    paddingBottom: Spacing.lg,
-    justifyContent: 'space-between',
+    paddingBottom: 40,
   },
   contentWrapper: {
     width: '100%',
