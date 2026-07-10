@@ -13,11 +13,12 @@ interface AppInputProps {
   label: string;
   placeholder?: string;
   value: string;
-  onChangeText: (text: string) => void;
+  onChangeText?: (text: string) => void;
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   error?: string;
   style?: ViewStyle;
+  editable?: boolean;
 }
 
 export function AppInput({
@@ -29,6 +30,7 @@ export function AppInput({
   keyboardType = 'default',
   error,
   style,
+  editable = true,
 }: AppInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   
@@ -43,11 +45,12 @@ export function AppInput({
         {label.toUpperCase()}
       </AppText>
       <View 
+        pointerEvents={editable ? 'auto' : 'none'}
         style={[
           styles.inputContainer,
           { 
             borderColor: error ? Palette.error : (isFocused ? Palette.primary.base : Palette.gray[200]),
-            backgroundColor: isFocused ? Palette.white : Palette.gray[50],
+            backgroundColor: !editable ? '#E2E8F0' : (isFocused ? Palette.white : Palette.gray[50]),
           }
         ]}
       >
@@ -60,7 +63,10 @@ export function AppInput({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholderTextColor={Palette.gray[400]}
-          style={styles.input}
+          style={[styles.input, !editable && { color: Palette.gray[500] }]}
+          editable={editable}
+          selectTextOnFocus={editable}
+          caretHidden={!editable}
         />
       </View>
       {error && (

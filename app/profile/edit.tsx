@@ -130,9 +130,9 @@ export default function EditProfileScreen() {
               <AppInput
                 label="Email Address"
                 value={email}
-                onChangeText={setEmail}
                 placeholder="you@example.com"
                 keyboardType="email-address"
+                editable={false}
               />
             </View>
           </View>
