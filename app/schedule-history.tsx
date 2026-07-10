@@ -70,11 +70,16 @@ function formatTime(t?: string): string | null {
 
 function cleanText(str: string): string {
   if (!str) return '';
-  return str
+  let cleaned = str
     .replace(/_/g, ' ')
     .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
+
+  // Deduplicate redundant suffix combinations
+  cleaned = cleaned.replace(/Feed Feeding/gi, 'Feeding');
+  cleaned = cleaned.replace(/Walk Walk/gi, 'Walk');
+  return cleaned;
 }
 
 // ─── Unified Filter Bottom Sheet ──────────────────────────────────────────────
