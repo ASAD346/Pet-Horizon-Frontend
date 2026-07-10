@@ -172,7 +172,7 @@ export default function LoginScreen() {
     });
   }, [email, router]);
 
-  if (isBootstrapping || isAuthenticated) {
+  if (isBootstrapping) {
     return <AuthEntryLoader />;
   }
 

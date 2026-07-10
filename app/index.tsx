@@ -69,7 +69,7 @@ export default function GetStartedScreen() {
   useAuthEntryRedirect();
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: ReturnType<typeof setTimeout> | undefined;
     AsyncStorage.getItem('HAS_SEEN_ONBOARDING')
       .then((val) => {
         if (val === 'true') {
@@ -148,8 +148,12 @@ export default function GetStartedScreen() {
   const activeColors = SLIDES.map((slide) => slide.accentColor);
   const currentSlide = SLIDES[activeIndex] || SLIDES[0];
 
-  if (isBootstrapping || isAuthenticated || hasSeenOnboarding === null || hasSeenOnboarding === true) {
+  if (isBootstrapping || hasSeenOnboarding === null || (hasSeenOnboarding === true && !isAuthenticated)) {
     return <AuthEntryLoader />;
+  }
+
+  if (isAuthenticated) {
+    return null;
   }
 
   return (

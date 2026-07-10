@@ -21,8 +21,11 @@ export function AuthBootstrap() {
     dispatch(bootstrapAuth());
   }, [dispatch]);
 
+  const hasHiddenSplash = useRef(false);
+
   useEffect(() => {
-    if (!isBootstrapping) {
+    if (!isBootstrapping && !hasHiddenSplash.current) {
+      hasHiddenSplash.current = true;
       void SplashScreen.hideAsync();
     }
   }, [isBootstrapping]);
