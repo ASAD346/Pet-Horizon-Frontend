@@ -47,7 +47,7 @@ export function ScreenHeader({
         >
           <Ionicons
             name="chevron-back"
-            size={24} // Align with size 24 from ProfileScreenHeader
+            size={16} // Align with size 16 from ProfileScreenHeader
             color="#0E3821"
           />
         </TouchableOpacity>
@@ -141,9 +141,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',

@@ -66,7 +66,7 @@ export default function NotificationsScreen() {
 
             <View style={styles.headerRow}>
               <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color="#0E3821" />
+                <Ionicons name="chevron-back" size={16} color="#0E3821" />
               </TouchableOpacity>
               
               <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
@@ -74,8 +74,8 @@ export default function NotificationsScreen() {
               </AppText>
               
               <TouchableOpacity onPress={markAllRead} hitSlop={12} style={styles.markAllReadBtn}>
-                <AppText variant="caption" weight="800" color="#FFFFFF">
-                  Mark all
+                <AppText variant="bodySmall" weight="800" color="#FFFFFF">
+                  Mark all read
                 </AppText>
               </TouchableOpacity>
             </View>
@@ -99,9 +99,17 @@ export default function NotificationsScreen() {
           }
         >
           {items.length === 0 ? (
-            <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.empty}>
-              No notifications yet.
-            </AppText>
+            <View style={styles.emptyWrap}>
+              <View style={styles.emptyCircle}>
+                <Ionicons name="notifications-off-outline" size={32} color="#9CA3AF" />
+              </View>
+              <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.emptyTitle}>
+                No Notifications Yet
+              </AppText>
+              <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.emptyDesc}>
+                We'll notify you here about upcoming schedules, activity updates, and reminders.
+              </AppText>
+            </View>
           ) : (
             items.map((item) => (
               <TouchableOpacity
@@ -188,35 +196,41 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     height: 48,
     paddingBottom: 8,
+    position: 'relative',
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    position: 'absolute',
+    left: 0,
+    top: 9, // Center 30x30 button vertically in 48px header height (48 - 30) / 2 = 9
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: -Spacing.xs,
     borderWidth: 1,
     borderColor: '#E2EBE2',
+    zIndex: 10,
     ...Platform.select({
       ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
       android: { elevation: 2 },
     }),
   },
   headerTitle: {
-    flex: 1,
     fontSize: 18,
     color: '#FFFFFF',
     textAlign: 'center',
   },
   markAllReadBtn: {
-    minWidth: 60,
-    alignItems: 'flex-end',
+    position: 'absolute',
+    right: 0,
+    top: 4,
+    height: 40,
     justifyContent: 'center',
+    zIndex: 10,
   },
   headerDivider: {
     height: 1,
@@ -234,9 +248,29 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
-  empty: {
+  emptyWrap: {
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxl * 1.5,
+  },
+  emptyCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F1F5F9', // Clean gray/blue base
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+  },
+  emptyTitle: {
+    marginBottom: Spacing.xs,
     textAlign: 'center',
-    marginTop: Spacing.xxl,
+    fontSize: 16,
+  },
+  emptyDesc: {
+    lineHeight: 18,
+    textAlign: 'center',
+    maxWidth: 240,
   },
   card: {
     backgroundColor: HomeTheme.surface,

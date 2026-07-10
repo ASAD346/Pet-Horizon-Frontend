@@ -29,7 +29,7 @@ export function ProfileScreenHeader({
   return (
     <View style={styles.container}>
       <Pressable onPress={onBack} hitSlop={12} style={styles.backBtn}>
-        <Ionicons name="chevron-back" size={24} color="#0E3821" />
+        <Ionicons name="chevron-back" size={16} color="#0E3821" />
       </Pressable>
 
       <AppText variant="h3" weight="800" color="#0E3821" style={styles.title} numberOfLines={1}>
@@ -66,9 +66,9 @@ const styles = StyleSheet.create({
     backgroundColor: ProfileTheme.background,
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
