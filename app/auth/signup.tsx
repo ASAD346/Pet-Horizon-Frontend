@@ -152,99 +152,93 @@ export default function SignupScreen() {
   }, [router]);
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <LoginHeaderDecor />
 
-
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.flex}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
-            <View style={styles.contentWrapper}>
-              <View>
-                <LoginBranding compact={true} />
-              </View>
-
-              <View style={styles.formWrapper}>
-                {step === 'signup' ? (
-                  <SignupFormSection
-                    fullName={fullName}
-                    email={email}
-                    password={password}
-                    confirmPassword={confirmPassword}
-                    loading={loading}
-                    fieldErrors={fieldErrors as SignupFieldErrors}
-                    onFullNameChange={(text) => {
-                      setFullName(text);
-                      clearErrors();
-                    }}
-                    onEmailChange={(text) => {
-                      setEmail(text);
-                      clearErrors();
-                    }}
-                    onPasswordChange={(text) => {
-                      setPassword(text);
-                      clearErrors();
-                    }}
-                    onConfirmPasswordChange={(text) => {
-                      setConfirmPassword(text);
-                      clearErrors();
-                    }}
-                    onSignUp={handleSignUp}
-                    onLogin={handleLogin}
-                  />
-                ) : (
-                  <VerifyEmailFormSection
-                    email={email}
-                    otp={otp}
-                    loading={loading}
-                    resendLoading={resendLoading}
-                    fieldErrors={fieldErrors as VerifyEmailFieldErrors}
-                    onOtpChange={(text) => {
-                      setOtp(text.replace(/\D/g, '').slice(0, 6));
-                      clearErrors();
-                    }}
-                    onVerify={handleVerify}
-                    onResendCode={handleResendCode}
-                    onBack={() => setStep('signup')}
-                  />
-                )}
-
-                {step === 'signup' ? (
-                  <SocialLoginButtons
-                    compact={false}
-                    googleLoading={googleLoading}
-                    onGooglePress={() => {
-                      clearErrors();
-                      void handleGoogleSignIn(showToast);
-                    }}
-                    onApplePress={() => {}}
-                  />
-                ) : null}
-              </View>
+          <View style={styles.contentWrapper}>
+            <View>
+              <LoginBranding compact={true} />
             </View>
-            <LoginFooterBar />
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+
+            <View style={styles.formWrapper}>
+              {step === 'signup' ? (
+                <SignupFormSection
+                  fullName={fullName}
+                  email={email}
+                  password={password}
+                  confirmPassword={confirmPassword}
+                  loading={loading}
+                  fieldErrors={fieldErrors as SignupFieldErrors}
+                  onFullNameChange={(text) => {
+                    setFullName(text);
+                    clearErrors();
+                  }}
+                  onEmailChange={(text) => {
+                    setEmail(text);
+                    clearErrors();
+                  }}
+                  onPasswordChange={(text) => {
+                    setPassword(text);
+                    clearErrors();
+                  }}
+                  onConfirmPasswordChange={(text) => {
+                    setConfirmPassword(text);
+                    clearErrors();
+                  }}
+                  onSignUp={handleSignUp}
+                  onLogin={handleLogin}
+                />
+              ) : (
+                <VerifyEmailFormSection
+                  email={email}
+                  otp={otp}
+                  loading={loading}
+                  resendLoading={resendLoading}
+                  fieldErrors={fieldErrors as VerifyEmailFieldErrors}
+                  onOtpChange={(text) => {
+                    setOtp(text.replace(/\D/g, '').slice(0, 6));
+                    clearErrors();
+                  }}
+                  onVerify={handleVerify}
+                  onResendCode={handleResendCode}
+                  onBack={() => setStep('signup')}
+                />
+              )}
+
+              {step === 'signup' ? (
+                <SocialLoginButtons
+                  compact={false}
+                  googleLoading={googleLoading}
+                  onGooglePress={() => {
+                    clearErrors();
+                    void handleGoogleSignIn(showToast);
+                  }}
+                  onApplePress={() => {}}
+                />
+              ) : null}
+            </View>
+          </View>
+          <LoginFooterBar />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#FFF9F5',
-  },
   safeArea: {
     flex: 1,
+    backgroundColor: '#FFF9F5',
   },
   flex: {
     flex: 1,
@@ -254,12 +248,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.xs,
     paddingBottom: Spacing.lg,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
   contentWrapper: {
     width: '100%',
     alignItems: 'center',
     gap: Spacing.sm,
+    flex: 1,
+    justifyContent: 'center',
   },
   formWrapper: {
     width: '100%',

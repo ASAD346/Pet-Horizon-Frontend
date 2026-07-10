@@ -75,20 +75,20 @@ export default function VerifyEmailScreen() {
   }, [router]);
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <LoginHeaderDecor />
 
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.flex}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-            bounces={false}
-          >
+          <View style={styles.contentWrapper}>
             <View style={styles.formWrapper}>
               <VerifyEmailFormSection
                 email={email}
@@ -105,21 +105,18 @@ export default function VerifyEmailScreen() {
                 onBack={handleBack}
               />
             </View>
-            <LoginFooterBar />
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </View>
+          </View>
+          <LoginFooterBar />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: '#FFF9F5',
-  },
   safeArea: {
     flex: 1,
+    backgroundColor: '#FFF9F5',
   },
   flex: {
     flex: 1,
@@ -129,6 +126,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.xs,
     paddingBottom: Spacing.lg,
+    justifyContent: 'space-between',
+  },
+  contentWrapper: {
+    width: '100%',
+    flex: 1,
     justifyContent: 'center',
   },
   formWrapper: {
