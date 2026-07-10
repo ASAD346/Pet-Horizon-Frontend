@@ -294,7 +294,7 @@ const ActivityCard = React.memo(function ActivityCard({
           </AppText>
           
           <View style={styles.metaRow}>
-            <AppText variant="caption" weight="800" color={brandColor} style={styles.kindLabel}>
+            <AppText variant="caption" weight="800" color={brandColor} style={styles.kindLabel} numberOfLines={1}>
               {category.toUpperCase()}
             </AppText>
             <AppText variant="caption" color={Palette.gray[400]}>•  {timeStr}</AppText>
@@ -769,6 +769,7 @@ const styles = StyleSheet.create({
   kindLabel: {
     fontSize: 9,
     letterSpacing: 0.4,
+    flexShrink: 0,
   },
   cardRight: {
     flexDirection: 'row',

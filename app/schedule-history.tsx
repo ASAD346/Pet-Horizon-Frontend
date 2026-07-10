@@ -239,7 +239,7 @@ const ScheduleCard = React.memo(function ScheduleCard({
           </AppText>
           
           <View style={styles.metaRow}>
-            <AppText variant="caption" weight="800" color={brandColor} style={styles.kindLabel}>
+            <AppText variant="caption" weight="800" color={brandColor} style={styles.kindLabel} numberOfLines={1}>
               {item.kind.toUpperCase()}
             </AppText>
             {timeLabel && (
@@ -682,6 +682,7 @@ const styles = StyleSheet.create({
   kindLabel: {
     fontSize: 9,
     letterSpacing: 0.4,
+    flexShrink: 0,
   },
   cardRight: {
     flexDirection: 'row',
