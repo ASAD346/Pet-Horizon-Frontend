@@ -32,6 +32,11 @@ export async function registerPushToken(authToken: string): Promise<string | nul
     return null;
   }
 
+  // Print the full token for easy copy-paste testing in development
+  if (__DEV__) {
+    console.log('🔥 [FCM Device Token]:', fcmToken);
+  }
+
   try {
     const platform = Platform.OS === 'ios' ? 'ios' : 'android';
     await registerDeviceToken(authToken, fcmToken, platform);
