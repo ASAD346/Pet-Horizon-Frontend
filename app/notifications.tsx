@@ -48,8 +48,12 @@ export default function NotificationsScreen() {
 
   const shadowColor = isPremium ? '#082113' : '#1B5E20';
 
+  const screenBg = isPremium ? '#FFFDF0' : '#F5F6F8';
+  const emptyCircleBg = isPremium ? 'rgba(212, 160, 23, 0.1)' : '#F3F4F6';
+  const iconColor = isPremium ? '#D4A017' : '#9CA3AF';
+
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: screenBg }]} edges={[]}>
       <View style={[styles.headerWrapper, { shadowColor }]}>
         <View style={styles.curveClipper}>
           <LinearGradient
@@ -100,8 +104,8 @@ export default function NotificationsScreen() {
         >
           {items.length === 0 ? (
             <View style={styles.emptyWrap}>
-              <View style={styles.emptyCircle}>
-                <Ionicons name="notifications-off-outline" size={32} color="#9CA3AF" />
+              <View style={[styles.emptyCircle, { backgroundColor: emptyCircleBg }]}>
+                <Ionicons name="notifications-off-outline" size={32} color={iconColor} />
               </View>
               <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.emptyTitle}>
                 No Notifications Yet
