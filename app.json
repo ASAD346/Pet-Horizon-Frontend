@@ -70,7 +70,7 @@
       "favicon": "./assets/images/app-icon.png"
     },
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/app-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#10B981"
     },
@@ -85,11 +85,11 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#10B981",
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/app-icon.png",
           "imageWidth": 200,
           "dark": {
             "backgroundColor": "#10B981",
-            "image": "./assets/images/splash-icon.png",
+            "image": "./assets/images/app-icon.png",
             "imageWidth": 200
           }
         }

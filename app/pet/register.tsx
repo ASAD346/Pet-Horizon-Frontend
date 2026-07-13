@@ -60,7 +60,7 @@ export default function RegisterPetScreen() {
   const isAddMode = params.mode === 'add';
   const isEditMode = params.mode === 'edit' && Boolean(params.petId);
   const editPetId = Array.isArray(params.petId) ? params.petId[0] : params.petId;
-  const { token, user, setSession } = useAuth();
+  const { token, user, logout, setSession } = useAuth();
   const { showToast, showSuccessToast, showErrorToast } = useToast();
   const queryClient = useQueryClient();
 
