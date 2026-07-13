@@ -37,9 +37,10 @@ export function addMinutesToTimeHHmm(hhmm: string, minutes: number): string {
   return `${h}:${m}`;
 }
 
+import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+
 export function getMealTypeLabel(value: string): string {
-  const found = MEAL_TYPE_OPTIONS.find((o) => o.value === value.toLowerCase());
-  return found?.label ?? formatMealTypeLabel(value);
+  return getTaskDisplayName(value);
 }
 
 /** Display label for non-standard API meal types. */

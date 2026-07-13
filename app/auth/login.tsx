@@ -17,7 +17,7 @@ import {
   LoginHeaderDecor,
   SocialLoginButtons,
 } from '@/components/auth/login';
-import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
+import { useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
 import { getAuthLoginErrorMessage } from '@/lib/auth/authErrors';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
@@ -173,7 +173,7 @@ export default function LoginScreen() {
   }, [email, router]);
 
   if (isBootstrapping) {
-    return <AuthEntryLoader />;
+    return null;
   }
 
   return (

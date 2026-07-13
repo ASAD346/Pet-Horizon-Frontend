@@ -7,9 +7,11 @@ import {
   getMealTypeLabel,
 } from '@/lib/feeding/feedingForm';
 
+import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+
 export function feedingScheduleTitle(item: FeedingScheduleItem): string {
   const mealType = item.metadata?.mealType;
-  if (mealType) return getMealTypeLabel(mealType);
+  if (mealType) return getTaskDisplayName(mealType);
   return item.title.replace(/\s+Feeding$/i, '') || item.title;
 }
 

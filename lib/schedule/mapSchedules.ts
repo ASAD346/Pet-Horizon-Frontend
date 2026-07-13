@@ -230,6 +230,8 @@ export function buildScheduleSectionsState(
   };
 }
 
+import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+
 type ScheduleEntry =
   | FeedingEntryState
   | WalkEntryState
@@ -240,17 +242,17 @@ type ScheduleEntry =
 export function scheduleEntryTitle(key: ScheduleSectionKey, entry: ScheduleEntry): string {
   switch (key) {
     case 'feeding':
-      return getMealTypeLabel((entry as FeedingEntryState).mealType) || 'Feeding';
+      return getTaskDisplayName((entry as FeedingEntryState).mealType) || 'Feeding';
     case 'walk': {
       const walk = entry as WalkEntryState;
-      return `${getWalkTimeLabel(walk.walkTime)} Walk`;
+      return `${getTaskDisplayName(walk.walkTime)} Walk`;
     }
     case 'medicine':
       return (entry as MedicineEntryState).medicineName.trim() || 'Medicine';
     case 'vaccination':
       return (entry as VaccinationEntryState).vaccineName.trim() || 'Vaccination';
     case 'grooming':
-      return groomingTypeLabel((entry as GroomingEntryState).groomingType) || 'Grooming';
+      return getTaskDisplayName((entry as GroomingEntryState).groomingType) || 'Grooming';
     default:
       return 'Schedule';
   }

@@ -13,9 +13,11 @@ interface GroomingAlertsRowProps {
   onAlertPress?: (record: GroomingRecord) => void;
 }
 
+import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+
 function groomingTypeLabel(type: string): string {
   if (!type) return 'Grooming';
-  return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, ' ');
+  return getTaskDisplayName(type);
 }
 
 function getGroomingIcon(type: string): React.ComponentProps<typeof Ionicons>['name'] {

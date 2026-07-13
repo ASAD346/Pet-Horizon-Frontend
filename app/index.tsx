@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dimensions, StyleSheet, View, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AuthEntryLoader, useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
+import { useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
 import { useAuth } from '@/hooks/useAuth';
 import { AppText } from '../components/ui/AppText';
 import { Palette, Spacing, Radius } from '../constants/theme';
@@ -149,7 +149,7 @@ export default function GetStartedScreen() {
   const currentSlide = SLIDES[activeIndex] || SLIDES[0];
 
   if (isBootstrapping || hasSeenOnboarding === null || (hasSeenOnboarding === true && !isAuthenticated)) {
-    return <AuthEntryLoader />;
+    return null;
   }
 
   if (isAuthenticated) {

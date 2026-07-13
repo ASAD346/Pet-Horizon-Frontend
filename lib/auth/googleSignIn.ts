@@ -3,7 +3,7 @@ import { isExpoGo } from '@/lib/runtime/isExpoGo';
 /** Android OAuth client (package + SHA-1 in Google Cloud Console). */
 export const GOOGLE_ANDROID_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID?.trim() ||
-  '162625002184-j28egm3lo9ugaeem48pp0enuc32snv82.apps.googleusercontent.com';
+  '162625002184-jgchdof16dl3otkkfto07ap9549itj50.apps.googleusercontent.com';
 
 /**
  * Web OAuth client — required for Android to return an ID token.
@@ -11,7 +11,7 @@ export const GOOGLE_ANDROID_CLIENT_ID =
  */
 export const GOOGLE_WEB_CLIENT_ID =
   process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ||
-  '162625002184-7od2ds6dt24bt7cs23825jkoafidov8f.apps.googleusercontent.com';
+  '162625002184-l2gck6jqt4qovmr9e1f6b1h8cntafvjt.apps.googleusercontent.com';
 
 const EXPO_GO_MESSAGE =
   'Continue with Google requires the Pet Horizon APK (EAS build). It does not work in Expo Go — install the latest APK on your phone.';

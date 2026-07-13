@@ -14,10 +14,10 @@ export const WALK_TIME_OPTIONS = [
   { value: 'night', label: 'Night' },
 ] as const;
 
+import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+
 export function getWalkTimeLabel(value: string): string {
-  const found = WALK_TIME_OPTIONS.find((o) => o.value === value.toLowerCase());
-  if (found) return found.label;
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  return getTaskDisplayName(value);
 }
 
 export function defaultWalkTimeDate(): Date {

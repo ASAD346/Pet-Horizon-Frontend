@@ -20,9 +20,8 @@ export function defaultScheduledDate(): Date {
   return d;
 }
 
+import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+
 export function groomingTypeLabel(value: string): string {
-  return value
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+  return getTaskDisplayName(value);
 }
