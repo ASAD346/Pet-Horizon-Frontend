@@ -14,7 +14,7 @@ export const WALK_TIME_OPTIONS = [
   { value: 'night', label: 'Night' },
 ] as const;
 
-import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 export function getWalkTimeLabel(value: string): string {
   return getTaskDisplayName(value);

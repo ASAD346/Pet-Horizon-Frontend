@@ -7,7 +7,7 @@ import {
   getMealTypeLabel,
 } from '@/lib/feeding/feedingForm';
 
-import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 export function feedingScheduleTitle(item: FeedingScheduleItem): string {
   const mealType = item.metadata?.mealType;

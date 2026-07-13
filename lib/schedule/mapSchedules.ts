@@ -230,7 +230,7 @@ export function buildScheduleSectionsState(
   };
 }
 
-import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 type ScheduleEntry =
   | FeedingEntryState

@@ -72,7 +72,7 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#2E7D32"
+      "backgroundColor": "#10B981"
     },
     "plugins": [
       [
@@ -84,11 +84,11 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#2E7D32",
+          "backgroundColor": "#10B981",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "dark": {
-            "backgroundColor": "#2E7D32",
+            "backgroundColor": "#10B981",
             "image": "./assets/images/splash-icon.png",
             "imageWidth": 200
           }

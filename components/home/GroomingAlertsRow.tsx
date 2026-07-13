@@ -13,7 +13,7 @@ interface GroomingAlertsRowProps {
   onAlertPress?: (record: GroomingRecord) => void;
 }
 
-import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 function groomingTypeLabel(type: string): string {
   if (!type) return 'Grooming';

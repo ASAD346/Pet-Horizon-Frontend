@@ -37,7 +37,7 @@ export function addMinutesToTimeHHmm(hhmm: string, minutes: number): string {
   return `${h}:${m}`;
 }
 
-import { getTaskDisplayName } from '@/lib/schedule/taskMappings';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 export function getMealTypeLabel(value: string): string {
   return getTaskDisplayName(value);
