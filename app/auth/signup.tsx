@@ -229,8 +229,8 @@ export default function SignupScreen() {
               ) : null}
             </View>
           </View>
-          <LoginFooterBar />
         </ScrollView>
+        <LoginFooterBar />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

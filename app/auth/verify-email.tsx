@@ -107,8 +107,8 @@ export default function VerifyEmailScreen() {
               />
             </View>
           </View>
-          <LoginFooterBar />
         </ScrollView>
+        <LoginFooterBar />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

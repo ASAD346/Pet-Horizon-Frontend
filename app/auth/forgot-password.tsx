@@ -264,8 +264,8 @@ export default function ForgotPasswordScreen() {
               )}
             </View>
           </View>
-          <LoginFooterBar />
         </ScrollView>
+        <LoginFooterBar />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

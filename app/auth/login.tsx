@@ -229,8 +229,8 @@ export default function LoginScreen() {
               />
             </View>
           </View>
-          <LoginFooterBar />
         </ScrollView>
+        <LoginFooterBar />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
