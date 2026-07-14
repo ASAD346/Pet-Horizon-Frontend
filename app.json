@@ -12,7 +12,13 @@
       "supportsTablet": true,
       "associatedDomains": [
         "applinks:pethorizon.app"
-      ]
+      ],
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
+      }
     },
     "android": {
       "adaptiveIcon": {

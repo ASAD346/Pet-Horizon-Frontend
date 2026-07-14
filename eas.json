@@ -11,7 +11,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://16.171.154.65/v1",
+        "EXPO_PUBLIC_API_URL": "http://16.171.1.50/v1",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "162625002184-jgchdof16dl3otkkfto07ap9549itj50.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "162625002184-l2gck6jqt4qovmr9e1f6b1h8cntafvjt.apps.googleusercontent.com"
       }
@@ -23,7 +23,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://16.171.154.65/v1",
+        "EXPO_PUBLIC_API_URL": "http://16.171.1.50/v1",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "162625002184-jgchdof16dl3otkkfto07ap9549itj50.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "162625002184-l2gck6jqt4qovmr9e1f6b1h8cntafvjt.apps.googleusercontent.com"
       }
@@ -34,7 +34,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://16.171.154.65/v1",
+        "EXPO_PUBLIC_API_URL": "http://16.171.1.50/v1",
         "EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID": "162625002184-jgchdof16dl3otkkfto07ap9549itj50.apps.googleusercontent.com",
         "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "162625002184-l2gck6jqt4qovmr9e1f6b1h8cntafvjt.apps.googleusercontent.com"
       }
