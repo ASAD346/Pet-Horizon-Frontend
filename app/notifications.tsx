@@ -19,6 +19,17 @@ import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonNotificationList } from '@/components/ui/skeletons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+function cleanNotificationText(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/Feed Feeding/gi, 'Feeding')
+    .replace(/Walk Walking/gi, 'Walking')
+    .replace(/Walk Walk/gi, 'Walk')
+    .replace(/feed feeding/gi, 'feeding')
+    .replace(/walk walking/gi, 'walking')
+    .replace(/walk walk/gi, 'walk');
+}
+
 export default function NotificationsScreen() {
   const router = useRouter();
   const { token } = useAuth();
@@ -124,13 +135,13 @@ export default function NotificationsScreen() {
               >
                 <View style={styles.cardHeader}>
                   <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                    {item.title}
+                    {cleanNotificationText(item.title)}
                   </AppText>
                   {!item.isRead ? <View style={styles.dot} /> : null}
                 </View>
                 {item.body ? (
                   <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
-                    {item.body}
+                    {cleanNotificationText(item.body)}
                   </AppText>
                 ) : null}
                 {item.createdAt ? (

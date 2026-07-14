@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react'
 import { Alert, ScrollView, StyleSheet, View, AppState } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
+import { useNotificationStore } from '@/context/NotificationContext';
 
 import { StatusBar } from 'expo-status-bar';
 import { useIsFocused } from '@react-navigation/native';
@@ -198,7 +199,15 @@ export default function HomeScreen() {
   const groomingRecords = dashboardData?.todaySchedules?.grooming ?? [];
   const vaccinationSchedules = dashboardData?.todaySchedules?.vaccination ?? [];
   const dashboardTasks = dashboardData?.upcomingTasks ?? [];
-  const unreadCount = dashboardData?.notifications?.unreadCount ?? 0;
+  const { unreadCount: globalUnreadCount, setUnreadCount } = useNotificationStore();
+
+  useEffect(() => {
+    if (dashboardData?.notifications?.unreadCount !== undefined) {
+      setUnreadCount(dashboardData.notifications.unreadCount);
+    }
+  }, [dashboardData?.notifications?.unreadCount, setUnreadCount]);
+
+  const unreadCount = globalUnreadCount;
   
   const scheduleLoading = dashboardLoading || !isDataFresh;
 
@@ -327,6 +336,14 @@ export default function HomeScreen() {
         : (entry.userId?.fullName ? entry.userId.fullName : 'A family member');
       
       let actionText = entry.note ? entry.note.trim() : `logged ${category}`;
+      // Deduplicate redundant suffix combinations
+      actionText = actionText.replace(/Feed Feeding/gi, 'Feeding');
+      actionText = actionText.replace(/Walk Walking/gi, 'Walking');
+      actionText = actionText.replace(/Walk Walk/gi, 'Walk');
+      actionText = actionText.replace(/feed feeding/gi, 'feeding');
+      actionText = actionText.replace(/walk walking/gi, 'walking');
+      actionText = actionText.replace(/walk walk/gi, 'walk');
+
       if (actionText.toLowerCase().startsWith('completed')) {
         actionText = actionText.replace(/^[Cc]ompleted\s*/, 'completed ');
       } else if (actionText.toLowerCase().startsWith('skipped')) {

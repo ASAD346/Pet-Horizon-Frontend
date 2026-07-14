@@ -87,7 +87,11 @@ function cleanText(str: string): string {
 
   // Deduplicate redundant suffix combinations
   cleaned = cleaned.replace(/Feed Feeding/gi, 'Feeding');
+  cleaned = cleaned.replace(/Walk Walking/gi, 'Walking');
   cleaned = cleaned.replace(/Walk Walk/gi, 'Walk');
+  cleaned = cleaned.replace(/feed feeding/gi, 'feeding');
+  cleaned = cleaned.replace(/walk walking/gi, 'walking');
+  cleaned = cleaned.replace(/walk walk/gi, 'walk');
   return cleaned;
 }
 

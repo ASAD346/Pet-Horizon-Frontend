@@ -70,3 +70,18 @@ export async function deleteNotification(
     throw error;
   }
 }
+
+export async function fetchUnreadCount(token: string): Promise<{ unreadCount: number }> {
+  log.info(SCOPE, 'GET /notifications/unread-count');
+  try {
+    const data = await apiRequest<{ unreadCount: number }>(
+      '/notifications/unread-count',
+      { token },
+    );
+    log.ok(SCOPE, 'Unread count fetched', data);
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Fetch unread count failed', getErrorMessage(error));
+    throw error;
+  }
+}

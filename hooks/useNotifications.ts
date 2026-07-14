@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -9,16 +9,13 @@ import {
 } from '@/services/notifications/notificationApi';
 import type { ApiNotification } from '@/types/notification';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
+import { useNotificationStore } from '@/context/NotificationContext';
 
 export function useNotifications(token: string | null) {
   const [items, setItems] = useState<ApiNotification[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const unreadCount = useMemo(
-    () => items.filter((item) => !item.isRead).length,
-    [items],
-  );
+  const { unreadCount, setUnreadCount, decrementUnreadCount, clearBadge } = useNotificationStore();
 
   const load = useCallback(async () => {
     if (!token) return [];
@@ -32,6 +29,8 @@ export function useNotifications(token: string | null) {
     onSuccess: (rows) => {
       setItems(rows);
       setError(null);
+      const computedUnread = rows.filter((item) => !item.isRead).length;
+      setUnreadCount(computedUnread);
     },
     onClear: () => {
       setItems([]);
@@ -50,17 +49,25 @@ export function useNotifications(token: string | null) {
   const markRead = useCallback(
     async (id: string) => {
       if (!token) return;
+      // Optimistic update
+      decrementUnreadCount();
+      setItems((prev) =>
+        prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
+      );
       await markNotificationRead(token, id);
       await reload();
     },
-    [token, reload],
+    [token, reload, decrementUnreadCount],
   );
 
   const markAllRead = useCallback(async () => {
     if (!token) return;
+    // Optimistic update
+    clearBadge();
+    setItems((prev) => prev.map((item) => ({ ...item, isRead: true })));
     await markAllNotificationsRead(token);
     await reload();
-  }, [token, reload]);
+  }, [token, reload, clearBadge]);
 
   const remove = useCallback(
     async (id: string) => {

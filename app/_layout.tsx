@@ -8,9 +8,13 @@ import 'react-native-reanimated';
 import { AuthBootstrap } from '@/components/auth/AuthBootstrap';
 import { PushNotificationRegistrar } from '@/components/PushNotificationRegistrar';
 import { ToastHost } from '@/components/ui/ToastHost';
-import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
+import { ensureNotificationHandler, registerBackgroundFetchAsync } from '@/lib/push/notificationSetup';
 import { store } from '@/redux/store';
 import { useColorScheme } from '../hooks/use-color-scheme';
+import { AppState } from 'react-native';
+import React, { useEffect } from 'react';
+import { NotificationProvider, useNotificationStore } from '@/context/NotificationContext';
+import { useAuth } from '@/hooks/useAuth';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -31,6 +35,25 @@ export const queryClient = new QueryClient({
 
 function InnerLayout() {
   const colorScheme = useColorScheme();
+  const { token } = useAuth();
+  const { syncWithServer } = useNotificationStore();
+
+  useEffect(() => {
+    // Initial sync
+    if (token) {
+      syncWithServer(token).catch(() => {});
+      registerBackgroundFetchAsync().catch(() => {});
+    }
+  }, [token, syncWithServer]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active' && token) {
+        syncWithServer(token).catch(() => {});
+      }
+    });
+    return () => subscription.remove();
+  }, [token, syncWithServer]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
@@ -59,9 +82,11 @@ export default function RootLayout() {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
-          <AuthBootstrap />
-          <ToastHost />
-          <InnerLayout />
+          <NotificationProvider>
+            <AuthBootstrap />
+            <ToastHost />
+            <InnerLayout />
+          </NotificationProvider>
         </SafeAreaProvider>
       </QueryClientProvider>
     </Provider>

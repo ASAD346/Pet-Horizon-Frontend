@@ -104,6 +104,15 @@ export function formatEntryTitle(entry: ApiJournalEntry): string {
     note = note.slice(13).trim();
     if (note.startsWith(':')) note = note.slice(1).trim();
   }
+  
+  // Deduplicate redundant suffix combinations
+  note = note.replace(/Feed Feeding/gi, 'Feeding');
+  note = note.replace(/Walk Walking/gi, 'Walking');
+  note = note.replace(/Walk Walk/gi, 'Walk');
+  note = note.replace(/feed feeding/gi, 'feeding');
+  note = note.replace(/walk walking/gi, 'walking');
+  note = note.replace(/walk walk/gi, 'walk');
+
   if (note) {
     note = note.charAt(0).toUpperCase() + note.slice(1);
     return note;

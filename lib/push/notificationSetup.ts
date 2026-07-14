@@ -123,3 +123,68 @@ export async function acquireDevicePushToken(): Promise<string | null> {
     return null;
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Background Fetch & Task Manager
+// ─────────────────────────────────────────────────────────────
+import * as BackgroundFetch from 'expo-background-fetch';
+import * as TaskManager from 'expo-task-manager';
+import AsyncStorageStatic from '@react-native-async-storage/async-storage';
+
+export const BACKGROUND_FETCH_TASK = 'BACKGROUND-NOTIFICATION-FETCH';
+
+TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+  const now = new Date();
+  log.info('BackgroundFetch', `Background fetch run at ${now.toISOString()}`);
+  try {
+    // Sync notifications from server or update local badge count
+    const token = await AsyncStorageStatic.getItem('auth_token');
+    if (token) {
+      // Trigger background scheduler run on backend
+      const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:5000/api';
+      await fetch(`${baseUrl}/notifications/tick`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => {});
+
+      const response = await fetch(`${baseUrl}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const items = Array.isArray(data) ? data : (data.items || []);
+        const unreadCount = items.filter((item: any) => !item.isRead).length;
+        await AsyncStorageStatic.setItem('unread_notification_count', String(unreadCount));
+        
+        // Update local app icon badge via expo-notifications
+        const Notifications = await getNotificationsModule();
+        await Notifications.setBadgeCountAsync(unreadCount);
+        
+        log.ok('BackgroundFetch', 'Background badge count updated', { unreadCount });
+        return BackgroundFetch.BackgroundFetchResult.NewData;
+      }
+    }
+    return BackgroundFetch.BackgroundFetchResult.NoData;
+  } catch (err) {
+    log.fail('BackgroundFetch', 'Background fetch execution failed', err instanceof Error ? err.message : String(err));
+    return BackgroundFetch.BackgroundFetchResult.Failed;
+  }
+});
+
+export async function registerBackgroundFetchAsync(): Promise<void> {
+  if (isExpoGo() || Platform.OS === 'web') return;
+  try {
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
+    if (!isRegistered) {
+      await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+        minimumInterval: 15 * 60, // 15 minutes
+        stopOnTerminate: false,
+        startOnBoot: true,
+      });
+      log.ok('BackgroundFetch', 'Background Fetch task registered successfully');
+    }
+  } catch (err) {
+    log.fail('BackgroundFetch', 'Failed to register background fetch task', err instanceof Error ? err.message : String(err));
+  }
+}
+
