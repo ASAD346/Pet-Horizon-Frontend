@@ -22,6 +22,7 @@ import { getAuthLoginErrorMessage } from '@/lib/auth/authErrors';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/api/errors';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 import { log } from '@/lib/log';
 import { Spacing } from '@/constants/theme';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
@@ -127,6 +128,9 @@ export default function LoginScreen() {
 
     loginInFlightRef.current = true;
     setLoading(true);
+
+    const targetUrl = `${API_BASE_URL}${API_ENDPOINTS.auth.login}`;
+    console.log(`[Login Submit] Hitting API endpoint URL: ${targetUrl}`);
 
     try {
       const session = await login(email, password);

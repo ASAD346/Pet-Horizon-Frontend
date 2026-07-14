@@ -23,6 +23,7 @@ import {
   resendVerificationEmail,
   verifyEmail,
 } from '@/services/auth/authApi';
+import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 import {
   validateEmailOnly,
   validateSignupForm,
@@ -95,6 +96,9 @@ export default function SignupScreen() {
 
     setLoading(true);
 
+    const targetUrl = `${API_BASE_URL}${API_ENDPOINTS.auth.register}`;
+    console.log(`[Signup Submit] Hitting API endpoint URL: ${targetUrl}`);
+
     try {
       const result = await registerAccount({ fullName, email, password });
       log.ok('Signup', 'Account created — verify next', { userId: result.userId });
@@ -112,6 +116,9 @@ export default function SignupScreen() {
     clearErrors();
 
     setLoading(true);
+
+    const targetUrl = `${API_BASE_URL}${API_ENDPOINTS.auth.verifyEmail}`;
+    console.log(`[Verify OTP Submit] Hitting API endpoint URL: ${targetUrl}`);
 
     try {
       const result = await verifyEmail({ email, otp });

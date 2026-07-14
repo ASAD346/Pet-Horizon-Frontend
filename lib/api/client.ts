@@ -120,6 +120,9 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   } catch (error) {
     clearTimeout(timeoutId);
 
+    // Debug log the exact network error caught by fetch
+    console.error(`[API Network Error] Path: ${path}, URL: ${url}, Error Details:`, error);
+
     if (error instanceof ApiError) {
       throw error;
     }
