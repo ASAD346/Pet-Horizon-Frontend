@@ -90,7 +90,7 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "dark": {
-            "backgroundColor": "#121212",
+            "backgroundColor": "#FFF9F5",
             "image": "./assets/images/logo.png",
             "imageWidth": 200
           }

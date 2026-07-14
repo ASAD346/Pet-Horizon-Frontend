@@ -35,7 +35,7 @@ export const queryClient = new QueryClient({
 
 function InnerLayout() {
   const colorScheme = useColorScheme();
-  const { token } = useAuth();
+  const { token, isBootstrapping } = useAuth();
   const { syncWithServer } = useNotificationStore();
 
   useEffect(() => {

@@ -5,6 +5,7 @@ import { selectAuthToken, selectIsBootstrapping } from '@/redux/reducer';
 import { useQueryClient } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { useTimezone } from '@/hooks/useTimezone';
+import { runServerConnectionTest } from '@/lib/api/connectionTest';
 
 export function AuthBootstrap() {
   useTimezone();
@@ -19,6 +20,7 @@ export function AuthBootstrap() {
     if (hasBootstrapped.current) return;
     hasBootstrapped.current = true;
     dispatch(bootstrapAuth());
+    void runServerConnectionTest();
   }, [dispatch]);
 
   const hasHiddenSplash = useRef(false);
