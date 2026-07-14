@@ -120,12 +120,12 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   } catch (error) {
     clearTimeout(timeoutId);
 
-    // Debug log the exact network error caught by fetch
-    console.error(`[API Network Error] Path: ${path}, URL: ${url}, Error Details:`, error);
-
     if (error instanceof ApiError) {
       throw error;
     }
+
+    // Log actual network handshake/DNS/connectivity errors without triggering red screen overlay
+    console.warn(`[API Network Connection Error] Path: ${path}, URL: ${url}, Error Details:`, error);
 
     if (error instanceof Error && error.name === 'AbortError') {
       const hint = __DEV__ ? ` (${API_BASE_URL})` : '';
