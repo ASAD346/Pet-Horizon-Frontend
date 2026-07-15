@@ -80,7 +80,7 @@
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#5CB35D"
+      "backgroundColor": "#FFFFFF"
     },
     "plugins": [
       [
@@ -92,13 +92,13 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#5CB35D",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/logo.png",
-          "imageWidth": 200,
+          "imageWidth": 300,
           "dark": {
-            "backgroundColor": "#5CB35D",
+            "backgroundColor": "#FFFFFF",
             "image": "./assets/images/logo.png",
-            "imageWidth": 200
+            "imageWidth": 300
           }
         }
       ],
