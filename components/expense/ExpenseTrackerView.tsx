@@ -111,6 +111,26 @@ export function ExpenseTrackerView({
     setRefreshing(false);
   };
 
+  const awaitingPet = petLoading && !pet;
+
+  if (awaitingPet) {
+    return (
+      <View style={styles.safeArea}>
+        <ExpenseTrackerHeader
+          notificationCount={unreadCount}
+          onJournalPress={canViewJournal ? onJournalPress : undefined}
+          onNotificationsPress={onNotificationsPress}
+          showJournal={canViewJournal}
+          isPremium={isPremium}
+          topInset={insets.top}
+          selectedMonthLabel={selectedMonthLabel}
+          onDatePress={() => setMonthPickerVisible(true)}
+        />
+        <SkeletonExpenseTracker />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.safeArea}>
       <ExpenseTrackerHeader
@@ -132,10 +152,6 @@ export function ExpenseTrackerView({
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
         }
       >
-
-        {petLoading && !pet ? (
-          <SkeletonExpenseTracker />
-        ) : null}
 
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from the Home tab to start tracking their expenses and budget." />

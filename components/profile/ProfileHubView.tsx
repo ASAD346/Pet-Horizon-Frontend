@@ -28,6 +28,7 @@ import { ProfileMenuRow, ProfileMenuSection } from './ProfileMenuRow';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
 import { HeaderActionButtons } from '@/components/ui/HeaderActionButtons';
+import { SkeletonProfileHub } from '@/components/ui/skeletons';
 import { ProfileTheme } from './profileTheme';
 import { useFocusReload, useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
@@ -174,6 +175,14 @@ export function ProfileHubView() {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
+
+  if (loading && !user?._id) {
+    return (
+      <View style={styles.container}>
+        <SkeletonProfileHub />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

@@ -20,6 +20,7 @@ import { ScheduleScreenHeader } from './ScheduleScreenHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SkeletonScheduleSetup } from '@/components/ui/skeletons';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
@@ -606,6 +607,22 @@ export function ScheduleSetupView({
 
   const insets = useSafeAreaInsets();
 
+  if (awaitingPet) {
+    return (
+      <View style={styles.container}>
+        <ScheduleScreenHeader
+          notificationCount={unreadCount}
+          onNotificationsPress={onNotificationsPress}
+          onJournalPress={canViewJournal ? onJournalPress : undefined}
+          showJournal={canViewJournal}
+          isPremium={isPremium}
+          topInset={insets.top}
+        />
+        <SkeletonScheduleSetup />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <ScheduleScreenHeader
@@ -655,11 +672,7 @@ export function ScheduleSetupView({
 
           {accessBannerMessage ? <View style={{ marginVertical: 12, padding: 12, backgroundColor: '#E3F2FD', borderRadius: 8 }}><AppText variant="caption">{accessBannerMessage}</AppText></View> : null}
 
-          {awaitingPet ? (
-            <View style={styles.awaitingPet}>
-              <Skeleton width="100%" height={120} borderRadius={Radius.lg} />
-            </View>
-          ) : !pet ? (
+          {!pet ? (
             <View style={styles.emptyBox}>
               <AppText variant="bodySmall" color={HomeTheme.textMuted}>
                 Add a pet from the Home tab to start building their care schedule.

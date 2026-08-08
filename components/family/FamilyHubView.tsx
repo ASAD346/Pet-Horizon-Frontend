@@ -215,6 +215,24 @@ export function FamilyHubView() {
 
   const joinCode = invite ? formatJoinCode(invite.inviteToken) : null;
 
+  const awaitingPet = petLoading && !pet;
+
+  if (awaitingPet) {
+    return (
+      <View style={styles.container}>
+        <FamilyHubHeader
+          notificationCount={notificationCount}
+          onNotificationsPress={onNotificationsPress}
+          onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
+          showJournal={canViewJournal}
+          isPremium={isPremium}
+          topInset={insets.top}
+        />
+        <SkeletonFamilyHub />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FamilyHubHeader
@@ -237,11 +255,6 @@ export function FamilyHubView() {
           />
         }
       >
-        {petLoading && !pet ? (
-          <View style={styles.skeletonWrap}>
-            <SkeletonFamilyHub />
-          </View>
-        ) : null}
 
         {!petLoading && !pet ? (
           <View style={styles.bannerWrap}>
