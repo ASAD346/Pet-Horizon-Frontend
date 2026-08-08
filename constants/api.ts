@@ -111,8 +111,6 @@ export const API_ENDPOINTS = {
   },
   payment: {
     invoices: '/payment/invoices',
-    createPaymentIntent: '/payment/create-payment-intent',
-    updatePaymentMethod: '/payment/update-payment-method',
   },
   journal: {
     list: '/journal',

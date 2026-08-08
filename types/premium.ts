@@ -4,7 +4,6 @@ export interface PremiumPlan {
   name: string;
   price: number;
   periodDays: number;
-  stripePriceId?: string;
 }
 
 export interface PremiumStatusResponse {
@@ -12,7 +11,6 @@ export interface PremiumStatusResponse {
   plan: string | null;
   expiresAt: string | null;
   autoRenew: boolean;
-  stripeSubscriptionId?: string | null;
 }
 
 export interface SubscribeRequest {
@@ -24,11 +22,6 @@ export interface SubscribeResponse {
   status: string;
   planId: string;
   expiresAt: string;
-}
-
-export interface PaymentIntentResponse {
-  clientSecret: string;
-  paymentIntentId: string;
 }
 
 export interface PaymentInvoice {
