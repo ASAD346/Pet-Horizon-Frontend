@@ -31,23 +31,58 @@ function cleanNotificationText(str: string): string {
     .replace(/walk walk/gi, 'walk');
 }
 
-function getNotificationCategory(title: string, body: string): string {
-  const t = (title || '').toLowerCase();
-  const b = (body || '').toLowerCase();
+function getNotificationCategory(item: any): string {
+  const t = (item.title || '').toLowerCase();
+  const b = (item.body || '').toLowerCase();
+  const type = (item.type || '').toLowerCase();
 
-  if (t.includes('feed') || b.includes('feed') || t.includes('food') || b.includes('food')) {
+  if (
+    type === 'feeding' || type === 'food' ||
+    t.includes('feed') || b.includes('feed') ||
+    t.includes('food') || b.includes('food') ||
+    t.includes('meal') || b.includes('meal')
+  ) {
     return 'feeding';
   }
-  if (t.includes('walk') || b.includes('walk')) {
+  if (
+    type === 'walk' || type === 'walks' ||
+    t.includes('walk') || b.includes('walk')
+  ) {
     return 'walk';
   }
-  if (t.includes('med') || b.includes('med') || t.includes('pill') || b.includes('pill')) {
+  if (
+    type === 'medicine' || type === 'med' ||
+    t.includes('med') || b.includes('med') ||
+    t.includes('pill') || b.includes('pill') ||
+    t.includes('dose') || b.includes('dose') ||
+    t.includes('tablet') || b.includes('tablet') ||
+    t.includes('capsule') || b.includes('capsule') ||
+    t.includes('give') || b.includes('give')
+  ) {
     return 'medicine';
   }
-  if (t.includes('groom') || b.includes('groom') || t.includes('trim') || b.includes('trim')) {
+  if (
+    type === 'grooming' || type === 'groom' ||
+    t.includes('groom') || b.includes('groom') ||
+    t.includes('trim') || b.includes('trim') ||
+    t.includes('bath') || b.includes('bath') ||
+    t.includes('wash') || b.includes('wash') ||
+    t.includes('brush') || b.includes('brush') ||
+    t.includes('haircut') || b.includes('haircut') ||
+    t.includes('nail') || b.includes('nail')
+  ) {
     return 'grooming';
   }
-  if (t.includes('vaccin') || b.includes('vaccin') || t.includes('dhpp') || b.includes('dhpp') || t.includes('needle') || b.includes('needle')) {
+  if (
+    type === 'vaccination' || type === 'vaccine' || type === 'vaccin' ||
+    t.includes('vaccin') || b.includes('vaccin') ||
+    t.includes('dhpp') || b.includes('dhpp') ||
+    t.includes('needle') || b.includes('needle') ||
+    t.includes('shot') || b.includes('shot') ||
+    t.includes('booster') || b.includes('booster') ||
+    t.includes('injection') || b.includes('injection') ||
+    t.includes('rabies') || b.includes('rabies')
+  ) {
     return 'vaccination';
   }
   return 'general';
@@ -274,7 +309,7 @@ export default function NotificationsScreen() {
                 
                 <View style={styles.groupContainer}>
                   {group.data.map((item, index) => {
-                    const category = getNotificationCategory(item.title, item.body || '');
+                    const category = getNotificationCategory(item);
                     const config = CATEGORY_STYLES[category] || CATEGORY_STYLES.general;
                     const isUnread = !item.isRead;
                     const isLast = index === group.data.length - 1;
