@@ -218,7 +218,9 @@ export default function HomeScreen() {
       endStr = endStr || s.date || s.metadata?.date;
     }
     
-    const today = new Date();
+    // Timezone-aware today boundary normalization
+    const todayStr = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
+    const today = new Date(todayStr);
     today.setHours(0, 0, 0, 0);
 
     if (startStr) {
