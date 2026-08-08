@@ -20,8 +20,6 @@ import {
 
     RecentActivitySection,
 
-    GroomingAlertsRow,
-
     PetBirthdayBanner,
 
     TodaysScheduleSection,
@@ -548,21 +546,7 @@ export default function HomeScreen() {
           <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
         ) : null}
 
-        {canView('grooming') ? (
-        <GroomingAlertsRow
-          token={token}
-          petId={pet?._id}
-          isPremium={user?.premiumStatus === 'premium'}
-          onAlertPress={
-            canEdit('grooming')
-              ? (record) => {
-                  setGroomingManageRecord(record);
-                  setGroomingManageVisible(true);
-                }
-              : undefined
-          }
-        />
-        ) : null}
+
 
         <QuickActionsSection
           onLogFoodPress={() => setLogFoodVisible(true)}

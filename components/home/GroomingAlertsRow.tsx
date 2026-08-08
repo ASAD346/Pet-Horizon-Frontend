@@ -39,7 +39,13 @@ export function GroomingAlertsRow({ token, petId, isPremium = false, onAlertPres
     }
     try {
       const data = await fetchGroomingAlerts(token, { petId, withinDays: 7 });
-      setAlerts(data.slice(0, 2));
+      const filtered = data.filter(alert => {
+        if (alert.groomingType === 'wing_trim') {
+          return alert.scheduledDate != null;
+        }
+        return true;
+      });
+      setAlerts(filtered.slice(0, 2));
     } catch {
       setAlerts([]);
     }

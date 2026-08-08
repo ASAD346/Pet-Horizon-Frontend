@@ -78,7 +78,7 @@
       "favicon": "./assets/images/app-icon.png"
     },
     "splash": {
-      "image": "./assets/images/logo.png",
+      "image": "./assets/images/applogo.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
@@ -93,12 +93,12 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFFFFF",
-          "image": "./assets/images/logo.png",
-          "imageWidth": 300,
+          "image": "./assets/images/applogo.png",
+          "imageWidth": 120,
           "dark": {
             "backgroundColor": "#FFFFFF",
-            "image": "./assets/images/logo.png",
-            "imageWidth": 300
+            "image": "./assets/images/applogo.png",
+            "imageWidth": 120
           }
         }
       ],
@@ -127,7 +127,8 @@
       "@react-native-google-signin/google-signin",
       "expo-localization",
       "expo-background-fetch",
-      "expo-task-manager"
+      "expo-task-manager",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
