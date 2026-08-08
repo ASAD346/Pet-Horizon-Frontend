@@ -673,14 +673,12 @@ export default function HomeScreen() {
           onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
           onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
           isPremium={isPremium}
-          onViewAll={() => router.push('/schedule-history' as Href)}
         />
 
         <RecentActivitySection
           activities={recentActivities}
           isPremium={isPremium}
           todayOnly
-          onViewAll={() => router.push('/activity-history' as Href)}
         />
       </ScrollView>
 
