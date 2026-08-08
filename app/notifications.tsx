@@ -299,6 +299,16 @@ export default function NotificationsScreen() {
                         displayBody = parts.slice(1).join(':').trim();
                       }
                     }
+
+                    // Map generic 'Reminder' titles to category-specific titles
+                    if (displayTitle.toLowerCase() === 'reminder') {
+                      if (category === 'feeding') displayTitle = 'Feeding Time';
+                      else if (category === 'walk') displayTitle = 'Walk Reminder';
+                      else if (category === 'medicine') displayTitle = 'Medication Due';
+                      else if (category === 'grooming') displayTitle = 'Grooming Appointment';
+                      else if (category === 'vaccination') displayTitle = 'Vaccination Alert';
+                      else displayTitle = 'Alert';
+                    }
                     
                     return (
                       <View key={item._id}>

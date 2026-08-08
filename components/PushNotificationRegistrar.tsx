@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { isExpoGo } from '@/lib/runtime/isExpoGo';
 import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
+import { useAppDispatch } from '@/redux/store';
+import { showToastAction } from '@/redux/action';
 
 /**
  * Prepares push infrastructure at launch and registers the FCM token after login.
@@ -11,6 +13,7 @@ import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
  */
 export function PushNotificationRegistrar() {
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const { token, isAuthenticated, isBootstrapping } = useAuth();
   const lastRegisteredAuthTokenRef = useRef<string | null>(null);
   const nativeTokenRef = useRef<string | null>(null);
@@ -77,7 +80,29 @@ export function PushNotificationRegistrar() {
       });
 
       receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
-        logNotificationReceived(notification.request.content.title, notification.request.content.body);
+        const title = notification.request.content.title || '';
+        const body = notification.request.content.body || '';
+
+        // Clean redundant strings
+        const cleanTitle = title
+          .replace(/Feed Feeding/gi, 'Feeding')
+          .replace(/Walk Walking/gi, 'Walking')
+          .replace(/Walk Walk/gi, 'Walk')
+          .replace(/feed feeding/gi, 'feeding')
+          .replace(/walk walking/gi, 'walking')
+          .replace(/walk walk/gi, 'walk');
+        const cleanBody = body
+          .replace(/Feed Feeding/gi, 'Feeding')
+          .replace(/Walk Walking/gi, 'Walking')
+          .replace(/Walk Walk/gi, 'Walk')
+          .replace(/feed feeding/gi, 'feeding')
+          .replace(/walk walking/gi, 'walking')
+          .replace(/walk walk/gi, 'walk');
+
+        logNotificationReceived(cleanTitle, cleanBody);
+        
+        // Show our themed toast
+        dispatch(showToastAction(cleanBody || cleanTitle, 'success'));
       });
     });
 
@@ -85,7 +110,7 @@ export function PushNotificationRegistrar() {
       responseSubscription?.remove();
       receivedSubscription?.remove();
     };
-  }, [router]);
+  }, [router, dispatch]);
 
   return null;
 }
