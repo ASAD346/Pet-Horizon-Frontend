@@ -191,12 +191,59 @@ export default function HomeScreen() {
     }, [refetchDashboard])
   );
 
-  const feedingSchedules = dashboardData?.todaySchedules?.feeding ?? [];
-  const walkSchedules = dashboardData?.todaySchedules?.walk ?? [];
-  const medicineSchedules = dashboardData?.todaySchedules?.medicine ?? [];
-  const groomingRecords = dashboardData?.todaySchedules?.grooming ?? [];
-  const vaccinationSchedules = dashboardData?.todaySchedules?.vaccination ?? [];
-  const dashboardTasks = dashboardData?.upcomingTasks ?? [];
+  const deduplicateByIdOrProps = <T extends { _id?: string; id?: string }>(
+    array: T[],
+    keyFn: (item: T) => string
+  ): T[] => {
+    const seen = new Set<string>();
+    return array.filter((item) => {
+      const id = item._id || item.id;
+      if (id) {
+        if (seen.has(id)) return false;
+        seen.add(id);
+      }
+      const key = keyFn(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const rawFeeding = dashboardData?.todaySchedules?.feeding ?? [];
+  const feedingSchedules = useMemo(() => 
+    deduplicateByIdOrProps(rawFeeding, (s: any) => `${s.time || ''}-${s.mealType || ''}-${s.amount || ''}-${s.unit || ''}`),
+    [rawFeeding]
+  );
+
+  const rawWalk = dashboardData?.todaySchedules?.walk ?? [];
+  const walkSchedules = useMemo(() => 
+    deduplicateByIdOrProps(rawWalk, (s: any) => `${s.time || ''}-${s.duration || ''}`),
+    [rawWalk]
+  );
+
+  const rawMedicine = dashboardData?.todaySchedules?.medicine ?? [];
+  const medicineSchedules = useMemo(() => 
+    deduplicateByIdOrProps(rawMedicine, (s: any) => `${s.time || ''}-${s.medicineName || ''}-${s.dose || ''}`),
+    [rawMedicine]
+  );
+
+  const rawGrooming = dashboardData?.todaySchedules?.grooming ?? [];
+  const groomingRecords = useMemo(() => 
+    deduplicateByIdOrProps(rawGrooming, (s: any) => `${s.time || ''}-${s.groomingType || ''}`),
+    [rawGrooming]
+  );
+
+  const rawVaccination = dashboardData?.todaySchedules?.vaccination ?? [];
+  const vaccinationSchedules = useMemo(() => 
+    deduplicateByIdOrProps(rawVaccination, (s: any) => `${s.dueDate || s.date || ''}-${s.vaccineName || ''}`),
+    [rawVaccination]
+  );
+
+  const rawTasks = dashboardData?.upcomingTasks ?? [];
+  const dashboardTasks = useMemo(() => 
+    deduplicateByIdOrProps(rawTasks, (s: any) => `${s.scheduledDate || ''}-${s.title || ''}-${s.timeOfDay || ''}`),
+    [rawTasks]
+  );
   const { unreadCount: globalUnreadCount, setUnreadCount } = useNotificationStore();
 
   useEffect(() => {

@@ -200,11 +200,54 @@ export function buildScheduleSectionsState(
     return entries.length > 0;
   }
 
-  const feedingEntries = input.feeding.map(mapFeedingItem);
-  const walkEntries = input.walk.map(mapWalkItem);
-  const medicineEntries = input.medicine.map(mapMedicineItem);
-  const vaccinationEntries = input.vaccination.map(mapVaccinationItem);
-  const groomingEntries = input.grooming.map(mapGroomingItem);
+  const deduplicateByIdOrKey = <T>(
+    array: T[],
+    idFn: (item: T) => string | undefined,
+    keyFn: (item: T) => string
+  ): T[] => {
+    const seen = new Set<string>();
+    return array.filter((item) => {
+      const id = idFn(item);
+      if (id) {
+        if (seen.has(id)) return false;
+        seen.add(id);
+      }
+      const key = keyFn(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const feedingEntries = deduplicateByIdOrKey(
+    input.feeding.map(mapFeedingItem),
+    (e) => e.scheduleId,
+    (e) => `${e.mealType || ''}-${dateToTimeHHmm(e.feedingTime)}-${e.amount || ''}-${e.unit || ''}`
+  );
+
+  const walkEntries = deduplicateByIdOrKey(
+    input.walk.map(mapWalkItem),
+    (e) => e.scheduleId,
+    (e) => `${dateToTimeHHmm(e.walkClockTime)}-${e.duration || ''}`
+  );
+
+  const medicineEntries = deduplicateByIdOrKey(
+    input.medicine.map(mapMedicineItem),
+    (e) => e.scheduleId,
+    (e) => `${dateToTimeHHmm(e.medicineTime)}-${e.medicineName || ''}-${e.doseAmount || ''}-${e.doseForm || ''}`
+  );
+
+  const vaccinationEntries = deduplicateByIdOrKey(
+    input.vaccination.map(mapVaccinationItem),
+    (e) => e.scheduleId,
+    (e) => `${e.vaccineName || ''}-${e.scheduleDate?.singleDate || e.scheduleDate?.startDate || ''}`
+  );
+
+  const groomingEntries = deduplicateByIdOrKey(
+    input.grooming.map(mapGroomingItem),
+    (e) => e.recordId,
+    (e) => `${e.groomingType || ''}-${e.scheduleDate?.singleDate || e.scheduleDate?.startDate || ''}`
+  );
 
   return {
     feeding: {
