@@ -108,6 +108,7 @@ export const API_ENDPOINTS = {
     subscribe: '/premium/subscribe',
     status: '/premium/status',
     cancel: '/premium/cancel',
+    verifyGooglePlay: '/premium/google-play/verify',
   },
   payment: {
     invoices: '/payment/invoices',

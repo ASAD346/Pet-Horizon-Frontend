@@ -70,6 +70,28 @@ export async function cancelPremium(token: string): Promise<{ message: string }>
   }
 }
 
+export async function verifyGooglePlayPurchase(
+  token: string,
+  payload: { productId: string; purchaseToken: string; packageName: string },
+): Promise<{ success: boolean; expiresAt: string; alreadyProcessed?: boolean }> {
+  log.info(SCOPE, 'POST /premium/google-play/verify', { productId: payload.productId });
+  try {
+    const data = await apiRequest<{ success: boolean; expiresAt: string; alreadyProcessed?: boolean }>(
+      API_ENDPOINTS.premium.verifyGooglePlay,
+      {
+        method: 'POST',
+        token,
+        body: payload,
+      },
+    );
+    log.ok(SCOPE, 'Purchase Verified Successfully');
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Verification failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
 export async function fetchPaymentInvoices(token: string): Promise<PaymentInvoice[]> {
   log.info(SCOPE, 'GET /payment/invoices');
   try {

@@ -24,7 +24,6 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
-  createPaymentIntent,
   fetchPremiumPlans,
   fetchPremiumStatus,
   subscribePremium,
@@ -316,13 +315,26 @@ export function PremiumHubContent() {
     setCheckoutLoading(true);
     setCheckoutError(null);
     try {
-      await createPaymentIntent(token, selectedPlan.planId, 'pm_stub_ui');
-      await subscribePremium(token, { planId: selectedPlan.planId });
-      const profile = await fetchUserProfile(token, user._id);
-      await setSession({ token, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
-      setIsPremium(true);
-      setCheckoutVisible(false);
-      setSuccessVisible(true);
+      // Import api verification client
+      const { verifyGooglePlayPurchase } = require('@/services/premium/premiumApi');
+      
+      // Perform verify API request (Mocked Google purchase token for testing integration)
+      const mockPurchaseToken = `mock_token_${Date.now()}`;
+      const verifyRes = await verifyGooglePlayPurchase(token, {
+        productId: selectedPlan.planId,
+        purchaseToken: mockPurchaseToken,
+        packageName: 'com.anonymous.PetHorizon',
+      });
+
+      if (verifyRes.success) {
+        const profile = await fetchUserProfile(token, user._id);
+        await setSession({ token, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
+        setIsPremium(true);
+        setCheckoutVisible(false);
+        setSuccessVisible(true);
+      } else {
+        throw new Error('Google Play verification returned unsuccessful status.');
+      }
     } catch (error) {
       setCheckoutError(getErrorMessage(error));
     } finally {
