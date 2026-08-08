@@ -30,6 +30,135 @@ function cleanNotificationText(str: string): string {
     .replace(/walk walk/gi, 'walk');
 }
 
+function getNotificationCategory(title: string, body: string): string {
+  const t = (title || '').toLowerCase();
+  const b = (body || '').toLowerCase();
+
+  if (t.includes('feed') || b.includes('feed') || t.includes('food') || b.includes('food')) {
+    return 'feeding';
+  }
+  if (t.includes('walk') || b.includes('walk')) {
+    return 'walk';
+  }
+  if (t.includes('med') || b.includes('med') || t.includes('pill') || b.includes('pill')) {
+    return 'medicine';
+  }
+  if (t.includes('groom') || b.includes('groom') || t.includes('trim') || b.includes('trim')) {
+    return 'grooming';
+  }
+  if (t.includes('vaccin') || b.includes('vaccin') || t.includes('dhpp') || b.includes('dhpp') || t.includes('needle') || b.includes('needle')) {
+    return 'vaccination';
+  }
+  return 'general';
+}
+
+const CATEGORY_STYLES: Record<string, { icon: string; color: string; bg: string; unreadBg: string }> = {
+  feeding: { icon: 'restaurant-outline', color: '#D97706', bg: '#FEF3C7', unreadBg: '#FFFDF5' },
+  walk: { icon: 'walk-outline', color: '#2563EB', bg: '#DBEAFE', unreadBg: '#F0F7FF' },
+  medicine: { icon: 'medical-outline', color: '#9333EA', bg: '#F3E8FF', unreadBg: '#FAF5FF' },
+  grooming: { icon: 'cut-outline', color: '#0D9488', bg: '#CCFBF1', unreadBg: '#F2FDFB' },
+  vaccination: { icon: 'shield-checkmark-outline', color: '#DB2777', bg: '#FCE7F3', unreadBg: '#FFF5F9' },
+  general: { icon: 'notifications-outline', color: '#4B5563', bg: '#F3F4F6', unreadBg: '#FAFAFA' },
+};
+
+function formatNotificationDate(dateStr: string): string {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  
+  const isPast = diffMs >= 0;
+  const absDiffMs = Math.abs(diffMs);
+  
+  const diffMins = Math.floor(absDiffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  
+  if (isPast) {
+    if (diffMins < 1) {
+      return 'Just now';
+    }
+    if (diffMins < 60) {
+      return `${diffMins}m ago`;
+    }
+    if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    }
+  } else {
+    if (diffMins < 1) {
+      return 'Starting now';
+    }
+    if (diffMins < 60) {
+      return `in ${diffMins}m`;
+    }
+    if (diffHours < 24) {
+      return `in ${diffHours}h`;
+    }
+  }
+  
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+  
+  const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  if (isToday) {
+    return `Today at ${timeStr}`;
+  }
+  if (isYesterday) {
+    return `Yesterday at ${timeStr}`;
+  }
+  
+  return `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} at ${timeStr}`;
+}
+
+interface GroupedNotifications {
+  title: string;
+  data: any[];
+}
+
+function groupNotifications(items: any[]): GroupedNotifications[] {
+  const today: any[] = [];
+  const yesterday: any[] = [];
+  const earlier: any[] = [];
+  
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const yest = new Date(now);
+  yest.setDate(now.getDate() - 1);
+  const yesterdayStr = yest.toDateString();
+  
+  items.forEach((item) => {
+    if (!item.createdAt) {
+      earlier.push(item);
+      return;
+    }
+    const itemDate = new Date(item.createdAt);
+    const itemDateStr = itemDate.toDateString();
+    
+    if (itemDateStr === todayStr) {
+      today.push(item);
+    } else if (itemDateStr === yesterdayStr) {
+      yesterday.push(item);
+    } else {
+      earlier.push(item);
+    }
+  });
+  
+  const groups: GroupedNotifications[] = [];
+  if (today.length > 0) {
+    groups.push({ title: 'Today', data: today });
+  }
+  if (yesterday.length > 0) {
+    groups.push({ title: 'Yesterday', data: yesterday });
+  }
+  if (earlier.length > 0) {
+    groups.push({ title: 'Earlier', data: earlier });
+  }
+  return groups;
+}
+
 export default function NotificationsScreen() {
   const router = useRouter();
   const { token } = useAuth();
@@ -63,6 +192,9 @@ export default function NotificationsScreen() {
   const emptyCircleBg = isPremium ? 'rgba(212, 160, 23, 0.1)' : '#F3F4F6';
   const iconColor = isPremium ? '#D4A017' : '#9CA3AF';
 
+  const unreadCount = items.filter(item => !item.isRead).length;
+  const groupedData = React.useMemo(() => groupNotifications(items), [items]);
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: screenBg }]} edges={[]}>
       <View style={[styles.headerWrapper, { shadowColor }]}>
@@ -81,12 +213,19 @@ export default function NotificationsScreen() {
 
             <View style={styles.headerRow}>
               <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={16} color="#0E3821" />
+                <Ionicons name="chevron-back" size={16} color={isPremium ? '#184F2E' : '#3A8F3B'} />
               </TouchableOpacity>
               
-              <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
-                Notifications
-              </AppText>
+              <View style={styles.titleContainer}>
+                <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.headerTitle}>
+                  Notifications
+                </AppText>
+                {unreadCount > 0 && (
+                  <AppText variant="caption" weight="600" color="rgba(255, 255, 255, 0.8)">
+                    {unreadCount} unread alert{unreadCount !== 1 ? 's' : ''}
+                  </AppText>
+                )}
+              </View>
               
               <TouchableOpacity onPress={markAllRead} hitSlop={12} style={styles.markAllReadBtn}>
                 <AppText variant="bodySmall" weight="800" color="#FFFFFF">
@@ -126,30 +265,95 @@ export default function NotificationsScreen() {
               </AppText>
             </View>
           ) : (
-            items.map((item) => (
-              <TouchableOpacity
-                key={item._id}
-                style={[styles.card, !item.isRead && styles.unreadCard]}
-                onPress={() => markRead(item._id)}
-                onLongPress={() => remove(item._id)}
-              >
-                <View style={styles.cardHeader}>
-                  <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                    {cleanNotificationText(item.title)}
-                  </AppText>
-                  {!item.isRead ? <View style={styles.dot} /> : null}
+            groupedData.map((group) => (
+              <View key={group.title} style={styles.sectionContainer}>
+                <AppText variant="caption" weight="800" color={HomeTheme.textMuted} style={styles.sectionHeader}>
+                  {group.title.toUpperCase()}
+                </AppText>
+                
+                <View style={styles.groupContainer}>
+                  {group.data.map((item, index) => {
+                    const category = getNotificationCategory(item.title, item.body || '');
+                    const config = CATEGORY_STYLES[category] || CATEGORY_STYLES.general;
+                    const isUnread = !item.isRead;
+                    const isLast = index === group.data.length - 1;
+
+                    let petName = '';
+                    let displayTitle = cleanNotificationText(item.title);
+                    let displayBody = cleanNotificationText(item.body || '');
+
+                    if (item.title.includes('—')) {
+                      const parts = item.title.split('—');
+                      petName = parts[0].trim();
+                      displayTitle = parts[1].trim();
+                    } else if (item.title.includes('-')) {
+                      const parts = item.title.split('-');
+                      petName = parts[0].trim();
+                      displayTitle = parts[1].trim();
+                    }
+
+                    if (!petName && displayBody.includes(':')) {
+                      const parts = displayBody.split(':');
+                      if (parts[0].trim().length < 15) {
+                        petName = parts[0].trim();
+                        displayBody = parts.slice(1).join(':').trim();
+                      }
+                    }
+                    
+                    return (
+                      <View key={item._id}>
+                        <TouchableOpacity
+                          style={[
+                            styles.row,
+                            isUnread && styles.unreadRow,
+                          ]}
+                          onPress={() => markRead(item._id)}
+                          onLongPress={() => remove(item._id)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.iconContainer}>
+                            <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>
+                              <Ionicons name={config.icon as any} size={18} color={config.color} />
+                            </View>
+                            {isUnread && (
+                              <View style={[styles.absoluteUnreadDot, { backgroundColor: config.color }]} />
+                            )}
+                          </View>
+                          
+                          <View style={styles.cardContent}>
+                            <View style={styles.cardHeader}>
+                              <View style={styles.titleRow}>
+                                {petName ? (
+                                  <View style={[styles.petBadge, { backgroundColor: config.bg }]}>
+                                    <AppText variant="caption" weight="800" color={config.color} style={styles.petBadgeText}>
+                                      {petName}
+                                    </AppText>
+                                  </View>
+                                ) : null}
+                                <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.cardTitle} numberOfLines={1}>
+                                  {displayTitle}
+                                </AppText>
+                              </View>
+                              {item.createdAt ? (
+                                <AppText variant="caption" color={HomeTheme.textMuted} style={styles.timeText}>
+                                  {formatNotificationDate(item.createdAt)}
+                                </AppText>
+                              ) : null}
+                            </View>
+                            
+                            {displayBody ? (
+                              <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
+                                {displayBody}
+                              </AppText>
+                            ) : null}
+                          </View>
+                        </TouchableOpacity>
+                        {!isLast && <View style={styles.divider} />}
+                      </View>
+                    );
+                  })}
                 </View>
-                {item.body ? (
-                  <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
-                    {cleanNotificationText(item.body)}
-                  </AppText>
-                ) : null}
-                {item.createdAt ? (
-                  <AppText variant="caption" color={HomeTheme.textMuted}>
-                    {new Date(item.createdAt).toLocaleString()}
-                  </AppText>
-                ) : null}
-              </TouchableOpacity>
+              </View>
             ))
           )}
         </ScrollView>
@@ -211,28 +415,28 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
+    justifyContent: 'space-between',
+    height: 56,
     paddingBottom: 8,
     position: 'relative',
   },
   backButton: {
-    position: 'absolute',
-    left: 0,
-    top: 9, // Center 30x30 button vertically in 48px header height (48 - 30) / 2 = 9
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#E2EBE2',
-    zIndex: 10,
     ...Platform.select({
       ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
       android: { elevation: 2 },
     }),
+  },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 18,
@@ -240,12 +444,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   markAllReadBtn: {
-    position: 'absolute',
-    right: 0,
-    top: 4,
     height: 40,
     justifyContent: 'center',
-    zIndex: 10,
   },
   headerDivider: {
     height: 1,
@@ -259,7 +459,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xxl,
   },
   content: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
@@ -272,7 +472,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#F1F5F9', // Clean gray/blue base
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
@@ -287,30 +487,103 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     maxWidth: 240,
   },
-  card: {
-    backgroundColor: HomeTheme.surface,
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    marginBottom: Spacing.sm,
-    borderWidth: 1,
-    borderColor: HomeTheme.surfaceMuted,
+  sectionContainer: {
+    marginBottom: Spacing.md,
   },
-  unreadCard: {
-    borderColor: HomeTheme.cardGreen,
+  sectionHeader: {
+    fontSize: 11,
+    letterSpacing: 1.2,
+    marginLeft: 8,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  groupContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E8EFE8',
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: { shadowColor: '#0E380E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.03, shadowRadius: 12 },
+      android: { elevation: 2 },
+    }),
+  },
+  row: {
+    flexDirection: 'row',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 14,
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: '#FFFFFF',
+  },
+  unreadRow: {
+    backgroundColor: '#F7FCF8',
+  },
+  iconContainer: {
+    position: 'relative',
+  },
+  absoluteUnreadDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardContent: {
+    flex: 1,
+    marginLeft: 2,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  petBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  petBadgeText: {
+    fontSize: 9,
+    textTransform: 'uppercase',
+  },
+  cardTitle: {
+    flex: 1,
+    fontSize: 13,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: HomeTheme.badgeRed,
+    marginBottom: 2,
   },
   body: {
-    marginBottom: 4,
+    fontSize: 12,
+    lineHeight: 16,
+    color: '#64748B',
+  },
+  timeText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    alignSelf: 'flex-start',
+    marginTop: 2,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F6F3',
+    marginLeft: 60, // Aligns divider perfectly after the icon circle
   },
 });
