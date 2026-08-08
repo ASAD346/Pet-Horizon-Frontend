@@ -40,6 +40,25 @@ export interface VerifyEmailFieldErrors {
   otp?: string;
 }
 
+export function isStrongPassword(password: string): { isValid: boolean; message?: string } {
+  if (password.length < 8) {
+    return { isValid: false, message: 'Password must be at least 8 characters' };
+  }
+  if (!/[A-Z]/.test(password)) {
+    return { isValid: false, message: 'Include at least one uppercase letter' };
+  }
+  if (!/[a-z]/.test(password)) {
+    return { isValid: false, message: 'Include at least one lowercase letter' };
+  }
+  if (!/[0-9]/.test(password)) {
+    return { isValid: false, message: 'Include at least one number' };
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    return { isValid: false, message: 'Include at least one special character' };
+  }
+  return { isValid: true };
+}
+
 export function validateSignupForm(
   fullName: string,
   email: string,
@@ -64,8 +83,11 @@ export function validateSignupForm(
 
   if (!password) {
     errors.password = 'Password is required';
-  } else if (password.length < 6) {
-    errors.password = 'Password must be at least 6 characters';
+  } else {
+    const strength = isStrongPassword(password);
+    if (!strength.isValid) {
+      errors.password = strength.message;
+    }
   }
 
   if (!confirmPassword) {
@@ -164,8 +186,11 @@ export function validateResetPasswordForm(
 
   if (!newPassword) {
     errors.newPassword = 'New password is required';
-  } else if (newPassword.length < 6) {
-    errors.newPassword = 'Password must be at least 6 characters';
+  } else {
+    const strength = isStrongPassword(newPassword);
+    if (!strength.isValid) {
+      errors.newPassword = strength.message;
+    }
   }
 
   if (!confirmPassword) {
