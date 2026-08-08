@@ -780,8 +780,8 @@ export function ScheduleSetupView({
                   }}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.modalIconWrap, { backgroundColor: brandBg }]}>
-                    <MaterialCommunityIcons name={section.icon} size={22} color={brandColor} />
+                  <View style={[styles.modalIconWrap, { backgroundColor: section.bg }]}>
+                    <MaterialCommunityIcons name={section.icon} size={22} color={section.color} />
                   </View>
                   <AppText variant="body" weight="700" color={HomeTheme.text}>
                     {section.title}
