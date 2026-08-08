@@ -72,7 +72,7 @@ export function ToastHost() {
     badgeColor = '#F44336';
   } else if (type === 'info') {
     title = 'Info';
-    badgeColor = '#2196F3';
+    badgeColor = '#3A8F3B';
   }
 
   return (
