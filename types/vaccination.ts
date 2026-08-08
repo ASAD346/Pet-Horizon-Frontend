@@ -71,6 +71,9 @@ export interface CompleteVaccinationRequest {
   administeredDate?: string;
   nextDueDate?: string;
   vetName?: string;
+  status?: 'done' | 'skipped';
+  date?: string;
+  completedAt?: string;
 }
 
 export interface CompleteVaccinationResponse {

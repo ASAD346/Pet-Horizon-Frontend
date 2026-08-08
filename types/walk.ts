@@ -44,6 +44,8 @@ export interface WalkScheduleItem {
 
 export interface CompleteWalkRequest {
   status?: 'done' | 'skipped';
+  date?: string;
+  completedAt?: string;
 }
 
 export interface CompleteWalkResponse {

@@ -101,12 +101,13 @@ export async function completeFeedingSchedule(
 export async function skipFeedingSchedule(
   token: string,
   scheduleId: string,
+  body: CompleteFeedingRequest = { status: 'skipped' },
 ): Promise<CompleteFeedingResponse> {
   log.info(SCOPE, 'PUT /schedules/feeding/:id/skip', { scheduleId });
   try {
     const data = await apiRequest<CompleteFeedingResponse>(
       API_ENDPOINTS.schedules.feedingSkip(scheduleId),
-      { method: 'PUT', token },
+      { method: 'PUT', token, body },
     );
     log.ok(SCOPE, 'Feeding skipped', { scheduleId });
     return data;

@@ -46,6 +46,8 @@ export interface FeedingScheduleItem {
 
 export interface CompleteFeedingRequest {
   status?: 'done' | 'skipped';
+  date?: string;
+  completedAt?: string;
 }
 
 export interface CompleteFeedingResponse {

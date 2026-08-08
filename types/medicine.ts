@@ -63,6 +63,8 @@ export interface MedicineScheduleItem {
 
 export interface CompleteMedicineRequest {
   status?: 'done' | 'skipped';
+  date?: string;
+  completedAt?: string;
 }
 
 export interface CompleteMedicineResponse {
