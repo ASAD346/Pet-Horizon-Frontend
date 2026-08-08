@@ -113,10 +113,16 @@ export function ActivityTimelineSection({
   categoryFilter,
   onEventPress,
 }: ActivityTimelineSectionProps) {
-  const filtered = useMemo(
-    () => filterEvents(events, categoryFilter),
-    [events, categoryFilter]
-  );
+  const filtered = useMemo(() => {
+    const rawFiltered = filterEvents(events, categoryFilter);
+    const seen = new Set<string>();
+    return rawFiltered.filter((event) => {
+      const key = `${event.time || ''}-${event.title || ''}-${event.status || ''}-${event.category || ''}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [events, categoryFilter]);
 
   return (
     <View style={styles.section}>
