@@ -622,7 +622,7 @@ export function ScheduleSetupView({
       >
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance + 80 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance + 80, flexGrow: 1 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
@@ -672,7 +672,10 @@ export function ScheduleSetupView({
               </AppText>
             </View>
           ) : (
-            <View style={styles.timelineList}>
+            <View style={[
+              styles.timelineList,
+              timelineItems.length === 0 && { flex: 1, justifyContent: 'center', paddingBottom: 0 }
+            ]}>
               {schedulesLoading && timelineItems.length === 0 ? (
                 <ScheduleEntriesSkeleton />
               ) : timelineItems.length === 0 ? (
