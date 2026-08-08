@@ -83,6 +83,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     ...headers,
   };
 
+  // Attach client timestamp for conflict resolution / offline versioning
+  if (method === 'POST' || method === 'PUT' || method === 'PATCH' || method === 'DELETE') {
+    requestHeaders['x-client-timestamp'] = new Date().toISOString();
+  }
+
   if (activePetId) {
     requestHeaders['x-active-pet-id'] = activePetId;
     requestHeaders['X-Active-Pet-Id'] = activePetId;
