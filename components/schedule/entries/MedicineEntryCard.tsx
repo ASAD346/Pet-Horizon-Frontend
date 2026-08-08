@@ -125,20 +125,22 @@ export function MedicineEntryCard({
         onSelect={(doseForm) => onChange({ ...entry, doseForm: doseForm as MedicineEntryState['doseForm'] })}
       />
 
-      <FormSegmentedControl
-        label="Frequency"
-        options={FREQUENCY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-        selected={entry.frequency}
-        onSelect={(frequency) =>
-          onChange({
-            ...entry,
-            frequency: frequency as MedicineEntryState['frequency'],
-            daysOfWeek: frequency === 'weekly' ? entry.daysOfWeek : [],
-          })
-        }
-      />
+      {entry.scheduleDate?.mode !== 'single' ? (
+        <FormSegmentedControl
+          label="Frequency"
+          options={FREQUENCY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+          selected={entry.frequency}
+          onSelect={(frequency) =>
+            onChange({
+              ...entry,
+              frequency: frequency as MedicineEntryState['frequency'],
+              daysOfWeek: frequency === 'weekly' ? entry.daysOfWeek : [],
+            })
+          }
+        />
+      ) : null}
 
-      {entry.frequency === 'weekly' ? (
+      {entry.scheduleDate?.mode !== 'single' && entry.frequency === 'weekly' ? (
         <View style={styles.daysContainer}>
           <AppText variant="caption" weight="700" color="#5C6470" style={{ marginBottom: 4 }}>
             DAYS OF WEEK
@@ -181,7 +183,14 @@ export function MedicineEntryCard({
 
       <ScheduleDateFields
         value={entry.scheduleDate}
-        onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+        onChange={(scheduleDate) => {
+          const updatedEntry = { ...entry, scheduleDate };
+          if (scheduleDate.mode === 'single') {
+            updatedEntry.frequency = 'daily';
+            updatedEntry.daysOfWeek = [];
+          }
+          onChange(updatedEntry);
+        }}
         accentColor={accentColor}
       />
 

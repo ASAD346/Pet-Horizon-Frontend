@@ -260,11 +260,12 @@ export default function HomeScreen() {
   );
 
   const rawTasks = (dashboardData?.upcomingTasks ?? []).filter((task: any) => {
-    // For upcoming tasks, check scheduledDate if it exists
-    if (task.scheduledDate) {
+    // For upcoming tasks, check if the date is scheduled for today (supporting multiple field formats)
+    const taskDateStr = task.scheduledDate || task.date || task.dateTime || task.scheduleDate;
+    if (taskDateStr) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      const scheduled = new Date(task.scheduledDate);
+      const scheduled = new Date(taskDateStr);
       scheduled.setHours(0, 0, 0, 0);
       if (today < scheduled || today > scheduled) return false;
     }
