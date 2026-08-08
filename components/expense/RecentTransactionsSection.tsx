@@ -78,8 +78,8 @@ export function RecentTransactionsSection({
           <View key={item.id} style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
             {/* Category Icon Badge */}
             <ColorIconBadge
-              color={iconColor}
-              backgroundColor={iconBg}
+              color={item.color}
+              backgroundColor={item.bg}
               materialIcon={item.materialIcon}
               size={46}
               iconSize={22}
@@ -102,7 +102,7 @@ export function RecentTransactionsSection({
                 -{formatCurrency(item.amountVal)}
               </AppText>
               <View style={styles.categoryPill}>
-                <AppText variant="caption" weight="700" color={iconColor} style={styles.categoryText}>
+                <AppText variant="caption" weight="700" color={item.color} style={styles.categoryText}>
                   {item.category}
                 </AppText>
               </View>

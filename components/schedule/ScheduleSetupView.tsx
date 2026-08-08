@@ -717,8 +717,8 @@ export function ScheduleSetupView({
                       key={entry.id}
                       title={title}
                       subtitle={subtitle}
-                      accentColor={brandColor}
-                      accentBg={brandBg}
+                      accentColor={sectionMeta.color}
+                      accentBg={sectionMeta.bg}
                       iconName={sectionMeta.icon}
                       onEdit={() => openEditEditor(sectionMeta, entry)}
                       onDelete={() => confirmDeleteEntry(sectionMeta, entry)}

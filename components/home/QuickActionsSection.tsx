@@ -115,28 +115,15 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
     }
   };
 
-  // Dynamic color palette based on premium status
-  const cardColors = ['#FFFFFF', '#FFFFFF'] as const; // White cards to pop out from the soft green background
+  const ACTION_COLORS: Record<string, { color: string; bg: string; border: string; plusBg: string; plusColor: string }> = {
+    'Log Food': { color: '#D97706', bg: 'rgba(217, 119, 6, 0.08)', border: 'rgba(217, 119, 6, 0.15)', plusBg: 'rgba(217, 119, 6, 0.12)', plusColor: '#D97706' },
+    'Log Walk': { color: '#2563EB', bg: 'rgba(37, 99, 235, 0.08)', border: 'rgba(37, 99, 235, 0.15)', plusBg: 'rgba(37, 99, 235, 0.12)', plusColor: '#2563EB' },
+    'Medicine': { color: '#9333EA', bg: 'rgba(147, 51, 234, 0.08)', border: 'rgba(147, 51, 234, 0.15)', plusBg: 'rgba(147, 51, 234, 0.12)', plusColor: '#9333EA' },
+    'Grooming': { color: '#0D9488', bg: 'rgba(13, 148, 136, 0.08)', border: 'rgba(13, 148, 136, 0.15)', plusBg: 'rgba(13, 148, 136, 0.12)', plusColor: '#0D9488' },
+    'Vaccination': { color: '#DB2777', bg: 'rgba(219, 39, 119, 0.08)', border: 'rgba(219, 39, 119, 0.15)', plusBg: 'rgba(219, 39, 119, 0.12)', plusColor: '#DB2777' },
+  };
 
-  const cardBorderColor = isPremium
-    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
-    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
-
-  const cardTint = isPremium
-    ? '#184F2E'  // Deep emerald green text/icons for premium
-    : '#2E7D32';  // Standard brand green text/icons
-
-  const cardPlusBg = isPremium
-    ? 'rgba(212, 160, 23, 0.12)'  // Translucent gold indicator
-    : 'rgba(46, 125, 50, 0.08)';  // Translucent green indicator
-
-  const plusIconColor = isPremium
-    ? '#D4A017'  // Gold plus
-    : '#2E7D32';  // Green plus
-
-  const iconCircleBg = isPremium
-    ? 'rgba(212, 160, 23, 0.08)'
-    : 'rgba(46, 125, 50, 0.06)';
+  const cardColors = ['#FFFFFF', '#FFFFFF'] as const;
 
   return (
     <View style={styles.section}>
@@ -150,8 +137,24 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
           const moduleId = QUICK_ACTION_MODULES[action.label];
-          // Disable if the user lacks view permission
           const isDisabled = moduleId ? (canView ? !canView(moduleId) : false) : false;
+
+          const colors = ACTION_COLORS[action.label] || {
+            color: '#2E7D32',
+            bg: 'rgba(46, 125, 50, 0.06)',
+            border: 'rgba(46, 125, 50, 0.12)',
+            plusBg: 'rgba(46, 125, 50, 0.08)',
+            plusColor: '#2E7D32',
+          };
+
+          const finalBorderColor = isDisabled
+            ? 'rgba(0, 0, 0, 0.08)'
+            : (isPremium ? 'rgba(212, 160, 23, 0.35)' : colors.border);
+
+          const finalTint = isDisabled ? 'rgba(0, 0, 0, 0.4)' : colors.color;
+          const finalIconCircleBg = isDisabled ? 'rgba(0, 0, 0, 0.04)' : colors.bg;
+          const finalPlusBg = isDisabled ? 'rgba(0, 0, 0, 0.06)' : colors.plusBg;
+          const finalPlusColor = isDisabled ? 'rgba(0, 0, 0, 0.5)' : colors.plusColor;
 
           return (
             <TouchableOpacity
@@ -169,28 +172,28 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
                 colors={cardColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
-                style={[styles.tileCard, { borderColor: isDisabled ? 'rgba(0,0,0,0.08)' : cardBorderColor }]}
+                style={[styles.tileCard, { borderColor: finalBorderColor }]}
               >
                 {/* Header elements: Icon container on left, plus/lock icon on right */}
                 <View style={styles.cardHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: isDisabled ? 'rgba(0,0,0,0.04)' : iconCircleBg }]}>
-                    <MaterialCommunityIcons name={action.icon} size={16} color={isDisabled ? 'rgba(0,0,0,0.4)' : cardTint} />
+                  <View style={[styles.iconCircle, { backgroundColor: finalIconCircleBg }]}>
+                    <MaterialCommunityIcons name={action.icon} size={16} color={finalTint} />
                   </View>
-                  <View style={[styles.plusButton, { backgroundColor: isDisabled ? 'rgba(0,0,0,0.06)' : cardPlusBg }]}>
+                  <View style={[styles.plusButton, { backgroundColor: finalPlusBg }]}>
                     {isDisabled ? (
-                      <Feather name="lock" size={9} color="rgba(0,0,0,0.5)" style={styles.plusIcon} />
+                      <Feather name="lock" size={9} color={finalPlusColor} style={styles.plusIcon} />
                     ) : (
-                      <Feather name="plus" size={10} color={plusIconColor} style={styles.plusIcon} />
+                      <Feather name="plus" size={10} color={finalPlusColor} style={styles.plusIcon} />
                     )}
                   </View>
                 </View>
 
                 {/* Footer elements: Action title and subtext */}
                 <View style={styles.textContainer}>
-                  <AppText variant="bodySmall" weight="800" color={isDisabled ? 'rgba(0,0,0,0.5)' : cardTint} style={styles.label}>
+                  <AppText variant="bodySmall" weight="800" color={isDisabled ? 'rgba(0,0,0,0.5)' : finalTint} style={styles.label}>
                     {action.displayLabel}
                   </AppText>
-                  <AppText variant="caption" weight="500" color={isDisabled ? 'rgba(0,0,0,0.35)' : cardTint} style={styles.subLabel}>
+                  <AppText variant="caption" weight="500" color={isDisabled ? 'rgba(0,0,0,0.35)' : finalTint} style={styles.subLabel}>
                     {isDisabled ? 'Restricted' : action.subText}
                   </AppText>
                 </View>

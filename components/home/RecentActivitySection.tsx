@@ -84,8 +84,8 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
         visibleActivities.map((item) => (
           <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
             <ColorIconBadge
-              color={iconColor}
-              backgroundColor={iconBg}
+              color={item.color}
+              backgroundColor={item.bg}
               materialIcon={item.icon}
               size={44}
               iconSize={22}

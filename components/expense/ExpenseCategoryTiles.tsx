@@ -45,8 +45,16 @@ export function ExpenseCategoryTiles({ selected, onSelect }: ExpenseCategoryTile
               onPress={() => onSelect(item.id)}
               style={[
                 styles.tile,
-                { backgroundColor: active ? BRAND_GREEN : item.bg },
-                active ? tileActiveShadow : styles.tileInactive,
+                { backgroundColor: active ? item.color : item.bg },
+                active
+                  ? {
+                      shadowColor: item.color,
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      elevation: 4,
+                    }
+                  : styles.tileInactive,
               ]}
             >
               {/* Small active indicator ring */}
@@ -55,7 +63,7 @@ export function ExpenseCategoryTiles({ selected, onSelect }: ExpenseCategoryTile
               <MaterialCommunityIcons
                 name={item.materialIcon}
                 size={18}
-                color={active ? '#FFFFFF' : BRAND_GREEN}
+                color={active ? '#FFFFFF' : item.color}
               />
               <AppText
                 variant="caption"

@@ -250,8 +250,17 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
 
   const busy = completeBusy || skipBusy;
 
-  const iconColor = isPremium ? '#184F2E' : '#2E7D32';
-  const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
+  const ROW_COLORS: Record<string, { color: string; bg: string }> = {
+    feeding: { color: '#D97706', bg: '#FEF3C7' },
+    walk: { color: '#2563EB', bg: '#DBEAFE' },
+    medicine: { color: '#9333EA', bg: '#F3E8FF' },
+    grooming: { color: '#0D9488', bg: '#CCFBF1' },
+    vaccination: { color: '#DB2777', bg: '#FCE7F3' },
+  };
+
+  const activeColors = ROW_COLORS[row.kind] || { color: '#2E7D32', bg: 'rgba(46, 125, 50, 0.06)' };
+  const iconColor = activeColors.color;
+  const iconBg = activeColors.bg;
 
   return (
     <View style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
