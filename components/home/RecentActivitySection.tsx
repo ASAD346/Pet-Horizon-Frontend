@@ -8,6 +8,7 @@ import { homePillCard } from './homeStyles';
 import { HomeTheme, Spacing } from '../../constants/theme';
 import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 export interface RecentActivityItem {
   id: string;
@@ -31,11 +32,13 @@ interface RecentActivitySectionProps {
 
 function formatRawString(text: string) {
   if (!text) return '';
-  return text
-    .replace(/_/g, ' ')
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+  if (text.includes(':')) {
+    const parts = text.split(':');
+    const prefix = parts[0].trim();
+    const suffix = parts.slice(1).join(':').trim();
+    return `${prefix}: ${getTaskDisplayName(suffix)}`;
+  }
+  return getTaskDisplayName(text);
 }
 
 export const RecentActivitySection = React.memo(function RecentActivitySection({

@@ -18,6 +18,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { SkeletonNotificationList } from '@/components/ui/skeletons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 function cleanNotificationText(str: string): string {
   if (!str) return '';
@@ -298,6 +299,14 @@ export default function NotificationsScreen() {
                         petName = parts[0].trim();
                         displayBody = parts.slice(1).join(':').trim();
                       }
+                    }
+
+                    displayTitle = getTaskDisplayName(displayTitle);
+                    if (displayBody.toLowerCase().startsWith('time for:')) {
+                      const suffix = displayBody.slice(9).trim();
+                      displayBody = `Time for: ${getTaskDisplayName(suffix)}`;
+                    } else {
+                      displayBody = getTaskDisplayName(displayBody);
                     }
 
                     // Map generic 'Reminder' titles to category-specific titles
