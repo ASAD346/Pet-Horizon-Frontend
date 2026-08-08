@@ -678,7 +678,7 @@ export default function HomeScreen() {
         <RecentActivitySection
           activities={recentActivities}
           isPremium={isPremium}
-          todayOnly
+          todayOnly={false}
         />
       </ScrollView>
 

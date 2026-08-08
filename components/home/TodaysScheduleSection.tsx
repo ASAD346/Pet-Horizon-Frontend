@@ -616,7 +616,7 @@ export function TodaysScheduleSection({
     ? 'rgba(212, 160, 23, 0.35)'
     : 'rgba(46, 125, 50, 0.12)';
 
-  const MAX_HOME_ITEMS = 3;
+  const MAX_HOME_ITEMS = 5;
   const visibleItems = items.slice(0, MAX_HOME_ITEMS);
   const overflowCount = items.length - MAX_HOME_ITEMS;
 
