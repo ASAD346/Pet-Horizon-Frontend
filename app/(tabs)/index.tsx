@@ -23,8 +23,6 @@ import {
     PetBirthdayBanner,
 
     TodaysScheduleSection,
-
-    UpNextSection,
 } from '@/components/home';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -210,8 +208,15 @@ export default function HomeScreen() {
   };
 
   const isDateWithinRange = (s: any) => {
+    const mode = s.scheduleDate?.mode || s.metadata?.scheduleDate?.mode || (s.date ? 'single' : 'ongoing');
     const startStr = s.startDate || s.date || s.metadata?.startDate || s.metadata?.date;
-    const endStr = s.endDate || s.date || s.metadata?.endDate || s.metadata?.date;
+    let endStr = s.endDate || s.metadata?.endDate;
+
+    if (mode === 'single') {
+      endStr = endStr || startStr;
+    } else {
+      endStr = endStr || s.date || s.metadata?.date;
+    }
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -293,45 +298,7 @@ export default function HomeScreen() {
   const visibleGroomingRecords = groomingRecords;
   const visibleVaccinationSchedules = vaccinationSchedules;
 
-  const visibleDashboardTasks = useMemo(() => {
-    const activeScheduleIds = new Set<string>();
-    visibleFeedingSchedules.forEach((s: any) => {
-      if (s._id) activeScheduleIds.add(s._id);
-      if (s.id) activeScheduleIds.add(s.id);
-    });
-    visibleWalkSchedules.forEach((s: any) => {
-      if (s._id) activeScheduleIds.add(s._id);
-      if (s.id) activeScheduleIds.add(s.id);
-    });
-    visibleMedicineSchedules.forEach((s: any) => {
-      if (s._id) activeScheduleIds.add(s._id);
-      if (s.id) activeScheduleIds.add(s.id);
-    });
-    visibleGroomingRecords.forEach((s: any) => {
-      if (s._id) activeScheduleIds.add(s._id);
-      if (s.id) activeScheduleIds.add(s.id);
-    });
-    visibleVaccinationSchedules.forEach((s: any) => {
-      if (s._id) activeScheduleIds.add(s._id);
-      if (s.id) activeScheduleIds.add(s.id);
-    });
 
-    return dashboardTasks.filter((task) => {
-      if (activeScheduleIds.has(task.id)) {
-        return false;
-      }
-      const moduleId = dashboardTaskModule(task);
-      return moduleId ? canView(moduleId) : false;
-    });
-  }, [
-    dashboardTasks,
-    canView,
-    visibleFeedingSchedules,
-    visibleWalkSchedules,
-    visibleMedicineSchedules,
-    visibleGroomingRecords,
-    visibleVaccinationSchedules,
-  ]);
 
   const profileStats = dashboardData?.activePet;
   const isPremium = profileStats?.isPremium ?? user?.premiumStatus === 'premium';
@@ -641,16 +608,7 @@ export default function HomeScreen() {
           }}
         />
 
-        <UpNextSection
-          loading={scheduleLoading}
-          onLogFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
-          onLogWalk={canEdit('walks') ? handleCompleteWalk : undefined}
-          onLogMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
-          onLogGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
-          onLogVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
-          dashboardTasks={visibleDashboardTasks}
-          isPremium={isPremium}
-        />
+
 
         <TodaysScheduleSection
           feedingSchedules={visibleFeedingSchedules}

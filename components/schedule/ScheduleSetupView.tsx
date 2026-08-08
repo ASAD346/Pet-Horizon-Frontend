@@ -575,14 +575,36 @@ export function ScheduleSetupView({
         return;
       }
 
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       const sectionState = sections[sectionMeta.key];
-      const visibleEntries = sectionState.entries.filter(
-        (entry: any) =>
-          entry.status !== 'done' &&
-          entry.status !== 'skipped' &&
-          !entry.isComplete &&
-          !(sectionMeta.key === 'grooming' && entry.performedAt),
-      );
+      const visibleEntries = sectionState.entries.filter((entry: any) => {
+        // Basic completion checks
+        if (
+          entry.status === 'done' ||
+          entry.status === 'skipped' ||
+          entry.isComplete ||
+          (sectionMeta.key === 'grooming' && entry.performedAt)
+        ) {
+          return false;
+        }
+
+        // Hide expired single-day or date-range schedules
+        const dateMode = entry.scheduleDate?.mode;
+        if (dateMode === 'single' && entry.scheduleDate?.singleDate) {
+          const sDate = new Date(entry.scheduleDate.singleDate);
+          sDate.setHours(0, 0, 0, 0);
+          if (sDate < today) return false;
+        }
+        if (dateMode === 'range' && entry.scheduleDate?.endDate) {
+          const eDate = new Date(entry.scheduleDate.endDate);
+          eDate.setHours(0, 0, 0, 0);
+          if (eDate < today) return false;
+        }
+
+        return true;
+      });
 
       visibleEntries.forEach((entry) => {
         list.push({
