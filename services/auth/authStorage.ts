@@ -31,6 +31,11 @@ export async function writeItem(key: string, value: string): Promise<void> {
       message: error instanceof Error ? error.message : String(error),
     });
   }
+
+  if (key === TOKEN_KEY) {
+    log.warn('AuthStorage', 'CRITICAL SECURITY NOTICE: Falling back to unencrypted AsyncStorage for sensitive auth token!');
+  }
+
   await AsyncStorage.setItem(key, value);
   await markBackend('async');
 }
