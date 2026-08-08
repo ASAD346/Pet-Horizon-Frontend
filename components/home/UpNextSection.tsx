@@ -8,6 +8,7 @@ import { homePillCard } from './homeStyles';
 import { formatTimeHHmmDisplay } from '@/lib/feeding/feedingForm';
 import type { DashboardTask } from '@/types/dashboard';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 
 interface UpNextSectionProps {
   loading?: boolean;
@@ -92,7 +93,7 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
       />
       <View style={styles.textBlock}>
         <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-          {task.title ? task.title.charAt(0).toUpperCase() + task.title.slice(1) : ''}
+          {task.title ? getTaskDisplayName(task.title) : ''}
         </AppText>
         <AppText variant="caption" color={HomeTheme.textMuted}>
           {dashboardTaskCaption(task)}
