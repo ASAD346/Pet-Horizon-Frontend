@@ -209,37 +209,67 @@ export default function HomeScreen() {
     });
   };
 
-  const rawFeeding = dashboardData?.todaySchedules?.feeding ?? [];
+  const isDateWithinRange = (s: any) => {
+    const startStr = s.startDate || s.date || s.metadata?.startDate || s.metadata?.date;
+    const endStr = s.endDate || s.date || s.metadata?.endDate || s.metadata?.date;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (startStr) {
+      const start = new Date(startStr);
+      start.setHours(0, 0, 0, 0);
+      if (today < start) return false;
+    }
+    if (endStr) {
+      const end = new Date(endStr);
+      end.setHours(0, 0, 0, 0);
+      if (today > end) return false;
+    }
+    return true;
+  };
+
+  const rawFeeding = (dashboardData?.todaySchedules?.feeding ?? []).filter(isDateWithinRange);
   const feedingSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawFeeding, (s: any) => `${s.time || ''}-${s.mealType || ''}-${s.amount || ''}-${s.unit || ''}`),
     [rawFeeding]
   );
 
-  const rawWalk = dashboardData?.todaySchedules?.walk ?? [];
+  const rawWalk = (dashboardData?.todaySchedules?.walk ?? []).filter(isDateWithinRange);
   const walkSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawWalk, (s: any) => `${s.time || ''}-${s.duration || ''}`),
     [rawWalk]
   );
 
-  const rawMedicine = dashboardData?.todaySchedules?.medicine ?? [];
+  const rawMedicine = (dashboardData?.todaySchedules?.medicine ?? []).filter(isDateWithinRange);
   const medicineSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawMedicine, (s: any) => `${s.time || ''}-${s.medicineName || ''}-${s.dose || ''}`),
     [rawMedicine]
   );
 
-  const rawGrooming = dashboardData?.todaySchedules?.grooming ?? [];
+  const rawGrooming = (dashboardData?.todaySchedules?.grooming ?? []).filter(isDateWithinRange);
   const groomingRecords = useMemo(() => 
     deduplicateByIdOrProps(rawGrooming, (s: any) => `${s.time || ''}-${s.groomingType || ''}`),
     [rawGrooming]
   );
 
-  const rawVaccination = dashboardData?.todaySchedules?.vaccination ?? [];
+  const rawVaccination = (dashboardData?.todaySchedules?.vaccination ?? []).filter(isDateWithinRange);
   const vaccinationSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawVaccination, (s: any) => `${s.dueDate || s.date || ''}-${s.vaccineName || ''}`),
     [rawVaccination]
   );
 
-  const rawTasks = dashboardData?.upcomingTasks ?? [];
+  const rawTasks = (dashboardData?.upcomingTasks ?? []).filter((task: any) => {
+    // For upcoming tasks, check scheduledDate if it exists
+    if (task.scheduledDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const scheduled = new Date(task.scheduledDate);
+      scheduled.setHours(0, 0, 0, 0);
+      if (today < scheduled || today > scheduled) return false;
+    }
+    return true;
+  });
   const dashboardTasks = useMemo(() => 
     deduplicateByIdOrProps(rawTasks, (s: any) => `${s.scheduledDate || ''}-${s.title || ''}-${s.timeOfDay || ''}`),
     [rawTasks]
