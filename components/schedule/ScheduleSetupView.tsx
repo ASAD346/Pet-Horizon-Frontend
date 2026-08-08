@@ -245,7 +245,7 @@ export function ScheduleSetupView({
     setDefaultGrooming(options.defaultGrooming);
   }, []);
 
-  const { data: querySections, isFetching: schedulesQueryLoading, refetch: refetchSchedules } = useQuery({
+  const { data: querySections, isLoading: schedulesQueryLoading, refetch: refetchSchedules } = useQuery({
     queryKey: ['schedules', pet?._id],
     queryFn: async () => {
       if (!token || !pet?._id) return createInitialScheduleState();
