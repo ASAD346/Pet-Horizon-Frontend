@@ -486,14 +486,8 @@ export default function HomeScreen() {
 
   const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {
-      Alert.alert(
-        'Premium required',
-        'Free accounts include one pet. Upgrade to Premium to add more pets.',
-        [
-          { text: 'Not now', style: 'cancel' },
-          { text: 'View Premium', onPress: () => router.push('/profile/premium' as Href) },
-        ],
-      );
+      setPetSwitcherVisible(false);
+      router.push('/profile/premium' as Href);
       return;
     }
     setPetSwitcherVisible(false);

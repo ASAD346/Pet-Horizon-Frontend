@@ -355,14 +355,7 @@ export function ProfileHubView() {
             subtitle="Register another pet companion"
             onPress={() => {
               if (!isPremium && user?.activePetId) {
-                Alert.alert(
-                  'Premium Required',
-                  'Free accounts are limited to one pet profile. Upgrade to Premium to register multiple pets.',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'View Premium', onPress: () => router.push('/profile/premium') },
-                  ],
-                );
+                router.push('/profile/premium');
               } else {
                 router.push({ pathname: '/pet/register', params: { mode: 'add' } } as any);
               }
