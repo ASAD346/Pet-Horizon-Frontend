@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
 import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { log } from '@/lib/log';
 import { LoginTheme } from '../../constants/theme';
@@ -88,11 +88,16 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
   return (
     <View style={styles.wrapper}>
       <TouchableOpacity style={styles.circle} onPress={handlePress} activeOpacity={0.8}>
-        {imageUri ? (
-          <Image source={{ uri: imageUri }} style={styles.preview} contentFit="cover" />
-        ) : (
-          <Ionicons name="camera" size={28} color={LoginTheme.green} />
-        )}
+        <View style={styles.imageWrapper}>
+          {imageUri ? (
+            <Image source={{ uri: imageUri }} style={styles.preview} contentFit="cover" />
+          ) : (
+            <View style={styles.placeholderContainer}>
+              <MaterialCommunityIcons name="paw" size={38} color="#81C784" />
+              <Ionicons name="camera" size={16} color="#2E7D32" style={styles.placeholderCamera} />
+            </View>
+          )}
+        </View>
         <View style={styles.addBadge}>
           <Ionicons name={imageUri ? 'pencil' : 'add'} size={14} color={LoginTheme.footerText} />
         </View>
@@ -121,28 +126,51 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#5CB35D',
-    backgroundColor: 'rgba(92, 179, 93, 0.05)',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1E293B',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   preview: {
     width: '100%',
     height: '100%',
-    borderRadius: 48,
   },
   addBadge: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
+    bottom: 0,
+    right: 0,
     width: 26,
     height: 26,
     borderRadius: 13,
     backgroundColor: '#5CB35D',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  placeholderContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#E8F5E9',
+  },
+  placeholderCamera: {
+    position: 'absolute',
+    bottom: 12,
+    alignSelf: 'center',
   },
 });

@@ -670,8 +670,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
-    paddingTop: Spacing.xs,
+    paddingBottom: 24,
+    paddingTop: Spacing.md,
     backgroundColor: 'transparent',
   },
   addButton: {
