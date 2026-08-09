@@ -62,17 +62,29 @@ export function ToastHost() {
   if (!message) return null;
 
   let title = 'Pet Horizon';
-  let badgeColor = '#4CAF50'; // standard green
+  let badgeColor = '#2E7D32'; 
+  let bgColor = '#E8F5E9'; // Light green fallback
+  let textColor = '#1B5E20';
+  let descColor = '#2E7D32';
 
   if (type === 'success') {
     title = 'Success';
-    badgeColor = '#4CAF50';
+    badgeColor = '#2E7D32';
+    bgColor = '#E8F5E9';
+    textColor = '#1B5E20';
+    descColor = '#2E7D32';
   } else if (type === 'error') {
     title = 'Alert';
-    badgeColor = '#F44336';
+    badgeColor = '#C62828';
+    bgColor = '#FFEBEE';
+    textColor = '#C62828';
+    descColor = '#D32F2F';
   } else if (type === 'info') {
     title = 'Info';
-    badgeColor = '#3A8F3B';
+    badgeColor = '#2E7D32';
+    bgColor = '#E8F5E9'; // Match theme green
+    textColor = '#1B5E20';
+    descColor = '#2E7D32';
   }
 
   return (
@@ -87,7 +99,7 @@ export function ToastHost() {
         },
       ]}
     >
-      <View style={styles.notificationCard}>
+      <View style={[styles.notificationCard, { backgroundColor: bgColor }]}>
         {/* Header Row */}
         <View style={styles.headerRow}>
           <View style={styles.appIdentity}>
@@ -97,30 +109,30 @@ export function ToastHost() {
               </AppText>
               <View style={[styles.tagUnderline, { backgroundColor: badgeColor }]} />
             </View>
-            <AppText variant="caption" weight="600" color="#9E9E9E" style={styles.appName}>
+            <AppText variant="caption" weight="600" color={textColor} style={styles.appName}>
               Pet Horizon
             </AppText>
-            <Ionicons name="notifications" size={12} color="#757575" style={styles.bellIcon} />
+            <Ionicons name="notifications" size={12} color={descColor} style={styles.bellIcon} />
           </View>
 
           <View style={styles.chevronWrapper}>
-            <Ionicons name="chevron-down" size={14} color="#757575" />
+            <Ionicons name="chevron-down" size={14} color={descColor} />
           </View>
         </View>
 
         {/* Content Row */}
         <View style={styles.contentRow}>
           <View style={styles.textContainer}>
-            <AppText variant="bodySmall" weight="700" color="#FFFFFF" style={styles.titleText}>
+            <AppText variant="bodySmall" weight="700" color={textColor} style={styles.titleText}>
               {title}
             </AppText>
-            <AppText variant="caption" weight="500" color="#E0E0E0" style={styles.bodyText}>
+            <AppText variant="caption" weight="500" color={descColor} style={styles.bodyText}>
               {message}
             </AppText>
           </View>
 
           {/* Right Icon/Logo representation */}
-          <View style={[styles.rightLogo, { borderColor: badgeColor }]}>
+          <View style={[styles.rightLogo, { borderColor: badgeColor, backgroundColor: 'rgba(255,255,255,0.4)' }]}>
             <Ionicons name="paw" size={16} color={badgeColor} />
           </View>
         </View>
@@ -139,7 +151,6 @@ const styles = StyleSheet.create({
   },
   notificationCard: {
     width: '100%',
-    backgroundColor: '#262626', // Premium dark slate/charcoal background
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 14,
