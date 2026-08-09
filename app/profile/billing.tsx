@@ -21,7 +21,9 @@ import {
   cancelPremium,
   fetchPaymentInvoices,
   fetchPremiumStatus,
+  subscribePremium,
 } from '@/services/premium/premiumApi';
+import { SecureCheckoutSheet } from '@/components/profile/SecureCheckoutSheet';
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
 const FREE_FEATURES = [
@@ -52,17 +54,19 @@ interface PlanCardProps {
   isActive: boolean;
   onPress?: () => void;
   renewLabel?: string;
+  isPopular?: boolean;
 }
 
 function PlanCard({
   title, icon, features, price,
-  isActive, onPress, renewLabel,
+  isActive, onPress, renewLabel, isPopular,
 }: PlanCardProps) {
   return (
     <TouchableOpacity
       style={[
         styles.planCard,
         isActive && styles.planCardActive,
+        isPopular && !isActive && styles.planCardPopular,
       ]}
       onPress={onPress}
       activeOpacity={onPress ? 0.8 : 1}
@@ -70,8 +74,8 @@ function PlanCard({
     >
       <View style={styles.planCardHeader}>
         <View style={styles.planTitleRow}>
-          <Ionicons name={icon} size={20} color={isActive ? '#2E7D32' : '#64748B'} />
-          <AppText variant="body" weight="800" color={isActive ? '#1B5E20' : '#334155'}>
+          <Ionicons name={icon} size={20} color={isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#64748B'} />
+          <AppText variant="body" weight="800" color={isActive ? '#1B5E20' : isPopular ? '#B47E00' : '#334155'}>
             {title}
           </AppText>
         </View>
@@ -79,6 +83,12 @@ function PlanCard({
           <View style={styles.activeBadge}>
             <AppText variant="caption" weight="800" color="#2E7D32">
               ACTIVE
+            </AppText>
+          </View>
+        ) : isPopular ? (
+          <View style={styles.popularBadge}>
+            <AppText variant="caption" weight="800" color="#FFFFFF">
+              POPULAR
             </AppText>
           </View>
         ) : onPress ? (
@@ -155,6 +165,36 @@ export default function BillingScreen() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const { showToast, showErrorToast } = useToast();
+
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [checkoutVisible, setCheckoutVisible] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+
+  const handleSelectPlan = (planId: 'monthly' | 'yearly') => {
+    setSelectedPlan({
+      planId,
+      price: planId === 'yearly' ? 49.99 : 4.99,
+      name: planId === 'yearly' ? 'Yearly Premium' : 'Monthly Premium',
+    });
+    setCheckoutVisible(true);
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedPlan || !token) return;
+    setCheckoutLoading(true);
+    try {
+      await subscribePremium(token, {
+        planId: selectedPlan.planId,
+      });
+      showToast('Successfully subscribed to Premium!');
+      setCheckoutVisible(false);
+      await reload();
+    } catch (err) {
+      showErrorToast(getErrorMessage(err));
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   const isPremium = status?.isPremium ?? user?.premiumStatus === 'premium';
 
@@ -298,7 +338,7 @@ export default function BillingScreen() {
             price="$4.99 / month"
             isActive={isMonthlyActive}
             renewLabel={isMonthlyActive ? renewLabel : undefined}
-            onPress={!isMonthlyActive ? () => router.push('/profile/premium') : undefined}
+            onPress={!isMonthlyActive ? () => handleSelectPlan('monthly') : undefined}
           />
 
           <PlanCard
@@ -308,7 +348,8 @@ export default function BillingScreen() {
             price="$49.99 / year  ·  Save 17%"
             isActive={isYearlyActive}
             renewLabel={isYearlyActive ? renewLabel : undefined}
-            onPress={!isYearlyActive ? () => router.push('/profile/premium') : undefined}
+            onPress={!isYearlyActive ? () => handleSelectPlan('yearly') : undefined}
+            isPopular={true}
           />
         </View>
 
@@ -354,6 +395,14 @@ export default function BillingScreen() {
           )}
         </View>
       </ScrollView>
+
+      <SecureCheckoutSheet
+        visible={checkoutVisible}
+        plan={selectedPlan}
+        onClose={() => setCheckoutVisible(false)}
+        onConfirm={handleConfirmPayment}
+        loading={checkoutLoading}
+      />
     </SafeAreaView>
   );
 }
@@ -384,6 +433,17 @@ const styles = StyleSheet.create({
   planCardActive: {
     borderColor: '#4CAF50',
     backgroundColor: '#F0FAF0',
+  },
+  planCardPopular: {
+    borderColor: '#D4A017',
+    borderWidth: 2,
+    backgroundColor: '#FFFDF0',
+  },
+  popularBadge: {
+    backgroundColor: '#D4A017',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.sm,
   },
   planCardHeader: {
     flexDirection: 'row',
