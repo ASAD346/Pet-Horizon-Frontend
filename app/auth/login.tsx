@@ -7,9 +7,8 @@ import {
   Keyboard,
   ScrollView,
 } from 'react-native';
-import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { readItem, writeItem, deleteItem } from '@/services/auth/authStorage';
 import {
   LoginBranding,
   LoginFooterBar,
@@ -41,29 +40,8 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showVerifyAction, setShowVerifyAction] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const loginInFlightRef = useRef(false);
-
-  useFocusEffect(
-    useCallback(() => {
-      async function hydrateRememberMe() {
-        try {
-          const storedEmail = await readItem('REMEMBER_ME_EMAIL');
-          if (storedEmail) {
-            setEmail(storedEmail);
-            setRememberMe(true);
-          } else {
-            setEmail('');
-            setRememberMe(false);
-          }
-        } catch (err) {
-          log.warn('Login', 'Failed to hydrate remember me email', err instanceof Error ? err.message : String(err));
-        }
-      }
-      void hydrateRememberMe();
-    }, [])
-  );
 
   React.useEffect(() => {
     const verified = params.verified === '1' || params.verified === 'true';
@@ -134,17 +112,6 @@ export default function LoginScreen() {
 
     try {
       const session = await login(email, password);
-      
-      // Securely persist or wipe the email flag for the next launch
-      try {
-        if (rememberMe) {
-          await writeItem('REMEMBER_ME_EMAIL', email.trim());
-        } else {
-          await deleteItem('REMEMBER_ME_EMAIL');
-        }
-      } catch (storageErr) {
-        log.warn('Login', 'Failed to update secure store', storageErr instanceof Error ? storageErr.message : String(storageErr));
-      }
 
       log.ok('Login', 'UI success — routing', {
         activePetId: session.user.activePetId ?? null,
@@ -206,8 +173,6 @@ export default function LoginScreen() {
                 password={password}
                 loading={loading || googleLoading}
                 showVerifyAction={showVerifyAction}
-                rememberMe={rememberMe}
-                onRememberMeChange={setRememberMe}
                 onEmailChange={handleEmailChange}
                 onPasswordChange={handlePasswordChange}
                 onLogin={handleLogin}
