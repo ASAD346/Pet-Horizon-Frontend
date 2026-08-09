@@ -3,14 +3,12 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Pressable,
-  FlatList,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Skeleton } from '@/components/ui/skeletons';
 import { Palette, Radius, Spacing } from '../../constants/theme';
+import { SheetOptionPicker } from '../sheets';
 
 interface BreedSelectorProps {
   value: string;
@@ -68,51 +66,18 @@ export function BreedSelector({
         </AppText>
       ) : null}
 
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={() => setVisible(false)}>
-        <Pressable style={styles.overlay} onPress={() => setVisible(false)}>
-          <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.sheetHeader}>
-              <AppText variant="h3" weight="800" color="#1A2B4E">
-                Select Breed
-              </AppText>
-              <TouchableOpacity onPress={() => setVisible(false)} hitSlop={12}>
-                <Ionicons name="close" size={24} color="#1A2B4E" />
-              </TouchableOpacity>
-            </View>
-
-            <FlatList
-              data={breeds}
-              keyExtractor={(item) => item}
-              style={styles.list}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.listContent}
-              renderItem={({ item }) => {
-                const selected = item === value;
-                return (
-                  <TouchableOpacity
-                    style={[styles.option, selected && styles.optionSelected]}
-                    onPress={() => {
-                      onChange(item);
-                      setVisible(false);
-                    }}
-                  >
-                    <AppText
-                      variant="body"
-                      color={selected ? '#5CB35D' : Palette.gray[800]}
-                      weight={selected ? '700' : '600'}
-                    >
-                      {item}
-                    </AppText>
-                    {selected ? (
-                      <Ionicons name="checkmark" size={20} color="#5CB35D" />
-                    ) : null}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <SheetOptionPicker
+        visible={visible}
+        title="Select Breed"
+        options={breeds.map((b) => ({ value: b, label: b }))}
+        selectedValue={value}
+        onClose={() => setVisible(false)}
+        onSelect={(val) => {
+          onChange(val);
+          setVisible(false);
+        }}
+        useNativeModal={false}
+      />
     </View>
   );
 }
@@ -158,45 +123,5 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: Spacing.xs,
     marginLeft: 4,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(26, 43, 78, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#F1F7F1',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '70%',
-    paddingBottom: Spacing.lg,
-    borderWidth: 1.5,
-    borderColor: '#EFEFEF',
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EFEFEF',
-  },
-  list: {
-    paddingHorizontal: Spacing.md,
-  },
-  listContent: {
-    paddingVertical: Spacing.sm,
-  },
-  option: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: Spacing.md,
-    borderRadius: 12,
-  },
-  optionSelected: {
-    backgroundColor: 'rgba(92, 179, 93, 0.08)',
   },
 });
