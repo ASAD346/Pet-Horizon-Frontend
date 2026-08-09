@@ -31,7 +31,7 @@ export const EXPENSE_TRACKER_CATEGORIES: {
   color: string;
   bg: string;
 }[] = [
-  { id: 'all', label: 'All', materialIcon: 'view-grid', color: '#FFFFFF', bg: '#5CB35D' },
+  { id: 'all', label: 'All', materialIcon: 'view-grid', color: '#5CB35D', bg: '#FFFFFF' },
   { id: 'food', label: 'Food', materialIcon: 'silverware-fork-knife', color: '#5CB35D', bg: '#FFFFFF' },
   { id: 'vet', label: 'Vet', materialIcon: 'medical-bag', color: '#5B9BD5', bg: '#FFFFFF' },
   { id: 'grooming', label: 'Grooming', materialIcon: 'content-cut', color: '#9C27B0', bg: '#FFFFFF' },
