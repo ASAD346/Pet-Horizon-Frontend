@@ -41,29 +41,32 @@ function TimelineRow({
     ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
 
+  const catStyle = getCategoryStyle(event.category);
+  let dotColor = catStyle.color;
+
+  if (skipped) {
+    dotColor = '#EF4444';
+  } else if (event.status === 'missed') {
+    dotColor = '#9CA3AF';
+  }
+
   let badgeBg = '#FEF3C7';
   let badgeText = '#D97706';
   let badgeLabel = 'SCHEDULED';
-  let dotColor = brandColor;
 
   if (completed) {
     badgeBg = '#DCFCE7';
     badgeText = '#16A34A';
     badgeLabel = 'COMPLETED';
-    dotColor = '#16A34A';
   } else if (skipped) {
     badgeBg = '#FEE2E2';
     badgeText = '#EF4444';
     badgeLabel = 'SKIPPED';
-    dotColor = '#EF4444';
   } else if (event.status === 'missed') {
     badgeBg = '#F3F4F6';
     badgeText = '#4B5563';
     badgeLabel = 'MISSED';
-    dotColor = '#9CA3AF';
   }
-
-  const catStyle = getCategoryStyle(event.category);
 
   return (
     <View style={styles.row}>
@@ -74,8 +77,8 @@ function TimelineRow({
 
       {/* Timeline line and outer ring */}
       <View style={styles.timelineCol}>
-        <View style={[styles.dotOuter, { borderColor: dotColor }]}>
-          <View style={[styles.dotInner, { backgroundColor: dotColor }]} />
+        <View style={[styles.timelineNode, { backgroundColor: catStyle.bg, borderColor: dotColor }]}>
+          <MaterialCommunityIcons name={event.materialIcon} size={15} color={dotColor} />
         </View>
         {!isLast ? <View style={styles.line} /> : null}
       </View>
@@ -87,14 +90,11 @@ function TimelineRow({
         disabled={!onPress}
         onPress={() => onPress?.(event.id)}
       >
-        <View style={[styles.iconContainer, { backgroundColor: catStyle.bg }]}>
-          <MaterialCommunityIcons name={event.materialIcon} size={18} color={catStyle.color} />
-        </View>
         <View style={styles.cardText}>
           <AppText variant="bodySmall" weight="700" color="#1F2937">
             {event.title}
           </AppText>
-          <AppText variant="caption" color={catStyle.color} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
+          <AppText variant="caption" color={dotColor} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
             {event.category}
           </AppText>
         </View>
@@ -195,36 +195,30 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   timelineCol: {
-    width: 24,
+    width: 32,
     alignItems: 'center',
     marginRight: Spacing.xs,
+    alignSelf: 'stretch',
   },
-  dotOuter: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  timelineNode: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 13,
-    backgroundColor: '#FFFFFF',
+    marginTop: 6,
     zIndex: 2,
-  },
-  dotInner: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
   },
   line: {
     position: 'absolute',
-    top: 24,
-    bottom: -12,
-    width: 1,
-    backgroundColor: '#E5E7EB',
-    left: 11,
+    top: 20,
+    bottom: -30,
+    width: 2,
+    backgroundColor: '#E2E8F0',
+    left: 15,
     zIndex: 1,
   },
-  
   card: {
     flex: 1,
     flexDirection: 'row',
@@ -233,7 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
+    paddingVertical: 10,
     marginBottom: 6,
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 2 },
@@ -241,16 +235,8 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 1,
   },
-  iconContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   cardText: {
     flex: 1,
-    marginLeft: Spacing.sm,
     justifyContent: 'center',
   },
   statusBadge: {
