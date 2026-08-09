@@ -462,7 +462,7 @@ export default function RegisterPetScreen() {
                 <View style={styles.headerRow}>
                   {(isEditMode || isAddMode) && (
                     <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                      <Ionicons name="chevron-back" size={22} color="#2E7D32" />
+                      <Ionicons name="chevron-back" size={16} color="#0E3821" />
                     </TouchableOpacity>
                   )}
                   <AppText variant="h3" weight="800" align="center" style={styles.title}>
@@ -631,12 +631,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     zIndex: 1,
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(46, 125, 50, 0.06)',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2EBE2',
+    ...Platform.select({
+      ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+      android: { elevation: 2 },
+    }),
   },
   title: {
     fontSize: 20,
