@@ -51,6 +51,8 @@ interface PlanCardProps {
   icon: React.ComponentProps<typeof Ionicons>['name'];
   features: string[];
   price: string;
+  period: string;
+  badge?: string;
   isActive: boolean;
   onPress?: () => void;
   renewLabel?: string;
@@ -58,9 +60,12 @@ interface PlanCardProps {
 }
 
 function PlanCard({
-  title, icon, features, price,
+  title, icon, features, price, period, badge,
   isActive, onPress, renewLabel, isPopular,
 }: PlanCardProps) {
+  const headerIconColor = isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#64748B';
+  const titleColor = isActive ? '#1B5E20' : isPopular ? '#B47E00' : '#1E293B';
+
   return (
     <TouchableOpacity
       style={[
@@ -69,63 +74,90 @@ function PlanCard({
         isPopular && !isActive && styles.planCardPopular,
       ]}
       onPress={onPress}
-      activeOpacity={onPress ? 0.8 : 1}
+      activeOpacity={onPress ? 0.85 : 1}
       disabled={!onPress}
     >
+      {/* Top accent strip for popular card */}
+      {isPopular && !isActive && (
+        <View style={styles.popularTopStrip} />
+      )}
+
+      {/* Header Row */}
       <View style={styles.planCardHeader}>
         <View style={styles.planTitleRow}>
-          <Ionicons name={icon} size={20} color={isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#64748B'} />
-          <AppText variant="body" weight="800" color={isActive ? '#1B5E20' : isPopular ? '#B47E00' : '#334155'}>
+          <Ionicons name={icon} size={20} color={headerIconColor} />
+          <AppText variant="body" weight="800" color={titleColor}>
             {title}
           </AppText>
         </View>
+        
         {isActive ? (
           <View style={styles.activeBadge}>
-            <AppText variant="caption" weight="800" color="#2E7D32">
+            <AppText variant="caption" weight="800" color="#2E7D32" style={{ fontSize: 9 }}>
               ACTIVE
             </AppText>
           </View>
         ) : isPopular ? (
           <View style={styles.popularBadge}>
-            <AppText variant="caption" weight="800" color="#FFFFFF">
+            <AppText variant="caption" weight="800" color="#FFFFFF" style={{ fontSize: 9 }}>
               POPULAR
             </AppText>
           </View>
         ) : onPress ? (
           <View style={styles.upgradeBadge}>
-            <AppText variant="caption" weight="700" color="#2E7D32">
-              Upgrade
+            <AppText variant="caption" weight="800" color="#2E7D32" style={{ fontSize: 9 }}>
+              UPGRADE
             </AppText>
           </View>
         ) : null}
       </View>
 
+      {/* Pricing Row */}
+      <View style={styles.priceContainer}>
+        <View style={styles.priceRow}>
+          <AppText variant="h2" weight="800" color="#0F172A" style={styles.priceText}>
+            {price}
+          </AppText>
+          <AppText variant="caption" weight="600" color="#64748B" style={styles.periodText}>
+            {period}
+          </AppText>
+        </View>
+        {badge ? (
+          <View style={styles.saveBadge}>
+            <AppText variant="caption" weight="800" color="#B47E00" style={{ fontSize: 9 }}>
+              {badge}
+            </AppText>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.cardDivider} />
+
+      {/* Features List */}
       <View style={styles.featureList}>
         {features.map((f, i) => (
           <View key={i} style={styles.featureRow}>
             <Ionicons
-              name="checkmark-circle"
+              name="checkmark"
               size={14}
-              color={isActive ? '#4CAF50' : '#94A3B8'}
+              color={isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#2E7D32'}
               style={styles.checkIcon}
             />
-            <AppText variant="caption" color="#475569" style={styles.featureText}>
+            <AppText variant="caption" color="#475569" weight="600" style={styles.featureText}>
               {f}
             </AppText>
           </View>
         ))}
       </View>
 
-      <View style={styles.planPriceRow}>
-        <AppText variant="bodySmall" weight="800" color="#334155">
-          {price}
-        </AppText>
-        {renewLabel ? (
-          <AppText variant="caption" color="#2E7D32" weight="600">
+      {renewLabel ? (
+        <View style={styles.renewRow}>
+          <Ionicons name="time-outline" size={12} color="#64748B" />
+          <AppText variant="caption" color="#64748B" weight="600" style={styles.renewText}>
             {renewLabel}
           </AppText>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </TouchableOpacity>
   );
 }
@@ -327,7 +359,8 @@ export default function BillingScreen() {
             title="Free Plan"
             icon="paw-outline"
             features={FREE_FEATURES}
-            price="Free forever"
+            price="Free"
+            period="forever"
             isActive={!isPremium}
           />
 
@@ -335,7 +368,8 @@ export default function BillingScreen() {
             title="Monthly Premium"
             icon="star-outline"
             features={MONTHLY_FEATURES}
-            price="$4.99 / month"
+            price="$4.99"
+            period="/ month"
             isActive={isMonthlyActive}
             renewLabel={isMonthlyActive ? renewLabel : undefined}
             onPress={!isMonthlyActive ? () => handleSelectPlan('monthly') : undefined}
@@ -345,7 +379,9 @@ export default function BillingScreen() {
             title="Yearly Premium"
             icon="ribbon-outline"
             features={YEARLY_FEATURES}
-            price="$49.99 / year  ·  Save 17%"
+            price="$49.99"
+            period="/ year"
+            badge="SAVE 17%"
             isActive={isYearlyActive}
             renewLabel={isYearlyActive ? renewLabel : undefined}
             onPress={!isYearlyActive ? () => handleSelectPlan('yearly') : undefined}
@@ -425,89 +461,139 @@ const styles = StyleSheet.create({
   },
   planCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.xl || 20,
-    padding: Spacing.lg,
+    borderRadius: Radius.md || 12,
+    padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
     ...Platform.select({
       ios: {
         shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.03,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  planCardActive: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#F6FBF6',
+    borderWidth: 1.2,
+  },
+  planCardPopular: {
+    borderColor: '#D4A017',
+    borderWidth: 1.5,
+    backgroundColor: '#FFFDF0',
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#D4A017',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.04,
-        shadowRadius: 12,
+        shadowOpacity: 0.05,
+        shadowRadius: 8,
       },
       android: {
         elevation: 2,
       },
     }),
   },
-  planCardActive: {
-    borderColor: '#4CAF50',
-    backgroundColor: '#F0FAF0',
-    borderWidth: 1.5,
-  },
-  planCardPopular: {
-    borderColor: '#D4A017',
-    borderWidth: 2,
-    backgroundColor: '#FFFDF0',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#D4A017',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.1,
-        shadowRadius: 14,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+  popularTopStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#D4A017',
   },
   popularBadge: {
     backgroundColor: '#D4A017',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: Radius.sm,
   },
   planCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   planTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
   activeBadge: {
     backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: '#C8E6C9',
   },
   upgradeBadge: {
     backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     borderRadius: Radius.sm,
   },
+  priceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 2,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  priceText: {
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  periodText: {
+    marginLeft: 3,
+  },
+  saveBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 160, 23, 0.15)',
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: Spacing.xs,
+  },
   featureList: {
-    gap: 8,
-    marginBottom: Spacing.md,
+    gap: 4,
+    marginBottom: 2,
   },
   featureRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   checkIcon: {
-    marginRight: 8,
-    marginTop: 1,
+    marginRight: 6,
   },
   featureText: {
     flex: 1,
-    lineHeight: 16,
+    lineHeight: 18,
+  },
+  renewRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingTop: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  renewText: {
+    fontSize: 11,
   },
   planPriceRow: {
     flexDirection: 'row',
