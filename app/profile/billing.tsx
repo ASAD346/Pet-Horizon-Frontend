@@ -25,22 +25,23 @@ import {
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
 const FREE_FEATURES = [
-  'Basic pet tracking and care schedules',
-  'Limit 1 daily photo upload in Journal',
-  'Single pet profile',
+  'Basic pet tracking & schedule limits',
+  '1 daily photo upload in activity journal',
+  'Single pet profile support',
 ];
 
 const MONTHLY_FEATURES = [
-  'Unlimited pet registrations',
-  'Up to 5 daily photo uploads in Journal',
-  'Smart notifications & reminders',
-  'Caregiver permissions & access controls',
+  'Unlimited pet profile registrations',
+  'Up to 5 daily photo uploads in journal',
+  'Smart custom push notifications & reminders',
+  'Invite family caregivers & customize access permissions',
+  'Health metrics tracking & weight logging',
 ];
 
 const YEARLY_FEATURES = [
-  'Best Value — get 2 months free!',
-  'All Monthly Premium features included',
-  'Dedicated Priority Customer Support',
+  'All Monthly Premium benefits included',
+  'Equivalent of 2 months free! (Save 17%)',
+  'Dedicated Priority Customer Support agent access',
 ];
 
 interface PlanCardProps {
@@ -69,29 +70,37 @@ function PlanCard({
     >
       <View style={styles.planCardHeader}>
         <View style={styles.planTitleRow}>
-          <Ionicons name={icon} size={20} color={isActive ? ProfileTheme.green : '#64748B'} />
-          <AppText variant="body" weight="800" color={isActive ? ProfileTheme.green : '#334155'}>
+          <Ionicons name={icon} size={20} color={isActive ? '#2E7D32' : '#64748B'} />
+          <AppText variant="body" weight="800" color={isActive ? '#1B5E20' : '#334155'}>
             {title}
           </AppText>
         </View>
         {isActive ? (
           <View style={styles.activeBadge}>
-            <AppText variant="caption" weight="800" color={ProfileTheme.green}>
+            <AppText variant="caption" weight="800" color="#2E7D32">
               ACTIVE
             </AppText>
           </View>
         ) : onPress ? (
-          <AppText variant="caption" weight="700" color={ProfileTheme.green}>
-            Upgrade
-          </AppText>
+          <View style={styles.upgradeBadge}>
+            <AppText variant="caption" weight="700" color="#2E7D32">
+              Upgrade
+            </AppText>
+          </View>
         ) : null}
       </View>
 
       <View style={styles.featureList}>
         {features.map((f, i) => (
           <View key={i} style={styles.featureRow}>
+            <Ionicons
+              name="checkmark-circle"
+              size={14}
+              color={isActive ? '#4CAF50' : '#94A3B8'}
+              style={styles.checkIcon}
+            />
             <AppText variant="caption" color="#475569" style={styles.featureText}>
-              • {f}
+              {f}
             </AppText>
           </View>
         ))}
@@ -102,7 +111,7 @@ function PlanCard({
           {price}
         </AppText>
         {renewLabel ? (
-          <AppText variant="caption" color={ProfileTheme.green}>
+          <AppText variant="caption" color="#2E7D32" weight="600">
             {renewLabel}
           </AppText>
         ) : null}
@@ -208,8 +217,68 @@ export default function BillingScreen() {
       <ProfileScreenHeader title="Billing & Subscription" onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        
+        {/* Active Premium Details Section */}
+        {isPremium && status && (
+          <View style={styles.detailsCard}>
+            <View style={styles.detailsHeader}>
+              <View style={styles.goldBadge}>
+                <Ionicons name="sparkles" size={16} color="#D4A017" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <AppText variant="body" weight="800" color="#0F172A">
+                  Active Subscription
+                </AppText>
+                <AppText variant="caption" color="#64748B">
+                  Premium member benefits unlocked
+                </AppText>
+              </View>
+            </View>
+            
+            <View style={styles.divider} />
 
-        <AppText variant="bodySmall" weight="700" color="#64748B" style={styles.sectionTitle}>
+            <View style={styles.detailsGrid}>
+              <View style={styles.detailsRow}>
+                <AppText variant="caption" color="#64748B">Active Plan</AppText>
+                <AppText variant="caption" weight="800" color="#0F172A">
+                  {isYearlyActive ? 'Yearly Premium' : 'Monthly Premium'}
+                </AppText>
+              </View>
+              
+              <View style={styles.detailsRow}>
+                <AppText variant="caption" color="#64748B">Status</AppText>
+                <AppText variant="caption" weight="800" color="#22C55E">
+                  ACTIVE
+                </AppText>
+              </View>
+
+              <View style={styles.detailsRow}>
+                <AppText variant="caption" color="#64748B">Billing Cycle</AppText>
+                <AppText variant="caption" weight="800" color="#0F172A">
+                  {isYearlyActive ? '$49.99/year' : '$4.99/month'}
+                </AppText>
+              </View>
+
+              <View style={styles.detailsRow}>
+                <AppText variant="caption" color="#64748B">
+                  {status.autoRenew ? 'Next Renewal' : 'Expires On'}
+                </AppText>
+                <AppText variant="caption" weight="800" color="#0F172A">
+                  {status.expiresAt ? new Date(status.expiresAt).toLocaleDateString() : 'N/A'}
+                </AppText>
+              </View>
+
+              <View style={styles.detailsRow}>
+                <AppText variant="caption" color="#64748B">Auto-Renew</AppText>
+                <AppText variant="caption" weight="800" color={status.autoRenew ? '#22C55E' : '#EF4444'}>
+                  {status.autoRenew ? 'Enabled' : 'Disabled'}
+                </AppText>
+              </View>
+            </View>
+          </View>
+        )}
+
+        <AppText variant="bodySmall" weight="800" color="#64748B" style={styles.sectionTitle}>
           MEMBERSHIP PLANS
         </AppText>
 
@@ -243,25 +312,30 @@ export default function BillingScreen() {
           />
         </View>
 
-        {isPremium && (
+        {isPremium && status?.autoRenew && (
           <TouchableOpacity style={styles.cancelCard} onPress={handleCancel} activeOpacity={0.8} disabled={cancelling}>
-            <AppText variant="bodySmall" weight="700" color="#EF4444">
-              Cancel Auto-Renewal
-            </AppText>
-            <AppText variant="caption" color="#94A3B8" style={{ marginTop: 2 }}>
-              Keep premium access until the end of your billing cycle
-            </AppText>
+            <View style={styles.cancelContent}>
+              <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+              <View style={{ flex: 1 }}>
+                <AppText variant="bodySmall" weight="700" color="#EF4444">
+                  Cancel Auto-Renewal
+                </AppText>
+                <AppText variant="caption" color="#94A3B8" style={{ marginTop: 2 }}>
+                  Your premium access remains active until the end of your billing cycle.
+                </AppText>
+              </View>
+            </View>
           </TouchableOpacity>
         )}
 
         <View style={styles.infoBanner}>
-          <Ionicons name="logo-google-playstore" size={16} color="#64748B" />
+          <Ionicons name="logo-google-playstore" size={18} color="#64748B" />
           <AppText variant="caption" color="#64748B" style={styles.infoText}>
             Payment methods, invoices, and billing cycles are managed securely via your Google Play Store account settings.
           </AppText>
         </View>
 
-        <AppText variant="bodySmall" weight="700" color="#64748B" style={[styles.sectionTitle, { marginTop: Spacing.md }]}>
+        <AppText variant="bodySmall" weight="800" color="#64748B" style={[styles.sectionTitle, { marginTop: Spacing.md }]}>
           BILLING HISTORY
         </AppText>
 
@@ -270,6 +344,7 @@ export default function BillingScreen() {
             <SkeletonBillingHistory count={3} />
           ) : invoices.length === 0 ? (
             <View style={styles.emptyContainer}>
+              <Ionicons name="document-text-outline" size={28} color="#CBD5E1" style={{ marginBottom: 8 }} />
               <AppText variant="bodySmall" color="#94A3B8">
                 No invoices on this account yet
               </AppText>
@@ -292,7 +367,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     marginBottom: Spacing.md,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   planContainer: {
     gap: Spacing.md,
@@ -302,18 +378,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
   },
   planCardActive: {
-    borderColor: ProfileTheme.green,
-    backgroundColor: 'rgba(46,125,50,0.02)',
+    borderColor: '#4CAF50',
+    backgroundColor: '#F0FAF0',
   },
   planCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   planTitleRow: {
     flexDirection: 'row',
@@ -321,36 +397,91 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   activeBadge: {
-    backgroundColor: 'rgba(46,125,50,0.1)',
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  upgradeBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: Radius.sm,
   },
   featureList: {
-    gap: 4,
+    gap: 8,
     marginBottom: Spacing.md,
   },
   featureRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkIcon: {
+    marginRight: 8,
+    marginTop: 1,
   },
   featureText: {
     flex: 1,
+    lineHeight: 16,
   },
   planPriceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: '#E2E8F0',
     paddingTop: Spacing.sm,
   },
+  /* Subscription Details Card */
+  detailsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    marginBottom: Spacing.xl,
+  },
+  detailsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  goldBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: Spacing.md,
+  },
+  detailsGrid: {
+    gap: Spacing.sm,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  /* Cancel Card */
   cancelCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
+    borderWidth: 1.5,
+    borderColor: '#FEE2E2',
     marginBottom: Spacing.lg,
+  },
+  cancelContent: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'flex-start',
   },
   infoBanner: {
     flexDirection: 'row',
@@ -370,7 +501,7 @@ const styles = StyleSheet.create({
   historyCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
     overflow: 'hidden',
   },
@@ -389,7 +520,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   emptyContainer: {
-    padding: Spacing.xl,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
+    justifyContent: 'center',
   },
 });
