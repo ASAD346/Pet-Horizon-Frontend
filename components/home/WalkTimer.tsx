@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 
 interface WalkTimerProps {
   scheduleId: string;
   isDone: boolean;
   isSkipped: boolean;
   isPremium: boolean;
+  targetDuration?: number; // target walk duration in minutes
   onComplete: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip: (id: string) => void | Promise<void>;
 }
@@ -19,6 +21,7 @@ export function WalkTimer({
   isDone,
   isSkipped,
   isPremium,
+  targetDuration = 45,
   onComplete,
   onSkip,
 }: WalkTimerProps) {
@@ -27,7 +30,7 @@ export function WalkTimer({
   const [busy, setBusy] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Load any running state on mount
+  // Load running timer state from AsyncStorage
   useEffect(() => {
     const loadWalkState = async () => {
       try {
@@ -44,12 +47,39 @@ export function WalkTimer({
     loadWalkState();
   }, [scheduleId]);
 
-  // Keep the counter ticking if active
+  // Keep counter ticking & schedule notifications
   useEffect(() => {
     if (startedAt !== null) {
+      // 1. Setup tick interval
       timerRef.current = setInterval(() => {
         setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
       }, 1000);
+
+      // 2. Schedule a local notification to fire when the target duration is reached
+      const scheduleLocalTimerNotification = async () => {
+        const targetSeconds = targetDuration * 60;
+        const remainingSeconds = targetSeconds - Math.floor((Date.now() - startedAt) / 1000);
+        
+        if (remainingSeconds > 0) {
+          try {
+            await Notifications.cancelAllScheduledNotificationsAsync();
+            await Notifications.scheduleNotificationAsync({
+              identifier: `walk-done-${scheduleId}`,
+              content: {
+                title: 'Pet Horizon 🐾',
+                body: 'Your walk time is complete!',
+                sound: true,
+              },
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                seconds: remainingSeconds,
+              },
+            });
+          } catch (_) {}
+        }
+      };
+      scheduleLocalTimerNotification();
+
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
       setElapsedSeconds(0);
@@ -58,7 +88,7 @@ export function WalkTimer({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [startedAt]);
+  }, [startedAt, targetDuration, scheduleId]);
 
   const handleStart = async () => {
     const now = Date.now();
@@ -68,13 +98,22 @@ export function WalkTimer({
     } catch (_) {}
   };
 
+  const cleanUpNotificationAndStorage = async () => {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`);
+    } catch (_) {}
+    try {
+      await AsyncStorage.removeItem(`walk_timer_started_${scheduleId}`);
+    } catch (_) {}
+  };
+
   const handleComplete = async () => {
     if (busy) return;
     setBusy(true);
     try {
       const minutes = Math.max(1, Math.round(elapsedSeconds / 60));
       await onComplete(scheduleId, minutes);
-      await AsyncStorage.removeItem(`walk_timer_started_${scheduleId}`);
+      await cleanUpNotificationAndStorage();
     } catch (_) {
     } finally {
       setBusy(false);
@@ -86,7 +125,7 @@ export function WalkTimer({
     setBusy(true);
     try {
       await onSkip(scheduleId);
-      await AsyncStorage.removeItem(`walk_timer_started_${scheduleId}`);
+      await cleanUpNotificationAndStorage();
     } catch (_) {
     } finally {
       setBusy(false);
