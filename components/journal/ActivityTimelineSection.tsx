@@ -94,7 +94,12 @@ function TimelineRow({
           <AppText variant="bodySmall" weight="700" color="#1F2937">
             {event.title}
           </AppText>
-          <AppText variant="caption" color={dotColor} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
+          {event.notes && event.notes.trim() !== '' && event.notes.toLowerCase() !== event.title.toLowerCase() ? (
+            <AppText variant="caption" color="#4B5563" style={{ marginTop: 2 }}>
+              {event.notes}
+            </AppText>
+          ) : null}
+          <AppText variant="caption" color={dotColor} style={{ marginTop: 4, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
             {event.category}
           </AppText>
         </View>

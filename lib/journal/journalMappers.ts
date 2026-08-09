@@ -146,6 +146,7 @@ export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
     category,
     materialIcon: categoryToMaterialIcon(category),
     imageUrl: entry.imagePath ?? null,
+    notes: entry.note ?? null,
   };
 }
 

@@ -20,6 +20,7 @@ export type TimelineEvent = {
   category: Exclude<JournalCategory, 'all'>;
   materialIcon: ComponentProps<typeof MaterialCommunityIcons>['name'];
   imageUrl?: string | null;
+  notes?: string | null;
 };
 
 export const JOURNAL_CATEGORY_CHIPS: { id: JournalCategory; label: string }[] = [
