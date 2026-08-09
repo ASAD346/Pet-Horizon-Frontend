@@ -41,7 +41,7 @@ export function LogJournalSheet({ visible, onClose }: LogJournalSheetProps) {
             </View>
 
             <View style={styles.body}>
-              <JournalContent active={visible} />
+              <JournalContent active={visible} onClose={onClose} />
             </View>
           </Pressable>
         </Pressable>

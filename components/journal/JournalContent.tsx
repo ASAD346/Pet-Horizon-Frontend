@@ -51,9 +51,10 @@ import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 
 interface JournalContentProps {
   active?: boolean;
+  onClose?: () => void;
 }
 
-export function JournalContent({ active = true }: JournalContentProps) {
+export function JournalContent({ active = true, onClose }: JournalContentProps) {
   const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
   const { canViewJournal, canEditJournal, accessBannerMessage } = usePetPermissions(
@@ -181,6 +182,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
     const currentPhotoCount = photos.length;
 
     if (!isPremium && currentPhotoCount >= 1) {
+      onClose?.();
       showToast('Upgrade to Premium to add up to 5 daily photos.', 'info');
       return;
     }
