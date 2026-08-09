@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   Modal,
   RefreshControl,
   ScrollView,
@@ -170,11 +169,11 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
 
   const handleAddPhoto = useCallback(async () => {
     if (!token || !pet?._id) {
-      Alert.alert('Journal', 'Select a pet before adding a photo.');
+      showErrorToast('Select a pet before adding a photo.');
       return;
     }
     if (!isSelectedToday) {
-      Alert.alert('Journal', 'Photos can only be added for today.');
+      showErrorToast('Photos can only be added for today.');
       return;
     }
 
@@ -182,19 +181,18 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
     const currentPhotoCount = photos.length;
 
     if (!isPremium && currentPhotoCount >= 1) {
-      onClose?.();
       showToast('Upgrade to Premium to add up to 5 daily photos.', 'info');
       return;
     }
 
     if (isPremium && currentPhotoCount >= 5) {
-      Alert.alert('Limit Reached', 'Premium limit reached: Maximum 5 daily photos allowed.');
+      showToast('Maximum 5 daily photos reached.', 'info');
       return;
     }
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Photos access', 'Allow photo library access to add journal photos.');
+      showErrorToast('Allow photo library access to add journal photos.');
       return;
     }
 
