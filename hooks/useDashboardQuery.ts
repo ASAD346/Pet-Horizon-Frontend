@@ -253,13 +253,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 3. Walk Complete Mutation
   const completeWalkMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
+    mutationFn: ({ scheduleId, elapsedMinutes }: { scheduleId: string; elapsedMinutes?: number }) =>
       completeWalkSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
+        ...(elapsedMinutes ? { duration: elapsedMinutes } : {}),
       }),
-    onMutate: async (scheduleId) => {
+    onMutate: async ({ scheduleId }) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
       let itemTitle = 'Walk';
@@ -272,7 +273,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       showToast(`${itemTitle} marked done successfully!`);
       return { previousDashboard };
     },
-    onError: (err, scheduleId, context) => {
+    onError: (err, { scheduleId }, context) => {
       if (context?.previousDashboard) {
         queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
       }
@@ -446,7 +447,8 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     refetch,
     completeFeeding: completeFeedingMutation.mutateAsync,
     skipFeeding: skipFeedingMutation.mutateAsync,
-    completeWalk: completeWalkMutation.mutateAsync,
+    completeWalk: (scheduleId: string, elapsedMinutes?: number) =>
+      completeWalkMutation.mutateAsync({ scheduleId, elapsedMinutes }),
     skipWalk: skipWalkMutation.mutateAsync,
     completeMedicine: completeMedicineMutation.mutateAsync,
     skipMedicine: skipMedicineMutation.mutateAsync,

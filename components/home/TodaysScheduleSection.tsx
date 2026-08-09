@@ -43,6 +43,7 @@ import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
+import { WalkTimer } from './WalkTimer';
 import { SectionHeader } from './SectionHeader';
 import { homePillCard } from './homeStyles';
 
@@ -67,7 +68,7 @@ interface TodaysScheduleSectionProps {
   vaccinationActionId?: string | null;
   onCompleteFeeding?: (scheduleId: string) => void | Promise<void>;
   onSkipFeeding?: (scheduleId: string) => void | Promise<void>;
-  onCompleteWalk?: (scheduleId: string) => void | Promise<void>;
+  onCompleteWalk?: (scheduleId: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkipWalk?: (scheduleId: string) => void | Promise<void>;
   onCompleteMedicine?: (scheduleId: string) => void | Promise<void>;
   onSkipMedicine?: (scheduleId: string) => void | Promise<void>;
@@ -159,7 +160,7 @@ function rowId(row: ScheduleRow) {
 function rowOnComplete(
   row: ScheduleRow,
   onCompleteFeeding?: (id: string) => void | Promise<void>,
-  onCompleteWalk?: (id: string) => void | Promise<void>,
+  onCompleteWalk?: (id: string, elapsedMinutes?: number) => void | Promise<void>,
   onCompleteMedicine?: (id: string) => void | Promise<void>,
   onCompleteGrooming?: (id: string) => void | Promise<void>,
   onCompleteVaccination?: (id: string) => void | Promise<void>,
@@ -176,7 +177,7 @@ interface ScheduleRowCardProps {
   row: ScheduleRow;
   onCompleteFeeding?: (id: string) => void | Promise<void>;
   onSkipFeeding?: (id: string) => void | Promise<void>;
-  onCompleteWalk?: (id: string) => void | Promise<void>;
+  onCompleteWalk?: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkipWalk?: (id: string) => void | Promise<void>;
   onCompleteMedicine?: (id: string) => void | Promise<void>;
   onSkipMedicine?: (id: string) => void | Promise<void>;
@@ -292,10 +293,18 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
         <AppText variant="caption" weight="600" color={HomeTheme.textMuted}>
           Skipped
         </AppText>
-      ) : (row.kind === 'feeding' || row.kind === 'walk' || row.kind === 'medicine') && (onComplete || onSkipFeeding || onSkipWalk || onSkipMedicine) ? (
+      ) : row.kind === 'walk' && (onCompleteWalk || onSkipWalk) ? (
+        <WalkTimer
+          scheduleId={rowId(row)}
+          isDone={isDone}
+          isSkipped={isSkipped}
+          isPremium={isPremium}
+          onComplete={onCompleteWalk!}
+          onSkip={onSkipWalk!}
+        />
+      ) : (row.kind === 'feeding' || row.kind === 'medicine') && (onComplete || onSkipFeeding || onSkipMedicine) ? (
         <View style={styles.actionRow}>
           {((row.kind === 'feeding' && onSkipFeeding) ||
-            (row.kind === 'walk' && onSkipWalk) ||
             (row.kind === 'medicine' && onSkipMedicine)) ? (
             <TouchableOpacity
               style={styles.skipBtn}
@@ -303,19 +312,6 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
               disabled={busy}
               onPress={
                 row.kind === 'feeding' ? handleSkip :
-                row.kind === 'walk' ? async () => {
-                  if (!onSkipWalk || clickedRef.current) return;
-                  clickedRef.current = true;
-                  setSkipBusy(true);
-                  try {
-                    await onSkipWalk(rowId(row));
-                  } catch (e: any) {
-                    Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
-                    clickedRef.current = false;
-                  } finally {
-                    setSkipBusy(false);
-                  }
-                } :
                 async () => {
                   if (!onSkipMedicine || clickedRef.current) return;
                   clickedRef.current = true;

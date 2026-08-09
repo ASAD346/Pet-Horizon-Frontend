@@ -505,8 +505,8 @@ export default function HomeScreen() {
     await skipFeeding(scheduleId);
   }, [skipFeeding]);
 
-  const handleCompleteWalk = useCallback(async (scheduleId: string) => {
-    await completeWalk(scheduleId);
+  const handleCompleteWalk = useCallback(async (scheduleId: string, elapsedMinutes?: number) => {
+    await completeWalk(scheduleId, elapsedMinutes);
   }, [completeWalk]);
 
   const handleSkipWalk = useCallback(async (scheduleId: string) => {
