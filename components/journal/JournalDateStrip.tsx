@@ -43,20 +43,20 @@ export function JournalDateStrip({
             onPress={() => onSelect(item.id)}
             style={[
               styles.card,
-              selected && { backgroundColor: themeColor || JournalTheme.navy, borderColor: themeColor || JournalTheme.navy }
+              selected && { backgroundColor: '#E8F5E9', borderColor: '#4CAF50', borderWidth: 1.5 }
             ]}
           >
             <AppText
               variant="caption"
-              weight="600"
-              color={selected ? JournalTheme.surface : JournalTheme.textLight}
+              weight="700"
+              color={selected ? '#2E7D32' : JournalTheme.textLight}
             >
               {item.day}
             </AppText>
             <AppText
               variant="body"
               weight="800"
-              color={selected ? JournalTheme.surface : JournalTheme.text}
+              color={selected ? '#1B5E20' : JournalTheme.text}
               style={styles.dateNum}
             >
               {item.date}
@@ -71,7 +71,7 @@ export function JournalDateStrip({
                     key={cat}
                     style={[
                       styles.dot,
-                      { backgroundColor: selected ? '#FFFFFF' : catStyle.color },
+                      { backgroundColor: catStyle.color },
                     ]}
                   />
                 );
