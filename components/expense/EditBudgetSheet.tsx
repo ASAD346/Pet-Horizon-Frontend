@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
@@ -27,6 +27,7 @@ interface EditBudgetSheetProps {
   isPremium?: boolean;
   periodStart?: string;
   periodEnd?: string;
+  autoRenew?: boolean;
 }
 
 export function EditBudgetSheet({
@@ -41,12 +42,14 @@ export function EditBudgetSheet({
   isPremium = false,
   periodStart,
   periodEnd,
+  autoRenew: initialAutoRenew = true,
 }: EditBudgetSheetProps) {
   const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'expenses');
   const resolvedReadOnly = !canEdit;
 
   const [amount, setAmount] = useState('');
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>(initialPeriodType);
+  const [autoRenew, setAutoRenew] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -55,9 +58,10 @@ export function EditBudgetSheet({
     if (visible) {
       setAmount(currentLimit != null ? String(currentLimit) : '');
       setPeriodType(initialPeriodType);
+      setAutoRenew(initialAutoRenew ?? true);
       setError(null);
     }
-  }, [visible, currentLimit, initialPeriodType]);
+  }, [visible, currentLimit, initialPeriodType, initialAutoRenew]);
 
   const handleSave = async () => {
     if (!canEdit) {
@@ -76,9 +80,9 @@ export function EditBudgetSheet({
     setError(null);
     try {
       if (budgetId) {
-        await updateBudget(token, budgetId, { amountLimit: limit, periodType });
+        await updateBudget(token, budgetId, { amountLimit: limit, periodType, autoRenew });
       } else {
-        await setBudget(token, { petId, amountLimit: limit, periodType });
+        await setBudget(token, { petId, amountLimit: limit, periodType, autoRenew });
       }
       showToast('Budget configured successfully!');
       onSaved(periodType);
@@ -158,6 +162,49 @@ export function EditBudgetSheet({
           unit="$"
         />
       </FormSection>
+
+      {/* Auto-renew card */}
+      <TouchableOpacity
+        activeOpacity={0.85}
+        onPress={() => setAutoRenew(!autoRenew)}
+        style={[
+          styles.autoRenewCard,
+          autoRenew ? styles.autoRenewCardActive : styles.autoRenewCardInactive,
+        ]}
+      >
+        {/* Icon badge */}
+        <View style={[
+          styles.autoRenewIconBadge,
+          { backgroundColor: autoRenew ? '#E8F5E9' : '#F3F4F6' },
+        ]}>
+          <Ionicons
+            name="refresh"
+            size={20}
+            color={autoRenew ? '#2E7D32' : '#9CA3AF'}
+          />
+        </View>
+
+        {/* Text */}
+        <View style={styles.autoRenewTextCol}>
+          <AppText variant="bodySmall" weight="700" color={autoRenew ? '#1C3A1E' : '#374151'}>
+            Auto-renew budget
+          </AppText>
+          <AppText variant="caption" weight="500" color={autoRenew ? '#4CAF50' : '#9CA3AF'} style={styles.autoRenewSub}>
+            {autoRenew
+              ? `Resets every ${periodType === 'weekly' ? 'week' : 'month'} automatically`
+              : 'One-time budget — expires after this period'}
+          </AppText>
+        </View>
+
+        {/* Switch */}
+        <Switch
+          value={autoRenew}
+          onValueChange={setAutoRenew}
+          trackColor={{ false: '#E5E7EB', true: '#A5D6A7' }}
+          thumbColor={autoRenew ? '#2E7D32' : '#FFFFFF'}
+          ios_backgroundColor="#E5E7EB"
+        />
+      </TouchableOpacity>
     </FormSheetShell>
   );
 }
@@ -172,5 +219,37 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     marginBottom: 16,
+  },
+  autoRenewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    marginTop: 12,
+  },
+  autoRenewCardActive: {
+    backgroundColor: '#F0FAF0',
+    borderColor: '#A5D6A7',
+  },
+  autoRenewCardInactive: {
+    backgroundColor: '#FAFAFA',
+    borderColor: '#E5E7EB',
+  },
+  autoRenewIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  autoRenewTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  autoRenewSub: {
+    lineHeight: 15,
   },
 });

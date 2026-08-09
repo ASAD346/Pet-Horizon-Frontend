@@ -50,6 +50,7 @@ export interface ApiBudget {
   periodType: 'weekly' | 'monthly';
   startDate?: string;
   createdByUserId?: string;
+  autoRenew?: boolean;
 }
 
 export interface BudgetRemainingItem {
@@ -62,6 +63,7 @@ export interface BudgetRemainingItem {
   currency: string;
   periodStart: string;
   periodEnd: string;
+  autoRenew?: boolean;
 }
 
 export interface BudgetRemainingResponse {
@@ -75,12 +77,14 @@ export interface SetBudgetRequest {
   amountLimit: number;
   periodType: 'weekly' | 'monthly';
   startDate?: string;
+  autoRenew?: boolean;
 }
 
 export interface UpdateBudgetRequest {
   amountLimit?: number;
   periodType?: 'weekly' | 'monthly';
   startDate?: string;
+  autoRenew?: boolean;
 }
 
 export interface CreateExpenseResponse {

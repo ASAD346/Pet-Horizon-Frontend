@@ -218,6 +218,7 @@ export function ExpenseTrackerView({
           isPremium={isPremium}
           periodStart={isNewBudget ? undefined : budget.periodStart}
           periodEnd={isNewBudget ? undefined : budget.periodEnd}
+          autoRenew={isNewBudget ? true : budget.autoRenew}
           onClose={() => setBudgetSheetVisible(false)}
           onSaved={(savedPeriod) => {
             if (savedPeriod) {

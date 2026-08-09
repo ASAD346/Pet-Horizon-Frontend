@@ -130,6 +130,7 @@ export function mapBudgetDisplay(
       totalSpent: undefined as number | undefined,
       periodStart: undefined as string | undefined,
       periodEnd: undefined as string | undefined,
+      autoRenew: undefined as boolean | undefined,
     };
   }
 
@@ -152,6 +153,7 @@ export function mapBudgetDisplay(
     totalSpent: budget.totalSpent,
     periodStart: budget.periodStart,
     periodEnd: budget.periodEnd,
+    autoRenew: budget.autoRenew,
   };
 }
 
