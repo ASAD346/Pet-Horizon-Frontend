@@ -2,6 +2,7 @@ import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { JournalTheme, Radius, Spacing } from '../../constants/theme';
+import { getCategoryStyle } from './journalData';
 
 export type JournalDateItem = {
   id: string;
@@ -14,9 +15,16 @@ interface JournalDateStripProps {
   selectedId: string;
   onSelect: (id: string) => void;
   themeColor?: string;
+  dateCategories?: Record<string, string[]>;
 }
 
-export function JournalDateStrip({ dates, selectedId, onSelect, themeColor }: JournalDateStripProps) {
+export function JournalDateStrip({
+  dates,
+  selectedId,
+  onSelect,
+  themeColor,
+  dateCategories,
+}: JournalDateStripProps) {
   return (
     <ScrollView
       horizontal
@@ -26,6 +34,8 @@ export function JournalDateStrip({ dates, selectedId, onSelect, themeColor }: Jo
     >
       {dates.map((item) => {
         const selected = item.id === selectedId;
+        const activeCategories = dateCategories?.[item.id] ?? [];
+
         return (
           <TouchableOpacity
             key={item.id}
@@ -51,6 +61,22 @@ export function JournalDateStrip({ dates, selectedId, onSelect, themeColor }: Jo
             >
               {item.date}
             </AppText>
+            
+            {/* Dots Row representing activity categories */}
+            <View style={styles.dotsRow}>
+              {activeCategories.slice(0, 4).map((cat) => {
+                const catStyle = getCategoryStyle(cat as any);
+                return (
+                  <View
+                    key={cat}
+                    style={[
+                      styles.dot,
+                      { backgroundColor: selected ? '#FFFFFF' : catStyle.color },
+                    ]}
+                  />
+                );
+              })}
+            </View>
           </TouchableOpacity>
         );
       })}
@@ -70,7 +96,7 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 48,
-    minHeight: 64,
+    minHeight: 70,
     borderRadius: Radius.md,
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
@@ -86,6 +112,20 @@ const styles = StyleSheet.create({
   dateNum: {
     marginTop: 2,
     fontSize: 16,
+    lineHeight: 18,
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    gap: 3,
+    marginTop: 4,
+    height: 5,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   trailingSpacer: {
     width: Spacing.sm,

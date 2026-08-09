@@ -31,7 +31,9 @@ import {
   shiftWeekStart,
   startOfWeek,
   toDateKey,
+  mapActivityTypeToCategory,
 } from '@/lib/journal/journalMappers';
+import { parseSafeDate } from '@/lib/timezone';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
 import { createJournalEntry, deleteJournalEntry, updateJournalEntry } from '@/services/journal/journalApi';
@@ -89,6 +91,24 @@ export function JournalContent({ active = true }: JournalContentProps) {
   const [deleteConfirmPhoto, setDeleteConfirmPhoto] = useState<JournalPhoto | null>(null);
 
   const dateStrip = useMemo(() => buildDateStrip(weekStart), [weekStart]);
+
+  const dateCategoryMap = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    dateStrip.forEach((d) => {
+      map[d.id] = [];
+    });
+    entries.forEach((entry) => {
+      const dateKey = toDateKey(parseSafeDate(entry.createdAt));
+      if (map[dateKey] !== undefined) {
+        const cat = mapActivityTypeToCategory(entry.activityType);
+        if (!map[dateKey].includes(cat)) {
+          map[dateKey].push(cat);
+        }
+      }
+    });
+    return map;
+  }, [dateStrip, entries]);
+
   const selectedDate = useMemo(() => parseDateKey(selectedDateId), [selectedDateId]);
   const monthLabel = useMemo(() => formatMonthLabel(selectedDate), [selectedDate]);
 
@@ -259,6 +279,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
         selectedId={selectedDateId}
         onSelect={setSelectedDateId}
         themeColor={themeColor}
+        dateCategories={dateCategoryMap}
       />
       <JournalCategoryChips
         chips={JOURNAL_CATEGORY_CHIPS}

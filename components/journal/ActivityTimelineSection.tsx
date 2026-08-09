@@ -63,6 +63,8 @@ function TimelineRow({
     dotColor = '#9CA3AF';
   }
 
+  const catStyle = getCategoryStyle(event.category);
+
   return (
     <View style={styles.row}>
       {/* Time column */}
@@ -85,14 +87,14 @@ function TimelineRow({
         disabled={!onPress}
         onPress={() => onPress?.(event.id)}
       >
-        <View style={[styles.iconContainer, { backgroundColor: brandBg }]}>
-          <MaterialCommunityIcons name={event.materialIcon} size={18} color={brandColor} />
+        <View style={[styles.iconContainer, { backgroundColor: catStyle.bg }]}>
+          <MaterialCommunityIcons name={event.materialIcon} size={18} color={catStyle.color} />
         </View>
         <View style={styles.cardText}>
           <AppText variant="bodySmall" weight="700" color="#1F2937">
             {event.title}
           </AppText>
-          <AppText variant="caption" color={brandColor} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
+          <AppText variant="caption" color={catStyle.color} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
             {event.category}
           </AppText>
         </View>
