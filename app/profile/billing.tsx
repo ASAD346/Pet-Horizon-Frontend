@@ -5,6 +5,7 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -37,7 +38,6 @@ const MONTHLY_FEATURES = [
   'Up to 5 daily photo uploads in journal',
   'Smart custom push notifications & reminders',
   'Invite family caregivers & customize access permissions',
-  'Health metrics tracking & weight logging',
 ];
 
 const YEARLY_FEATURES = [
@@ -425,19 +425,42 @@ const styles = StyleSheet.create({
   },
   planCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderRadius: Radius.xl || 20,
+    padding: Spacing.lg,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   planCardActive: {
     borderColor: '#4CAF50',
     backgroundColor: '#F0FAF0',
+    borderWidth: 1.5,
   },
   planCardPopular: {
     borderColor: '#D4A017',
     borderWidth: 2,
     backgroundColor: '#FFFDF0',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#D4A017',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.1,
+        shadowRadius: 14,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   popularBadge: {
     backgroundColor: '#D4A017',
