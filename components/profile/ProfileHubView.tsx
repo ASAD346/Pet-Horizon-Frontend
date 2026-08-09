@@ -358,6 +358,7 @@ export function ProfileHubView() {
             onPress={() => {
               if (!isPremium && user?.activePetId) {
                 showToast('Free accounts include one pet. Upgrade to Premium to add more.', 'info');
+                router.push('/profile/premium');
               } else {
                 router.push({ pathname: '/pet/register', params: { mode: 'add' } } as any);
               }

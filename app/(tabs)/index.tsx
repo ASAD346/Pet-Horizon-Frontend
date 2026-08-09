@@ -488,6 +488,7 @@ export default function HomeScreen() {
     if (!canAddAnotherPet(pets.length, isPremium)) {
       setPetSwitcherVisible(false);
       showToast('Free accounts include one pet. Upgrade to Premium to add more.', 'info');
+      router.push('/profile/premium' as Href);
       return;
     }
     setPetSwitcherVisible(false);
