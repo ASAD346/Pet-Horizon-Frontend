@@ -19,6 +19,8 @@ interface SpeciesSelectorProps {
   error?: string;
 }
 
+const POPULARITY_ORDER = ['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other'];
+
 export function SpeciesSelector({
   speciesList,
   value,
@@ -26,6 +28,17 @@ export function SpeciesSelector({
   loading = false,
   error,
 }: SpeciesSelectorProps) {
+  // Sort by popularity: Dog, Cat, Bird, etc.
+  const sortedList = React.useMemo(() => {
+    return [...speciesList].sort((a, b) => {
+      const idxA = POPULARITY_ORDER.indexOf(a.trim().toLowerCase());
+      const idxB = POPULARITY_ORDER.indexOf(b.trim().toLowerCase());
+      const valA = idxA === -1 ? 999 : idxA;
+      const valB = idxB === -1 ? 999 : idxB;
+      return valA - valB;
+    });
+  }, [speciesList]);
+
   return (
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
@@ -40,9 +53,14 @@ export function SpeciesSelector({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.row}
         >
-          {speciesList.map((species) => {
+          {sortedList.map((species) => {
             const selected = value === species;
             const icon = getSpeciesIcon(species);
+            
+            // Soft colored style mapping
+            const iconColor = selected ? '#2E7D32' : '#64748B';
+            const labelColor = selected ? '#1B5E20' : '#475569';
+
             return (
               <TouchableOpacity
                 key={species}
@@ -52,12 +70,12 @@ export function SpeciesSelector({
               >
                 <MaterialCommunityIcons
                   name={icon}
-                  size={20}
-                  color={selected ? Palette.white : '#1A2B4E'}
+                  size={24}
+                  color={iconColor}
                 />
                 <AppText
                   variant="caption"
-                  color={selected ? Palette.white : Palette.gray[500]}
+                  color={labelColor}
                   style={[styles.tileLabel, selected && styles.tileLabelSelected]}
                   numberOfLines={1}
                 >
@@ -93,39 +111,29 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   tile: {
-    width: 58,
-    height: 58,
-    backgroundColor: '#FCFCFD',
-    borderRadius: 12,
+    width: 68,
+    height: 68,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#EFEFEF',
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: Spacing.xs,
-    shadowColor: '#1A2B4E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.01,
-    shadowRadius: 4,
-    elevation: 1,
   },
   tileSelected: {
-    backgroundColor: '#5CB35D',
-    borderColor: '#5CB35D',
-    shadowColor: '#5CB35D',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: '#E8F5E9',
+    borderColor: '#4CAF50',
   },
   tileLabel: {
     marginTop: 4,
     fontSize: 10,
     fontWeight: '600',
-    maxWidth: 60,
+    maxWidth: 64,
     textAlign: 'center',
   },
   tileLabelSelected: {
-    fontWeight: '700',
+    fontWeight: '800',
   },
   errorText: {
     marginTop: Spacing.xs,
