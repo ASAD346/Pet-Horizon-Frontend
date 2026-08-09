@@ -451,6 +451,25 @@ export default function RegisterPetScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           style={styles.flex}
         >
+          {/* Fixed Top Header */}
+          <View style={styles.headerOuter}>
+            <View style={styles.headerRow}>
+              {(isEditMode || isAddMode) && (
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                  <Ionicons name="chevron-back" size={16} color="#0E3821" />
+                </TouchableOpacity>
+              )}
+              <View style={styles.headerTextContainer}>
+                <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
+                  {isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!'}
+                </AppText>
+                <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle}>
+                  Let&apos;s create a profile to help you track their healthy lifestyle.
+                </AppText>
+              </View>
+            </View>
+          </View>
+
           <ScrollView
             style={styles.flex}
             contentContainerStyle={styles.scrollContent}
@@ -458,22 +477,6 @@ export default function RegisterPetScreen() {
             showsVerticalScrollIndicator={false}
           >
             <View style={styles.formContainer}>
-              <View style={styles.header}>
-                <View style={styles.headerRow}>
-                  {(isEditMode || isAddMode) && (
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                      <Ionicons name="chevron-back" size={16} color="#0E3821" />
-                    </TouchableOpacity>
-                  )}
-                  <AppText variant="h3" weight="800" align="center" style={styles.title}>
-                    {isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!'}
-                  </AppText>
-                </View>
-                <View style={styles.accentLine} />
-                <AppText variant="bodySmall" color={Palette.gray[500]} align="center" style={styles.subtitle}>
-                  Let&apos;s create a profile to help you track their healthy lifestyle.
-                </AppText>
-              </View>
 
               {!hasEditPermission && (
                 <View style={styles.viewOnlyBanner}>
@@ -609,28 +612,32 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingBottom: Spacing.lg,
+    flexGrow: 1,
+    paddingTop: 24,
   },
   formContainer: {
     width: '100%',
     maxWidth: 340,
     alignSelf: 'center',
   },
-  header: {
-    marginTop: Spacing.xs,
-    marginBottom: Spacing.xs,
-    alignItems: 'center',
+  headerOuter: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Platform.OS === 'ios' ? 12 : 24,
+    paddingBottom: Spacing.sm,
+    backgroundColor: 'transparent',
+    zIndex: 10,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
     width: '100%',
   },
+  headerTextContainer: {
+    flex: 1,
+  },
   backButton: {
-    position: 'absolute',
-    left: 0,
-    zIndex: 1,
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -648,14 +655,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     lineHeight: 24,
     color: '#1A2B4E',
-    marginBottom: Spacing.xs,
-  },
-  accentLine: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#5CB35D',
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   subtitle: {
     lineHeight: 16,
