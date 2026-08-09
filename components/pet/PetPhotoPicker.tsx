@@ -87,8 +87,8 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
 
   return (
     <View style={styles.wrapper}>
-      <TouchableOpacity style={styles.circle} onPress={handlePress} activeOpacity={0.8}>
-        <View style={styles.imageWrapper}>
+      <View style={styles.avatarContainer}>
+        <TouchableOpacity style={styles.circle} onPress={handlePress} activeOpacity={0.8}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.preview} contentFit="cover" />
           ) : (
@@ -97,11 +97,11 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
               <Ionicons name="camera" size={16} color="#2E7D32" style={styles.placeholderCamera} />
             </View>
           )}
-        </View>
-        <View style={styles.addBadge}>
-          <Ionicons name={imageUri ? 'pencil' : 'add'} size={14} color={LoginTheme.footerText} />
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.addBadge} onPress={handlePress} activeOpacity={0.9}>
+          <Ionicons name={imageUri ? 'pencil' : 'add'} size={12} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
 
       <PhotoPickerBottomSheet
         isVisible={isModalVisible}
@@ -121,6 +121,11 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     marginBottom: 12,
+  },
+  avatarContainer: {
+    position: 'relative',
+    width: 96,
+    height: 96,
   },
   circle: {
     width: 96,
