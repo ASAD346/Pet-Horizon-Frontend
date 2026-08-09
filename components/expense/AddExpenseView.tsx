@@ -7,7 +7,7 @@ import {
   Platform,
   Pressable,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { SheetColors } from '../sheets/sheetUi';
 import { Radius, Spacing } from '../../constants/theme';
@@ -16,7 +16,7 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { createExpense } from '@/services/expense/expenseApi';
 import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 import { useLocalization } from '@/hooks/useLocalization';
-import { FormSheetShell, FormSection, FormSelectInput, SheetOptionPicker } from '../sheets';
+import { FormSheetShell, FormSection, SheetOptionPicker } from '../sheets';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -71,12 +71,21 @@ export function AddExpenseView({
   // Focus tracking for input states
   const [activeField, setActiveField] = useState<'amount' | 'merchant' | 'note' | null>(null);
 
-  const categoryLabels = API_EXPENSE_CATEGORIES.map((item) => item.label);
-
   const dropdownOptions = React.useMemo(() => {
+    const CATEGORY_META: Record<string, { mciIcon: any; color: string; bg: string; subtitle: string }> = {
+      food:        { mciIcon: 'silverware-fork-knife', color: '#5CB35D', bg: '#E8F5E9', subtitle: 'Meals, treats, and pet food' },
+      vet:         { mciIcon: 'medical-bag',           color: '#5B9BD5', bg: '#E3F2FD', subtitle: 'Doctor visits and checkups' },
+      grooming:    { mciIcon: 'content-cut',           color: '#9C27B0', bg: '#F3E5F5', subtitle: 'Baths, trims, and clipping' },
+      medicine:    { mciIcon: 'pill',                  color: '#FF9800', bg: '#FFF3E0', subtitle: 'Prescriptions and supplements' },
+      accessories: { mciIcon: 'tag-heart',             color: '#E91E63', bg: '#FCE4EC', subtitle: 'Toys, collars, and leashes' },
+      training:    { mciIcon: 'school',                color: '#3F51B5', bg: '#E8EAF6', subtitle: 'Classes and behavior coaching' },
+      boarding:    { mciIcon: 'home-heart',            color: '#009688', bg: '#E0F2F1', subtitle: 'Pet sitting and daycare' },
+      other:       { mciIcon: 'dots-horizontal',       color: '#607D8B', bg: '#ECEFF1', subtitle: 'Miscellaneous expenses' },
+    };
     return API_EXPENSE_CATEGORIES.map((item) => ({
-      value: item.label,
+      value: item.value,
       label: item.label,
+      ...CATEGORY_META[item.value],
     }));
   }, []);
 
@@ -103,15 +112,13 @@ export function AddExpenseView({
     setSaving(true);
     setError(null);
     try {
-      const selected = API_EXPENSE_CATEGORIES.find((item) => item.label === category);
       const now = new Date();
-      // Ensure backend uses the local month by formatting the local time precisely, keeping the local hour/min/sec
       const pad = (n: number) => String(n).padStart(2, '0');
       const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
       
       const data = await createExpense(token, {
         petId,
-        category: selected?.value ?? 'other',
+        category: category ?? 'other',
         amount: value,
         note: [merchant.trim(), note.trim()].filter(Boolean).join(' — ') || undefined,
         date: localDate,
@@ -200,11 +207,43 @@ export function AddExpenseView({
       >
         {/* Category */}
         <FormSection title="Category">
-          <FormSelectInput
-            label=""
-            valueLabel={category || 'Select Category'}
-            onPress={() => setPickerVisible(true)}
-          />
+          {(() => {
+            const meta = category ? dropdownOptions.find((o) => o.value === category) : null;
+            return (
+              <Pressable
+                onPress={() => setPickerVisible(true)}
+                style={[
+                  styles.categoryTrigger,
+                  meta && { borderColor: meta.color ?? '#E2E8F0' },
+                ]}
+              >
+                {/* Icon badge */}
+                <View style={[styles.catIconBadge, { backgroundColor: meta?.bg ?? '#F3F4F6' }]}>
+                  {meta?.mciIcon ? (
+                    <MaterialCommunityIcons
+                      name={meta.mciIcon as any}
+                      size={18}
+                      color={meta?.color ?? '#9CA3AF'}
+                    />
+                  ) : (
+                    <Ionicons name="grid-outline" size={18} color="#9CA3AF" />
+                  )}
+                </View>
+
+                {/* Label */}
+                <AppText
+                  variant="bodySmall"
+                  weight="600"
+                  color={meta ? (meta.color ?? '#1A1A1A') : '#9CA3AF'}
+                  style={{ flex: 1 }}
+                >
+                  {meta ? meta.label : 'Select a category'}
+                </AppText>
+
+                <Ionicons name="chevron-down" size={16} color="#94A3B8" />
+              </Pressable>
+            );
+          })()}
         </FormSection>
 
         {/* Amount */}
@@ -364,5 +403,24 @@ const styles = StyleSheet.create({
       },
       android: { elevation: 1 },
     }),
+  },
+  categoryTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    gap: 10,
+    minHeight: 48,
+  },
+  catIconBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

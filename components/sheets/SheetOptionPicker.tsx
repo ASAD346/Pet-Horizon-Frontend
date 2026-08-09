@@ -8,7 +8,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SheetColors } from './sheetUi';
@@ -17,6 +17,15 @@ import { SheetOverlayContext } from './FormSheetShell';
 export type SheetOption = {
   value: string;
   label: string;
+  subtitle?: string;
+  /** MaterialCommunityIcons name */
+  mciIcon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  /** Ionicons name */
+  ionIcon?: React.ComponentProps<typeof Ionicons>['name'];
+  /** Icon accent color */
+  color?: string;
+  /** Icon background color */
+  bg?: string;
 };
 
 interface SheetOptionPickerProps {
@@ -41,44 +50,126 @@ export function SheetOptionPicker({
   const overlayContext = useContext(SheetOverlayContext);
   const id = useId();
 
+  const hasRichOptions = options.some((o) => o.mciIcon || o.ionIcon || o.color);
+
   const content = (
     <Pressable style={styles.overlay} onPress={onClose}>
       <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        {/* Handle bar */}
+        <View style={styles.handleBar} />
+
+        {/* Header */}
         <View style={styles.header}>
-          <AppText variant="body" weight="800" color={SheetColors.title}>
-            {title}
-          </AppText>
-          <TouchableOpacity onPress={onClose} hitSlop={12}>
-            <Ionicons name="close" size={22} color={SheetColors.chipText} />
+          <View style={styles.titleContainer}>
+            <AppText variant="body" weight="800" color={SheetColors.title} style={styles.selectText}>
+              Select
+            </AppText>
+            <AppText variant="caption" weight="600" color="#64748B" style={styles.categoryText}>
+              Category
+            </AppText>
+          </View>
+          <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.closeBtn}>
+            <Ionicons name="close" size={18} color={SheetColors.chipText} />
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
-          {options.map((option) => {
-            const selected = option.value === selectedValue;
-            return (
-              <TouchableOpacity
-                key={option.value}
-                style={[styles.row, selected && styles.rowSelected]}
-                activeOpacity={0.85}
-                onPress={() => {
-                  onSelect(option.value);
-                  onClose();
-                }}
-              >
-                <AppText
-                  variant="bodySmall"
-                  weight={selected ? '700' : '600'}
-                  color={selected ? HomeTheme.green : SheetColors.inputText}
+        <ScrollView
+          style={styles.list}
+          contentContainerStyle={hasRichOptions ? styles.richListContent : styles.simpleListContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {hasRichOptions ? (
+            /* Rich vertical row layout */
+            <View style={styles.richList}>
+              {options.map((option) => {
+                const selected = option.value === selectedValue;
+                const accentColor = option.color ?? '#5CB35D';
+                const bgColor = option.bg ?? '#E8F5E9';
+                return (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.richRow,
+                      selected && styles.richRowSelected,
+                    ]}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      onSelect(option.value);
+                      onClose();
+                    }}
+                  >
+                    {/* Left: Icon badge */}
+                    <View style={[styles.richIconBadge, { backgroundColor: bgColor }]}>
+                      {option.mciIcon ? (
+                        <MaterialCommunityIcons
+                          name={option.mciIcon}
+                          size={20}
+                          color={accentColor}
+                        />
+                      ) : option.ionIcon ? (
+                        <Ionicons
+                          name={option.ionIcon}
+                          size={20}
+                          color={accentColor}
+                        />
+                      ) : null}
+                    </View>
+
+                    {/* Middle: Labels */}
+                    <View style={styles.richTextCol}>
+                      <AppText variant="bodySmall" weight="700" color="#1E293B">
+                        {option.label}
+                      </AppText>
+                      {option.subtitle ? (
+                        <AppText variant="caption" weight="500" color="#64748B" style={styles.richSubText}>
+                          {option.subtitle}
+                        </AppText>
+                      ) : null}
+                    </View>
+
+                    {/* Right: Custom radio indicator */}
+                    <View style={styles.radioWrapper}>
+                      {selected ? (
+                        <View style={[styles.radioOuter, { borderColor: accentColor }]}>
+                          <View style={[styles.radioInner, { backgroundColor: accentColor }]} />
+                        </View>
+                      ) : (
+                        <View style={styles.radioOuterInactive} />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ) : (
+            /* Simple list layout */
+            options.map((option) => {
+              const selected = option.value === selectedValue;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  style={[styles.row, selected && styles.rowSelected]}
+                  activeOpacity={0.85}
+                  onPress={() => {
+                    onSelect(option.value);
+                    onClose();
+                  }}
                 >
-                  {option.label}
-                </AppText>
-                {selected ? (
-                  <Ionicons name="checkmark" size={20} color={HomeTheme.green} />
-                ) : null}
-              </TouchableOpacity>
-            );
-          })}
+                  <AppText
+                    variant="bodySmall"
+                    weight={selected ? '700' : '600'}
+                    color={selected ? HomeTheme.green : SheetColors.inputText}
+                  >
+                    {option.label}
+                  </AppText>
+                  {selected ? (
+                    <Ionicons name="checkmark" size={20} color={HomeTheme.green} />
+                  ) : null}
+                </TouchableOpacity>
+              );
+            })
+          )}
         </ScrollView>
       </Pressable>
     </Pressable>
@@ -86,7 +177,7 @@ export function SheetOptionPicker({
 
   useEffect(() => {
     if (visible && overlayContext) {
-      overlayContext.setOverlay(id, 
+      overlayContext.setOverlay(id,
         <View key={id} style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
           {content}
         </View>
@@ -104,7 +195,7 @@ export function SheetOptionPicker({
   }
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       {content}
     </Modal>
   );
@@ -113,11 +204,11 @@ export function SheetOptionPicker({
 const sheetShadow = Platform.select({
   ios: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
   },
-  android: { elevation: 8 },
+  android: { elevation: 12 },
 });
 
 const styles = StyleSheet.create({
@@ -127,30 +218,121 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: SheetColors.overlay,
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.lg,
+    backgroundColor: 'rgba(0,0,0,0.40)',
+    justifyContent: 'flex-end',
     zIndex: 99999,
   },
   sheet: {
-    backgroundColor: SheetColors.sheetBg,
-    borderRadius: Radius.lg,
-    maxHeight: '60%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
     ...sheetShadow,
+  },
+  handleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E7EB',
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 4,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.sm,
+    paddingTop: 12,
+    paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: SheetColors.border,
+    borderBottomColor: '#F0F2F5',
+  },
+  titleContainer: {
+    flexDirection: 'column',
+    gap: 1,
+  },
+  selectText: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  categoryText: {
+    fontSize: 12,
+    lineHeight: 15,
+    marginTop: -1,
+  },
+  closeBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   list: {
+    flexGrow: 0,
+  },
+  simpleListContent: {
     paddingVertical: Spacing.xs,
   },
+  richListContent: {
+    paddingBottom: 32,
+  },
+  richList: {
+    width: '100%',
+  },
+  richRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+    gap: 14,
+  },
+  richRowSelected: {
+    backgroundColor: '#F8FAFC',
+  },
+  richIconBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  richTextCol: {
+    flex: 1,
+    gap: 2,
+  },
+  richSubText: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  radioWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  radioOuterInactive: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+  },
+  /* Simple list */
   row: {
     flexDirection: 'row',
     alignItems: 'center',
