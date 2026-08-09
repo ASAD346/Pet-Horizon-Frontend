@@ -487,12 +487,12 @@ export default function HomeScreen() {
   const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {
       setPetSwitcherVisible(false);
-      router.push('/profile/premium' as Href);
+      showToast('Free accounts include one pet. Upgrade to Premium to add more.', 'info');
       return;
     }
     setPetSwitcherVisible(false);
     router.push({ pathname: '/pet/register', params: { mode: 'add' } });
-  }, [pets.length, isPremium, router]);
+  }, [pets.length, isPremium, router, showToast]);
 
 
 

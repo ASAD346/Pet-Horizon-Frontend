@@ -73,7 +73,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
   });
   
   const entries = journalData?.items ?? [];
-  const { showErrorToast } = useToast();
+  const { showToast, showErrorToast } = useToast();
 
   useEffect(() => {
     if (error) {
@@ -181,14 +181,7 @@ export function JournalContent({ active = true }: JournalContentProps) {
     const currentPhotoCount = photos.length;
 
     if (!isPremium && currentPhotoCount >= 1) {
-      Alert.alert(
-        'Premium Feature',
-        'Upgrade to Premium to add up to 5 daily photos to your journal!',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => router.push('/profile/premium') }
-        ]
-      );
+      showToast('Upgrade to Premium to add up to 5 daily photos.', 'info');
       return;
     }
 

@@ -31,6 +31,7 @@ import { HeaderActionButtons } from '@/components/ui/HeaderActionButtons';
 import { SkeletonProfileHub } from '@/components/ui/skeletons';
 import { ProfileTheme } from './profileTheme';
 import { useFocusReload, useStaleLoadScope } from '@/hooks/useStaleLoadScope';
+import { useToast } from '@/hooks/useToast';
 import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
 import { PrivacyPolicySheet } from './PrivacyPolicySheet';
 import { HelpSupportSheet } from './HelpSupportSheet';
@@ -50,6 +51,7 @@ export function ProfileHubView() {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const { notificationCount, onNotificationsPress } = useTabHeaderActions();
   const { token, user, logout, setSession } = useAuth();
+  const { showToast } = useToast();
   
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -355,7 +357,7 @@ export function ProfileHubView() {
             subtitle="Register another pet companion"
             onPress={() => {
               if (!isPremium && user?.activePetId) {
-                router.push('/profile/premium');
+                showToast('Free accounts include one pet. Upgrade to Premium to add more.', 'info');
               } else {
                 router.push({ pathname: '/pet/register', params: { mode: 'add' } } as any);
               }
