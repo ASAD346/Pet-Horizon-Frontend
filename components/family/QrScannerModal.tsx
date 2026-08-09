@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TouchableOpacity, Modal, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, Modal, ActivityIndicator, Dimensions, Platform } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
@@ -11,9 +11,13 @@ interface QrScannerModalProps {
   onScanSuccess: (token: string) => void;
 }
 
+const { width } = Dimensions.get('window');
+const SCANNER_SIZE = width * 0.65;
+
 export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerModalProps) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [torch, setTorch] = useState(false);
 
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     if (scanned) return;
@@ -39,20 +43,10 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
     <Modal
       visible={visible}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
       onRequestClose={onClose}
     >
       <View style={styles.container}>
-        {/* Header bar */}
-        <View style={styles.header}>
-          <AppText variant="h3" weight="800" color={HomeTheme.text}>
-            Scan QR Code
-          </AppText>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.8}>
-            <Ionicons name="close" size={24} color={HomeTheme.text} />
-          </TouchableOpacity>
-        </View>
-
         {/* Permission Request View */}
         {!permission ? (
           <View style={styles.centered}>
@@ -60,16 +54,23 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
           </View>
         ) : !permission.granted ? (
           <View style={styles.permissionContainer}>
-            <Ionicons name="camera-outline" size={64} color="#64748B" style={styles.permIcon} />
-            <AppText variant="body" weight="700" color={HomeTheme.text} align="center" style={styles.permTitle}>
-              Camera Permission Required
+            <View style={styles.permIconContainer}>
+              <Ionicons name="camera" size={44} color="#2E7D32" />
+            </View>
+            <AppText variant="h2" weight="800" color="#0F172A" align="center" style={styles.permTitle}>
+              Camera Permission
             </AppText>
-            <AppText variant="bodySmall" color={HomeTheme.textMuted} align="center" style={styles.permDesc}>
-              We need access to your camera to scan family invitation QR codes.
+            <AppText variant="bodySmall" color="#64748B" align="center" style={styles.permDesc}>
+              Allow camera access to quickly scan QR codes and connect with your family hub.
             </AppText>
             <TouchableOpacity onPress={requestPermission} style={styles.btn} activeOpacity={0.8}>
               <AppText variant="body" weight="800" color="#FFFFFF">
-                Grant Permission
+                Grant Access
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onClose} style={styles.cancelLink} activeOpacity={0.7}>
+              <AppText variant="bodySmall" weight="700" color="#64748B">
+                Cancel
               </AppText>
             </TouchableOpacity>
           </View>
@@ -78,22 +79,55 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
             <CameraView
               style={StyleSheet.absoluteFillObject}
               facing="back"
+              enableTorch={torch}
               barcodeScannerSettings={{
                 barcodeTypes: ['qr'],
               }}
               onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
             />
-            {/* Scanner Overlay Box */}
-            <View style={styles.overlayContainer} pointerEvents="none">
-              <View style={styles.scannerOutline}>
-                <View style={[styles.corner, styles.topLeft]} />
-                <View style={[styles.corner, styles.topRight]} />
-                <View style={[styles.corner, styles.bottomLeft]} />
-                <View style={[styles.corner, styles.bottomRight]} />
+
+            {/* Custom Overlay Mask */}
+            <View style={styles.maskContainer}>
+              <View style={styles.maskTop} />
+              
+              <View style={styles.maskMiddleRow}>
+                <View style={styles.maskSide} />
+                
+                {/* Clean Scanner Window */}
+                <View style={styles.scannerWindow}>
+                  {/* Neon border corners */}
+                  <View style={[styles.corner, styles.topLeft]} />
+                  <View style={[styles.corner, styles.topRight]} />
+                  <View style={[styles.corner, styles.bottomLeft]} />
+                  <View style={[styles.corner, styles.bottomRight]} />
+                  
+                  {/* Subtle target helper */}
+                  <View style={styles.centerTarget} />
+                </View>
+                
+                <View style={styles.maskSide} />
               </View>
-              <AppText variant="bodySmall" weight="700" color="#FFFFFF" style={styles.hint}>
-                Align QR code within the frame
+              
+              <View style={styles.maskBottom}>
+                <AppText variant="bodySmall" weight="700" color="#FFFFFF" style={styles.hint}>
+                  Align family QR code in the frame
+                </AppText>
+              </View>
+            </View>
+
+            {/* Premium Header Controls (Absolute Overlay) */}
+            <View style={styles.floatingHeader}>
+              <TouchableOpacity onPress={onClose} style={styles.circleActionBtn} activeOpacity={0.8}>
+                <Ionicons name="close" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+              
+              <AppText variant="bodySmall" weight="800" color="#FFFFFF" style={styles.headerTitle}>
+                SCAN QR CODE
               </AppText>
+              
+              <TouchableOpacity onPress={() => setTorch(!torch)} style={styles.circleActionBtn} activeOpacity={0.8}>
+                <Ionicons name={torch ? "flash" : "flash-off"} size={20} color={torch ? "#FFEB3B" : "#FFFFFF"} />
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -105,106 +139,170 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E2E8F0',
-    backgroundColor: '#FFFFFF',
-  },
-  closeBtn: {
-    padding: 4,
+    backgroundColor: '#000000',
   },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    gap: Spacing.md,
+    paddingHorizontal: 32,
+    backgroundColor: '#FFFFFF',
   },
-  permIcon: {
-    marginBottom: Spacing.sm,
+  permIconContainer: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   permTitle: {
-    marginBottom: Spacing.xs,
+    marginBottom: 8,
   },
   permDesc: {
-    marginBottom: Spacing.lg,
-    lineHeight: 18,
+    marginBottom: 32,
+    lineHeight: 20,
+    maxWidth: 260,
   },
   btn: {
     backgroundColor: '#2E7D32',
     paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderRadius: Radius.full,
+    paddingHorizontal: 40,
+    borderRadius: 14,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  cancelLink: {
+    marginTop: 18,
+    padding: 8,
   },
   cameraContainer: {
     flex: 1,
-    backgroundColor: '#000000',
   },
-  overlayContainer: {
-    ...StyleSheet.absoluteFillObject,
+  floatingHeader: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 56 : 24,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+  headerTitle: {
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  circleActionBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-  },
-  scannerOutline: {
-    width: 250,
-    height: 250,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    position: 'relative',
-    backgroundColor: 'transparent',
+    borderColor: 'rgba(255,255,255,0.15)',
   },
+  /* Mask styles */
+  maskContainer: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  maskTop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+  },
+  maskMiddleRow: {
+    flexDirection: 'row',
+    height: SCANNER_SIZE,
+  },
+  maskSide: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+  },
+  scannerWindow: {
+    width: SCANNER_SIZE,
+    height: SCANNER_SIZE,
+    backgroundColor: 'transparent',
+    position: 'relative',
+  },
+  maskBottom: {
+    flex: 1.2,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    alignItems: 'center',
+    paddingTop: 32,
+  },
+  /* Corners */
   corner: {
     position: 'absolute',
-    width: 20,
-    height: 20,
-    borderColor: '#3A8F3B',
-    borderWidth: 0,
+    width: 24,
+    height: 24,
+    borderColor: '#4CAF50',
   },
   topLeft: {
-    top: -1,
-    left: -1,
+    top: 0,
+    left: 0,
     borderTopWidth: 4,
     borderLeftWidth: 4,
+    borderTopLeftRadius: 12,
   },
   topRight: {
-    top: -1,
-    right: -1,
+    top: 0,
+    right: 0,
     borderTopWidth: 4,
     borderRightWidth: 4,
+    borderTopRightRadius: 12,
   },
   bottomLeft: {
-    bottom: -1,
-    left: -1,
+    bottom: 0,
+    left: 0,
     borderBottomWidth: 4,
     borderLeftWidth: 4,
+    borderBottomLeftRadius: 12,
   },
   bottomRight: {
-    bottom: -1,
-    right: -1,
+    bottom: 0,
+    right: 0,
     borderBottomWidth: 4,
     borderRightWidth: 4,
+    borderBottomRightRadius: 12,
+  },
+  centerTarget: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    width: 10,
+    height: 10,
+    marginTop: -5,
+    marginLeft: -5,
+    borderRadius: 5,
+    backgroundColor: 'rgba(76, 175, 80, 0.4)',
   },
   hint: {
-    marginTop: Spacing.lg,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: Radius.md,
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
 });
