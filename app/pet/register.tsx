@@ -555,26 +555,26 @@ export default function RegisterPetScreen() {
           </ScrollView>
 
           <View style={styles.footer}>
-            <View style={styles.formContainer}>
+            <View style={[styles.formContainer, styles.footerRow]}>
+              {isEditMode ? (
+                <TouchableOpacity
+                  onPress={handleDeletePet}
+                  disabled={loading || !hasEditPermission}
+                  style={styles.smallDeleteButton}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                </TouchableOpacity>
+              ) : null}
               <CustomButton
                 title={isEditMode ? 'Save Changes' : 'Add Pet'}
                 onPress={handleAddPet}
                 isLoading={loading}
                 disabled={speciesLoading || loading || !hasEditPermission}
                 variant="primary"
-                style={styles.addButton}
+                style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
                 textStyle={styles.addButtonText}
               />
-              {isEditMode ? (
-                <CustomButton
-                  title="Delete Pet"
-                  onPress={handleDeletePet}
-                  disabled={loading || !hasEditPermission}
-                  variant="outline"
-                  style={styles.deleteButton}
-                  textStyle={styles.deleteButtonText}
-                />
-              ) : null}
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -690,17 +690,23 @@ const styles = StyleSheet.create({
     color: Palette.white,
     letterSpacing: 0.5,
   },
-  deleteButton: {
-    width: '100%',
+  footerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  smallDeleteButton: {
+    width: 52,
     height: 52,
     borderRadius: 14,
-    marginTop: Spacing.sm,
-    borderColor: '#C62828',
-    borderWidth: 1.5,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  deleteButtonText: {
-    color: '#C62828',
-    fontWeight: '700',
+  addButtonWithDelete: {
+    flex: 1,
   },
   viewOnlyBanner: {
     flexDirection: 'row',
