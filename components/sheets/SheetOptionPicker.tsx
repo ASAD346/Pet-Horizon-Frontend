@@ -50,6 +50,9 @@ export function SheetOptionPicker({
   const overlayContext = useContext(SheetOverlayContext);
   const id = useId();
 
+  const titleParts = (title || '').split(' ');
+  const firstRow = titleParts[0] || '';
+  const secondRow = titleParts.slice(1).join(' ') || '';
   const hasRichOptions = options.some((o) => o.mciIcon || o.ionIcon || o.color);
 
   const content = (
@@ -61,12 +64,14 @@ export function SheetOptionPicker({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.titleContainer}>
-            <AppText variant="body" weight="800" color={SheetColors.title} style={styles.selectText}>
-              Select
+            <AppText variant="body" weight="800" color="#0F172A" style={styles.selectText}>
+              {firstRow}
             </AppText>
-            <AppText variant="caption" weight="600" color="#64748B" style={styles.categoryText}>
-              Category
-            </AppText>
+            {secondRow ? (
+              <AppText variant="caption" weight="700" color="#64748B" style={styles.categoryText}>
+                {secondRow}
+              </AppText>
+            ) : null}
           </View>
           <TouchableOpacity onPress={onClose} hitSlop={12} style={styles.closeBtn}>
             <Ionicons name="close" size={18} color={SheetColors.chipText} />
@@ -253,13 +258,19 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   selectText: {
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 20,
+    lineHeight: 24,
+    fontWeight: '800',
+    color: '#0F172A',
   },
   categoryText: {
     fontSize: 12,
     lineHeight: 15,
-    marginTop: -1,
+    marginTop: 0,
+    fontWeight: '700',
+    color: '#64748B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   closeBtn: {
     width: 28,
