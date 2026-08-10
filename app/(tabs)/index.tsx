@@ -389,10 +389,11 @@ export default function HomeScreen() {
       actionText = actionText.replace(/walk walking/gi, 'walking');
       actionText = actionText.replace(/walk walk/gi, 'walk');
 
+      // Normalise leading verb — keep the raw note including any duration "(X min)"
       if (actionText.toLowerCase().startsWith('completed')) {
-        actionText = actionText.replace(/^[Cc]ompleted\s*/, 'completed ');
+        // Leave as-is so duration suffix is preserved
       } else if (actionText.toLowerCase().startsWith('skipped')) {
-        actionText = actionText.replace(/^[Ss]kipped\s*/, 'skipped ');
+        // Leave as-is
       } else if (actionText.toLowerCase().startsWith('logged')) {
         actionText = actionText.replace(/^[Ll]ogged\s*/, 'logged ');
       } else {

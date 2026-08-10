@@ -27,8 +27,10 @@ export function WalkTimer({
 }: WalkTimerProps) {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [notifFired, setNotifFired] = useState(false);
   const [busy, setBusy] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const notifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load running timer state from AsyncStorage
   useEffect(() => {
@@ -55,38 +57,56 @@ export function WalkTimer({
         setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
       }, 1000);
 
-      // 2. Schedule a local notification to fire when the target duration is reached
-      const scheduleLocalTimerNotification = async () => {
+      // 2. Schedule local OS notification for when target duration expires
+      const scheduleWalkCompleteNotification = async () => {
         const targetSeconds = targetDuration * 60;
         const remainingSeconds = targetSeconds - Math.floor((Date.now() - startedAt) / 1000);
-        
-        if (remainingSeconds > 0) {
+
+        if (remainingSeconds <= 0) return;
+
+        try {
+          // Request permission first
+          const { status } = await Notifications.requestPermissionsAsync();
+          if (status !== 'granted') return;
+
+          // Cancel only the previous walk notification for this schedule
           try {
-            await Notifications.cancelAllScheduledNotificationsAsync();
-            await Notifications.scheduleNotificationAsync({
-              identifier: `walk-done-${scheduleId}`,
-              content: {
-                title: 'Pet Horizon 🐾',
-                body: 'Your walk time is complete!',
-                sound: true,
-              },
-              trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-                seconds: remainingSeconds,
-              },
-            });
+            await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`);
           } catch (_) {}
-        }
+
+          await Notifications.scheduleNotificationAsync({
+            identifier: `walk-done-${scheduleId}`,
+            content: {
+              title: 'Pet Horizon 🐾',
+              body: 'Your walk time is complete!',
+              sound: true,
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+              seconds: remainingSeconds,
+            },
+          });
+        } catch (_) {}
+
+        // 3. JS-side setTimeout fallback — fires in-process even if OS notification is blocked
+        if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
+        notifTimeoutRef.current = setTimeout(() => {
+          setNotifFired(true);
+        }, remainingSeconds * 1000);
       };
-      scheduleLocalTimerNotification();
+
+      scheduleWalkCompleteNotification();
 
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
       setElapsedSeconds(0);
+      setNotifFired(false);
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
     };
   }, [startedAt, targetDuration, scheduleId]);
 
@@ -170,11 +190,19 @@ export function WalkTimer({
     );
   }
 
+  // Show a pulsing Done prompt if walk timer has expired but user hasn't tapped Done yet
+  const timerExpired = notifFired || elapsedSeconds >= targetDuration * 60;
+
   return (
     <View style={styles.actionRow}>
       <View style={styles.timerWrapper}>
-        <View style={styles.pulseDot} />
-        <AppText variant="caption" weight="800" color="#2563EB" style={styles.timerText}>
+        <View style={[styles.pulseDot, timerExpired && { backgroundColor: '#16A34A' }]} />
+        <AppText
+          variant="caption"
+          weight="800"
+          color={timerExpired ? '#16A34A' : '#2563EB'}
+          style={styles.timerText}
+        >
           {formatTime(elapsedSeconds)}
         </AppText>
       </View>

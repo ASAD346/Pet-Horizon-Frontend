@@ -20,11 +20,11 @@ export async function ensureNotificationHandler(): Promise<void> {
   const Notifications = await getNotificationsModule();
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
-      shouldShowAlert: false, // Suppress OS popups in foreground
+      shouldShowAlert: true,
       shouldPlaySound: true,
       shouldSetBadge: true,
-      shouldShowBanner: false,
-      shouldShowList: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
     }),
   });
   handlerConfigured = true;

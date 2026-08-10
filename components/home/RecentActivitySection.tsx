@@ -32,6 +32,9 @@ interface RecentActivitySectionProps {
 
 function formatRawString(text: string) {
   if (!text) return '';
+  if (/\(\d+\s*min\)/i.test(text)) {
+    return text;
+  }
   if (text.includes(':')) {
     const parts = text.split(':');
     const prefix = parts[0].trim();
