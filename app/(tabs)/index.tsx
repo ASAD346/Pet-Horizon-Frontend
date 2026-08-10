@@ -400,6 +400,11 @@ export default function HomeScreen() {
         actionText = `logged ${category}: ${actionText}`;
       }
 
+      const walkDuration = entry.metadata?.duration ?? entry.metadata?.targetDuration ?? entry.duration;
+      if (category === 'walk' && walkDuration && !/\(\d+\s*min\)/i.test(actionText)) {
+        actionText = `${actionText} (${walkDuration} min)`;
+      }
+
       return {
         id: entry._id,
         actorName,

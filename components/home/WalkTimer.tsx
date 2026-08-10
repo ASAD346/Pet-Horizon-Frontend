@@ -5,6 +5,7 @@ import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { useActiveWalk } from '@/context/ActiveWalkContext';
 
 interface WalkTimerProps {
   scheduleId: string;
@@ -25,6 +26,7 @@ export function WalkTimer({
   onComplete,
   onSkip,
 }: WalkTimerProps) {
+  const { activeWalk, startWalk, stopWalk } = useActiveWalk();
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [notifFired, setNotifFired] = useState(false);
@@ -32,10 +34,21 @@ export function WalkTimer({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const notifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load running timer state from AsyncStorage
+  // Sync startedAt with activeWalk from context
+  useEffect(() => {
+    if (activeWalk && activeWalk.scheduleId === scheduleId) {
+      setStartedAt(activeWalk.startedAt);
+      setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
+    } else {
+      setStartedAt(null);
+    }
+  }, [activeWalk, scheduleId]);
+
+  // Load running timer state from AsyncStorage fallback
   useEffect(() => {
     const loadWalkState = async () => {
       try {
+        if (activeWalk && activeWalk.scheduleId === scheduleId) return;
         const storedStr = await AsyncStorage.getItem(`walk_timer_started_${scheduleId}`);
         if (storedStr) {
           const timestamp = parseInt(storedStr, 10);
@@ -111,10 +124,8 @@ export function WalkTimer({
   }, [startedAt, targetDuration, scheduleId]);
 
   const handleStart = async () => {
-    const now = Date.now();
-    setStartedAt(now);
     try {
-      await AsyncStorage.setItem(`walk_timer_started_${scheduleId}`, String(now));
+      await startWalk(scheduleId, targetDuration, 'Walk');
     } catch (_) {}
   };
 
@@ -130,10 +141,27 @@ export function WalkTimer({
   const handleComplete = async () => {
     if (busy) return;
     setBusy(true);
+
+    const finalSeconds = elapsedSeconds;
+
+    // Stop walk in global context
+    await stopWalk();
+
+    // Instantly reset timer state to prevent lagging ticks
+    setStartedAt(null);
+    setElapsedSeconds(0);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (notifTimeoutRef.current) {
+      clearTimeout(notifTimeoutRef.current);
+      notifTimeoutRef.current = null;
+    }
+
     try {
-      const minutes = Math.max(1, Math.round(elapsedSeconds / 60));
+      const minutes = Math.max(1, Math.round(finalSeconds / 60));
       await onComplete(scheduleId, minutes);
-      await cleanUpNotificationAndStorage();
     } catch (_) {
     } finally {
       setBusy(false);

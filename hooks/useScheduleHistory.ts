@@ -55,7 +55,11 @@ function normaliseSchedules(
     title:
       item.title || item.name || item.mealType || item.medicationName ||
       item.vaccineName || item.groomingType || kind,
-    subtitle: item.notes || item.note || item.amount || item.dosage || item.duration || '',
+    subtitle:
+      item.notes || item.note || item.amount || item.dosage ||
+      ((kind === 'walk') && (item.metadata?.duration || item.metadata?.targetDuration || item.duration)
+        ? `${item.metadata?.duration || item.metadata?.targetDuration || item.duration} min`
+        : item.duration) || '',
     timeOfDay: item.timeOfDay || item.time || undefined,
     status: resolveStatus(item),
     date:

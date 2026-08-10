@@ -15,6 +15,8 @@ import { AppState } from 'react-native';
 import React, { useEffect } from 'react';
 import { NotificationProvider, useNotificationStore } from '@/context/NotificationContext';
 import { useAuth } from '@/hooks/useAuth';
+import { ActiveWalkProvider } from '@/context/ActiveWalkContext';
+import { ActiveWalkOverlay } from '@/components/home/ActiveWalkOverlay';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -73,6 +75,7 @@ function InnerLayout() {
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
       </Stack>
       <AppStatusBar />
+      <ActiveWalkOverlay />
     </ThemeProvider>
   );
 }
@@ -83,9 +86,11 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <SafeAreaProvider>
           <NotificationProvider>
-            <AuthBootstrap />
-            <ToastHost />
-            <InnerLayout />
+            <ActiveWalkProvider>
+              <AuthBootstrap />
+              <ToastHost />
+              <InnerLayout />
+            </ActiveWalkProvider>
           </NotificationProvider>
         </SafeAreaProvider>
       </QueryClientProvider>

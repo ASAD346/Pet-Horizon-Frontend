@@ -5,9 +5,11 @@ export interface ApiJournalEntry {
   activityType: string;
   note: string;
   imagePath?: string | null;
-  relatedScheduleLogId?: string | null;
+  relatedScheduleLogId?: any;
   status?: 'done' | 'skipped' | 'missed';
   canUploadImage?: boolean;
+  duration?: number | null;
+  metadata?: any;
   createdAt: string;
   updatedAt?: string;
 }

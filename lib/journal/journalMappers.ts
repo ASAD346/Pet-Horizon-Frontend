@@ -113,6 +113,16 @@ export function formatEntryTitle(entry: ApiJournalEntry): string {
   note = note.replace(/walk walking/gi, 'walking');
   note = note.replace(/walk walk/gi, 'walk');
 
+  const category = mapActivityTypeToCategory(entry.activityType);
+  const walkDuration = entry.metadata?.duration ?? entry.metadata?.targetDuration ?? entry.duration;
+  if (category === 'walk' && walkDuration && !/\(\d+\s*min\)/i.test(note)) {
+    if (note) {
+      note = `${note} (${walkDuration} min)`;
+    } else {
+      note = `Completed walk (${walkDuration} min)`;
+    }
+  }
+
   if (note) {
     note = note.charAt(0).toUpperCase() + note.slice(1);
     return note;
