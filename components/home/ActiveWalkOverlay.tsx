@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Modal, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, Palette } from '@/constants/theme';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAuth } from '@/hooks/useAuth';
 import { completeWalkSchedule } from '@/services/schedules/walkApi';
@@ -118,7 +118,7 @@ export function ActiveWalkOverlay() {
     >
       <View style={styles.backdrop}>
         <LinearGradient
-          colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
+          colors={['#FFFFFF', '#F9FBF9']}
           style={styles.container}
         >
           {/* Pulsing Walk Indicator */}
@@ -133,22 +133,22 @@ export function ActiveWalkOverlay() {
               ]}
             />
             <View style={styles.iconCircle}>
-              <Ionicons name="walk" size={32} color="#4ADE80" />
+              <Ionicons name="walk" size={32} color="#2E7D32" />
             </View>
           </View>
 
           {/* Heading */}
-          <AppText variant="h2" weight="800" color="#FFFFFF" style={styles.title}>
+          <AppText variant="h2" weight="800" color="#1A2B4E" style={styles.title}>
             Walk in Progress
           </AppText>
 
-          <AppText variant="body" weight="600" color="#94A3B8" style={styles.subtitle}>
+          <AppText variant="body" weight="600" color="#616161" style={styles.subtitle}>
             {activeWalk.title || 'Ongoing Walk'}
           </AppText>
 
           {/* Timer Display */}
           <View style={styles.timerContainer}>
-            <AppText variant="h1" weight="800" color="#4ADE80" style={styles.timerText}>
+            <AppText variant="h1" weight="800" color="#2E7D32" style={styles.timerText}>
               {formatTimer(elapsedSeconds)}
             </AppText>
           </View>
@@ -180,7 +180,7 @@ export function ActiveWalkOverlay() {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)', // Sleek semi-transparent dark slate
+    backgroundColor: 'rgba(26, 43, 78, 0.55)', // Elegant Navy-tinted semi-transparent overlay
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
@@ -188,21 +188,21 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     maxWidth: 350,
-    borderRadius: 24,
+    borderRadius: Radius.xl,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.xxl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderColor: 'rgba(46, 125, 50, 0.15)',
     ...Platform.select({
       ios: {
-        shadowColor: '#000000',
+        shadowColor: '#1A2B4E',
         shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.35,
+        shadowOpacity: 0.15,
         shadowRadius: 20,
       },
       android: {
-        elevation: 12,
+        elevation: 10,
       },
     }),
   },
@@ -219,29 +219,29 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     borderWidth: 3,
-    borderColor: '#4ADE80',
+    borderColor: '#2E7D32',
   },
   iconCircle: {
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    backgroundColor: 'rgba(46, 125, 50, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(74, 222, 128, 0.3)',
+    borderColor: 'rgba(46, 125, 50, 0.2)',
   },
   title: {
     marginBottom: Spacing.xs,
     textAlign: 'center',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   subtitle: {
     marginBottom: Spacing.xl,
     textAlign: 'center',
   },
   timerContainer: {
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    backgroundColor: '#E8F5E9', // SuccessLight background
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xxl,
     borderRadius: 20,
@@ -249,24 +249,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.xxl,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.05)',
+    borderColor: 'rgba(46, 125, 50, 0.12)',
   },
   timerText: {
     fontSize: 52,
     fontVariant: ['tabular-nums'],
     letterSpacing: 2,
-    textShadowColor: 'rgba(74, 222, 128, 0.25)',
+    textShadowColor: 'rgba(46, 125, 50, 0.15)',
     textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 8,
+    textShadowRadius: 6,
   },
   btn: {
     width: '100%',
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#22C55E', // Premium green accent
+    backgroundColor: '#2E7D32', // Matches brand success green
     ...Platform.select({
       ios: {
-        shadowColor: '#22C55E',
+        shadowColor: '#2E7D32',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     }),
   },
   btnDisabled: {
-    backgroundColor: '#15803D',
+    backgroundColor: '#1B5E20',
     opacity: 0.7,
   },
   btnContent: {

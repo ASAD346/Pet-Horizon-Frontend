@@ -215,9 +215,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Feeding';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'done');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
@@ -228,7 +228,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, scheduleId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -250,9 +250,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Feeding';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'skipped');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
@@ -263,7 +263,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, scheduleId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -286,9 +286,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async ({ scheduleId }) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Walk';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'done');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
@@ -299,7 +299,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, { scheduleId }, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -321,9 +321,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Medicine';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'done');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
@@ -334,7 +334,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, scheduleId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -352,9 +352,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (recordId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Grooming';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'grooming', recordId, 'done');
         updated = removeCacheUpcomingTask(updated, recordId);
         itemTitle = findItemTitle(prev, 'grooming', recordId, 'Grooming');
@@ -365,7 +365,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, recordId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -387,9 +387,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Vaccination';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'vaccination', scheduleId, 'done');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'vaccination', scheduleId, 'Vaccination');
@@ -400,7 +400,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, scheduleId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -422,9 +422,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Walk';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'skipped');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
@@ -435,7 +435,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, scheduleId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
@@ -457,9 +457,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
-      const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Medicine';
-      queryClient.setQueryData(['dashboard', petId], (prev: any) => {
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
         let updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'skipped');
         updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
@@ -470,7 +470,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     onError: (err, scheduleId, context) => {
       if (context?.previousDashboard) {
-        queryClient.setQueryData(['dashboard', petId], context.previousDashboard);
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
       }
     },
     onSettled: () => {
