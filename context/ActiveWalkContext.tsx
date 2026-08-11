@@ -5,6 +5,7 @@ import { log } from '@/lib/log';
 
 export interface ActiveWalk {
   scheduleId: string;
+  petId: string;
   startedAt: number;
   targetDuration: number;
   title?: string;
@@ -12,7 +13,7 @@ export interface ActiveWalk {
 
 interface ActiveWalkContextType {
   activeWalk: ActiveWalk | null;
-  startWalk: (scheduleId: string, targetDuration: number, title?: string) => Promise<void>;
+  startWalk: (scheduleId: string, petId: string, targetDuration: number, title?: string) => Promise<void>;
   stopWalk: () => Promise<void>;
   loadActiveWalk: () => Promise<void>;
 }
@@ -42,10 +43,11 @@ export function ActiveWalkProvider({ children }: { children: React.ReactNode }) 
     loadActiveWalk();
   }, [loadActiveWalk]);
 
-  const startWalk = useCallback(async (scheduleId: string, targetDuration: number, title?: string) => {
+  const startWalk = useCallback(async (scheduleId: string, petId: string, targetDuration: number, title?: string) => {
     const now = Date.now();
     const newWalk: ActiveWalk = {
       scheduleId,
+      petId,
       startedAt: now,
       targetDuration,
       title: title || 'Walk',

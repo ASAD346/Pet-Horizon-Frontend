@@ -42,6 +42,8 @@ import { isBirthdayToday } from '@/lib/pet/birthdayUtils';
 import { dashboardTaskModule } from '@/lib/pet/petPermissionAccess';
 
 import { petToProfileProps, formatPetAge } from '@/services/pets/petDisplay';
+import { useActiveWalk } from '@/context/ActiveWalkContext';
+import { ActiveWalkOverlay } from '@/components/home/ActiveWalkOverlay';
 
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 
@@ -97,6 +99,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
 
   const router = useRouter();
+  const { activeWalk } = useActiveWalk();
 
   const { token, user, setSession } = useAuth();
 
@@ -579,6 +582,8 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
+
+        <ActiveWalkOverlay />
 
         <PetProfileCard
           {...(profile ?? {})}

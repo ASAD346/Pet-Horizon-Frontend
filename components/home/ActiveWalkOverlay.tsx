@@ -9,6 +9,8 @@ import { completeWalkSchedule } from '@/services/schedules/walkApi';
 import { queryClient } from '@/app/_layout';
 import { useToast } from '@/hooks/useToast';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAppSelector } from '@/redux/store';
+import { selectActivePetId } from '@/redux/reducer';
 
 export function ActiveWalkOverlay() {
   const { activeWalk, stopWalk } = useActiveWalk();
@@ -21,6 +23,8 @@ export function ActiveWalkOverlay() {
   // Animation values for the pulsing ring
   const pulseScale = useRef(new Animated.Value(1)).current;
   const pulseOpacity = useRef(new Animated.Value(0.6)).current;
+
+  const activePetId = useAppSelector(selectActivePetId);
 
   useEffect(() => {
     if (activeWalk) {
@@ -63,6 +67,11 @@ export function ActiveWalkOverlay() {
   }, [activeWalk]);
 
   if (!activeWalk) return null;
+
+  // Only display the overlay if the walk belongs to the currently active pet
+  if (activeWalk.petId && activePetId && activeWalk.petId !== activePetId) {
+    return null;
+  }
 
   const formatTimer = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
@@ -107,174 +116,135 @@ export function ActiveWalkOverlay() {
   };
 
   return (
-    <Modal
-      visible={true}
-      transparent={true}
-      animationType="fade"
-      statusBarTranslucent={true}
-      onRequestClose={() => {
-        // Persistent/Non-dismissible
-      }}
-    >
-      <View style={styles.backdrop}>
-        <LinearGradient
-          colors={['#FFFFFF', '#F9FBF9']}
-          style={styles.container}
-        >
-          {/* Pulsing Walk Indicator */}
-          <View style={styles.indicatorWrapper}>
-            <Animated.View
-              style={[
-                styles.pulseRing,
-                {
-                  transform: [{ scale: pulseScale }],
-                  opacity: pulseOpacity,
-                },
-              ]}
-            />
-            <View style={styles.iconCircle}>
-              <Ionicons name="walk" size={32} color="#2E7D32" />
-            </View>
+    <View style={styles.container}>
+      <View style={styles.leftSection}>
+        {/* Pulsing Walk Icon */}
+        <View style={styles.indicatorWrapper}>
+          <Animated.View
+            style={[
+              styles.pulseRing,
+              {
+                transform: [{ scale: pulseScale }],
+                opacity: pulseOpacity,
+              },
+            ]}
+          />
+          <View style={styles.iconCircle}>
+            <Ionicons name="walk" size={20} color="#2E7D32" />
           </View>
+        </View>
 
-          {/* Heading */}
-          <AppText variant="h2" weight="800" color="#1A2B4E" style={styles.title}>
+        {/* Text Info */}
+        <View style={styles.textContainer}>
+          <AppText variant="caption" weight="600" color="#757575" style={styles.title}>
             Walk in Progress
           </AppText>
-
-          <AppText variant="body" weight="600" color="#616161" style={styles.subtitle}>
-            {activeWalk.title || 'Ongoing Walk'}
+          <AppText variant="h3" weight="800" color="#2E7D32" style={styles.timerText}>
+            {formatTimer(elapsedSeconds)}
           </AppText>
+        </View>
+      </View>
 
-          {/* Timer Display */}
-          <View style={styles.timerContainer}>
-            <AppText variant="h1" weight="800" color="#2E7D32" style={styles.timerText}>
-              {formatTimer(elapsedSeconds)}
+      {/* Action Button */}
+      <TouchableOpacity
+        style={[styles.btn, busy && styles.btnDisabled]}
+        activeOpacity={0.85}
+        onPress={handleComplete}
+        disabled={busy}
+      >
+        {busy ? (
+          <ActivityIndicator color="#FFFFFF" size="small" />
+        ) : (
+          <View style={styles.btnContent}>
+            <Ionicons name="checkmark-circle-outline" size={18} color="#FFFFFF" style={styles.btnIcon} />
+            <AppText variant="body" weight="700" color="#FFFFFF" style={styles.btnText}>
+              Complete
             </AppText>
           </View>
-
-          {/* Action CTA Button */}
-          <TouchableOpacity
-            style={[styles.btn, busy && styles.btnDisabled]}
-            activeOpacity={0.85}
-            onPress={handleComplete}
-            disabled={busy}
-          >
-            {busy ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <View style={styles.btnContent}>
-                <Ionicons name="checkmark-circle-outline" size={24} color="#FFFFFF" style={styles.btnIcon} />
-                <AppText variant="body" weight="700" color="#FFFFFF">
-                  Complete Walk
-                </AppText>
-              </View>
-            )}
-          </TouchableOpacity>
-        </LinearGradient>
-      </View>
-    </Modal>
+        )}
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(26, 43, 78, 0.55)', // Elegant Navy-tinted semi-transparent overlay
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
-  },
   container: {
-    width: '100%',
-    maxWidth: 350,
-    borderRadius: Radius.xl,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xxl,
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 55 : 40, // Positioned safely at the top below the status bar
+    left: Spacing.md,
+    right: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.15)',
+    justifyContent: 'space-between',
+    borderWidth: 1.2,
+    borderColor: 'rgba(46, 125, 50, 0.12)',
     ...Platform.select({
       ios: {
         shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 10,
+        elevation: 4,
       },
     }),
   },
+  leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   indicatorWrapper: {
-    width: 90,
-    height: 90,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginRight: Spacing.sm,
   },
   pulseRing: {
     position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 3,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
     borderColor: '#2E7D32',
   },
   iconCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: 'rgba(46, 125, 50, 0.08)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: 'rgba(46, 125, 50, 0.2)',
   },
+  textContainer: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
   title: {
-    marginBottom: Spacing.xs,
-    textAlign: 'center',
+    fontSize: 11,
+    lineHeight: 14,
     letterSpacing: 0.3,
-  },
-  subtitle: {
-    marginBottom: Spacing.xl,
-    textAlign: 'center',
-  },
-  timerContainer: {
-    backgroundColor: '#E8F5E9', // SuccessLight background
-    paddingVertical: Spacing.lg,
-    paddingHorizontal: Spacing.xxl,
-    borderRadius: 20,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: Spacing.xxl,
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.12)',
+    marginBottom: 1,
   },
   timerText: {
-    fontSize: 52,
+    fontSize: 20,
+    lineHeight: 22,
     fontVariant: ['tabular-nums'],
-    letterSpacing: 2,
-    textShadowColor: 'rgba(46, 125, 50, 0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
   },
   btn: {
-    width: '100%',
-    borderRadius: 16,
+    borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#2E7D32', // Matches brand success green
-    ...Platform.select({
-      ios: {
-        shadowColor: '#2E7D32',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
+    backgroundColor: '#2E7D32',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
   },
   btnDisabled: {
     backgroundColor: '#1B5E20',
@@ -284,10 +254,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    width: '100%',
   },
   btnIcon: {
-    marginRight: Spacing.sm,
+    marginRight: 4,
+  },
+  btnText: {
+    fontSize: 13,
+    lineHeight: 16,
   },
 });

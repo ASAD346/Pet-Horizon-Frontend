@@ -6,6 +6,8 @@ import { HomeTheme, Radius } from '@/constants/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
+import { useAppSelector } from '@/redux/store';
+import { selectActivePetId } from '@/redux/reducer';
 
 interface WalkTimerProps {
   scheduleId: string;
@@ -27,6 +29,7 @@ export function WalkTimer({
   onSkip,
 }: WalkTimerProps) {
   const { activeWalk, startWalk, stopWalk } = useActiveWalk();
+  const activePetId = useAppSelector(selectActivePetId);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [notifFired, setNotifFired] = useState(false);
@@ -125,7 +128,7 @@ export function WalkTimer({
 
   const handleStart = async () => {
     try {
-      await startWalk(scheduleId, targetDuration, 'Walk');
+      await startWalk(scheduleId, activePetId || '', targetDuration, 'Walk');
     } catch (_) {}
   };
 
