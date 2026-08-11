@@ -116,139 +116,210 @@ export function ActiveWalkOverlay() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.leftSection}>
-        {/* Pulsing Walk Icon */}
-        <View style={styles.indicatorWrapper}>
-          <Animated.View
-            style={[
-              styles.pulseRing,
-              {
-                transform: [{ scale: pulseScale }],
-                opacity: pulseOpacity,
-              },
-            ]}
-          />
-          <View style={styles.iconCircle}>
-            <Ionicons name="walk" size={20} color="#2E7D32" />
-          </View>
-        </View>
+    <Modal
+      visible={true}
+      transparent={true}
+      animationType="fade"
+      statusBarTranslucent={true}
+    >
+      <View style={styles.backdrop}>
+        <View style={styles.cardContainer}>
+          {/* Subtle top decoration line */}
+          <View style={styles.topAccent} />
 
-        {/* Text Info */}
-        <View style={styles.textContainer}>
-          <AppText variant="caption" weight="600" color="#757575" style={styles.title}>
+          {/* Pulsing Walk Indicator */}
+          <View style={styles.indicatorWrapper}>
+            <Animated.View
+              style={[
+                styles.pulseRing,
+                {
+                  transform: [{ scale: pulseScale }],
+                  opacity: pulseOpacity,
+                },
+              ]}
+            />
+            <LinearGradient
+              colors={['#E8F5E9', '#C8E6C9']}
+              style={styles.iconCircle}
+            >
+              <Ionicons name="walk" size={32} color="#2E7D32" />
+            </LinearGradient>
+          </View>
+
+          {/* Heading */}
+          <AppText variant="h2" weight="800" color="#0F172A" style={styles.title}>
             Walk in Progress
           </AppText>
-          <AppText variant="h3" weight="800" color="#2E7D32" style={styles.timerText}>
-            {formatTimer(elapsedSeconds)}
-          </AppText>
-        </View>
-      </View>
 
-      {/* Action Button */}
-      <TouchableOpacity
-        style={[styles.btn, busy && styles.btnDisabled]}
-        activeOpacity={0.85}
-        onPress={handleComplete}
-        disabled={busy}
-      >
-        {busy ? (
-          <ActivityIndicator color="#FFFFFF" size="small" />
-        ) : (
-          <View style={styles.btnContent}>
-            <Ionicons name="checkmark-circle-outline" size={18} color="#FFFFFF" style={styles.btnIcon} />
-            <AppText variant="body" weight="700" color="#FFFFFF" style={styles.btnText}>
-              Complete
+          <AppText variant="body" weight="600" color="#64748B" style={styles.subtitle}>
+            {activeWalk.title || 'Ongoing Walk'}
+          </AppText>
+
+          {/* Timer Display */}
+          <View style={styles.timerWrapper}>
+            <AppText variant="h1" weight="800" color="#1E4620" style={styles.timerText}>
+              {formatTimer(elapsedSeconds)}
             </AppText>
           </View>
-        )}
-      </TouchableOpacity>
-    </View>
+
+          {/* Subtle helper text */}
+          <AppText variant="caption" weight="500" color="#94A3B8" style={styles.helperText}>
+            Timer runs in background if you leave the app
+          </AppText>
+
+          {/* Action CTA Button */}
+          <TouchableOpacity
+            style={[styles.btn, busy && styles.btnDisabled]}
+            activeOpacity={0.85}
+            onPress={handleComplete}
+            disabled={busy}
+          >
+            <LinearGradient
+              colors={['#2E7D32', '#1B5E20']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.btnGradient}
+            >
+              {busy ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <View style={styles.btnContent}>
+                  <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" style={styles.btnIcon} />
+                  <AppText variant="body" weight="700" color="#FFFFFF">
+                    Complete Walk
+                  </AppText>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 55 : 40, // Positioned safely at the top below the status bar
-    left: Spacing.md,
-    right: Spacing.md,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    flexDirection: 'row',
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)', // Deep premium slate backdrop overlay
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1.2,
-    borderColor: 'rgba(46, 125, 50, 0.12)',
+    padding: Spacing.xl,
+  },
+  cardContainer: {
+    width: '90%',
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xl + 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
     ...Platform.select({
       ios: {
-        shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 12 },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
+  },
+  topAccent: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    position: 'absolute',
+    top: 12,
+  },
+  indicatorWrapper: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    borderWidth: 2,
+    borderColor: '#C8E6C9',
+  },
+  iconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.15)',
+  },
+  title: {
+    fontSize: 22,
+    lineHeight: 28,
+    marginBottom: 4,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    marginBottom: Spacing.lg,
+    textAlign: 'center',
+  },
+  timerWrapper: {
+    backgroundColor: '#F1F8F3', // Soft pastel mint green
+    width: '100%',
+    paddingVertical: Spacing.md + 2,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.08)',
+    marginBottom: Spacing.sm,
+  },
+  timerText: {
+    fontSize: 48,
+    lineHeight: 54,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 1.5,
+  },
+  helperText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginBottom: Spacing.xl,
+    textAlign: 'center',
+  },
+  btn: {
+    width: '100%',
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.22,
+        shadowRadius: 10,
       },
       android: {
         elevation: 4,
       },
     }),
   },
-  leftSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  indicatorWrapper: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: Spacing.sm,
-  },
-  pulseRing: {
-    position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: '#2E7D32',
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(46, 125, 50, 0.08)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.2)',
-  },
-  textContainer: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 11,
-    lineHeight: 14,
-    letterSpacing: 0.3,
-    marginBottom: 1,
-  },
-  timerText: {
-    fontSize: 20,
-    lineHeight: 22,
-    fontVariant: ['tabular-nums'],
-  },
-  btn: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: '#2E7D32',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
   btnDisabled: {
-    backgroundColor: '#1B5E20',
-    opacity: 0.7,
+    opacity: 0.6,
+  },
+  btnGradient: {
+    width: '100%',
+    paddingVertical: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   btnContent: {
     flexDirection: 'row',
@@ -256,10 +327,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnIcon: {
-    marginRight: 4,
-  },
-  btnText: {
-    fontSize: 13,
-    lineHeight: 16,
+    marginRight: 6,
   },
 });
