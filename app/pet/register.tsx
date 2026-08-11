@@ -514,6 +514,7 @@ export default function RegisterPetScreen() {
                 value={species}
                 onChange={handleSpeciesChange}
                 loading={speciesLoading}
+                disabled={isEditMode}
                 error={fieldErrors.species}
               />
 
@@ -521,7 +522,7 @@ export default function RegisterPetScreen() {
                 value={breed}
                 breeds={breeds}
                 loading={breedsLoading}
-                disabled={!species}
+                disabled={isEditMode || !species}
                 error={fieldErrors.breed}
                 onChange={(next) => {
                   setBreed(next);

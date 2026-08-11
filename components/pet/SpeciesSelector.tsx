@@ -16,6 +16,7 @@ interface SpeciesSelectorProps {
   value: string;
   onChange: (species: string) => void;
   loading?: boolean;
+  disabled?: boolean;
   error?: string;
 }
 
@@ -26,6 +27,7 @@ export function SpeciesSelector({
   value,
   onChange,
   loading = false,
+  disabled = false,
   error,
 }: SpeciesSelectorProps) {
   // Sort by popularity: Dog, Cat, Bird, etc.
@@ -64,9 +66,14 @@ export function SpeciesSelector({
             return (
               <TouchableOpacity
                 key={species}
-                style={[styles.tile, selected && styles.tileSelected]}
-                onPress={() => onChange(species)}
-                activeOpacity={0.85}
+                style={[
+                  styles.tile,
+                  selected && styles.tileSelected,
+                  disabled && styles.tileDisabled,
+                ]}
+                onPress={() => !disabled && onChange(species)}
+                activeOpacity={disabled ? 1 : 0.85}
+                disabled={disabled}
               >
                 <MaterialCommunityIcons
                   name={icon}
@@ -76,7 +83,7 @@ export function SpeciesSelector({
                 <AppText
                   variant="caption"
                   color={labelColor}
-                  style={[styles.tileLabel, selected && styles.tileLabelSelected]}
+                  style={[styles.tileLabel, selected && styles.tileLabelSelected, disabled && styles.tileLabelDisabled]}
                   numberOfLines={1}
                 >
                   {species}
@@ -125,6 +132,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F5E9',
     borderColor: '#4CAF50',
   },
+  tileDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#F1F5F9',
+    borderColor: '#CBD5E1',
+  },
   tileLabel: {
     marginTop: 4,
     fontSize: 10,
@@ -134,6 +146,9 @@ const styles = StyleSheet.create({
   },
   tileLabelSelected: {
     fontWeight: '800',
+  },
+  tileLabelDisabled: {
+    color: '#94A3B8',
   },
   errorText: {
     marginTop: Spacing.xs,
