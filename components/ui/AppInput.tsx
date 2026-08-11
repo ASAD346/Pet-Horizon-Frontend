@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   TextInput, 
   StyleSheet, 
   Platform,
-  ViewStyle
+  ViewStyle,
+  TouchableOpacity
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Palette, Spacing, Radius } from '../../constants/theme';
 import { AppText } from './AppText';
 
@@ -33,6 +35,11 @@ export function AppInput({
   editable = true,
 }: AppInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+  const [hidePassword, setHidePassword] = useState(secureTextEntry);
+
+  useEffect(() => {
+    setHidePassword(secureTextEntry);
+  }, [secureTextEntry]);
   
   return (
     <View style={[styles.container, style]}>
@@ -58,7 +65,7 @@ export function AppInput({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={hidePassword}
           keyboardType={keyboardType}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
@@ -68,6 +75,19 @@ export function AppInput({
           selectTextOnFocus={editable}
           caretHidden={!editable}
         />
+        {secureTextEntry && (
+          <TouchableOpacity 
+            onPress={() => setHidePassword(!hidePassword)}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            style={styles.eyeIcon}
+          >
+            <Ionicons 
+              name={hidePassword ? 'eye-off-outline' : 'eye-outline'} 
+              size={20} 
+              color={Palette.gray[500]} 
+            />
+          </TouchableOpacity>
+        )}
       </View>
       {error && (
         <AppText variant="caption" weight="600" color={Palette.error} style={styles.errorText}>
@@ -93,7 +113,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     borderWidth: 1,
     paddingHorizontal: Spacing.md,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -110,6 +132,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: Palette.gray[900],
     padding: 0,
+    flex: 1,
+  },
+  eyeIcon: {
+    paddingLeft: Spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   errorText: {
     marginTop: 4,

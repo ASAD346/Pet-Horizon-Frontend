@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter, type Href } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from '@/components/ui/AppButton';
@@ -17,7 +17,7 @@ import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { PetPhotoPicker } from '@/components/pet';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme } from '@/components/profile/profileTheme';
-import { Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing, Palette } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
@@ -26,12 +26,81 @@ import {
   requestEmailChange,
   updateUserProfile,
   verifyEmailChange,
+  changePassword,
+  deleteAccount,
 } from '@/services/users/userApi';
-import { deleteAccount } from '@/services/users/userApi';
 import { uploadUserAvatar } from '@/services/users/uploadUserAvatar';
 import { AppInput } from '@/components/ui/AppInput';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 
+// ─── Password Strength Estimator ─────────────────────────────────────────────
+function getStrength(pwd: string): { level: number; label: string; color: string } {
+  if (!pwd) return { level: 0, label: '', color: '#E2E8F0' };
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+  if (score <= 1) return { level: 1, label: 'Weak', color: '#EF4444' };
+  if (score <= 2) return { level: 2, label: 'Fair', color: '#F59E0B' };
+  if (score <= 3) return { level: 3, label: 'Good', color: '#3B82F6' };
+  if (score <= 4) return { level: 4, label: 'Strong', color: '#22C55E' };
+  return { level: 5, label: 'Very Strong', color: '#059669' };
+}
+
+function StrengthBar({ password }: { password: string }) {
+  if (!password) return null;
+  const { level, label, color } = getStrength(password);
+  const bars = [1, 2, 3, 4, 5];
+
+  return (
+    <View style={strengthStyles.container}>
+      <View style={strengthStyles.bars}>
+        {bars.map((b) => (
+          <View
+            key={b}
+            style={[
+              strengthStyles.bar,
+              { backgroundColor: b <= level ? color : '#E2E8F0' },
+            ]}
+          />
+        ))}
+      </View>
+      <AppText variant="caption" weight="700" color={color} style={strengthStyles.label}>
+        {label}
+      </AppText>
+    </View>
+  );
+}
+
+const strengthStyles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: Spacing.md,
+    marginTop: -Spacing.xs,
+  },
+  bars: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  bar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+  },
+  label: {
+    fontSize: 12,
+    minWidth: 60,
+    textAlign: 'right',
+  },
+});
+
+// ─── Edit Profile Screen ─────────────────────────────────────────────────────
 export default function EditProfileScreen() {
   const router = useRouter();
   const { token, user, setSession, logout } = useAuth();
@@ -44,6 +113,13 @@ export default function EditProfileScreen() {
   const [saving, setSaving] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  
+  // Password states
+  const [passwordSectionExpanded, setPasswordSectionExpanded] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
   const { showToast, showErrorToast } = useToast();
 
   useEffect(() => {
@@ -58,9 +134,33 @@ export default function EditProfileScreen() {
     if (!token || !user?._id) { showErrorToast('Please log in again.'); return; }
     const trimmedName = fullName.trim();
     if (!trimmedName) { showErrorToast('Full name is required.'); return; }
+
+    const hasPasswordInput = currentPassword || newPassword || confirmPassword;
+    if (hasPasswordInput) {
+      if (!currentPassword || !newPassword) {
+        showErrorToast('Enter your current and new password.');
+        return;
+      }
+      if (newPassword.length < 8) {
+        showErrorToast('New password must be at least 8 characters.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showErrorToast('New passwords do not match.');
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       let nextUser = user;
+      
+      // 1. Update password inline if details are supplied
+      if (hasPasswordInput) {
+        await changePassword(token, { currentPassword, newPassword });
+      }
+
+      // 2. Update name/photo
       if (trimmedName !== (user.fullName ?? '')) {
         nextUser = await updateUserProfile(token, user._id, { fullName: trimmedName });
       }
@@ -82,6 +182,15 @@ export default function EditProfileScreen() {
         });
         return;
       }
+
+      // Reset password inputs on success
+      if (hasPasswordInput) {
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setPasswordSectionExpanded(false);
+      }
+
       await setSession({ token, user: nextUser });
       showToast('Profile updated successfully!');
       router.back();
@@ -90,7 +199,7 @@ export default function EditProfileScreen() {
     } finally {
       setSaving(false);
     }
-  }, [token, user, fullName, photoUri, email, initialEmail, setSession, router]);
+  }, [token, user, fullName, photoUri, email, initialEmail, currentPassword, newPassword, confirmPassword, setSession, router]);
 
   const handleDeleteConfirm = useCallback(async () => {
     if (!token || !user?._id) return;
@@ -108,6 +217,7 @@ export default function EditProfileScreen() {
   }, [token, user?._id, logout, router]);
 
   const displayPhoto = photoUri ?? existingPhotoUrl ?? null;
+  const strength = getStrength(newPassword);
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -158,6 +268,74 @@ export default function EditProfileScreen() {
             </View>
           </View>
 
+          {/* Collapsible Security & Password Section Card */}
+          <View style={styles.accordionContainer}>
+            <TouchableOpacity
+              style={[styles.accordionHeader, passwordSectionExpanded && styles.accordionHeaderActive]}
+              activeOpacity={0.8}
+              onPress={() => setPasswordSectionExpanded(!passwordSectionExpanded)}
+            >
+              <View style={styles.accordionTitleRow}>
+                <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(46, 125, 50, 0.08)' }]}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#2E7D32" />
+                </View>
+                <View style={styles.actionTextBlock}>
+                  <AppText variant="body" weight="700" color="#212121">
+                    Security & Password
+                  </AppText>
+                  <AppText variant="caption" color="#64748B">
+                    Update your account password
+                  </AppText>
+                </View>
+              </View>
+              <Ionicons
+                name={passwordSectionExpanded ? 'chevron-up' : 'chevron-down'}
+                size={18}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+
+            {passwordSectionExpanded && (
+              <View style={styles.accordionContent}>
+                <AppText variant="caption" color="#64748B" style={styles.accordionInfoText}>
+                  Update your security details. Fill all three fields below to change your account password.
+                </AppText>
+
+                <AppInput
+                  label="Current Password"
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                  placeholder="Enter current password"
+                  secureTextEntry
+                />
+
+                <AppInput
+                  label="New Password"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  placeholder="At least 8 characters"
+                  secureTextEntry
+                />
+
+                <StrengthBar password={newPassword} />
+
+                {newPassword.length > 0 && strength.level < 4 && (
+                  <AppText variant="caption" color="#64748B" style={styles.tipText}>
+                    Tip: Add uppercase letters, numbers, and symbols to strengthen your password.
+                  </AppText>
+                )}
+
+                <AppInput
+                  label="Confirm New Password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Repeat new password"
+                  secureTextEntry
+                />
+              </View>
+            )}
+          </View>
+
           <CustomButton
             title="Save Changes"
             onPress={handleSave}
@@ -165,30 +343,11 @@ export default function EditProfileScreen() {
             variant="primary"
           />
 
-          {/* Account Actions Section */}
+          {/* Danger Zone Section */}
           <View style={styles.actionsSection}>
-            <AppText variant="bodySmall" weight="700" color="#94A3B8" style={styles.actionsSectionTitle}>
-              ACCOUNT ACTIONS
+            <AppText variant="bodySmall" weight="700" color="#EA4335" style={styles.actionsSectionTitle}>
+              DANGER ZONE
             </AppText>
-
-            <TouchableOpacity
-              style={styles.actionRow}
-              activeOpacity={0.85}
-              onPress={() => router.push('/profile/change-password' as Href)}
-            >
-              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(46, 125, 50, 0.08)' }]}>
-                <Ionicons name="lock-closed-outline" size={20} color="#2E7D32" />
-              </View>
-              <View style={styles.actionTextBlock}>
-                <AppText variant="body" weight="700" color="#212121">
-                  Change Password
-                </AppText>
-                <AppText variant="caption" color="#64748B">
-                  Update your account password
-                </AppText>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-            </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.actionRow}
@@ -248,15 +407,64 @@ const styles = StyleSheet.create({
   avatarHint: {
     color: '#64748B',
   },
-  banner: {
-    marginBottom: Spacing.md,
-  },
   formSection: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
     gap: Spacing.sm,
   },
+  accordionContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: Spacing.xl,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 12,
+  },
+  accordionHeaderActive: {
+    backgroundColor: '#F8FAFC',
+  },
+  accordionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  accordionContent: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: '#FCFCFD',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    gap: Spacing.sm,
+  },
+  accordionInfoText: {
+    marginBottom: Spacing.xs,
+    lineHeight: 16,
+    color: '#64748B',
+  },
+  tipText: {
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.xs,
+    fontStyle: 'italic',
+  },
   actionsSection: {
-    marginTop: Spacing.xxl,
+    marginTop: Spacing.xl,
   },
   actionsSectionTitle: {
     marginBottom: Spacing.sm,
