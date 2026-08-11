@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/useToast';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
+import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
 export function ActiveWalkOverlay() {
   const { activeWalk, stopWalk } = useActiveWalk();
@@ -113,6 +114,7 @@ export function ActiveWalkOverlay() {
 
     // 3. Trigger API and clear states in background asynchronously without blocking UI
     void stopWalk().catch(() => {});
+    void cancelTaskNotifications(scheduleId).catch(() => {});
 
     if (token) {
       completeWalkSchedule(token, scheduleId, {
