@@ -33,16 +33,15 @@ interface RecentActivitySectionProps {
 
 function formatRawString(text: string) {
   if (!text) return '';
-  if (/\(\d+\s*min\)/i.test(text)) {
-    return text;
-  }
-  if (text.includes(':')) {
-    const parts = text.split(':');
+  // Strip any existing (X min) duration suffixes to avoid duplicate display
+  const cleaned = text.replace(/\s*\(\d+\s*min\)/gi, '');
+  if (cleaned.includes(':')) {
+    const parts = cleaned.split(':');
     const prefix = parts[0].trim();
     const suffix = parts.slice(1).join(':').trim();
     return `${prefix}: ${getTaskDisplayName(suffix)}`;
   }
-  return getTaskDisplayName(text);
+  return getTaskDisplayName(cleaned);
 }
 
 export const RecentActivitySection = React.memo(function RecentActivitySection({
@@ -101,7 +100,8 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                   {item.actorName}
                 </Text>
                 <Text style={{ color: HomeTheme.textMuted }}>
-                  {' '}{formatRawString(item.actionText)}{item.icon === 'walk' && item.duration && !/\(\d+\s*min\)/i.test(item.actionText) ? ` (${item.duration} min)` : ''}
+                  {' '}{formatRawString(item.actionText)}
+                  {item.icon === 'walk' && item.duration ? ` • ${item.duration} min` : ''}
                 </Text>
               </AppText>
               <AppText variant="caption" color={HomeTheme.textMuted}>

@@ -92,11 +92,16 @@ function TimelineRow({
       >
         <View style={styles.cardText}>
           <AppText variant="bodySmall" weight="700" color="#1F2937">
-            {event.title}{event.category === 'walk' && event.duration && !/\(\d+\s*min\)/i.test(event.title) ? ` (${event.duration} min)` : ''}
+            {event.title.replace(/\s*\(\d+\s*min\)/gi, '')}
           </AppText>
+          {event.category === 'walk' && event.duration ? (
+            <AppText variant="caption" weight="600" color="#2E7D32" style={{ marginTop: 2 }}>
+              Walk Duration: {event.duration} min
+            </AppText>
+          ) : null}
           {event.notes && event.notes.trim() !== '' && event.notes.toLowerCase() !== event.title.toLowerCase() ? (
             <AppText variant="caption" color="#4B5563" style={{ marginTop: 2 }}>
-              {event.notes}
+              {event.notes.replace(/\s*\(\d+\s*min\)/gi, '')}
             </AppText>
           ) : null}
           <AppText variant="caption" color={dotColor} style={{ marginTop: 4, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
