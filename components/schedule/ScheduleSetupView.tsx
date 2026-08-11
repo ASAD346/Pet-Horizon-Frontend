@@ -551,11 +551,14 @@ export function ScheduleSetupView({
     }
   };
 
+  const isSectionApplicable = useCallback((key: ScheduleSectionKey) => {
+    if (key === 'grooming') return groomingVisible;
+    if (key === 'walk') return walkingVisible;
+    return true;
+  }, [groomingVisible, walkingVisible]);
+
   const visibleSections = SCHEDULE_SECTIONS.filter(
-    (section) =>
-      (section.key !== 'grooming' || groomingVisible) &&
-      (section.key !== 'walk' || walkingVisible) &&
-      canViewSchedule(section.key),
+    (section) => canViewSchedule(section.key),
   );
 
   const filterChips: { key: 'all' | ScheduleSectionKey; label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }[] = [
@@ -750,7 +753,7 @@ export function ScheduleSetupView({
                       : `No ${filterChips.find((c) => c.key === selectedCategory)?.label?.toLowerCase() ?? selectedCategory} routines set up yet. Add one to get started.`
                   }
                   buttonLabel={
-                    visibleSections.some((s) => (selectedCategory === 'all' || selectedCategory === s.key) && canEditSchedule(s.key))
+                    visibleSections.some((s) => (selectedCategory === 'all' || selectedCategory === s.key) && canEditSchedule(s.key) && isSectionApplicable(s.key))
                       ? selectedCategory === 'all'
                         ? 'Create First Schedule'
                         : `Add ${filterChips.find((c) => c.key === selectedCategory)?.label ?? 'Schedule'}`
@@ -761,7 +764,7 @@ export function ScheduleSetupView({
                       setFabMenuVisible(true);
                     } else {
                       const meta = SCHEDULE_SECTIONS.find((s) => s.key === selectedCategory);
-                      if (meta) openAddEditor(meta);
+                      if (meta && isSectionApplicable(meta.key)) openAddEditor(meta);
                     }
                   }}
                   buttonVariant="success"
@@ -828,24 +831,61 @@ export function ScheduleSetupView({
               </Pressable>
             </View>
             <View style={styles.modalList}>
-              {visibleSections.filter(s => canEditSchedule(s.key)).map((section) => (
-                <TouchableOpacity
-                   key={section.key}
-                  style={styles.modalItem}
-                  onPress={() => {
-                    setFabMenuVisible(false);
-                    openAddEditor(section);
-                  }}
-                  activeOpacity={0.7}
-                >
-                  <View style={[styles.modalIconWrap, { backgroundColor: section.bg }]}>
-                    <MaterialCommunityIcons name={section.icon} size={22} color={section.color} />
-                  </View>
-                  <AppText variant="body" weight="700" color={HomeTheme.text}>
-                    {section.title}
-                  </AppText>
-                </TouchableOpacity>
-              ))}
+              {visibleSections.map((section) => {
+                const isApplicable = isSectionApplicable(section.key);
+                const canEdit = canEditSchedule(section.key);
+                const isDisabled = !isApplicable || !canEdit;
+                
+                const s = (pet?.species || '').trim();
+                const lower = s.toLowerCase();
+                const pluralSpecies = !s
+                  ? 'this species'
+                  : lower === 'fish'
+                  ? 'fish'
+                  : lower === 'other'
+                  ? 'other species'
+                  : lower.endsWith('s')
+                  ? lower
+                  : `${lower}s`;
+
+                return (
+                  <TouchableOpacity
+                    key={section.key}
+                    style={[styles.modalItem, isDisabled && { opacity: 0.55 }]}
+                    onPress={() => {
+                      if (!isApplicable) {
+                        showToast(`${section.title} is not applicable for ${pluralSpecies}.`, 'info');
+                        return;
+                      }
+                      if (!canEdit) {
+                        showToast(`You do not have permission to edit ${section.title.toLowerCase()}.`, 'info');
+                        return;
+                      }
+                      setFabMenuVisible(false);
+                      openAddEditor(section);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.modalIconWrap, { backgroundColor: isDisabled ? '#F1F5F9' : section.bg }]}>
+                      <MaterialCommunityIcons 
+                        name={section.icon} 
+                        size={22} 
+                        color={isDisabled ? '#94A3B8' : section.color} 
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <AppText variant="body" weight="700" color={isDisabled ? '#94A3B8' : HomeTheme.text}>
+                        {section.title}
+                      </AppText>
+                      {!isApplicable && (
+                        <AppText variant="caption" color="#D97706" weight="700" style={{ fontSize: 10, marginTop: 1, letterSpacing: 0.2 }}>
+                          Not applicable for {pluralSpecies}
+                        </AppText>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </Pressable>
