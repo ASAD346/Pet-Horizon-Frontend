@@ -835,18 +835,6 @@ export function ScheduleSetupView({
                 const isApplicable = isSectionApplicable(section.key);
                 const canEdit = canEditSchedule(section.key);
                 const isDisabled = !isApplicable || !canEdit;
-                
-                const s = (pet?.species || '').trim();
-                const lower = s.toLowerCase();
-                const pluralSpecies = !s
-                  ? 'this species'
-                  : lower === 'fish'
-                  ? 'fish'
-                  : lower === 'other'
-                  ? 'other species'
-                  : lower.endsWith('s')
-                  ? lower
-                  : `${lower}s`;
 
                 return (
                   <TouchableOpacity
@@ -854,7 +842,7 @@ export function ScheduleSetupView({
                     style={[styles.modalItem, isDisabled && { opacity: 0.55 }]}
                     onPress={() => {
                       if (!isApplicable) {
-                        showToast(`${section.title} is not applicable for ${pluralSpecies}.`, 'info');
+                        showToast(`${section.title} is not applicable for ${pet?.species?.toLowerCase() ?? 'this pet'}.`, 'info');
                         return;
                       }
                       if (!canEdit) {
@@ -878,8 +866,8 @@ export function ScheduleSetupView({
                         {section.title}
                       </AppText>
                       {!isApplicable && (
-                        <AppText variant="caption" color="#D97706" weight="700" style={{ fontSize: 10, marginTop: 1, letterSpacing: 0.2 }}>
-                          Not applicable for {pluralSpecies}
+                        <AppText variant="caption" color="#EF4444" weight="600" style={{ fontSize: 10, marginTop: 1 }}>
+                          Not applicable for {pet?.species?.toLowerCase() ?? 'this species'}
                         </AppText>
                       )}
                     </View>

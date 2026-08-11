@@ -27,7 +27,7 @@ export interface ScheduleSectionTheme {
 export const SCHEDULE_SECTIONS: ScheduleSectionTheme[] = [
   {
     key: 'feeding',
-    title: 'Feeding Schedule',
+    title: 'Meals & Nutrition',
     icon: 'bowl-mix-outline',
     color: '#D97706',
     bg: '#FEF3C7',
@@ -36,7 +36,7 @@ export const SCHEDULE_SECTIONS: ScheduleSectionTheme[] = [
   },
   {
     key: 'grooming',
-    title: 'Grooming',
+    title: 'Grooming & Hygiene',
     optional: true,
     icon: 'content-cut',
     color: '#0D9488',
@@ -46,7 +46,7 @@ export const SCHEDULE_SECTIONS: ScheduleSectionTheme[] = [
   },
   {
     key: 'medicine',
-    title: 'Medicine',
+    title: 'Medications',
     optional: true,
     icon: 'pill',
     color: '#9333EA',
@@ -56,7 +56,7 @@ export const SCHEDULE_SECTIONS: ScheduleSectionTheme[] = [
   },
   {
     key: 'walk',
-    title: 'Daily Walks',
+    title: 'Walks & Exercise',
     optional: true,
     icon: 'walk',
     color: '#2563EB',
