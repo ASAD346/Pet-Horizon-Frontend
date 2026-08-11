@@ -94,9 +94,9 @@ function TimelineRow({
           <AppText variant="bodySmall" weight="700" color="#1F2937">
             {event.title.replace(/\s*\(\d+\s*min\)/gi, '')}
           </AppText>
-          {event.category === 'walk' && event.duration ? (
+          {event.category === 'walk' && event.durationLabel ? (
             <AppText variant="caption" weight="600" color="#2E7D32" style={{ marginTop: 2 }}>
-              Walk Duration: {event.duration} min
+              Walk Duration: {event.durationLabel}
             </AppText>
           ) : null}
           {event.notes && event.notes.trim() !== '' && event.notes.toLowerCase() !== event.title.toLowerCase() ? (

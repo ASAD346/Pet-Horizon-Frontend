@@ -148,6 +148,8 @@ export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
     }
   }
 
+  const walkDuration = entry.duration ?? entry.relatedScheduleLogId?.duration ?? entry.metadata?.duration ?? entry.metadata?.targetDuration;
+
   return {
     id: entry._id,
     time: formatTimeLabel(entry.createdAt),
@@ -157,7 +159,8 @@ export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
     materialIcon: categoryToMaterialIcon(category),
     imageUrl: entry.imagePath ?? null,
     notes: entry.note ?? null,
-    duration: entry.duration ?? entry.relatedScheduleLogId?.duration ?? entry.metadata?.duration ?? entry.metadata?.targetDuration,
+    duration: walkDuration,
+    durationLabel: walkDuration ? `${walkDuration} min` : undefined,
   };
 }
 

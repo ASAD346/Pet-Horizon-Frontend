@@ -22,6 +22,7 @@ export type TimelineEvent = {
   imageUrl?: string | null;
   notes?: string | null;
   duration?: number | null;
+  durationLabel?: string;
 };
 
 export const JOURNAL_CATEGORY_CHIPS: { id: JournalCategory; label: string }[] = [

@@ -418,6 +418,7 @@ export default function HomeScreen() {
         bg: colors.bg,
         createdAt: entry.createdAt,
         duration: walkDuration,
+        durationLabel: walkDuration ? `${walkDuration} min` : undefined,
       };
     });
   }, [dashboardData?.recentActivities, user]);
