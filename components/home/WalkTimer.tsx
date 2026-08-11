@@ -32,10 +32,8 @@ export function WalkTimer({
   const activePetId = useAppSelector(selectActivePetId);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [notifFired, setNotifFired] = useState(false);
   const [busy, setBusy] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const notifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync startedAt with activeWalk from context
   useEffect(() => {
@@ -68,18 +66,13 @@ export function WalkTimer({
   // Keep counter ticking & schedule notifications
   useEffect(() => {
     if (startedAt !== null) {
-      // 1. Setup tick interval with instant completion checks
+      // 1. Setup tick interval for UI clock ONLY
       timerRef.current = setInterval(() => {
         const curElapsed = Math.floor((Date.now() - startedAt) / 1000);
         setElapsedSeconds(curElapsed);
-
-        const targetSeconds = targetDuration * 60;
-        if (curElapsed >= targetSeconds) {
-          setNotifFired(true);
-        }
       }, 1000);
 
-      // 2. Schedule local OS notification for when target duration expires
+      // 2. Schedule local OS notification exactly once on start/mount for absolute future timestamp
       const scheduleWalkCompleteNotification = async () => {
         const targetSeconds = targetDuration * 60;
         const remainingSeconds = targetSeconds - Math.floor((Date.now() - startedAt) / 1000);
@@ -87,11 +80,10 @@ export function WalkTimer({
         if (remainingSeconds <= 0) return;
 
         try {
-          // Request permission first
           const { status } = await Notifications.requestPermissionsAsync();
           if (status !== 'granted') return;
 
-          // Cancel only the previous walk notification for this schedule
+          // Cancel any previous walk notification for this schedule
           try {
             await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`);
           } catch (_) {}
@@ -109,26 +101,17 @@ export function WalkTimer({
             },
           });
         } catch (_) {}
-
-        // 3. JS-side setTimeout fallback — fires in-process even if OS notification is blocked
-        if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
-        notifTimeoutRef.current = setTimeout(() => {
-          setNotifFired(true);
-        }, remainingSeconds * 1000);
       };
 
       scheduleWalkCompleteNotification();
 
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
       setElapsedSeconds(0);
-      setNotifFired(false);
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
     };
   }, [startedAt, targetDuration, scheduleId]);
 
@@ -153,19 +136,18 @@ export function WalkTimer({
 
     const finalSeconds = elapsedSeconds;
 
+    // Instantly cancel pre-scheduled native notification and storage
+    await cleanUpNotificationAndStorage();
+
     // Stop walk in global context
     await stopWalk();
 
-    // Instantly reset timer state to prevent lagging ticks
+    // Instantly reset timer state
     setStartedAt(null);
     setElapsedSeconds(0);
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
-    }
-    if (notifTimeoutRef.current) {
-      clearTimeout(notifTimeoutRef.current);
-      notifTimeoutRef.current = null;
     }
 
     try {
@@ -228,7 +210,7 @@ export function WalkTimer({
   }
 
   // Show a pulsing Done prompt if walk timer has expired but user hasn't tapped Done yet
-  const timerExpired = notifFired || elapsedSeconds >= targetDuration * 60;
+  const timerExpired = elapsedSeconds >= targetDuration * 60;
 
   return (
     <View style={styles.actionRow}>
