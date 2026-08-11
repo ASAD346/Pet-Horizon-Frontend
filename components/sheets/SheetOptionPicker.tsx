@@ -1,8 +1,7 @@
-import React, { useContext, useId, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   StyleSheet,
-  Modal,
   Pressable,
   TouchableOpacity,
   ScrollView,
@@ -12,7 +11,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SheetColors } from './sheetUi';
-import { SheetOverlayContext } from './FormSheetShell';
+import { SafeModal } from '../ui/SafeModal';
 
 export type SheetOption = {
   value: string;
@@ -45,10 +44,7 @@ export function SheetOptionPicker({
   selectedValue,
   onClose,
   onSelect,
-  useNativeModal = true,
 }: SheetOptionPickerProps) {
-  const overlayContext = useContext(SheetOverlayContext);
-  const id = useId();
 
   const titleParts = (title || '').split(' ');
   const firstRow = titleParts[0] || '';
@@ -180,29 +176,10 @@ export function SheetOptionPicker({
     </Pressable>
   );
 
-  useEffect(() => {
-    if (visible && overlayContext) {
-      overlayContext.setOverlay(id,
-        <View key={id} style={[StyleSheet.absoluteFillObject, { zIndex: 9999, elevation: 24 }]}>
-          {content}
-        </View>
-      );
-    } else if (!visible && overlayContext) {
-      overlayContext.removeOverlay(id);
-    }
-    return () => {
-      if (overlayContext) overlayContext.removeOverlay(id);
-    };
-  }, [visible, overlayContext, id, content]);
-
-  if (overlayContext) {
-    return null;
-  }
-
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       {content}
-    </Modal>
+    </SafeModal>
   );
 }
 
@@ -232,6 +209,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
+    minHeight: 240,
+    flexShrink: 1,
     ...sheetShadow,
   },
   handleBar: {
@@ -281,7 +260,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   list: {
-    flexGrow: 0,
+    flexShrink: 1,
+    flexGrow: 1,
   },
   simpleListContent: {
     paddingVertical: Spacing.xs,
