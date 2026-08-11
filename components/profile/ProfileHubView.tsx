@@ -348,7 +348,7 @@ export function ProfileHubView() {
           <ProfileMenuRow
             icon="person-outline"
             title="Profile Information"
-            subtitle="Name, email, and photo"
+            subtitle="Name, email, password, and photo"
             onPress={() => router.push('/profile/edit' as Href)}
           />
           <ProfileMenuRow
@@ -363,12 +363,6 @@ export function ProfileHubView() {
                 router.push({ pathname: '/pet/register', params: { mode: 'add' } } as any);
               }
             }}
-          />
-          <ProfileMenuRow
-            icon="lock-closed-outline"
-            title="Password & Security"
-            subtitle="Protect your account"
-            onPress={() => router.push('/profile/change-password' as Href)}
           />
           <ProfileMenuRow
             icon="globe-outline"
@@ -408,17 +402,6 @@ export function ProfileHubView() {
             title="Rate Us & Feedback"
             subtitle="Share your thoughts with us"
             onPress={() => setFeedbackVisible(true)}
-          />
-        </ProfileMenuSection>
-
-        <ProfileMenuSection title="ACTIONS">
-          <ProfileMenuRow
-            icon="trash-outline"
-            title="Delete Account"
-            subtitle="Permanently erase your data and profile"
-            onPress={handleDeletePress}
-            iconColor="#EA4335"
-            iconBg="rgba(234, 67, 53, 0.08)"
           />
           <ProfileMenuRow
             icon="log-out-outline"

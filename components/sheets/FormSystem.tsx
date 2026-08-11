@@ -30,7 +30,7 @@ export function FormSection({ title, icon, children }: FormSectionProps) {
       <View style={styles.sectionHeader}>
         {icon ? (
           <View style={[styles.sectionIcon, { backgroundColor: accentBg }]}>
-            <MaterialCommunityIcons name={icon} size={18} color={accentColor} />
+            <MaterialCommunityIcons name={icon} size={16} color={accentColor} />
           </View>
         ) : null}
         <AppText variant="caption" weight="800" color={FormSheetColors.label} style={styles.sectionTitle}>
@@ -88,7 +88,7 @@ export function FormTextInput({
         style={[
           styles.input,
           multiline ? styles.multilineInput : styles.standardHeight,
-          focused && { borderColor: accentColor },
+          focused && { borderColor: accentColor, borderWidth: 1.5 },
           error ? { borderColor: '#E53935' } : null,
           isReadOnly ? { backgroundColor: '#F3F4F6', color: '#9CA3AF' } : null,
         ]}
@@ -133,7 +133,7 @@ export function FormNumberInput({
         style={[
           styles.inputContainerRow,
           styles.standardHeight,
-          focused && { borderColor: accentColor },
+          focused && { borderColor: accentColor, borderWidth: 1.5 },
           error ? { borderColor: '#E53935' } : null,
           isReadOnly ? { backgroundColor: '#F3F4F6' } : null,
         ]}
@@ -184,13 +184,14 @@ export function FormDateInput({ label, value, onPress, error }: FormDateInputPro
       <TouchableOpacity
         style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         disabled={isReadOnly}
       >
+        <Ionicons name="calendar-outline" size={17} color={FormSheetColors.label} style={styles.leftIcon} />
         <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text} style={styles.pickerText}>
           {value.toLocaleDateString()}
         </AppText>
-        <Ionicons name="calendar-outline" size={16} color={FormSheetColors.label} style={styles.rightIcon} />
+        <Ionicons name="chevron-down" size={15} color={FormSheetColors.placeholder} />
       </TouchableOpacity>
       {error ? (
         <AppText variant="caption" color="#E53935" style={styles.errorText}>
@@ -220,13 +221,14 @@ export function FormTimeInput({ label, value, onPress, error }: FormTimeInputPro
       <TouchableOpacity
         style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         disabled={isReadOnly}
       >
+        <Ionicons name="time-outline" size={17} color={FormSheetColors.label} style={styles.leftIcon} />
         <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text} style={styles.pickerText}>
           {formattedTime}
         </AppText>
-        <Ionicons name="time-outline" size={16} color={FormSheetColors.label} style={styles.rightIcon} />
+        <Ionicons name="chevron-down" size={15} color={FormSheetColors.placeholder} />
       </TouchableOpacity>
       {error ? (
         <AppText variant="caption" color="#E53935" style={styles.errorText}>
@@ -256,7 +258,7 @@ export function FormSelectInput({ label, valueLabel, onPress, icon = 'chevron-do
       <TouchableOpacity
         style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
-        activeOpacity={0.8}
+        activeOpacity={0.7}
         disabled={isReadOnly}
       >
         <AppText variant="bodySmall" weight="600" color={isReadOnly ? '#9CA3AF' : FormSheetColors.text} style={styles.pickerText}>
@@ -287,6 +289,7 @@ export function FormSegmentedControl({
   onSelect,
   error,
 }: FormSegmentedControlProps) {
+  const { accentColor } = useAppThemeColor();
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
@@ -301,15 +304,19 @@ export function FormSegmentedControl({
           return (
             <TouchableOpacity
               key={option.value}
-              style={[styles.segmentButton, isSelected && styles.segmentButtonActive]}
+              style={[
+                styles.segmentButton,
+                isSelected && styles.segmentButtonActive,
+                isSelected && { borderColor: accentColor },
+              ]}
               onPress={() => onSelect(option.value)}
-              activeOpacity={0.9}
+              activeOpacity={0.85}
               disabled={isReadOnly}
             >
               <AppText
                 variant="caption"
-                weight="700"
-                color={isSelected ? FormSheetColors.text : FormSheetColors.label}
+                weight={isSelected ? '800' : '600'}
+                color={isSelected ? accentColor : FormSheetColors.label}
                 style={styles.segmentText}
               >
                 {option.label}
@@ -395,18 +402,18 @@ export function StickyActionFooter({
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 10,
+    marginBottom: 14,
   },
   sectionIcon: {
     width: 28,
     height: 28,
-    borderRadius: Radius.sm,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -414,7 +421,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
   },
   sectionBody: {
-    gap: 12,
+    gap: 14,
   },
   fieldContainer: {
     width: '100%',
@@ -422,7 +429,7 @@ const styles = StyleSheet.create({
   },
   fieldLabel: {
     letterSpacing: 0.4,
-    marginBottom: 6,
+    marginBottom: 7,
   },
   input: {
     width: '100%',
@@ -430,17 +437,17 @@ const styles = StyleSheet.create({
     borderColor: FormSheetColors.inputBorder,
     borderWidth: 1,
     borderRadius: Radius.md,
-    paddingHorizontal: 12,
-    fontSize: 14,
+    paddingHorizontal: 14,
+    fontSize: 15,
     color: FormSheetColors.text,
   },
   standardHeight: {
-    height: 40,
+    height: 44,
   },
   multilineInput: {
-    minHeight: 80,
-    paddingTop: 10,
-    paddingBottom: 10,
+    minHeight: 88,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   inputContainerRow: {
     flexDirection: 'row',
@@ -449,22 +456,25 @@ const styles = StyleSheet.create({
     borderColor: FormSheetColors.inputBorder,
     borderWidth: 1,
     borderRadius: Radius.md,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     overflow: 'hidden',
   },
   flexInput: {
     flex: 1,
-    height: 40,
-    fontSize: 14,
+    height: 44,
+    fontSize: 15,
     color: FormSheetColors.text,
   },
   unitBadge: {
-    paddingLeft: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     marginLeft: 8,
-    borderLeftWidth: 1,
-    borderLeftColor: FormSheetColors.inputBorder,
+    backgroundColor: FormSheetColors.chipBg,
+    borderRadius: 8,
     justifyContent: 'center',
-    height: '100%',
+  },
+  leftIcon: {
+    marginRight: 10,
   },
   pickerText: {
     flex: 1,
@@ -474,34 +484,37 @@ const styles = StyleSheet.create({
   },
   segmentedContainer: {
     flexDirection: 'row',
-    backgroundColor: '#E6E8EB',
+    backgroundColor: '#ECEEF2',
     borderRadius: Radius.md,
-    padding: 2,
+    padding: 3,
     width: '100%',
   },
   segmentButton: {
     flex: 1,
-    height: 36,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.md - 2,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
   },
   segmentButtonActive: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.12,
-        shadowRadius: 1.5,
+        shadowOpacity: 0.10,
+        shadowRadius: 3,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
   segmentText: {
-    fontSize: 12,
+    fontSize: 13,
     textAlign: 'center',
   },
   toggleRow: {
@@ -512,13 +525,13 @@ const styles = StyleSheet.create({
     borderColor: FormSheetColors.inputBorder,
     borderWidth: 1,
     borderRadius: Radius.md,
-    paddingHorizontal: 12,
-    height: 44,
+    paddingHorizontal: 14,
+    height: 48,
   },
   toggleLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   stickyFooter: {
     position: 'absolute',
@@ -527,28 +540,30 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F0F2F5',
-    paddingHorizontal: Spacing.lg,
-    paddingTop: 12,
+    borderTopColor: '#ECEEF2',
+    paddingHorizontal: 20,
+    paddingTop: 14,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: -6 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 8,
+        elevation: 10,
       },
     }),
   },
   saveButtonCustom: {
     width: '100%',
+    height: 54,
+    borderRadius: 16,
     shadowColor: '#114227',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 4,
   },
   errorText: {
     marginTop: 4,

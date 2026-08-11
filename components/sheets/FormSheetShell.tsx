@@ -106,12 +106,12 @@ export function FormSheetShell({
               style={formSheetStyles.gradientHeader}
             >
               {/* Drag handle inside the header */}
-              <View style={[formSheetStyles.handle, { backgroundColor: 'rgba(255, 255, 255, 0.45)' }]} />
+              <View style={formSheetStyles.handle} />
  
               <View style={formSheetStyles.headerContent}>
                 <View style={formSheetStyles.headerLeft}>
                   <View style={formSheetStyles.headerIconBadge}>
-                    <MaterialCommunityIcons name={icon} size={18} color="#FFFFFF" />
+                    <MaterialCommunityIcons name={icon} size={20} color="#FFFFFF" />
                   </View>
                   <View style={{ flex: 1 }}>
                     <AppText variant="h3" weight="800" color="#FFFFFF" style={formSheetStyles.headerTitle}>
@@ -124,8 +124,8 @@ export function FormSheetShell({
                     ) : null}
                   </View>
                 </View>
-                <Pressable style={formSheetStyles.closeButton} onPress={onClose} hitSlop={8}>
-                  <Ionicons name="close" size={20} color="rgba(255,255,255,0.85)" />
+                <Pressable style={formSheetStyles.closeButton} onPress={onClose} hitSlop={12}>
+                  <Ionicons name="close" size={20} color="rgba(255,255,255,0.9)" />
                 </Pressable>
               </View>
             </LinearGradient>
@@ -135,7 +135,7 @@ export function FormSheetShell({
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={[
                 formSheetStyles.scrollContent,
-                { paddingBottom: 100 } // Ensure last field is visible above sticky footer
+                { paddingBottom: 110 } // Ensure last field is visible above sticky footer
               ]}
             >
               {!compact && subtitle ? (
@@ -148,8 +148,8 @@ export function FormSheetShell({
               ) : null}
 
               {isReadOnly ? (
-                <View style={{ marginHorizontal: 16, marginTop: 12, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D', borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 6 }} />
+                <View style={{ marginBottom: 14, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D', borderRadius: 12, flexDirection: 'row', alignItems: 'center' }}>
+                  <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 8 }} />
                   <AppText variant="caption" weight="700" color="#B45309">
                     Request access from admin to edit.
                   </AppText>
@@ -161,7 +161,7 @@ export function FormSheetShell({
               </View>
 
               {error ? (
-                <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+                <View style={{ paddingHorizontal: 4, marginTop: 12 }}>
                   <AppText variant="bodySmall" weight="700" color="#E53935">
                     {error}
                   </AppText>

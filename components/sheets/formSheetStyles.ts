@@ -3,19 +3,22 @@ import { Radius, Spacing, Palette } from '@/constants/theme';
 
 export const FormSheetColors = {
   sheetBg: '#FFFFFF',
-  overlay: 'rgba(10, 15, 30, 0.45)', // Premium dark blue-gray backdrop blur/tint
-  pageBg: '#FAFCFD', // cleaner off-white bg
+  overlay: 'rgba(10, 15, 30, 0.55)', // Deeper frosted-glass tint
+  pageBg: '#F7F8FA', // Slightly warmer off-white
   sectionBg: '#FFFFFF',
-  sectionBorder: '#F0F2F5', // softer border
+  sectionBorder: '#ECEEF2', // Softer, cooler border
   label: '#5C6470', // Charcoal grey label
   text: '#1C1F24', // Premium dark neutral
   placeholder: '#A0A7B5',
-  inputBg: '#FAFAFA',
-  inputBorder: '#E6E8EB',
+  inputBg: '#F8F9FB', // Slightly cooler input background
+  inputBorder: '#E2E5EA', // Softer border
+  inputFocusBorder: '#5CB35D', // Green focus ring
   chipBg: '#F3F5F7',
   chipBorder: '#E6E8EB',
-  divider: '#F0F2F5',
-  handle: '#E6E8EB',
+  divider: '#ECEEF2',
+  handle: '#D8DBE0', // Slightly more visible handle
+  footerBg: '#FFFFFF',
+  footerBorder: '#F0F2F5',
 } as const;
 
 export const formSheetStyles = StyleSheet.create({
@@ -29,30 +32,30 @@ export const formSheetStyles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: FormSheetColors.sheetBg,
-    borderTopLeftRadius: Radius.xl, // Premium roundness
-    borderTopRightRadius: Radius.xl,
-    maxHeight: '90%', // Increased from 68% to prevent content from being cut off
+    borderTopLeftRadius: 28, // Premium roundness
+    borderTopRightRadius: 28,
+    maxHeight: '92%',
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: -10 },
-        shadowOpacity: 0.08,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: -12 },
+        shadowOpacity: 0.10,
+        shadowRadius: 20,
       },
       android: {
-        elevation: 24,
+        elevation: 28,
       },
     }),
   },
   handle: {
     alignSelf: 'center',
-    width: 36,
-    height: 4,
+    width: 44,
+    height: 5,
     borderRadius: Radius.full,
-    backgroundColor: FormSheetColors.handle,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
+    backgroundColor: 'rgba(255, 255, 255, 0.45)',
+    marginTop: 10,
+    marginBottom: 6,
   },
   topBar: {
     flexDirection: 'row',
@@ -62,15 +65,16 @@ export const formSheetStyles = StyleSheet.create({
     paddingBottom: Spacing.sm,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: 34,
+    height: 34,
     borderRadius: Radius.full,
     backgroundColor: FormSheetColors.pageBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   scrollContent: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 4,
     paddingBottom: Spacing.lg,
     backgroundColor: FormSheetColors.pageBg,
   },
@@ -96,22 +100,34 @@ export const formSheetStyles = StyleSheet.create({
     gap: 2,
   },
   section: {
-    marginBottom: Spacing.sm,
-    // Removed card background, borders, padding and shadows to eliminate card nesting
+    marginBottom: 20,
+    backgroundColor: FormSheetColors.sectionBg,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: FormSheetColors.sectionBorder,
+    padding: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: Spacing.sm,
-    paddingBottom: Spacing.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: FormSheetColors.divider,
+    gap: 8,
+    marginBottom: 14,
   },
   sectionIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: Radius.sm,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -125,7 +141,7 @@ export const formSheetStyles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    paddingVertical: 8,
     borderRadius: Radius.full,
     backgroundColor: FormSheetColors.chipBg,
     borderWidth: 1,
@@ -136,13 +152,13 @@ export const formSheetStyles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    height: 38,
-    fontSize: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    height: 44,
+    fontSize: 15,
     color: FormSheetColors.text,
     ...Platform.select({
       web: {
@@ -154,18 +170,18 @@ export const formSheetStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    height: 38,
+    paddingHorizontal: 14,
+    height: 44,
   },
   suffixInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 15,
     color: FormSheetColors.text,
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 0,
     margin: 0,
     backgroundColor: 'transparent',
@@ -183,24 +199,24 @@ export const formSheetStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    height: 38,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    height: 44,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 14,
     paddingVertical: 4,
-    height: 38,
+    height: 48,
   },
   twoColRow: {
     flexDirection: 'row',
@@ -210,20 +226,20 @@ export const formSheetStyles = StyleSheet.create({
     flex: 1,
   },
   fieldGap: {
-    marginBottom: 6,
+    marginBottom: 8,
   },
   notesInput: {
-    height: 56, // reduced from 70
+    height: 64,
     textAlignVertical: 'top',
-    paddingTop: 6,
+    paddingTop: 10,
   },
   footer: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: 20,
     paddingTop: Spacing.sm,
     paddingBottom: Spacing.xs,
-    backgroundColor: FormSheetColors.sheetBg,
+    backgroundColor: FormSheetColors.footerBg,
     borderTopWidth: 1,
-    borderTopColor: FormSheetColors.divider,
+    borderTopColor: FormSheetColors.footerBorder,
   },
   saveBtn: {
     width: '100%',
@@ -242,11 +258,10 @@ export const formSheetStyles = StyleSheet.create({
     gap: 4,
   },
   gradientHeader: {
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    marginBottom: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
   },
   headerContent: {
     flexDirection: 'row',
@@ -260,24 +275,26 @@ export const formSheetStyles = StyleSheet.create({
     flex: 1,
   },
   headerIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.25)',
+    borderColor: 'rgba(255,255,255,0.28)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    lineHeight: 22,
+    fontSize: 19,
+    lineHeight: 24,
   },
   closeButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },

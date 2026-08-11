@@ -25,7 +25,7 @@ export function FormSection({ title, icon, children }: FormSectionProps) {
               { backgroundColor: accentBg },
             ]}
           >
-            <MaterialCommunityIcons name={icon} size={22} color={accentColor} />
+            <MaterialCommunityIcons name={icon} size={16} color={accentColor} />
           </View>
         ) : null}
         <AppText variant="caption" weight="800" color={FormSheetColors.text} style={{ letterSpacing: 0.3 }}>

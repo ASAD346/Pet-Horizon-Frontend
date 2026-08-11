@@ -5,10 +5,12 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
@@ -25,12 +27,14 @@ import {
   updateUserProfile,
   verifyEmailChange,
 } from '@/services/users/userApi';
+import { deleteAccount } from '@/services/users/userApi';
 import { uploadUserAvatar } from '@/services/users/uploadUserAvatar';
 import { AppInput } from '@/components/ui/AppInput';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 
 export default function EditProfileScreen() {
   const router = useRouter();
-  const { token, user, setSession } = useAuth();
+  const { token, user, setSession, logout } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -38,6 +42,8 @@ export default function EditProfileScreen() {
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
   useEffect(() => {
@@ -85,6 +91,21 @@ export default function EditProfileScreen() {
       setSaving(false);
     }
   }, [token, user, fullName, photoUri, email, initialEmail, setSession, router]);
+
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!token || !user?._id) return;
+    setDeleting(true);
+    try {
+      await deleteAccount(token, user._id);
+      setDeleteConfirmVisible(false);
+      await logout();
+      router.replace('/auth/login');
+    } catch (error) {
+      Alert.alert('Error', getErrorMessage(error));
+    } finally {
+      setDeleting(false);
+    }
+  }, [token, user?._id, logout, router]);
 
   const displayPhoto = photoUri ?? existingPhotoUrl ?? null;
 
@@ -143,8 +164,65 @@ export default function EditProfileScreen() {
             isLoading={saving}
             variant="primary"
           />
+
+          {/* Account Actions Section */}
+          <View style={styles.actionsSection}>
+            <AppText variant="bodySmall" weight="700" color="#94A3B8" style={styles.actionsSectionTitle}>
+              ACCOUNT ACTIONS
+            </AppText>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.85}
+              onPress={() => router.push('/profile/change-password' as Href)}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(46, 125, 50, 0.08)' }]}>
+                <Ionicons name="lock-closed-outline" size={20} color="#2E7D32" />
+              </View>
+              <View style={styles.actionTextBlock}>
+                <AppText variant="body" weight="700" color="#212121">
+                  Change Password
+                </AppText>
+                <AppText variant="caption" color="#64748B">
+                  Update your account password
+                </AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionRow}
+              activeOpacity={0.85}
+              onPress={() => setDeleteConfirmVisible(true)}
+            >
+              <View style={[styles.actionIconWrap, { backgroundColor: 'rgba(234, 67, 53, 0.08)' }]}>
+                <Ionicons name="trash-outline" size={20} color="#EA4335" />
+              </View>
+              <View style={styles.actionTextBlock}>
+                <AppText variant="body" weight="700" color="#EA4335">
+                  Delete Account
+                </AppText>
+                <AppText variant="caption" color="#64748B">
+                  Permanently erase your data and profile
+                </AppText>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <AppConfirmModal
+        visible={deleteConfirmVisible}
+        title="Delete Account"
+        message="Are you sure you want to permanently delete your account? This action cannot be undone and all your pet profiles, schedules, and data will be lost forever."
+        confirmLabel="Delete"
+        cancelLabel="Keep account"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirmVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -177,4 +255,47 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     gap: Spacing.sm,
   },
+  actionsSection: {
+    marginTop: Spacing.xxl,
+  },
+  actionsSectionTitle: {
+    marginBottom: Spacing.sm,
+    marginLeft: 4,
+    letterSpacing: 0.5,
+    fontSize: 11,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 14,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  actionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  actionTextBlock: {
+    flex: 1,
+  },
 });
+
