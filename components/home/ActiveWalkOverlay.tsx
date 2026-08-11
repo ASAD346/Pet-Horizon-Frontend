@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Modal, Platform } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Modal, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAuth } from '@/hooks/useAuth';
 import { completeWalkSchedule } from '@/services/schedules/walkApi';
 import { queryClient } from '@/app/_layout';
 import { useToast } from '@/hooks/useToast';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export function ActiveWalkOverlay() {
   const { activeWalk, stopWalk } = useActiveWalk();
@@ -17,12 +18,34 @@ export function ActiveWalkOverlay() {
   const [busy, setBusy] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Animation values for the pulsing ring
+  const pulseScale = useRef(new Animated.Value(1)).current;
+  const pulseOpacity = useRef(new Animated.Value(0.6)).current;
+
   useEffect(() => {
     if (activeWalk) {
       setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
       timerRef.current = setInterval(() => {
         setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
       }, 1000);
+
+      // Start the looping pulse animation
+      pulseScale.setValue(1);
+      pulseOpacity.setValue(0.6);
+      Animated.loop(
+        Animated.parallel([
+          Animated.timing(pulseScale, {
+            toValue: 1.5,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseOpacity, {
+            toValue: 0,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
     } else {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -94,26 +117,43 @@ export function ActiveWalkOverlay() {
       }}
     >
       <View style={styles.backdrop}>
-        <View style={styles.container}>
-          <View style={styles.pulseContainer}>
-            <View style={styles.pulseRing} />
-            <View style={styles.pulseDot} />
+        <LinearGradient
+          colors={['rgba(30, 41, 59, 0.98)', 'rgba(15, 23, 42, 0.98)']}
+          style={styles.container}
+        >
+          {/* Pulsing Walk Indicator */}
+          <View style={styles.indicatorWrapper}>
+            <Animated.View
+              style={[
+                styles.pulseRing,
+                {
+                  transform: [{ scale: pulseScale }],
+                  opacity: pulseOpacity,
+                },
+              ]}
+            />
+            <View style={styles.iconCircle}>
+              <Ionicons name="walk" size={32} color="#4ADE80" />
+            </View>
           </View>
 
-          <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.title}>
+          {/* Heading */}
+          <AppText variant="h2" weight="800" color="#FFFFFF" style={styles.title}>
             Walk in Progress
           </AppText>
 
-          <AppText variant="bodySmall" color="#A3A3A3" style={styles.subtitle}>
+          <AppText variant="body" weight="600" color="#94A3B8" style={styles.subtitle}>
             {activeWalk.title || 'Ongoing Walk'}
           </AppText>
 
+          {/* Timer Display */}
           <View style={styles.timerContainer}>
-            <AppText variant="h1" weight="800" color="#22C55E" style={styles.timerText}>
+            <AppText variant="h1" weight="800" color="#4ADE80" style={styles.timerText}>
               {formatTimer(elapsedSeconds)}
             </AppText>
           </View>
 
+          {/* Action CTA Button */}
           <TouchableOpacity
             style={[styles.btn, busy && styles.btnDisabled]}
             activeOpacity={0.85}
@@ -123,15 +163,15 @@ export function ActiveWalkOverlay() {
             {busy ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <>
+              <View style={styles.btnContent}>
                 <Ionicons name="checkmark-circle-outline" size={24} color="#FFFFFF" style={styles.btnIcon} />
                 <AppText variant="body" weight="700" color="#FFFFFF">
                   Complete Walk
                 </AppText>
-              </>
+              </View>
             )}
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
       </View>
     </Modal>
   );
@@ -140,90 +180,114 @@ export function ActiveWalkOverlay() {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(9, 9, 11, 0.92)', // Premium deep dark theme backdrop
+    backgroundColor: 'rgba(15, 23, 42, 0.85)', // Sleek semi-transparent dark slate
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.xl,
   },
   container: {
     width: '100%',
-    maxWidth: 340,
-    backgroundColor: '#18181B', // Dark charcoal card
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
+    maxWidth: 350,
+    borderRadius: 24,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.xxl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(34, 197, 94, 0.25)', // Green accent glow
-    shadowColor: '#22C55E',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 12,
+      },
+    }),
   },
-  pulseContainer: {
-    width: 64,
-    height: 64,
+  indicatorWrapper: {
+    width: 90,
+    height: 90,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.lg,
   },
   pulseRing: {
     position: 'absolute',
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 2,
-    borderColor: '#22C55E',
-    opacity: 0.5,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: '#4ADE80',
   },
-  pulseDot: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#22C55E',
+  iconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(74, 222, 128, 0.3)',
   },
   title: {
     marginBottom: Spacing.xs,
     textAlign: 'center',
+    letterSpacing: 0.5,
   },
   subtitle: {
     marginBottom: Spacing.xl,
     textAlign: 'center',
   },
   timerContainer: {
-    backgroundColor: '#09090B',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: Radius.md,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xxl,
+    borderRadius: 20,
     width: '100%',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.xxl,
     borderWidth: 1,
-    borderColor: '#27272A',
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   timerText: {
-    fontSize: 48,
+    fontSize: 52,
     fontVariant: ['tabular-nums'],
     letterSpacing: 2,
+    textShadowColor: 'rgba(74, 222, 128, 0.25)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
   },
   btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#22C55E', // Solid green CTA
     width: '100%',
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-    shadowColor: '#22C55E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#22C55E', // Premium green accent
+    ...Platform.select({
+      ios: {
+        shadowColor: '#22C55E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+      },
+      android: {
+        elevation: 6,
+      },
+    }),
   },
   btnDisabled: {
     backgroundColor: '#15803D',
-    opacity: 0.8,
+    opacity: 0.7,
+  },
+  btnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    width: '100%',
   },
   btnIcon: {
-    marginRight: Spacing.xs,
+    marginRight: Spacing.sm,
   },
 });
