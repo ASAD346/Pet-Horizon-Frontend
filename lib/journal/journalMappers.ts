@@ -114,7 +114,7 @@ export function formatEntryTitle(entry: ApiJournalEntry): string {
   note = note.replace(/walk walk/gi, 'walk');
 
   const category = mapActivityTypeToCategory(entry.activityType);
-  const walkDuration = entry.metadata?.duration ?? entry.metadata?.targetDuration ?? entry.duration;
+  const walkDuration = entry.duration ?? entry.relatedScheduleLogId?.duration ?? entry.metadata?.duration ?? entry.metadata?.targetDuration;
   if (category === 'walk' && walkDuration && !/\(\d+\s*min\)/i.test(note)) {
     if (note) {
       note = `${note} (${walkDuration} min)`;
@@ -157,6 +157,7 @@ export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
     materialIcon: categoryToMaterialIcon(category),
     imageUrl: entry.imagePath ?? null,
     notes: entry.note ?? null,
+    duration: entry.duration ?? entry.relatedScheduleLogId?.duration ?? entry.metadata?.duration ?? entry.metadata?.targetDuration,
   };
 }
 

@@ -27,6 +27,7 @@ export interface WalkScheduleItem {
   reminderTime?: string;
   status?: WalkScheduleStatus;
   completedAt?: string;
+  duration?: number | null;
   isComplete?: boolean;
   reminderDue?: boolean;
   metadata?: {

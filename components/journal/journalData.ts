@@ -21,6 +21,7 @@ export type TimelineEvent = {
   materialIcon: ComponentProps<typeof MaterialCommunityIcons>['name'];
   imageUrl?: string | null;
   notes?: string | null;
+  duration?: number | null;
 };
 
 export const JOURNAL_CATEGORY_CHIPS: { id: JournalCategory; label: string }[] = [

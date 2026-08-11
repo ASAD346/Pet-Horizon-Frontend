@@ -16,7 +16,7 @@ export function walkScheduleTitle(item: WalkScheduleItem): string {
 }
 
 export function walkScheduleSubtitle(item: WalkScheduleItem): string {
-  const duration = item.metadata?.duration;
+  const duration = item.duration ?? item.metadata?.duration;
   const durationText = duration ? `${duration} min · ` : '';
 
   if (item.status === 'done') {

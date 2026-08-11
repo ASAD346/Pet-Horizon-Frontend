@@ -92,7 +92,7 @@ function TimelineRow({
       >
         <View style={styles.cardText}>
           <AppText variant="bodySmall" weight="700" color="#1F2937">
-            {event.title}
+            {event.title}{event.category === 'walk' && event.duration && !/\(\d+\s*min\)/i.test(event.title) ? ` (${event.duration} min)` : ''}
           </AppText>
           {event.notes && event.notes.trim() !== '' && event.notes.toLowerCase() !== event.title.toLowerCase() ? (
             <AppText variant="caption" color="#4B5563" style={{ marginTop: 2 }}>

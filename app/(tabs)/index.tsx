@@ -403,7 +403,7 @@ export default function HomeScreen() {
         actionText = `logged ${category}: ${actionText}`;
       }
 
-      const walkDuration = entry.metadata?.duration ?? entry.metadata?.targetDuration ?? entry.duration;
+      const walkDuration = entry.duration ?? entry.relatedScheduleLogId?.duration ?? entry.metadata?.duration ?? entry.metadata?.targetDuration;
       if (category === 'walk' && walkDuration && !/\(\d+\s*min\)/i.test(actionText)) {
         actionText = `${actionText} (${walkDuration} min)`;
       }
@@ -417,6 +417,7 @@ export default function HomeScreen() {
         color: colors.color,
         bg: colors.bg,
         createdAt: entry.createdAt,
+        duration: walkDuration,
       };
     });
   }, [dashboardData?.recentActivities, user]);

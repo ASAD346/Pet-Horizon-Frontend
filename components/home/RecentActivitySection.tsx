@@ -20,6 +20,7 @@ export interface RecentActivityItem {
   bg: string;
   /** ISO date string used to filter today-only on home screen */
   createdAt?: string;
+  duration?: number | null;
 }
 
 interface RecentActivitySectionProps {
@@ -100,7 +101,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                   {item.actorName}
                 </Text>
                 <Text style={{ color: HomeTheme.textMuted }}>
-                  {' '}{formatRawString(item.actionText)}
+                  {' '}{formatRawString(item.actionText)}{item.icon === 'walk' && item.duration && !/\(\d+\s*min\)/i.test(item.actionText) ? ` (${item.duration} min)` : ''}
                 </Text>
               </AppText>
               <AppText variant="caption" color={HomeTheme.textMuted}>
