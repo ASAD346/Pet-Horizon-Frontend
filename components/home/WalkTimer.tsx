@@ -68,9 +68,15 @@ export function WalkTimer({
   // Keep counter ticking & schedule notifications
   useEffect(() => {
     if (startedAt !== null) {
-      // 1. Setup tick interval
+      // 1. Setup tick interval with instant completion checks
       timerRef.current = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
+        const curElapsed = Math.floor((Date.now() - startedAt) / 1000);
+        setElapsedSeconds(curElapsed);
+
+        const targetSeconds = targetDuration * 60;
+        if (curElapsed >= targetSeconds) {
+          setNotifFired(true);
+        }
       }, 1000);
 
       // 2. Schedule local OS notification for when target duration expires

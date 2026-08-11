@@ -18,6 +18,7 @@ export function ActiveWalkOverlay() {
   const { showToast } = useToast();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [forceHidden, setForceHidden] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Animation values for the pulsing ring
@@ -25,6 +26,13 @@ export function ActiveWalkOverlay() {
   const pulseOpacity = useRef(new Animated.Value(0.6)).current;
 
   const activePetId = useAppSelector(selectActivePetId);
+
+  // Reset forceHidden when a new active walk is loaded
+  useEffect(() => {
+    if (activeWalk) {
+      setForceHidden(false);
+    }
+  }, [activeWalk]);
 
   useEffect(() => {
     if (activeWalk) {
@@ -66,7 +74,7 @@ export function ActiveWalkOverlay() {
     };
   }, [activeWalk]);
 
-  if (!activeWalk) return null;
+  if (!activeWalk || forceHidden) return null;
 
   // Only display the overlay if the walk belongs to the currently active pet
   if (activeWalk.petId && activePetId && activeWalk.petId !== activePetId) {
@@ -86,31 +94,44 @@ export function ActiveWalkOverlay() {
     return `${pad(mins)}:${pad(secs)}`;
   };
 
-  const handleComplete = async () => {
+  const handleComplete = () => {
     if (busy) return;
     setBusy(true);
+
     const finalSeconds = elapsedSeconds;
+    const scheduleId = activeWalk.scheduleId;
+    const minutes = Math.max(1, Math.round(finalSeconds / 60));
 
-    try {
-      const minutes = Math.max(1, Math.round(finalSeconds / 60));
-      
-      // Stop the timer and clear state locally first
-      await stopWalk();
+    // 1. Instantly hide the modal synchronously
+    setForceHidden(true);
 
-      if (token) {
-        await completeWalkSchedule(token, activeWalk.scheduleId, {
-          status: 'done',
-          completedAt: new Date().toISOString(),
-          duration: minutes,
+    // 2. Instantly clear local interval timers
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // 3. Trigger API and clear states in background asynchronously without blocking UI
+    void stopWalk().catch(() => {});
+
+    if (token) {
+      completeWalkSchedule(token, scheduleId, {
+        status: 'done',
+        completedAt: new Date().toISOString(),
+        duration: minutes,
+      })
+        .then(() => {
+          showToast('Walk completed successfully! 🐾');
+          queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+          queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        })
+        .catch((err: any) => {
+          showToast(err.message || 'Failed to complete walk.');
+        })
+        .finally(() => {
+          setBusy(false);
         });
-        showToast('Walk completed successfully! 🐾');
-        // Refresh dashboard to show the new recent activity
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-        queryClient.invalidateQueries({ queryKey: ['schedules'] });
-      }
-    } catch (err: any) {
-      showToast(err.message || 'Failed to complete walk.');
-    } finally {
+    } else {
       setBusy(false);
     }
   };
