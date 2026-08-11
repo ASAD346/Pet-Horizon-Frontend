@@ -9,6 +9,7 @@ import {
 import type { MedicineScheduleItem } from '@/types/medicine';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
+import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
 export function useMedicineSchedules(token: string | null, petId: string | null | undefined) {
   const queryClient = useQueryClient();
@@ -53,6 +54,7 @@ export function useMedicineSchedules(token: string | null, petId: string | null 
       );
       try {
         await completeMedicineSchedule(token, scheduleId, { status: 'done' });
+        await cancelTaskNotifications(scheduleId);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Medicine marked done successfully!');

@@ -188,3 +188,65 @@ export async function registerBackgroundFetchAsync(): Promise<void> {
   }
 }
 
+export async function cancelTaskNotifications(scheduleId: string): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const Notifications = await getNotificationsModule();
+    // 1. Try to cancel directly using standard naming schemes
+    await Promise.allSettled([
+      Notifications.cancelScheduledNotificationAsync(scheduleId),
+      Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`),
+      Notifications.cancelScheduledNotificationAsync(`feeding-${scheduleId}`),
+      Notifications.cancelScheduledNotificationAsync(`medicine-${scheduleId}`),
+      Notifications.cancelScheduledNotificationAsync(`vaccination-${scheduleId}`),
+    ]);
+
+    // 2. Query all scheduled notifications to find any identifier that contains the scheduleId
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    for (const n of scheduled) {
+      if (n.identifier === scheduleId || n.identifier.includes(scheduleId)) {
+        await Notifications.cancelScheduledNotificationAsync(n.identifier).catch(() => {});
+      }
+    }
+    log.ok(SCOPE, 'Cancelled scheduled notifications for task', { scheduleId });
+  } catch (error) {
+    log.fail(SCOPE, `Failed to cancel notifications for schedule ${scheduleId}`, error instanceof Error ? error.message : String(error));
+  }
+}
+
+export async function cleanupPendingNotifications(activeScheduleIds: string[]): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const Notifications = await getNotificationsModule();
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const activeSet = new Set(activeScheduleIds);
+    let cancelledCount = 0;
+
+    for (const n of scheduled) {
+      const identifier = n.identifier;
+      // Extract scheduleId
+      let scheduleId = identifier;
+      if (identifier.startsWith('walk-done-')) {
+        scheduleId = identifier.replace('walk-done-', '');
+      } else if (identifier.startsWith('feeding-')) {
+        scheduleId = identifier.replace('feeding-', '');
+      } else if (identifier.startsWith('medicine-')) {
+        scheduleId = identifier.replace('medicine-', '');
+      } else if (identifier.startsWith('vaccination-')) {
+        scheduleId = identifier.replace('vaccination-', '');
+      }
+
+      if (!activeSet.has(scheduleId)) {
+        await Notifications.cancelScheduledNotificationAsync(identifier).catch(() => {});
+        cancelledCount++;
+      }
+    }
+
+    if (cancelledCount > 0) {
+      log.ok(SCOPE, 'Cleaned up ghost notifications', { count: cancelledCount });
+    }
+  } catch (error) {
+    log.fail(SCOPE, 'Failed to cleanup pending notifications', error instanceof Error ? error.message : String(error));
+  }
+}
+

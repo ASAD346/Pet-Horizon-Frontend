@@ -28,6 +28,7 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { useNotifications } from '@/hooks/useNotifications';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { useFocusReload } from '@/hooks/useStaleLoadScope';
+import { cancelTaskNotifications, cleanupPendingNotifications } from '@/lib/push/notificationSetup';
 import {
   featureOptionsFromRemote,
   hydrateScheduleFeaturesFromSpecies,
@@ -264,6 +265,18 @@ export function ScheduleSetupView({
   useEffect(() => {
     if (querySections) {
       setSections(querySections);
+
+      // Cleanup pending notifications that no longer exist in the database
+      const activeIds: string[] = [];
+      Object.values(querySections).forEach((section: any) => {
+        if (section && Array.isArray(section.entries)) {
+          section.entries.forEach((entry: any) => {
+            if (entry._id) activeIds.push(entry._id);
+            if (entry.id && entry.id !== entry._id) activeIds.push(entry.id);
+          });
+        }
+      });
+      void cleanupPendingNotifications(activeIds);
     }
   }, [querySections]);
 
@@ -494,6 +507,7 @@ export function ScheduleSetupView({
     try {
       console.log('[handleDeleteEntry] Calling deleteScheduleEntry API...');
       await deleteScheduleEntry(token, key, remoteId);
+      await cancelTaskNotifications(remoteId);
       console.log('[handleDeleteEntry] API succeeded. Optimistically updating cache, invalidating queries and reloading...');
       
       // Optimistically remove from dashboard todaySchedules & upcomingTasks

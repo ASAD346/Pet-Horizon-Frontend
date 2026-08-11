@@ -12,6 +12,7 @@ import {
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
+import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
 export function useVaccinationSchedules(token: string | null, petId: string | null | undefined) {
   const [schedules, setSchedules] = useState<VaccinationScheduleItem[]>([]);
@@ -73,6 +74,7 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
       );
       try {
         await completeVaccinationSchedule(token, scheduleId, body);
+        await cancelTaskNotifications(scheduleId);
         void reload(false);
         showToast('Vaccination marked done successfully!');
       } catch (error) {

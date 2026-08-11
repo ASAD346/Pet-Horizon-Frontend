@@ -10,6 +10,7 @@ import { completeGroomingRecord } from '@/services/grooming/groomingApi';
 import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
 import { useToast } from '@/hooks/useToast';
 import { deduplicateSchedules as globalDeduplicate } from '@/lib/schedule/scheduleUtils';
+import { cancelTaskNotifications, cleanupPendingNotifications } from '@/lib/push/notificationSetup';
 
 const deduplicateSchedules = (schedulesObj: any) => {
   if (!schedulesObj) return schedulesObj;
@@ -93,6 +94,20 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
         data.recentActivities ? AsyncStorage.setItem(`@recent_activities_cache_${petId}`, JSON.stringify(data.recentActivities)) : Promise.resolve(),
         AsyncStorage.setItem(`@today_schedule_cache_timestamp_${petId}`, new Date().toDateString()),
       ]);
+
+      // Cleanup pending notifications that no longer exist in database
+      if (data.todaySchedules) {
+        const activeIds: string[] = [];
+        Object.values(data.todaySchedules).forEach((list: any) => {
+          if (Array.isArray(list)) {
+            list.forEach((item: any) => {
+              if (item._id) activeIds.push(item._id);
+              if (item.id && item.id !== item._id) activeIds.push(item.id);
+            });
+          }
+        });
+        void cleanupPendingNotifications(activeIds);
+      }
     }
   }, [query.data, petId]);
 
@@ -189,12 +204,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 1. Feeding Complete Mutation
   const completeFeedingMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
-      completeFeedingSchedule(token!, scheduleId, {
+    mutationFn: async (scheduleId: string) => {
+      const res = await completeFeedingSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -221,12 +239,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 2. Feeding Skip Mutation
   const skipFeedingMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
-      skipFeedingSchedule(token!, scheduleId, {
+    mutationFn: async (scheduleId: string) => {
+      const res = await skipFeedingSchedule(token!, scheduleId, {
         status: 'skipped',
         date: localDateStr,
         completedAt: new Date().toISOString(),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -253,13 +274,16 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 3. Walk Complete Mutation
   const completeWalkMutation = useMutation({
-    mutationFn: ({ scheduleId, elapsedMinutes }: { scheduleId: string; elapsedMinutes?: number }) =>
-      completeWalkSchedule(token!, scheduleId, {
+    mutationFn: async ({ scheduleId, elapsedMinutes }: { scheduleId: string; elapsedMinutes?: number }) => {
+      const res = await completeWalkSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
         ...(elapsedMinutes ? { duration: elapsedMinutes } : {}),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async ({ scheduleId }) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -286,12 +310,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 4. Medicine Complete Mutation
   const completeMedicineMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
-      completeMedicineSchedule(token!, scheduleId, {
+    mutationFn: async (scheduleId: string) => {
+      const res = await completeMedicineSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -318,7 +345,11 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 5. Grooming Complete Mutation
   const completeGroomingMutation = useMutation({
-    mutationFn: (recordId: string) => completeGroomingRecord(token!, recordId),
+    mutationFn: async (recordId: string) => {
+      const res = await completeGroomingRecord(token!, recordId);
+      await cancelTaskNotifications(recordId);
+      return res;
+    },
     onMutate: async (recordId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -345,12 +376,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 6. Vaccination Complete Mutation
   const completeVaccinationMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
-      completeVaccinationSchedule(token!, scheduleId, {
+    mutationFn: async (scheduleId: string) => {
+      const res = await completeVaccinationSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -377,12 +411,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 7. Walk Skip Mutation
   const skipWalkMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
-      completeWalkSchedule(token!, scheduleId, {
+    mutationFn: async (scheduleId: string) => {
+      const res = await completeWalkSchedule(token!, scheduleId, {
         status: 'skipped',
         date: localDateStr,
         completedAt: new Date().toISOString(),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);
@@ -409,12 +446,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
 
   // 8. Medicine Skip Mutation
   const skipMedicineMutation = useMutation({
-    mutationFn: (scheduleId: string) =>
-      completeMedicineSchedule(token!, scheduleId, {
+    mutationFn: async (scheduleId: string) => {
+      const res = await completeMedicineSchedule(token!, scheduleId, {
         status: 'skipped',
         date: localDateStr,
         completedAt: new Date().toISOString(),
-      }),
+      });
+      await cancelTaskNotifications(scheduleId);
+      return res;
+    },
     onMutate: async (scheduleId) => {
       await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
       const previousDashboard = queryClient.getQueryData(['dashboard', petId]);

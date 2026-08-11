@@ -10,6 +10,7 @@ import {
 import type { FeedingScheduleItem } from '@/types/feeding';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
+import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
 export function useFeedingSchedules(token: string | null, petId: string | null | undefined) {
   const queryClient = useQueryClient();
@@ -54,6 +55,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       );
       try {
         await completeFeedingSchedule(token, scheduleId, { status: 'done' });
+        await cancelTaskNotifications(scheduleId);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Feeding marked done successfully!');
@@ -85,6 +87,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
       );
       try {
         await skipFeedingSchedule(token, scheduleId);
+        await cancelTaskNotifications(scheduleId);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Feeding skipped successfully!');

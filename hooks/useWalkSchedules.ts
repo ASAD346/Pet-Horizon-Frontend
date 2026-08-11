@@ -6,6 +6,7 @@ import { completeWalkSchedule, fetchTodayWalkSchedules } from '@/services/schedu
 import type { WalkScheduleItem } from '@/types/walk';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useToast } from '@/hooks/useToast';
+import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
 export function useWalkSchedules(token: string | null, petId: string | null | undefined) {
   const queryClient = useQueryClient();
@@ -50,6 +51,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
       );
       try {
         await completeWalkSchedule(token, scheduleId, { status: 'done' });
+        await cancelTaskNotifications(scheduleId);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Walk marked done successfully!');
