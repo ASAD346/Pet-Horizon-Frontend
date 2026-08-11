@@ -218,6 +218,7 @@ export function ScheduleSetupView({
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [groomingTypeOptions, setGroomingTypeOptions] = useState<GroomingTypeOption[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
+  const [walkingVisible, setWalkingVisible] = useState(true);
   const [defaultMeal, setDefaultMeal] = useState('');
   const [defaultUnit, setDefaultUnit] = useState('');
   const [defaultGrooming, setDefaultGrooming] = useState('');
@@ -242,6 +243,7 @@ export function ScheduleSetupView({
     setUnitOptions(options.unitOptions);
     setGroomingTypeOptions(options.groomingTypeOptions);
     setGroomingVisible(options.groomingVisible);
+    setWalkingVisible(options.walkingVisible);
     setDefaultMeal(options.defaultMeal);
     setDefaultUnit(options.defaultUnit);
     setDefaultGrooming(options.defaultGrooming);
@@ -328,6 +330,7 @@ export function ScheduleSetupView({
         let remoteInventoryUnits = localFeatures.inventoryUnits;
         let remoteGroomingVisible = localOptions.groomingVisible;
         let remoteGroomingTypes = localOptions.groomingTypeOptions;
+        let remoteWalkingVisible = localOptions.walkingVisible;
 
         if (permsResult.status === 'fulfilled' && permsResult.value.speciesFeatures) {
           const remote = permsResult.value.speciesFeatures;
@@ -335,6 +338,9 @@ export function ScheduleSetupView({
           if (remote.inventoryUnits?.length) remoteInventoryUnits = remote.inventoryUnits;
           if (typeof remote.groomingVisible === 'boolean') {
             remoteGroomingVisible = remote.groomingVisible;
+          }
+          if (typeof remote.walkingVisible === 'boolean') {
+            remoteWalkingVisible = remote.walkingVisible;
           }
         }
 
@@ -351,6 +357,7 @@ export function ScheduleSetupView({
             inventoryUnits: remoteInventoryUnits,
             groomingVisible: remoteGroomingVisible,
             groomingTypes: remoteGroomingTypes,
+            walkingVisible: remoteWalkingVisible,
           }),
         );
       } catch (err) {
@@ -546,7 +553,9 @@ export function ScheduleSetupView({
 
   const visibleSections = SCHEDULE_SECTIONS.filter(
     (section) =>
-      (section.key !== 'grooming' || groomingVisible) && canViewSchedule(section.key),
+      (section.key !== 'grooming' || groomingVisible) &&
+      (section.key !== 'walk' || walkingVisible) &&
+      canViewSchedule(section.key),
   );
 
   const filterChips: { key: 'all' | ScheduleSectionKey; label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }[] = [

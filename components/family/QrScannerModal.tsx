@@ -112,6 +112,34 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
                 <AppText variant="bodySmall" weight="700" color="#FFFFFF" style={styles.hint}>
                   Align family QR code in the frame
                 </AppText>
+
+                {/* Step-by-step Scan Instructions */}
+                <View style={styles.instructionsCard}>
+                  <AppText variant="caption" weight="800" color="#81C784" style={styles.instructionsTitle}>
+                    HOW TO JOIN A FAMILY:
+                  </AppText>
+                  
+                  <View style={styles.instructionStep}>
+                    <View style={styles.stepNumberBadge}><AppText variant="caption" weight="800" color="#2E7D32">1</AppText></View>
+                    <AppText variant="caption" weight="600" color="#E2E8F0" style={styles.stepText}>
+                      Ask the family owner to open their Family Hub view.
+                    </AppText>
+                  </View>
+
+                  <View style={styles.instructionStep}>
+                    <View style={styles.stepNumberBadge}><AppText variant="caption" weight="800" color="#2E7D32">2</AppText></View>
+                    <AppText variant="caption" weight="600" color="#E2E8F0" style={styles.stepText}>
+                      Have them tap "Invite Member" to display their QR code.
+                    </AppText>
+                  </View>
+
+                  <View style={styles.instructionStep}>
+                    <View style={styles.stepNumberBadge}><AppText variant="caption" weight="800" color="#2E7D32">3</AppText></View>
+                    <AppText variant="caption" weight="600" color="#E2E8F0" style={styles.stepText}>
+                      Point your camera at their screen to scan and join instantly.
+                    </AppText>
+                  </View>
+                </View>
               </View>
             </View>
 
@@ -304,5 +332,38 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
+    marginBottom: 24,
+  },
+  instructionsCard: {
+    width: '85%',
+    backgroundColor: 'rgba(30, 41, 59, 0.85)',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    alignSelf: 'center',
+  },
+  instructionsTitle: {
+    letterSpacing: 1,
+    marginBottom: 12,
+    alignSelf: 'center',
+  },
+  instructionStep: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 10,
+  },
+  stepNumberBadge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#C8E6C9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepText: {
+    flex: 1,
+    lineHeight: 16,
   },
 });

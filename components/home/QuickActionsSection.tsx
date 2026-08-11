@@ -58,6 +58,7 @@ interface QuickActionsSectionProps {
   onGroomingPress?: () => void;
   onVaccinationPress?: () => void;
   groomingVisible?: boolean;
+  walkingVisible?: boolean;
   canView?: (moduleId: AppModuleId) => boolean;
   canEdit?: (moduleId: AppModuleId) => boolean;
   isPremium?: boolean;
@@ -82,6 +83,7 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
   onGroomingPress,
   onVaccinationPress,
   groomingVisible = true,
+  walkingVisible = true,
   canView,
   canEdit,
   isPremium = false,
@@ -98,6 +100,7 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
   const visibleActions = ACTIONS.filter((action) => {
     // Hide species-incompatible modules (e.g. Grooming for species that don't support it)
     if (action.label === 'Grooming' && !groomingVisible) return false;
+    if (action.label === 'Log Walk' && !walkingVisible) return false;
     // Keep modules visible regardless of edit/view permissions (they will be disabled)
     return true;
   });

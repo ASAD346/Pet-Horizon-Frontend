@@ -40,6 +40,7 @@ import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { activatePetSession } from '@/lib/pet/activatePetSession';
 import { isBirthdayToday } from '@/lib/pet/birthdayUtils';
 import { dashboardTaskModule } from '@/lib/pet/petPermissionAccess';
+import { getSpeciesFeatures } from '@/lib/species/speciesFeatures';
 
 import { petToProfileProps, formatPetAge } from '@/services/pets/petDisplay';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
@@ -609,7 +610,8 @@ export default function HomeScreen() {
           onMedicinePress={() => setLogMedicineVisible(true)}
           onGroomingPress={() => setLogGroomingVisible(true)}
           onVaccinationPress={() => setLogVaccinationVisible(true)}
-          groomingVisible={canView('grooming')}
+          groomingVisible={canView('grooming') && getSpeciesFeatures(pet?.species).groomingVisible}
+          walkingVisible={canView('walks') && getSpeciesFeatures(pet?.species).walkingVisible}
           canView={canView}
           canEdit={canEdit}
           isPremium={isPremium}

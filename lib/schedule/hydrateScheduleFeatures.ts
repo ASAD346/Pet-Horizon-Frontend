@@ -8,6 +8,7 @@ export interface ScheduleFeatureOptions {
   unitOptions: { value: string; label: string }[];
   groomingTypeOptions: GroomingTypeOption[];
   groomingVisible: boolean;
+  walkingVisible: boolean;
   defaultMeal: string;
   defaultUnit: string;
   defaultGrooming: string;
@@ -29,6 +30,7 @@ export function hydrateScheduleFeaturesFromSpecies(
     unitOptions: unitOpts,
     groomingTypeOptions: groomingTypes,
     groomingVisible: speciesFeatures.groomingVisible,
+    walkingVisible: speciesFeatures.walkingVisible,
     defaultMeal: meal,
     defaultUnit: unit,
     defaultGrooming: grooming,
@@ -42,12 +44,14 @@ export function featureOptionsFromRemote(
     inventoryUnits?: string[];
     groomingVisible?: boolean;
     groomingTypes?: GroomingTypeOption[];
+    walkingVisible?: boolean;
   },
 ): ScheduleFeatureOptions {
   const local = getSpeciesFeatures(species);
   const mealTypes = input.mealTypes?.length ? input.mealTypes : local.mealTypes;
   const inventoryUnits = input.inventoryUnits?.length ? input.inventoryUnits : local.inventoryUnits;
   const groomingVisible = input.groomingVisible ?? local.groomingVisible;
+  const walkingVisible = input.walkingVisible ?? local.walkingVisible;
   const groomingTypeOptions =
     input.groomingTypes?.length ? input.groomingTypes : getGroomingTypeOptions(species);
   const mealOpts = mealTypeOptionsForSpecies(mealTypes);
@@ -58,6 +62,7 @@ export function featureOptionsFromRemote(
     unitOptions: unitOpts,
     groomingTypeOptions,
     groomingVisible,
+    walkingVisible,
     defaultMeal: mealOpts[0]?.value ?? '',
     defaultUnit: pickDefaultUnitFromList(inventoryUnits),
     defaultGrooming: groomingTypeOptions[0]?.value ?? '',

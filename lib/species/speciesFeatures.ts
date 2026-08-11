@@ -43,11 +43,11 @@ const GROOMING_TYPE_LABELS: Record<string, string> = {
 const SPECIES_HIDDEN_MODULES: Record<string, string[]> = {
   Dog: [],
   Cat: [],
-  Bird: [],
-  Fish: ['grooming'],
-  Hamster: ['grooming'],
+  Bird: ['walks'],
+  Fish: ['grooming', 'walks'],
+  Hamster: ['grooming', 'walks'],
   Rabbit: [],
-  Reptile: ['grooming'],
+  Reptile: ['grooming', 'walks'],
   Other: ['grooming'],
 };
 
@@ -112,6 +112,6 @@ export function getSpeciesFeatures(species?: string | null): LocalSpeciesFeature
     inventoryUnits: getInventoryUnits(normalized),
     groomingTypes: getGroomingTypes(normalized),
     groomingVisible: isGroomingVisibleForSpecies(normalized),
-    walkingVisible: true,
+    walkingVisible: !hiddenModules.includes('walks'),
   };
 }
