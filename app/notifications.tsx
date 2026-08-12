@@ -318,7 +318,17 @@ export default function NotificationsScreen() {
                     let displayTitle = cleanNotificationText(item.title);
                     let displayBody = cleanNotificationText(item.body || '');
 
-                    if (item.title.includes('—')) {
+                    if (displayTitle === '🐾 Pet Horizon · Care Alert' && displayBody.includes('\n')) {
+                      const lines = displayBody.split('\n');
+                      displayTitle = lines[0].trim();
+                      displayBody = lines.slice(1).join('\n').trim();
+
+                      // Try to extract pet name from the header line e.g. "🥣 Bunty's Evening Meal Time"
+                      const match = displayTitle.match(/^[^\w\s]*\s*(\w+)'s\s/);
+                      if (match) {
+                        petName = match[1];
+                      }
+                    } else if (item.title.includes('—')) {
                       const parts = item.title.split('—');
                       petName = parts[0].trim();
                       displayTitle = parts[1].trim();
