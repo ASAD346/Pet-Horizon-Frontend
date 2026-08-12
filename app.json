@@ -128,7 +128,8 @@
       "expo-localization",
       "expo-background-fetch",
       "expo-task-manager",
-      "expo-font"
+      "expo-font",
+      "expo-iap"
     ],
     "experiments": {
       "typedRoutes": true,
