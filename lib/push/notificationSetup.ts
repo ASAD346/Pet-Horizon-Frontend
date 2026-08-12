@@ -192,13 +192,19 @@ export async function cancelTaskNotifications(scheduleId: string): Promise<void>
   if (Platform.OS === 'web') return;
   try {
     const Notifications = await getNotificationsModule();
-    // 1. Try to cancel directly using standard naming schemes
+    // 1. Try to cancel/dismiss directly using standard naming schemes
     await Promise.allSettled([
       Notifications.cancelScheduledNotificationAsync(scheduleId),
       Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`),
       Notifications.cancelScheduledNotificationAsync(`feeding-${scheduleId}`),
       Notifications.cancelScheduledNotificationAsync(`medicine-${scheduleId}`),
       Notifications.cancelScheduledNotificationAsync(`vaccination-${scheduleId}`),
+
+      Notifications.dismissNotificationAsync(scheduleId),
+      Notifications.dismissNotificationAsync(`walk-done-${scheduleId}`),
+      Notifications.dismissNotificationAsync(`feeding-${scheduleId}`),
+      Notifications.dismissNotificationAsync(`medicine-${scheduleId}`),
+      Notifications.dismissNotificationAsync(`vaccination-${scheduleId}`),
     ]);
 
     // 2. Query all scheduled notifications to find any identifier that contains the scheduleId
@@ -206,11 +212,12 @@ export async function cancelTaskNotifications(scheduleId: string): Promise<void>
     for (const n of scheduled) {
       if (n.identifier === scheduleId || n.identifier.includes(scheduleId)) {
         await Notifications.cancelScheduledNotificationAsync(n.identifier).catch(() => {});
+        await Notifications.dismissNotificationAsync(n.identifier).catch(() => {});
       }
     }
-    log.ok(SCOPE, 'Cancelled scheduled notifications for task', { scheduleId });
+    log.ok(SCOPE, 'Cancelled and dismissed notifications for task', { scheduleId });
   } catch (error) {
-    log.fail(SCOPE, `Failed to cancel notifications for schedule ${scheduleId}`, error instanceof Error ? error.message : String(error));
+    log.fail(SCOPE, `Failed to cancel/dismiss notifications for schedule ${scheduleId}`, error instanceof Error ? error.message : String(error));
   }
 }
 
