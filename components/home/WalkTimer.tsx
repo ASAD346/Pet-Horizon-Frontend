@@ -91,9 +91,11 @@ export function WalkTimer({
           await Notifications.scheduleNotificationAsync({
             identifier: `walk-done-${scheduleId}`,
             content: {
-              title: 'Pet Horizon 🐾',
-              body: 'Your walk time is complete!',
+              title: '🐾 Pet Horizon · Care Alert',
+              body: '🦮 Walk time is complete!\nTap to open the app and log your activity.',
               sound: true,
+              categoryIdentifier: 'care-alert',
+              data: { id: scheduleId, type: 'walk' }
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
