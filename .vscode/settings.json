@@ -3,5 +3,13 @@
     "source.fixAll": "explicit",
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
-  }
+  },
+  "java.import.exclusions": [
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/android/build/**",
+    "**/android/.gradle/**",
+    "**/node_modules/@react-native/gradle-plugin/**",
+    "**/node_modules/expo-modules-core/expo-module-gradle-plugin/**"
+  ]
 }

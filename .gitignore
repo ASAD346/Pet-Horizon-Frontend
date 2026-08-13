@@ -41,3 +41,11 @@ app-example
 
 # generated native folders
 /ios
+
+# Android build artifacts (prevent stale generated files from being uploaded to EAS)
+android/build/
+android/app/build/
+android/app/.cxx/
+android/.gradle/
+android/.kotlin/
+android/local.properties

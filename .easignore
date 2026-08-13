@@ -1,0 +1,44 @@
+# Node modules - handled by EAS
+node_modules/
+
+# Android build artifacts and Gradle caches
+android/.gradle/
+android/build/
+android/app/build/
+android/app/.cxx/
+android/.idea/
+android/captures/
+
+# iOS build artifacts  
+ios/build/
+ios/Pods/
+ios/DerivedData/
+
+# Expo local build files
+.expo/
+dist/
+
+# Editor files
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Test files
+__tests__/
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
