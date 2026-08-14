@@ -12,6 +12,7 @@ import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SheetColors } from './sheetUi';
 import { SafeModal } from '../ui/SafeModal';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type SheetOption = {
   value: string;
@@ -45,6 +46,7 @@ export function SheetOptionPicker({
   onClose,
   onSelect,
 }: SheetOptionPickerProps) {
+  const insets = useSafeAreaInsets();
 
   const titleParts = (title || '').split(' ');
   const firstRow = titleParts[0] || '';
@@ -53,7 +55,13 @@ export function SheetOptionPicker({
 
   const content = (
     <Pressable style={styles.overlay} onPress={onClose}>
-      <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+      <Pressable 
+        style={[
+          styles.sheet, 
+          { paddingBottom: Math.max(insets.bottom, 16) }
+        ]} 
+        onPress={(e) => e.stopPropagation()}
+      >
         {/* Handle bar */}
         <View style={styles.handleBar} />
 
