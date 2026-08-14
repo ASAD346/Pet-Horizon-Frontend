@@ -578,6 +578,17 @@ export default function HomeScreen() {
     );
   }
 
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+
+  const handlePullRefresh = useCallback(async () => {
+    setIsPullRefreshing(true);
+    try {
+      await refetchDashboard();
+    } finally {
+      setIsPullRefreshing(false);
+    }
+  }, [refetchDashboard]);
+
   return (
     <View style={styles.root}>
       <StatusBar style={isFocused ? "light" : "dark"} />
@@ -601,10 +612,8 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={dashboardFetching && !dashboardLoading}
-            onRefresh={() => {
-              void refetchDashboard();
-            }}
+            refreshing={isPullRefreshing}
+            onRefresh={handlePullRefresh}
             tintColor={isPremium ? '#184F2E' : '#2E7D32'}
           />
         }
