@@ -16,12 +16,10 @@ import { getErrorMessage } from '@/lib/api/errors';
 import { createExpense } from '@/services/expense/expenseApi';
 import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 import { useLocalization } from '@/hooks/useLocalization';
-import { FormSheetShell, FormSection, SheetOptionPicker } from '../sheets';
+import { FormSheetShell, FormSection, SheetOptionPicker, useAppThemeColor, FormSheetColors } from '../sheets';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
-
-const BRAND_GREEN = '#2E7D32';
 
 import type { ApiExpense } from '@/types/expense';
 
@@ -67,6 +65,8 @@ export function AddExpenseView({
   // Refs to correctly manage focus targets
   const amountRef = useRef<TextInput>(null);
   const merchantRef = useRef<TextInput>(null);
+
+  const { accentColor } = useAppThemeColor();
 
   // Focus tracking for input states
   const [activeField, setActiveField] = useState<'amount' | 'merchant' | 'note' | null>(null);
@@ -199,12 +199,7 @@ export function AddExpenseView({
       isReadOnly={resolvedReadOnly}
       compact
     >
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
+      <View style={styles.formContainer}>
         {/* Category */}
         <FormSection title="Category">
           {(() => {
@@ -214,7 +209,7 @@ export function AddExpenseView({
                 onPress={() => setPickerVisible(true)}
                 style={[
                   styles.categoryTrigger,
-                  meta && { borderColor: meta.color ?? '#E2E8F0' },
+                  meta && { borderColor: meta.color ?? FormSheetColors.inputBorder },
                 ]}
               >
                 {/* Icon badge */}
@@ -250,12 +245,12 @@ export function AddExpenseView({
         <FormSection title="Amount">
           <Pressable 
             onPress={() => amountRef.current?.focus()}
-            style={[styles.amountField, activeField === 'amount' && styles.inputActive]}
+            style={[styles.amountField, activeField === 'amount' && { borderColor: accentColor, borderWidth: 1.5 }]}
           >
             <AppText
               variant="h2"
               weight="800"
-              color={activeField === 'amount' ? BRAND_GREEN : '#94A3B8'}
+              color={activeField === 'amount' ? accentColor : '#94A3B8'}
               style={styles.currency}
             >
               {currencySymbol}
@@ -280,12 +275,12 @@ export function AddExpenseView({
           <View style={styles.detailsGroup}>
             <Pressable 
               onPress={() => merchantRef.current?.focus()}
-              style={[styles.regularField, activeField === 'merchant' && styles.inputActive]}
+              style={[styles.regularField, activeField === 'merchant' && { borderColor: accentColor, borderWidth: 1.5 }]}
             >
               <Ionicons
                 name="storefront-outline"
                 size={18}
-                color={activeField === 'merchant' ? BRAND_GREEN : '#94A3B8'}
+                color={activeField === 'merchant' ? accentColor : '#94A3B8'}
               />
               <TextInput
                 ref={merchantRef}
@@ -305,7 +300,7 @@ export function AddExpenseView({
               onChangeText={setNote}
               placeholder="Add notes (optional)..."
               placeholderTextColor={SheetColors.placeholder}
-              style={[styles.noteInput, activeField === 'note' && styles.inputActive]}
+              style={[styles.noteInput, activeField === 'note' && { borderColor: accentColor, borderWidth: 1.5 }]}
               multiline
               textAlignVertical="top"
               onFocus={() => setActiveField('note')}
@@ -314,7 +309,7 @@ export function AddExpenseView({
             />
           </View>
         </FormSection>
-      </ScrollView>
+      </View>
 
       <SheetOptionPicker
         visible={pickerVisible}
@@ -330,19 +325,16 @@ export function AddExpenseView({
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: Spacing.lg,
+  formContainer: {
+    paddingBottom: Spacing.xs,
   },
   amountField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: FormSheetColors.inputBg,
     borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
     paddingVertical: Platform.OS === 'ios' ? 14 : 10,
     gap: Spacing.xs,
@@ -364,10 +356,10 @@ const styles = StyleSheet.create({
   regularField: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: FormSheetColors.inputBg,
     borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
     paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     gap: Spacing.sm,
@@ -381,10 +373,10 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   noteInput: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: FormSheetColors.inputBg,
     borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     minHeight: 80,
@@ -392,25 +384,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#1A1A1A',
   },
-  inputActive: {
-    borderColor: BRAND_GREEN,
-    ...Platform.select({
-      ios: {
-        shadowColor: BRAND_GREEN,
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: { elevation: 1 },
-    }),
-  },
   categoryTrigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: FormSheetColors.inputBg,
     borderRadius: Radius.md,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderWidth: 1,
+    borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
     paddingVertical: 10,
     gap: 10,
