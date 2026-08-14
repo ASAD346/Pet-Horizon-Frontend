@@ -63,14 +63,19 @@ function PlanCard({
   title, icon, features, price, period, badge,
   isActive, onPress, renewLabel, isPopular,
 }: PlanCardProps) {
-  const headerIconColor = isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#64748B';
-  const titleColor = isActive ? '#1B5E20' : isPopular ? '#B47E00' : '#1E293B';
+  const isPremiumPlan = title.toLowerCase().includes('premium');
+  const headerIconColor = isActive 
+    ? (isPremiumPlan ? '#D4A017' : '#2E7D32') 
+    : (isPopular ? '#D4A017' : '#64748B');
+  const titleColor = isActive 
+    ? (isPremiumPlan ? '#B47E00' : '#1B5E20') 
+    : (isPopular ? '#B47E00' : '#1E293B');
 
   return (
     <TouchableOpacity
       style={[
         styles.planCard,
-        isActive && styles.planCardActive,
+        isActive && (isPremiumPlan ? styles.planCardActivePremium : styles.planCardActive),
         isPopular && !isActive && styles.planCardPopular,
       ]}
       onPress={onPress}
@@ -92,8 +97,8 @@ function PlanCard({
         </View>
         
         {isActive ? (
-          <View style={styles.activeBadge}>
-            <AppText variant="caption" weight="800" color="#2E7D32" style={{ fontSize: 9 }}>
+          <View style={[styles.activeBadge, isPremiumPlan && styles.activeBadgePremium]}>
+            <AppText variant="caption" weight="800" color={isPremiumPlan ? '#B47E00' : '#2E7D32'} style={{ fontSize: 9 }}>
               ACTIVE
             </AppText>
           </View>
@@ -140,7 +145,7 @@ function PlanCard({
             <Ionicons
               name="checkmark"
               size={14}
-              color={isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#2E7D32'}
+              color={isActive ? (isPremiumPlan ? '#D4A017' : '#2E7D32') : isPopular ? '#D4A017' : '#2E7D32'}
               style={styles.checkIcon}
             />
             <AppText variant="caption" color="#475569" weight="600" style={styles.featureText}>
@@ -482,6 +487,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F6FBF6',
     borderWidth: 1.2,
   },
+  planCardActivePremium: {
+    borderColor: '#D4A017',
+    backgroundColor: '#FFFDF0',
+    borderWidth: 1.5,
+  },
   planCardPopular: {
     borderColor: '#D4A017',
     borderWidth: 1.5,
@@ -531,6 +541,10 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: '#C8E6C9',
+  },
+  activeBadgePremium: {
+    backgroundColor: '#FEF3C7',
+    borderColor: 'rgba(212, 160, 23, 0.3)',
   },
   upgradeBadge: {
     backgroundColor: '#E8F5E9',
@@ -605,12 +619,23 @@ const styles = StyleSheet.create({
   },
   /* Subscription Details Card */
   detailsCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFFDF0',
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    borderColor: '#D4A017',
     marginBottom: Spacing.xl,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#D4A017',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   detailsHeader: {
     flexDirection: 'row',
