@@ -77,6 +77,10 @@ interface TodaysScheduleSectionProps {
   onCompleteVaccination?: (scheduleId: string) => void | Promise<void>;
   isPremium?: boolean;
   onViewAll?: () => void;
+  /** Current user's id — used to detect walk sessions by other members */
+  currentUserId?: string;
+  /** Auth token — forwarded to WalkTimer so it can persist walk sessions */
+  token?: string;
 }
 
 function rowSortKey(row: ScheduleRow): number {
@@ -185,6 +189,8 @@ interface ScheduleRowCardProps {
   onManageGrooming?: (id: string) => void | Promise<void>;
   onCompleteVaccination?: (id: string) => void | Promise<void>;
   isPremium?: boolean;
+  currentUserId?: string;
+  token?: string;
 }
 
 const ScheduleRowCard = React.memo(function ScheduleRowCard({
@@ -199,6 +205,8 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   onManageGrooming,
   onCompleteVaccination,
   isPremium = false,
+  currentUserId,
+  token,
 }: ScheduleRowCardProps) {
   const [completeBusy, setCompleteBusy] = useState(false);
   const [skipBusy, setSkipBusy] = useState(false);
@@ -302,6 +310,9 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
           targetDuration={row.kind === 'walk' ? (row.item.metadata?.duration ?? 45) : undefined}
           onComplete={onCompleteWalk!}
           onSkip={onSkipWalk!}
+          activeSession={row.kind === 'walk' ? row.item.metadata?.activeSession : null}
+          currentUserId={currentUserId}
+          token={token}
         />
       ) : (row.kind === 'feeding' || row.kind === 'medicine') && (onComplete || onSkipFeeding || onSkipMedicine) ? (
         <View style={styles.actionRow}>
@@ -580,6 +591,8 @@ export function TodaysScheduleSection({
   onCompleteVaccination,
   isPremium = false,
   onViewAll,
+  currentUserId,
+  token,
 }: TodaysScheduleSectionProps) {
   const todaySchedules = {
     feeding: feedingSchedules,
@@ -656,6 +669,8 @@ export function TodaysScheduleSection({
               onManageGrooming={onManageGrooming}
               onCompleteVaccination={onCompleteVaccination}
               isPremium={isPremium}
+              currentUserId={currentUserId}
+              token={token}
             />
           ))}
           {overflowCount > 0 && onViewAll ? (

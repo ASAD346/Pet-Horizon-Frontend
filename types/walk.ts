@@ -37,6 +37,12 @@ export interface WalkScheduleItem {
     reminder?: boolean;
     reminderTime?: string;
     reminderMinutes?: number;
+    /** Set when any family member starts a walk. Cleared on complete/skip. */
+    activeSession?: {
+      userId: string;
+      userName: string;
+      startedAt: number;
+    } | null;
   };
   date?: string;
   startDate?: string;

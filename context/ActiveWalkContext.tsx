@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { log } from '@/lib/log';
+import { startWalkSession as startWalkSessionApi } from '@/services/schedules/walkApi';
 
 export interface ActiveWalk {
   scheduleId: string;
@@ -13,7 +14,7 @@ export interface ActiveWalk {
 
 interface ActiveWalkContextType {
   activeWalk: ActiveWalk | null;
-  startWalk: (scheduleId: string, petId: string, targetDuration: number, title?: string) => Promise<void>;
+  startWalk: (scheduleId: string, petId: string, targetDuration: number, title?: string, token?: string) => Promise<void>;
   stopWalk: () => Promise<void>;
   loadActiveWalk: () => Promise<void>;
 }
@@ -43,7 +44,13 @@ export function ActiveWalkProvider({ children }: { children: React.ReactNode }) 
     loadActiveWalk();
   }, [loadActiveWalk]);
 
-  const startWalk = useCallback(async (scheduleId: string, petId: string, targetDuration: number, title?: string) => {
+  const startWalk = useCallback(async (
+    scheduleId: string,
+    petId: string,
+    targetDuration: number,
+    title?: string,
+    token?: string,
+  ) => {
     const now = Date.now();
     const newWalk: ActiveWalk = {
       scheduleId,
@@ -58,6 +65,10 @@ export function ActiveWalkProvider({ children }: { children: React.ReactNode }) 
       await AsyncStorage.setItem(`walk_timer_started_${scheduleId}`, String(now));
     } catch (err) {
       log.fail('ActiveWalkContext', 'Failed to save active walk state', err as any);
+    }
+    // Persist active session to backend (fire-and-forget — local timer always works)
+    if (token) {
+      void startWalkSessionApi(token, scheduleId).catch(() => {});
     }
   }, []);
 

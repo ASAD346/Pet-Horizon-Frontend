@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UnifiedDashboardData } from '@/types/dashboard';
 import { fetchUnifiedDashboard } from '@/services/dashboard/dashboardApi';
 import { completeFeedingSchedule, skipFeedingSchedule } from '@/services/schedules/feedingApi';
-import { completeWalkSchedule } from '@/services/schedules/walkApi';
+import { completeWalkSchedule, startWalkSession as startWalkSessionApi } from '@/services/schedules/walkApi';
 import { completeMedicineSchedule } from '@/services/schedules/medicineApi';
 import { completeGroomingRecord } from '@/services/grooming/groomingApi';
 import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
@@ -78,6 +78,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
     enabled: Boolean(token && petId && petId !== 'fallback-pet-id-123' && !isSwitching),
     staleTime: 1000 * 60 * 5,
+    // Poll every 15 seconds so family members receive live walk session state changes
+    refetchInterval: 15_000,
+    refetchIntervalInBackground: false,
   });
 
   // Save each segment back to AsyncStorage on successful query load
@@ -132,25 +135,18 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     return query.refetch();
   }, [query.refetch]);
 
-  // Mutator helper for updating a schedule item status optimistically in the cached todaySchedules
-  const updateCacheScheduleStatus = (
+  // Optimistically REMOVE a schedule item from todaySchedules so it disappears
+  // from the home screen instantly without waiting for a server refetch.
+  const removeCacheScheduleItem = (
     prev: any,
     category: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination',
     itemId: string,
-    status: 'done' | 'skipped' | 'pending'
   ): any => {
     if (!prev || !prev.todaySchedules) return prev;
     const todaySchedules = { ...prev.todaySchedules };
     if (todaySchedules[category]) {
-      todaySchedules[category] = (todaySchedules[category] as any[]).map((item) =>
-        item._id === itemId || item.id === itemId
-          ? {
-              ...item,
-              status,
-              isComplete: status === 'done',
-              completedAt: status === 'done' ? new Date().toISOString() : undefined,
-            }
-          : item
+      todaySchedules[category] = (todaySchedules[category] as any[]).filter(
+        (item) => item._id !== itemId && item.id !== itemId
       );
     }
     return {
@@ -218,9 +214,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Feeding';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'done');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
+        let updated = removeCacheScheduleItem(prev, 'feeding', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Feeding', `completed ${itemTitle}`);
       });
       showToast(`${itemTitle} marked done successfully!`);
@@ -253,9 +249,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Feeding';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'feeding', scheduleId, 'skipped');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
+        let updated = removeCacheScheduleItem(prev, 'feeding', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Feeding', `skipped ${itemTitle}`);
       });
       showToast(`${itemTitle} skipped successfully!`);
@@ -289,9 +285,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Walk';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'done');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
+        let updated = removeCacheScheduleItem(prev, 'walk', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Walk', `completed ${itemTitle}`);
       });
       showToast(`${itemTitle} marked done successfully!`);
@@ -324,9 +320,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Medicine';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'done');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
+        let updated = removeCacheScheduleItem(prev, 'medicine', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Medicine', `completed ${itemTitle}`);
       });
       showToast(`${itemTitle} marked done successfully!`);
@@ -355,9 +351,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Grooming';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'grooming', recordId, 'done');
-        updated = removeCacheUpcomingTask(updated, recordId);
         itemTitle = findItemTitle(prev, 'grooming', recordId, 'Grooming');
+        let updated = removeCacheScheduleItem(prev, 'grooming', recordId);
+        updated = removeCacheUpcomingTask(updated, recordId);
         return addCacheRecentActivity(updated, 'Grooming', `completed ${itemTitle}`);
       });
       showToast(`${itemTitle} marked done successfully!`);
@@ -390,9 +386,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Vaccination';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'vaccination', scheduleId, 'done');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'vaccination', scheduleId, 'Vaccination');
+        let updated = removeCacheScheduleItem(prev, 'vaccination', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Vaccination', `completed ${itemTitle}`);
       });
       showToast(`${itemTitle} marked done successfully!`);
@@ -425,9 +421,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Walk';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'walk', scheduleId, 'skipped');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
+        let updated = removeCacheScheduleItem(prev, 'walk', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Walk', `skipped ${itemTitle}`);
       });
       showToast(`${itemTitle} skipped successfully!`);
@@ -460,9 +456,9 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
       const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
       let itemTitle = 'Medicine';
       queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
-        let updated = updateCacheScheduleStatus(prev, 'medicine', scheduleId, 'skipped');
-        updated = removeCacheUpcomingTask(updated, scheduleId);
         itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
+        let updated = removeCacheScheduleItem(prev, 'medicine', scheduleId);
+        updated = removeCacheUpcomingTask(updated, scheduleId);
         return addCacheRecentActivity(updated, 'Medicine', `skipped ${itemTitle}`);
       });
       showToast(`${itemTitle} skipped successfully!`);
@@ -479,12 +475,36 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
   });
 
+  const startWalk = async (scheduleId: string) => {
+    if (!token) return;
+    // Optimistically write activeSession into the local cache so the current user's
+    // own WalkTimer doesn't momentarily flash the "in progress" pill for themselves
+    // while the PATCH is in-flight.
+    queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+      if (!prev?.todaySchedules?.walk) return prev;
+      return {
+        ...prev,
+        todaySchedules: {
+          ...prev.todaySchedules,
+          walk: (prev.todaySchedules.walk as any[]).map((item: any) =>
+            (item._id === scheduleId || item.id === scheduleId)
+              ? { ...item, metadata: { ...(item.metadata || {}), activeSession: { userId: '__self__', userName: 'You', startedAt: Date.now() } } }
+              : item
+          ),
+        },
+      };
+    });
+    // Fire-and-forget to backend — if it fails, next poll will clean up
+    void startWalkSessionApi(token, scheduleId).catch(() => {});
+  };
+
   return {
     data,
     isLoading,
     isFetching,
     error,
     refetch,
+    startWalk,
     completeFeeding: completeFeedingMutation.mutateAsync,
     skipFeeding: skipFeedingMutation.mutateAsync,
     completeWalk: (scheduleId: string, elapsedMinutes?: number) =>

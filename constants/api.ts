@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
     feedingSkip: (id: string) => `/schedules/feeding/${id}/skip`,
     walk: '/schedules/walk',
     walkById: (id: string) => `/schedules/walk/${id}`,
+    walkStart: (id: string) => `/schedules/walk/${id}/start`,
     walkComplete: (id: string) => `/schedules/walk/${id}/complete`,
     walkReschedule: (id: string) => `/schedules/walk/${id}/reschedule`,
     walkStats: '/schedules/walk/stats',

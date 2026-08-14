@@ -117,6 +117,24 @@ export function ActiveWalkOverlay() {
     void cancelTaskNotifications(scheduleId).catch(() => {});
 
     if (token) {
+      // Optimistically remove from dashboard query cache to clean up view instantly
+      if (activePetId) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        queryClient.setQueryData(['dashboard', activePetId, todayStr], (prev: any) => {
+          if (!prev || !prev.todaySchedules) return prev;
+          const todaySchedules = { ...prev.todaySchedules };
+          if (todaySchedules.walk) {
+            todaySchedules.walk = (todaySchedules.walk as any[]).filter(
+              (item) => item._id !== scheduleId && item.id !== scheduleId
+            );
+          }
+          return {
+            ...prev,
+            todaySchedules,
+          };
+        });
+      }
+
       completeWalkSchedule(token, scheduleId, {
         status: 'done',
         completedAt: new Date().toISOString(),

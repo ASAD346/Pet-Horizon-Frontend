@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius } from '@/constants/theme';
@@ -9,14 +9,26 @@ import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
 
+interface ActiveWalkSession {
+  userId: string;
+  userName: string;
+  startedAt: number;
+}
+
 interface WalkTimerProps {
   scheduleId: string;
   isDone: boolean;
   isSkipped: boolean;
   isPremium: boolean;
-  targetDuration?: number; // target walk duration in minutes
+  targetDuration?: number;
   onComplete: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip: (id: string) => void | Promise<void>;
+  /** Active session from the server (set by whoever started the walk) */
+  activeSession?: ActiveWalkSession | null;
+  /** Current logged-in user's id to determine if we are the walker */
+  currentUserId?: string;
+  /** Token to pass to backend when starting the walk */
+  token?: string;
 }
 
 export function WalkTimer({
@@ -27,6 +39,9 @@ export function WalkTimer({
   targetDuration = 45,
   onComplete,
   onSkip,
+  activeSession,
+  currentUserId,
+  token,
 }: WalkTimerProps) {
   const { activeWalk, startWalk, stopWalk } = useActiveWalk();
   const activePetId = useAppSelector(selectActivePetId);
@@ -34,6 +49,19 @@ export function WalkTimer({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Pulsing animation for the "in-progress by other" pill
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 0.55, duration: 900, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 900, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseAnim]);
 
   // Sync startedAt with activeWalk from context
   useEffect(() => {
@@ -66,36 +94,27 @@ export function WalkTimer({
   // Keep counter ticking & schedule notifications
   useEffect(() => {
     if (startedAt !== null) {
-      // 1. Setup tick interval for UI clock ONLY
       timerRef.current = setInterval(() => {
         const curElapsed = Math.floor((Date.now() - startedAt) / 1000);
         setElapsedSeconds(curElapsed);
       }, 1000);
 
-      // 2. Schedule local OS notification exactly once on start/mount for absolute future timestamp
       const scheduleWalkCompleteNotification = async () => {
         const targetSeconds = targetDuration * 60;
         const remainingSeconds = targetSeconds - Math.floor((Date.now() - startedAt) / 1000);
-
         if (remainingSeconds <= 0) return;
-
         try {
           const { status } = await Notifications.requestPermissionsAsync();
           if (status !== 'granted') return;
-
-          // Cancel any previous walk notification for this schedule
-          try {
-            await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`);
-          } catch (_) {}
-
+          try { await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`); } catch (_) {}
           await Notifications.scheduleNotificationAsync({
             identifier: `walk-done-${scheduleId}`,
             content: {
               title: '🐾 Pet Horizon · Care Alert',
-              body: '🦮 Walk time is complete!\nTap to open the app and log your activity.',
+              body: '🦮 Walk time is complete! Tap to open the app and log your activity.',
               sound: true,
               categoryIdentifier: 'care-alert',
-              data: { id: scheduleId, type: 'walk' }
+              data: { id: scheduleId, type: 'walk' },
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -104,54 +123,34 @@ export function WalkTimer({
           });
         } catch (_) {}
       };
-
       scheduleWalkCompleteNotification();
-
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
       setElapsedSeconds(0);
     }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [startedAt, targetDuration, scheduleId]);
 
   const handleStart = async () => {
     try {
-      await startWalk(scheduleId, activePetId || '', targetDuration, 'Walk');
+      await startWalk(scheduleId, activePetId || '', targetDuration, 'Walk', token);
     } catch (_) {}
   };
 
   const cleanUpNotificationAndStorage = async () => {
-    try {
-      await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`);
-    } catch (_) {}
-    try {
-      await AsyncStorage.removeItem(`walk_timer_started_${scheduleId}`);
-    } catch (_) {}
+    try { await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`); } catch (_) {}
+    try { await AsyncStorage.removeItem(`walk_timer_started_${scheduleId}`); } catch (_) {}
   };
 
   const handleComplete = async () => {
     if (busy) return;
     setBusy(true);
-
     const finalSeconds = elapsedSeconds;
-
-    // Instantly cancel pre-scheduled native notification and storage
     await cleanUpNotificationAndStorage();
-
-    // Stop walk in global context
     await stopWalk();
-
-    // Instantly reset timer state
     setStartedAt(null);
     setElapsedSeconds(0);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     try {
       const minutes = Math.max(1, Math.round(finalSeconds / 60));
       await onComplete(scheduleId, minutes);
@@ -190,6 +189,28 @@ export function WalkTimer({
     );
   }
 
+  // ── "Walk in progress by another family member" pill ────────────────────────
+  // Show when: there's a backend session, it doesn't belong to this user,
+  // and the local timer for THIS card hasn't started on this device.
+  const sessionByOther =
+    activeSession &&
+    activeSession.userId &&
+    activeSession.userId !== '__self__' &&
+    activeSession.userId !== currentUserId &&
+    startedAt === null;
+
+  if (sessionByOther) {
+    const displayName = activeSession!.userName || 'A family member';
+    return (
+      <View style={styles.inProgressPill}>
+        <Animated.View style={[styles.inProgressDot, { opacity: pulseAnim }]} />
+        <AppText variant="caption" weight="700" color="#1D4ED8" numberOfLines={1} style={styles.inProgressText}>
+          {displayName} is walking
+        </AppText>
+      </View>
+    );
+  }
+
   const formatTime = (totalSecs: number) => {
     const m = Math.floor(totalSecs / 60);
     const s = totalSecs % 60;
@@ -211,7 +232,6 @@ export function WalkTimer({
     );
   }
 
-  // Show a pulsing Done prompt if walk timer has expired but user hasn't tapped Done yet
   const timerExpired = elapsedSeconds >= targetDuration * 60;
 
   return (
@@ -281,5 +301,29 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontVariant: ['tabular-nums'],
+  },
+  // ── "In progress by another member" pill ──────────────────────
+  inProgressPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#EFF6FF',
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    maxWidth: 160,
+  },
+  inProgressDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#3B82F6',
+    flexShrink: 0,
+  },
+  inProgressText: {
+    fontSize: 10,
+    flexShrink: 1,
   },
 });

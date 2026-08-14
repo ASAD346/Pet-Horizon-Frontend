@@ -144,3 +144,22 @@ export async function deleteWalkSchedule(
     throw error;
   }
 }
+
+export async function startWalkSession(
+  token: string,
+  scheduleId: string,
+): Promise<{ success: boolean; activeSession: { userId: string; userName: string; startedAt: number } }> {
+  log.info(SCOPE, 'PATCH /schedules/walk/:id/start', { scheduleId });
+  try {
+    const data = await apiRequest<{ success: boolean; activeSession: { userId: string; userName: string; startedAt: number } }>(
+      API_ENDPOINTS.schedules.walkStart(scheduleId),
+      { method: 'PATCH', token },
+    );
+    log.ok(SCOPE, 'Walk session started on backend', { scheduleId });
+    return data;
+  } catch (error) {
+    // Non-fatal: local timer still works even if backend call fails
+    log.fail(SCOPE, 'Start walk session backend sync failed', getErrorMessage(error));
+    throw error;
+  }
+}

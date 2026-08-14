@@ -644,6 +644,8 @@ export default function HomeScreen() {
           onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
           onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
           isPremium={isPremium}
+          currentUserId={user?._id ?? undefined}
+          token={token ?? undefined}
         />
 
         <RecentActivitySection
