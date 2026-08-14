@@ -86,7 +86,7 @@ export default function RegisterPetScreen() {
   const [scannerVisible, setScannerVisible] = useState(false);
   const [scannedToken, setScannedToken] = useState<string | null>(null);
   const [acceptModalVisible, setAcceptModalVisible] = useState(false);
-  const [dataLoaded, setDataLoaded] = useState(!isEditMode); // Add flag to prevent flashing empty fields when editing
+  const [dataLoaded, setDataLoaded] = useState(!isEditMode); // Start as true if adding a pet, false if editing an existing pet profile to allow async hydration without flashes
   const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
