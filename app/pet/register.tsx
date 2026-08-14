@@ -94,10 +94,8 @@ export default function RegisterPetScreen() {
   }, []);
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !hasEditPermission) {
       setSpeciesLoading(false);
-      log.fail('AddPet', 'Not authenticated');
-      showErrorToast('Please log in to register a pet.');
       return;
     }
 
@@ -127,10 +125,10 @@ export default function RegisterPetScreen() {
     return () => {
       mounted = false;
     };
-  }, [token]);
+  }, [token, hasEditPermission]);
 
   useEffect(() => {
-    if (!token || !species) {
+    if (!token || !species || !hasEditPermission) {
       setBreeds([]);
       return;
     }
@@ -162,7 +160,7 @@ export default function RegisterPetScreen() {
     return () => {
       mounted = false;
     };
-  }, [token, species]);
+  }, [token, species, hasEditPermission]);
 
   useEffect(() => {
     if (!token || !isEditMode || !editPetId) return;
