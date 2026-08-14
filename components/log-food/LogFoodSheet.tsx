@@ -96,11 +96,16 @@ export function LogFoodSheet({
     if (propsMealTypeOptions?.length && propsUnitOptions?.length) {
       setMealTypeOptions(propsMealTypeOptions);
       setUnitOptions(propsUnitOptions);
-      setEntry((prev) => ({
-        ...prev,
-        mealType: prev.mealType || (propsMealTypeOptions[0]?.value ?? ''),
-        unit: prev.unit || propsUnitOptions[0]?.value || '',
-      }));
+      setEntry((prev) => {
+        const mealVal = initialEntry?.mealType || prev.mealType || (propsMealTypeOptions[0]?.value ?? '');
+        const unitVal = initialEntry?.unit || prev.unit || propsUnitOptions[0]?.value || '';
+        return {
+          ...prev,
+          ...initialEntry,
+          mealType: mealVal,
+          unit: unitVal,
+        };
+      });
       setFeaturesLoading(false);
       return;
     }
@@ -115,7 +120,6 @@ export function LogFoodSheet({
       return;
     }
 
-    // Try reading from permission cache first for instant loading
     const cacheKey = `${token}:${petId}`;
     const cachedPermissions = getPetPermissionCache(cacheKey);
     if (cachedPermissions) {
@@ -125,16 +129,20 @@ export function LogFoodSheet({
 
       setMealTypeOptions(mealOptions);
       setUnitOptions(unitOpts);
-      setEntry((prev) => ({
-        ...prev,
-        mealType: prev.mealType || (mealOptions[0]?.value ?? ''),
-        unit: prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []),
-      }));
+      setEntry((prev) => {
+        const mealVal = initialEntry?.mealType || prev.mealType || (mealOptions[0]?.value ?? '');
+        const unitVal = initialEntry?.unit || prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []);
+        return {
+          ...prev,
+          ...initialEntry,
+          mealType: mealVal,
+          unit: unitVal,
+        };
+      });
       setFeaturesLoading(false);
       return;
     }
 
-    setFeaturesLoading(true);
     try {
       const perms = await fetchPetPermissions(token, petId);
       const features = perms.speciesFeatures;
@@ -143,11 +151,16 @@ export function LogFoodSheet({
 
       setMealTypeOptions(mealOptions);
       setUnitOptions(unitOpts);
-      setEntry((prev) => ({
-        ...prev,
-        mealType: prev.mealType || (mealOptions[0]?.value ?? ''),
-        unit: prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []),
-      }));
+      setEntry((prev) => {
+        const mealVal = initialEntry?.mealType || prev.mealType || (mealOptions[0]?.value ?? '');
+        const unitVal = initialEntry?.unit || prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []);
+        return {
+          ...prev,
+          ...initialEntry,
+          mealType: mealVal,
+          unit: unitVal,
+        };
+      });
     } catch (e) {
       setMealTypeOptions([]);
       setUnitOptions([]);

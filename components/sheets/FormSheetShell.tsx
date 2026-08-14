@@ -147,16 +147,16 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              {isReadOnly ? (
+              {isReadOnly && !compact ? (
                 <View style={{ marginBottom: 14, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D', borderRadius: 12, flexDirection: 'row', alignItems: 'center' }}>
                   <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 8 }} />
                   <AppText variant="caption" weight="700" color="#B45309">
-                    Request access from admin to edit.
+                    Read-only access mode.
                   </AppText>
                 </View>
               ) : null}
 
-              <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : undefined}>
+              <View pointerEvents="auto" style={isReadOnly ? { opacity: 0.85 } : undefined}>
                 {children}
               </View>
 
@@ -169,23 +169,14 @@ export function FormSheetShell({
               ) : null}
             </ScrollView>
 
-            {onSave && saveLabel ? (
-              isReadOnly ? (
-                <View style={{ paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FEF3C7', borderTopWidth: 1, borderTopColor: '#FCD34D', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-                  <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 6 }} />
-                  <AppText variant="bodySmall" weight="700" color="#B45309">
-                    Request access from admin to edit.
-                  </AppText>
-                </View>
-              ) : (
-                <StickyActionFooter
-                  onSave={onSave}
-                  saveLabel={saveLabel}
-                  saving={saving}
-                  saveDisabled={saveDisabled}
-                  accentColor={accentColor}
-                />
-              )
+            {onSave && saveLabel && !isReadOnly ? (
+              <StickyActionFooter
+                onSave={onSave}
+                saveLabel={saveLabel}
+                saving={saving}
+                saveDisabled={saveDisabled}
+                accentColor={accentColor}
+              />
             ) : null}
 
             {Object.values(overlays)}
