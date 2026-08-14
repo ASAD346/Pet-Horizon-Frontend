@@ -135,7 +135,7 @@ export function FormSheetShell({
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={[
                 formSheetStyles.scrollContent,
-                { paddingBottom: 110 } // Ensure last field is visible above sticky footer
+                { paddingBottom: isReadOnly ? 10 : 110 } // Reduce padding when read-only to eliminate space below Close button
               ]}
             >
               {!compact && subtitle ? (
@@ -148,7 +148,7 @@ export function FormSheetShell({
               ) : null}
 
               {isReadOnly ? (
-                <View style={{ paddingVertical: 36, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ paddingVertical: 20, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
                   <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                     <MaterialCommunityIcons name="lock" size={32} color="#DC2626" />
                   </View>
@@ -159,7 +159,7 @@ export function FormSheetShell({
                     You don't have permission to edit or create this schedule. Please request access from an admin.
                   </AppText>
                   
-                  <View style={{ width: '100%' }}>
+                  <View style={{ width: '100%', marginBottom: 10 }}>
                     <CustomButton
                       title="Close"
                       onPress={onClose}
