@@ -147,17 +147,40 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : undefined}>
-                {children}
-              </View>
-
-              {error ? (
-                <View style={{ paddingHorizontal: 4, marginTop: 12 }}>
-                  <AppText variant="bodySmall" weight="700" color="#E53935">
-                    {error}
+              {isReadOnly ? (
+                <View style={{ paddingVertical: 36, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                    <MaterialCommunityIcons name="lock" size={32} color="#DC2626" />
+                  </View>
+                  <AppText variant="h3" weight="800" color="#1E293B" style={{ marginBottom: 8, textAlign: 'center' }}>
+                    Access Restricted
                   </AppText>
+                  <AppText variant="bodySmall" color="#64748B" style={{ textAlign: 'center', lineHeight: 18, marginBottom: 24 }}>
+                    You don't have permission to edit or create this schedule. Please request access from an admin.
+                  </AppText>
+                  
+                  <View style={{ width: '100%' }}>
+                    <CustomButton
+                      title="Close"
+                      onPress={onClose}
+                    />
+                  </View>
                 </View>
-              ) : null}
+              ) : (
+                <>
+                  <View pointerEvents="auto">
+                    {children}
+                  </View>
+
+                  {error ? (
+                    <View style={{ paddingHorizontal: 4, marginTop: 12 }}>
+                      <AppText variant="bodySmall" weight="700" color="#E53935">
+                        {error}
+                      </AppText>
+                    </View>
+                  ) : null}
+                </>
+              )}
             </ScrollView>
 
             {onSave && saveLabel && !isReadOnly ? (
