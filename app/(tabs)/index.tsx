@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { Alert, ScrollView, StyleSheet, View, AppState } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { useNotificationStore } from '@/context/NotificationContext';
@@ -599,6 +599,16 @@ export default function HomeScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={dashboardFetching}
+            onRefresh={async () => {
+              await refetchDashboard();
+            }}
+            colors={['#5CB35D']}
+            tintColor={isPremium ? '#184F2E' : '#5CB35D'}
+          />
+        }
       >
         {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 

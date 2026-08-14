@@ -9,6 +9,7 @@ import {
   Alert,
   Pressable,
   Animated,
+  RefreshControl,
 } from 'react-native';
 import { SafeModal } from '@/components/ui/SafeModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -690,6 +691,16 @@ export function ScheduleSetupView({
           contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance + 80, flexGrow: 1 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={schedulesLoading}
+              onRefresh={async () => {
+                if (pet?._id) await reloadSchedules(pet._id);
+              }}
+              colors={['#5CB35D']}
+              tintColor={isPremium ? '#184F2E' : '#5CB35D'}
+            />
+          }
         >
          
 
