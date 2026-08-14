@@ -63,19 +63,14 @@ function PlanCard({
   title, icon, features, price, period, badge,
   isActive, onPress, renewLabel, isPopular,
 }: PlanCardProps) {
-  const isPremiumPlan = title.toLowerCase().includes('premium');
-  const headerIconColor = isActive 
-    ? (isPremiumPlan ? '#D4A017' : '#2E7D32') 
-    : (isPopular ? '#D4A017' : '#64748B');
-  const titleColor = isActive 
-    ? (isPremiumPlan ? '#B47E00' : '#1B5E20') 
-    : (isPopular ? '#B47E00' : '#1E293B');
+  const headerIconColor = isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#64748B';
+  const titleColor = isActive ? '#1B5E20' : isPopular ? '#B47E00' : '#1E293B';
 
   return (
     <TouchableOpacity
       style={[
         styles.planCard,
-        isActive && (isPremiumPlan ? styles.planCardActivePremium : styles.planCardActive),
+        isActive && styles.planCardActive,
         isPopular && !isActive && styles.planCardPopular,
       ]}
       onPress={onPress}
@@ -90,15 +85,15 @@ function PlanCard({
       {/* Header Row */}
       <View style={styles.planCardHeader}>
         <View style={styles.planTitleRow}>
-          <Ionicons name={icon} size={20} color={headerIconColor} />
-          <AppText variant="body" weight="800" color={titleColor}>
+          <Ionicons name={icon} size={18} color={headerIconColor} />
+          <AppText variant="body" weight="800" color={titleColor} style={{ fontSize: 14 }}>
             {title}
           </AppText>
         </View>
         
         {isActive ? (
-          <View style={[styles.activeBadge, isPremiumPlan && styles.activeBadgePremium]}>
-            <AppText variant="caption" weight="800" color={isPremiumPlan ? '#B47E00' : '#2E7D32'} style={{ fontSize: 9 }}>
+          <View style={styles.activeBadge}>
+            <AppText variant="caption" weight="800" color="#2E7D32" style={{ fontSize: 9 }}>
               ACTIVE
             </AppText>
           </View>
@@ -120,11 +115,11 @@ function PlanCard({
       {/* Pricing Row */}
       <View style={styles.priceContainer}>
         <View style={styles.priceRow}>
-          <AppText variant="h2" weight="800" color="#0F172A" style={styles.priceText}>
+          <AppText variant="h2" weight="800" color="#0F172A" style={styles.priceText} numberOfLines={1}>
             {price}
-          </AppText>
-          <AppText variant="caption" weight="600" color="#64748B" style={styles.periodText}>
-            {period}
+            <AppText variant="caption" weight="600" color="#64748B" style={{ fontSize: 12 }}>
+              {` ${period}`}
+            </AppText>
           </AppText>
         </View>
         {badge ? (
@@ -144,8 +139,8 @@ function PlanCard({
           <View key={i} style={styles.featureRow}>
             <Ionicons
               name="checkmark"
-              size={14}
-              color={isActive ? (isPremiumPlan ? '#D4A017' : '#2E7D32') : isPopular ? '#D4A017' : '#2E7D32'}
+              size={13}
+              color={isActive ? '#2E7D32' : isPopular ? '#D4A017' : '#2E7D32'}
               style={styles.checkIcon}
             />
             <AppText variant="caption" color="#475569" weight="600" style={styles.featureText}>
@@ -299,15 +294,17 @@ export default function BillingScreen() {
         {isPremium && status && (
           <View style={styles.detailsCard}>
             <View style={styles.detailsHeader}>
-              <View style={styles.goldBadge}>
-                <Ionicons name="sparkles" size={16} color="#D4A017" />
-              </View>
               <View style={{ flex: 1 }}>
-                <AppText variant="body" weight="800" color="#0F172A">
+                <AppText variant="bodySmall" weight="800" color="#1E293B">
                   Active Subscription
                 </AppText>
-                <AppText variant="caption" color="#64748B">
+                <AppText variant="caption" color="#64748B" style={{ fontSize: 11 }}>
                   Premium member benefits unlocked
+                </AppText>
+              </View>
+              <View style={styles.detailsActiveBadge}>
+                <AppText variant="caption" weight="800" color="#2E7D32" style={{ fontSize: 9 }}>
+                  ACTIVE
                 </AppText>
               </View>
             </View>
@@ -461,13 +458,13 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   planContainer: {
-    gap: Spacing.md,
-    marginBottom: Spacing.xl,
+    gap: 10,
+    marginBottom: Spacing.lg,
   },
   planCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.md || 12,
-    padding: Spacing.md,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     ...Platform.select({
@@ -486,11 +483,6 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
     backgroundColor: '#F6FBF6',
     borderWidth: 1.2,
-  },
-  planCardActivePremium: {
-    borderColor: '#D4A017',
-    backgroundColor: '#FFFDF0',
-    borderWidth: 1.5,
   },
   planCardPopular: {
     borderColor: '#D4A017',
@@ -619,44 +611,33 @@ const styles = StyleSheet.create({
   },
   /* Subscription Details Card */
   detailsCard: {
-    backgroundColor: '#FFFDF0',
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.md || 12,
+    padding: 12,
     borderWidth: 1.5,
-    borderColor: '#D4A017',
-    marginBottom: Spacing.xl,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#D4A017',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
+    borderColor: '#E2E8F0',
+    marginBottom: Spacing.lg,
   },
   detailsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
   },
-  goldBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center',
+  detailsActiveBadge: {
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
   divider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginVertical: Spacing.md,
+    marginVertical: 8,
   },
   detailsGrid: {
-    gap: Spacing.sm,
+    gap: 6,
   },
   detailsRow: {
     flexDirection: 'row',
