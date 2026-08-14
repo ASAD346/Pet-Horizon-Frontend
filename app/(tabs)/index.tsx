@@ -409,8 +409,15 @@ export default function HomeScreen() {
         // Leave as-is
       } else if (actionText.toLowerCase().startsWith('logged')) {
         actionText = actionText.replace(/^[Ll]ogged\s*/, 'logged ');
+        if (category === 'general') {
+          actionText = actionText.replace(/^logged\s+general:?/i, 'added journal:');
+        }
       } else {
-        actionText = `logged ${category}: ${actionText}`;
+        if (category === 'general') {
+          actionText = `added journal: ${actionText}`;
+        } else {
+          actionText = `logged ${category}: ${actionText}`;
+        }
       }
 
       const walkDuration = entry.duration ?? entry.relatedScheduleLogId?.duration ?? entry.metadata?.duration ?? entry.metadata?.targetDuration;
