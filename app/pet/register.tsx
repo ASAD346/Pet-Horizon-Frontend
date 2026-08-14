@@ -94,6 +94,45 @@ export default function RegisterPetScreen() {
   }, []);
 
   useEffect(() => {
+    if (!token || !isEditMode || !editPetId) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        const existing = await fetchPetById(token, editPetId);
+        if (!mounted) return;
+        
+        setPetName(existing.name ?? '');
+        setSpecies(existing.species ?? '');
+        setBreed(existing.breed ?? '');
+        setGender((existing.gender as PetGender) || 'Male');
+        setBirthday(parseSafeDateOrNull(existing.birthday));
+        if (existing.weight != null) setWeight(String(existing.weight));
+        if (existing.weightUnit === 'lbs' || existing.weightUnit === 'kg') {
+          setWeightUnit(existing.weightUnit);
+        }
+        if (existing.image) {
+          setPhotoUri(resolveMediaUrl(existing.image) ?? null);
+        }
+
+        if (!isPetOwner(existing.ownerUserId, user?._id)) {
+          setHasEditPermission(false);
+        }
+      } catch (error) {
+        if (mounted) showErrorToast(getErrorMessage(error));
+      } finally {
+        if (mounted) {
+          setDataLoaded(true);
+        }
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [token, isEditMode, editPetId, user?._id]);
+
+  useEffect(() => {
     if (!token || !hasEditPermission) {
       setSpeciesLoading(false);
       return;
@@ -161,45 +200,6 @@ export default function RegisterPetScreen() {
       mounted = false;
     };
   }, [token, species, hasEditPermission]);
-
-  useEffect(() => {
-    if (!token || !isEditMode || !editPetId) return;
-
-    let mounted = true;
-    (async () => {
-      try {
-        const existing = await fetchPetById(token, editPetId);
-        if (!mounted) return;
-        
-        setPetName(existing.name ?? '');
-        setSpecies(existing.species ?? '');
-        setBreed(existing.breed ?? '');
-        setGender((existing.gender as PetGender) || 'Male');
-        setBirthday(parseSafeDateOrNull(existing.birthday));
-        if (existing.weight != null) setWeight(String(existing.weight));
-        if (existing.weightUnit === 'lbs' || existing.weightUnit === 'kg') {
-          setWeightUnit(existing.weightUnit);
-        }
-        if (existing.image) {
-          setPhotoUri(resolveMediaUrl(existing.image) ?? null);
-        }
-
-        if (!isPetOwner(existing.ownerUserId, user?._id)) {
-          setHasEditPermission(false);
-        }
-      } catch (error) {
-        if (mounted) showErrorToast(getErrorMessage(error));
-      } finally {
-        if (mounted) {
-          setDataLoaded(true);
-        }
-      }
-    })();
-
-    return () => {
-      mounted = false;
-    };
-  }, [token, isEditMode, editPetId, user?._id]);
 
   const handleSpeciesChange = useCallback(
     (next: string) => {
