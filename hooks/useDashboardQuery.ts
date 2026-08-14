@@ -230,6 +230,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -265,6 +266,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -301,6 +303,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -336,6 +339,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -367,6 +371,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -402,6 +407,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -437,6 +443,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 
@@ -472,6 +479,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
       queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
     },
   });
 

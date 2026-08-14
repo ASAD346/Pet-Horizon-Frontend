@@ -23,14 +23,7 @@ interface EmptyStateProps {
 
 import { Palette } from '@/constants/theme';
 
-const VARIANT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  primary: { bg: Palette.primary.base, text: '#FFFFFF', border: Palette.primary.base },
-  success: { bg: Palette.success, text: '#FFFFFF', border: Palette.success },
-  secondary: { bg: '#F1F5F9', text: '#475569', border: '#E2E8F0' },
-  danger: { bg: Palette.error, text: '#FFFFFF', border: Palette.error },
-  outline: { bg: 'transparent', text: Palette.primary.base, border: Palette.primary.base },
-  ghost: { bg: 'transparent', text: '#64748B', border: 'transparent' },
-};
+import { useAuth } from '@/hooks/useAuth';
 
 export function EmptyState({
   icon,
@@ -43,8 +36,21 @@ export function EmptyState({
   buttonVariant = 'success',
   compact = false,
 }: EmptyStateProps) {
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
+  
   const resolvedLabel = buttonLabel ?? actionLabel;
   const resolvedPress = onButtonPress ?? onActionPress;
+
+  const VARIANT_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+    primary: { bg: Palette.primary.base, text: '#FFFFFF', border: Palette.primary.base },
+    success: { bg: isPremium ? '#184F2E' : Palette.success, text: '#FFFFFF', border: isPremium ? '#184F2E' : Palette.success },
+    secondary: { bg: '#F1F5F9', text: '#475569', border: '#E2E8F0' },
+    danger: { bg: Palette.error, text: '#FFFFFF', border: Palette.error },
+    outline: { bg: 'transparent', text: Palette.primary.base, border: Palette.primary.base },
+    ghost: { bg: 'transparent', text: '#64748B', border: 'transparent' },
+  };
+
   const variantStyle = VARIANT_COLORS[buttonVariant] ?? VARIANT_COLORS.success;
 
   return (
