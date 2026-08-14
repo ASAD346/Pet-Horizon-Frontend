@@ -19,7 +19,7 @@ export function PremiumActiveCard({ planName, expiresAt }: PremiumActiveCardProp
       <View style={styles.banner}>
         <View style={styles.mainRow}>
           <View style={styles.planCol}>
-            <AppText variant="caption" color="rgba(255, 255, 255, 0.4)" weight="800" style={styles.label}>
+            <AppText variant="caption" color="rgba(255, 255, 255, 0.5)" weight="800" style={styles.label}>
               ACTIVE SUBSCRIPTION
             </AppText>
             <AppText variant="bodySmall" weight="800" color="#FFFFFF">
@@ -28,10 +28,10 @@ export function PremiumActiveCard({ planName, expiresAt }: PremiumActiveCardProp
           </View>
 
           <View style={styles.infoCol}>
-            <AppText variant="caption" color="rgba(255, 255, 255, 0.4)" weight="800" style={styles.label}>
+            <AppText variant="caption" color="rgba(255, 255, 255, 0.5)" weight="800" style={styles.label}>
               RENEWS
             </AppText>
-            <AppText variant="bodySmall" weight="800" color="#D4A017">
+            <AppText variant="bodySmall" weight="800" color="#FFD700">
               {displayDate}
             </AppText>
           </View>
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: 'rgba(212, 160, 23, 0.2)', // subtle gold border
+    borderColor: 'rgba(255, 215, 0, 0.3)', // subtle bright gold border
   },
   mainRow: {
     flexDirection: 'row',
