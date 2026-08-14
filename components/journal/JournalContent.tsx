@@ -62,7 +62,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
     user?._id,
   );
   const queryClient = useQueryClient();
-  const { data: journalData, isFetching: loading, error, refetch: reload } = useQuery({
+  const { data: journalData, isLoading, isFetching: loading, error, refetch: reload } = useQuery({
     queryKey: ['journalEntries', pet?._id],
     queryFn: async () => {
       if (!token || !pet?._id) return { items: [], total: 0 };
@@ -243,7 +243,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
   const isPremium = user?.premiumStatus === 'premium';
   const themeColor = isPremium ? '#184F2E' : '#5CB35D';
 
-  if (loading && entries.length === 0) {
+  if (isLoading && entries.length === 0) {
     return <SkeletonJournalScreen />;
   }
 

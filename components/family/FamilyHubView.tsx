@@ -198,7 +198,7 @@ export function FamilyHubView() {
     } catch {
       // ignore
     }
-    await Promise.all([reloadPet(), reloadMembers(), loadGuestAccess()]);
+    await Promise.all([reloadPet(), reloadMembers(true, true), loadGuestAccess()]);
     setRefreshing(false);
   }, [token, reloadPet, reloadMembers, loadGuestAccess]);
 

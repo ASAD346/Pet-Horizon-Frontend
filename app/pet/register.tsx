@@ -8,6 +8,7 @@ import {
   Keyboard,
   Alert,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -85,6 +86,7 @@ export default function RegisterPetScreen() {
   const [scannerVisible, setScannerVisible] = useState(false);
   const [scannedToken, setScannedToken] = useState<string | null>(null);
   const [acceptModalVisible, setAcceptModalVisible] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(!isEditMode); // Add flag to prevent flashing empty fields when editing
   const isSubmitting = useRef(false);
 
   const clearErrors = useCallback(() => {
@@ -189,6 +191,10 @@ export default function RegisterPetScreen() {
         }
       } catch (error) {
         if (mounted) showErrorToast(getErrorMessage(error));
+      } finally {
+        if (mounted) {
+          setDataLoaded(true);
+        }
       }
     })();
 
@@ -444,6 +450,126 @@ export default function RegisterPetScreen() {
             </View>
           </View>
         </SafeAreaView>
+      ) : !dataLoaded ? (
+        /* Clean hydration skeleton loader to prevent flashes */
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          <View style={styles.headerOuter}>
+            <View style={styles.headerRow}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="chevron-back" size={16} color="#0E3821" />
+              </TouchableOpacity>
+              <View style={styles.headerTextContainer}>
+                <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
+                  Loading pet profile...
+                </AppText>
+              </View>
+            </View>
+          </View>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#5CB35D" />
+          </View>
+        </SafeAreaView>
+      ) : !hasEditPermission ? (
+        /* Professional high-end Read-Only Profile Card layout */
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          {/* Header with clear back button only */}
+          <View style={styles.headerOuter}>
+            <View style={styles.headerRow}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                <Ionicons name="chevron-back" size={16} color="#0E3821" />
+              </TouchableOpacity>
+              <View style={styles.headerTextContainer}>
+                <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
+                  {petName ? `${petName}'s Profile` : 'Companion Overview'}
+                </AppText>
+                <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle}>
+                  View details managed by your pet admin.
+                </AppText>
+              </View>
+            </View>
+          </View>
+
+          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.readOnlyContainer}>
+              {/* Pet Avatar with Glowing Emerald Ring */}
+              <View style={styles.readOnlyAvatarSection}>
+                <PetPhotoPicker imageUri={photoUri} readOnly={true} />
+                <View style={styles.readOnlyPillBadge}>
+                  <Ionicons name="shield-checkmark" size={12} color="#0F766E" />
+                  <AppText variant="caption" weight="800" color="#0F766E" style={styles.readOnlyPillBadgeText}>
+                    Verified Member Access
+                  </AppText>
+                </View>
+              </View>
+
+              {/* High-end unified details card */}
+              <View style={styles.readOnlyCardGrid}>
+                {/* Pet Name */}
+                <View style={styles.readOnlyInfoRow}>
+                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
+                    Pet Name
+                  </AppText>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                    {petName || '—'}
+                  </AppText>
+                </View>
+
+                {/* Gender */}
+                <View style={styles.readOnlyInfoRow}>
+                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
+                    Gender
+                  </AppText>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                    {gender || '—'}
+                  </AppText>
+                </View>
+
+                {/* Species */}
+                <View style={styles.readOnlyInfoRow}>
+                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
+                    Species
+                  </AppText>
+                  <View style={styles.readOnlySpeciesTag}>
+                    <Ionicons name="paw" size={12} color="#0F766E" style={{ marginRight: 4 }} />
+                    <AppText variant="caption" weight="800" color="#0F766E" style={{ textTransform: 'capitalize' }}>
+                      {species || '—'}
+                    </AppText>
+                  </View>
+                </View>
+
+                {/* Breed */}
+                <View style={styles.readOnlyInfoRow}>
+                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
+                    Breed
+                  </AppText>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                    {breed || '—'}
+                  </AppText>
+                </View>
+
+                {/* Birthday */}
+                <View style={styles.readOnlyInfoRow}>
+                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
+                    Birthday
+                  </AppText>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                    {birthday ? birthday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}
+                  </AppText>
+                </View>
+
+                {/* Weight */}
+                <View style={styles.readOnlyInfoRow}>
+                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
+                    Weight
+                  </AppText>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                    {weight ? `${weight} ${weightUnit.toUpperCase()}` : '—'}
+                  </AppText>
+                </View>
+              </View>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
       ) : (
 
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -478,27 +604,18 @@ export default function RegisterPetScreen() {
           >
             <View style={styles.formContainer}>
 
-              {!hasEditPermission && (
-                <View style={styles.viewOnlyBanner}>
-                  <Ionicons name="lock-closed" size={16} color="#2E7D32" />
-                  <AppText variant="bodySmall" color="#2E7D32" weight="700" style={styles.viewOnlyText}>
-                    View only — only the pet owner can edit this profile.
-                  </AppText>
-                </View>
-              )}
-
               {/* Photo avatar — readOnly hides the + badge */}
               <PetPhotoPicker
                 imageUri={photoUri}
                 onImageChange={setPhotoUri}
-                readOnly={!hasEditPermission}
+                readOnly={false}
               />
 
               <PetLabeledInput
                 label="Pet Name"
                 placeholder="Pet Name"
                 value={petName}
-                readOnly={!hasEditPermission}
+                readOnly={false}
                 onChangeText={(text) => {
                   setPetName(text);
                   if (fieldErrors.petName) {
@@ -506,7 +623,7 @@ export default function RegisterPetScreen() {
                   }
                 }}
               />
-              {!hasEditPermission ? null : fieldErrors.petName ? (
+              {fieldErrors.petName ? (
                 <AppText variant="caption" color="#C62828" style={styles.inlineError}>
                   {fieldErrors.petName}
                 </AppText>
@@ -515,7 +632,7 @@ export default function RegisterPetScreen() {
               <GenderSelect
                 value={gender}
                 onChange={setGender}
-                readOnly={!hasEditPermission}
+                readOnly={false}
               />
 
               <SpeciesSelector
@@ -523,8 +640,8 @@ export default function RegisterPetScreen() {
                 value={species}
                 onChange={handleSpeciesChange}
                 loading={speciesLoading}
-                disabled={isEditMode && hasEditPermission}
-                readOnly={!hasEditPermission}
+                disabled={isEditMode}
+                readOnly={false}
                 error={fieldErrors.species}
               />
 
@@ -532,8 +649,8 @@ export default function RegisterPetScreen() {
                 value={breed}
                 breeds={breeds}
                 loading={breedsLoading}
-                disabled={(isEditMode || !species) && hasEditPermission}
-                readOnly={!hasEditPermission}
+                disabled={isEditMode || !species}
+                readOnly={false}
                 error={fieldErrors.breed}
                 onChange={(next) => {
                   setBreed(next);
@@ -545,7 +662,7 @@ export default function RegisterPetScreen() {
 
               <BirthdayField
                 value={birthday}
-                readOnly={!hasEditPermission}
+                readOnly={false}
                 onChange={(date) => {
                   setBirthday(date);
                   if (fieldErrors.birthday) {
@@ -558,11 +675,11 @@ export default function RegisterPetScreen() {
               <WeightInput
                 value={weight}
                 unit={weightUnit}
-                readOnly={!hasEditPermission}
+                readOnly={false}
                 onValueChange={setWeight}
                 onUnitChange={setWeightUnit}
               />
-              {!hasEditPermission ? null : fieldErrors.weight ? (
+              {fieldErrors.weight ? (
                 <AppText variant="caption" color="#C62828" style={styles.inlineError}>
                   {fieldErrors.weight}
                 </AppText>
@@ -572,37 +689,25 @@ export default function RegisterPetScreen() {
 
           <View style={styles.footer}>
             <View style={[styles.formContainer, styles.footerRow]}>
-              {!hasEditPermission ? (
-                /* View-only footer: clean pill — no actions */
-                <View style={styles.viewOnlyFooterPill}>
-                  <Ionicons name="eye-outline" size={16} color="#5CB35D" />
-                  <AppText variant="bodySmall" weight="700" color="#2E7D32" style={styles.viewOnlyFooterText}>
-                    View Only
-                  </AppText>
-                </View>
-              ) : (
-                <>
-                  {isEditMode ? (
-                    <TouchableOpacity
-                      onPress={handleDeletePet}
-                      disabled={loading}
-                      style={styles.smallDeleteButton}
-                      activeOpacity={0.8}
-                    >
-                      <Ionicons name="trash-outline" size={20} color="#DC2626" />
-                    </TouchableOpacity>
-                  ) : null}
-                  <CustomButton
-                    title={isEditMode ? 'Save Changes' : 'Add Pet'}
-                    onPress={handleAddPet}
-                    isLoading={loading}
-                    disabled={speciesLoading || loading}
-                    variant="primary"
-                    style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
-                    textStyle={styles.addButtonText}
-                  />
-                </>
-              )}
+              {isEditMode ? (
+                <TouchableOpacity
+                  onPress={handleDeletePet}
+                  disabled={loading}
+                  style={styles.smallDeleteButton}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                </TouchableOpacity>
+              ) : null}
+              <CustomButton
+                title={isEditMode ? 'Save Changes' : 'Add Pet'}
+                onPress={handleAddPet}
+                isLoading={loading}
+                disabled={speciesLoading || loading}
+                variant="primary"
+                style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
+                textStyle={styles.addButtonText}
+              />
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -763,6 +868,70 @@ const styles = StyleSheet.create({
   },
   viewOnlyFooterText: {
     fontSize: 14,
+  },
+  // ── Read-only card grid design ────────────────────────────────
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  readOnlyContainer: {
+    paddingTop: Spacing.md,
+  },
+  readOnlyAvatarSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+  },
+  readOnlyPillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginTop: -8,
+  },
+  readOnlyPillBadgeText: {
+    marginLeft: 4,
+    fontSize: 11,
+  },
+  readOnlyCardGrid: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderWidth: 1,
+    borderColor: '#E8F5E9',
+    shadowColor: '#2E7D32',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2,
+    gap: Spacing.md,
+  },
+  readOnlyInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  readOnlyInfoLabel: {
+    letterSpacing: 0.5,
+  },
+  readOnlyInfoValue: {
+    fontSize: 15,
+  },
+  readOnlySpeciesTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   // ── Track-selection landing ──────────────────────────────────
   trackContainer: {

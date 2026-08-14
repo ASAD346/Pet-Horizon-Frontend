@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { Alert, ScrollView, StyleSheet, View, AppState } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl } from 'react-native';
 import { useSelector } from 'react-redux';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { useNotificationStore } from '@/context/NotificationContext';
@@ -296,7 +296,7 @@ export default function HomeScreen() {
 
   const unreadCount = globalUnreadCount;
   
-  const scheduleLoading = dashboardLoading || !isDataFresh;
+  const scheduleLoading = dashboardLoading && !dashboardFetching;
 
   const visibleFeedingSchedules = feedingSchedules;
   const visibleWalkSchedules = walkSchedules;
@@ -557,7 +557,7 @@ export default function HomeScreen() {
     await completeVaccination(scheduleId);
   }, [completeVaccination]);
 
-  if (petCardLoading) {
+  if (petCardLoading && !pet) {
     return (
       <View style={styles.root}>
         <StatusBar style={isFocused ? "light" : "dark"} />
@@ -599,6 +599,15 @@ export default function HomeScreen() {
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={dashboardFetching && !dashboardLoading}
+            onRefresh={() => {
+              void refetchDashboard();
+            }}
+            tintColor={isPremium ? '#184F2E' : '#2E7D32'}
+          />
+        }
       >
         {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 

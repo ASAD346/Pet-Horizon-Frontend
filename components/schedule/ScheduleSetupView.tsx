@@ -9,6 +9,7 @@ import {
   Alert,
   Pressable,
   Animated,
+  RefreshControl,
 } from 'react-native';
 import { SafeModal } from '@/components/ui/SafeModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -249,7 +250,7 @@ export function ScheduleSetupView({
     setDefaultGrooming(options.defaultGrooming);
   }, []);
 
-  const { data: querySections, isLoading: schedulesQueryLoading, refetch: refetchSchedules } = useQuery({
+  const { data: querySections, isLoading: schedulesQueryLoading, isFetching: schedulesQueryFetching, refetch: refetchSchedules } = useQuery({
     queryKey: ['schedules', pet?._id],
     queryFn: async () => {
       if (!token || !pet?._id) return createInitialScheduleState();
@@ -262,7 +263,7 @@ export function ScheduleSetupView({
     staleTime: 0,
   });
 
-  const schedulesLoading = schedulesQueryLoading;
+  const schedulesLoading = schedulesQueryLoading && !schedulesQueryFetching;
 
   useEffect(() => {
     if (querySections) {
@@ -690,6 +691,15 @@ export function ScheduleSetupView({
           contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance + 80, flexGrow: 1 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl
+              refreshing={schedulesLoading && !schedulesQueryLoading}
+              onRefresh={() => {
+                if (pet?._id) void reloadSchedules(pet._id);
+              }}
+              tintColor={brandColor}
+            />
+          }
         >
          
 

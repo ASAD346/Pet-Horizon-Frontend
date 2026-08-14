@@ -210,7 +210,7 @@ export default function NotificationsScreen() {
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await reload();
+    await reload(true, true); // reload(force, silent)
     setRefreshing(false);
   }, [reload]);
 

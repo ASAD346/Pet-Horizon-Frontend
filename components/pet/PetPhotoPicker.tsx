@@ -91,7 +91,7 @@ export function PetPhotoPicker({ imageUri, onImageChange, readOnly }: PetPhotoPi
     return (
       <View style={styles.wrapper}>
         <View style={styles.avatarContainer}>
-          <View style={styles.circle}>
+          <View style={[styles.circle, styles.circleReadOnly]}>
             {imageUri ? (
               <Image source={{ uri: imageUri }} style={styles.preview} contentFit="cover" />
             ) : (
@@ -100,7 +100,6 @@ export function PetPhotoPicker({ imageUri, onImageChange, readOnly }: PetPhotoPi
               </View>
             )}
           </View>
-          {/* No + badge in read-only mode */}
         </View>
       </View>
     );
@@ -167,6 +166,21 @@ const styles = StyleSheet.create({
       },
       android: {
         elevation: 3,
+      },
+    }),
+  },
+  circleReadOnly: {
+    borderColor: '#10B981', // Emerald green border
+    borderWidth: 3.5,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#10B981',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.22,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 6,
       },
     }),
   },
