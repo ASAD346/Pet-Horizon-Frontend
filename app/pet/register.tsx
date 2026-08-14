@@ -470,20 +470,20 @@ export default function RegisterPetScreen() {
           </View>
         </SafeAreaView>
       ) : !hasEditPermission ? (
-        /* Professional high-end Read-Only Profile Card layout */
+        /* High-end Premium Companion Details View */
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          {/* Header with clear back button only */}
+          {/* Header */}
           <View style={styles.headerOuter}>
             <View style={styles.headerRow}>
               <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                 <Ionicons name="chevron-back" size={16} color="#0E3821" />
               </TouchableOpacity>
               <View style={styles.headerTextContainer}>
-                <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
-                  {petName ? `${petName}'s Profile` : 'Companion Overview'}
+                <AppText variant="h3" weight="800" color="#1E3A2B" style={styles.title}>
+                  {petName ? `${petName}'s Profile` : 'Companion Details'}
                 </AppText>
-                <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle}>
-                  View details managed by your pet admin.
+                <AppText variant="bodySmall" color="#475569" style={styles.subtitle}>
+                  Verified Companion Information
                 </AppText>
               </View>
             </View>
@@ -491,7 +491,7 @@ export default function RegisterPetScreen() {
 
           <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.readOnlyContainer}>
-              {/* Pet Avatar with Glowing Emerald Ring */}
+              {/* Pet Avatar with Glowing Ring */}
               <View style={styles.readOnlyAvatarSection}>
                 <PetPhotoPicker imageUri={photoUri} readOnly={true} />
                 <View style={styles.readOnlyPillBadge}>
@@ -502,35 +502,49 @@ export default function RegisterPetScreen() {
                 </View>
               </View>
 
-              {/* High-end unified details card */}
-              <View style={styles.readOnlyCardGrid}>
+              {/* High-end Info Deck */}
+              <View style={styles.premiumDeckCard}>
                 {/* Pet Name */}
-                <View style={styles.readOnlyInfoRow}>
-                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
-                    Pet Name
-                  </AppText>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                <View style={styles.deckItem}>
+                  <View style={styles.deckLeft}>
+                    <View style={[styles.deckIconWrapper, { backgroundColor: '#ECFDF5' }]}>
+                      <Ionicons name="text-outline" size={18} color="#059669" />
+                    </View>
+                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
+                      Pet Name
+                    </AppText>
+                  </View>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
                     {petName || '—'}
                   </AppText>
                 </View>
 
                 {/* Gender */}
-                <View style={styles.readOnlyInfoRow}>
-                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
-                    Gender
-                  </AppText>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                <View style={styles.deckItem}>
+                  <View style={styles.deckLeft}>
+                    <View style={[styles.deckIconWrapper, { backgroundColor: '#EFF6FF' }]}>
+                      <Ionicons name="transgender-outline" size={18} color="#2563EB" />
+                    </View>
+                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
+                      Gender
+                    </AppText>
+                  </View>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
                     {gender || '—'}
                   </AppText>
                 </View>
 
                 {/* Species */}
-                <View style={styles.readOnlyInfoRow}>
-                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
-                    Species
-                  </AppText>
-                  <View style={styles.readOnlySpeciesTag}>
-                    <Ionicons name="paw" size={12} color="#0F766E" style={{ marginRight: 4 }} />
+                <View style={styles.deckItem}>
+                  <View style={styles.deckLeft}>
+                    <View style={[styles.deckIconWrapper, { backgroundColor: '#FDF2F8' }]}>
+                      <Ionicons name="paw-outline" size={18} color="#DB2777" />
+                    </View>
+                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
+                      Species
+                    </AppText>
+                  </View>
+                  <View style={styles.deckTag}>
                     <AppText variant="caption" weight="800" color="#0F766E" style={{ textTransform: 'capitalize' }}>
                       {species || '—'}
                     </AppText>
@@ -538,31 +552,46 @@ export default function RegisterPetScreen() {
                 </View>
 
                 {/* Breed */}
-                <View style={styles.readOnlyInfoRow}>
-                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
-                    Breed
-                  </AppText>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                <View style={styles.deckItem}>
+                  <View style={styles.deckLeft}>
+                    <View style={[styles.deckIconWrapper, { backgroundColor: '#F5F5F4' }]}>
+                      <Ionicons name="git-branch-outline" size={18} color="#78716C" />
+                    </View>
+                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
+                      Breed
+                    </AppText>
+                  </View>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue} numberOfLines={1}>
                     {breed || '—'}
                   </AppText>
                 </View>
 
                 {/* Birthday */}
-                <View style={styles.readOnlyInfoRow}>
-                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
-                    Birthday
-                  </AppText>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                <View style={styles.deckItem}>
+                  <View style={styles.deckLeft}>
+                    <View style={[styles.deckIconWrapper, { backgroundColor: '#FEF3C7' }]}>
+                      <Ionicons name="calendar-outline" size={18} color="#D97706" />
+                    </View>
+                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
+                      Birthday
+                    </AppText>
+                  </View>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
                     {birthday ? birthday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}
                   </AppText>
                 </View>
 
                 {/* Weight */}
-                <View style={styles.readOnlyInfoRow}>
-                  <AppText variant="caption" weight="700" color="#475569" style={styles.readOnlyInfoLabel}>
-                    Weight
-                  </AppText>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.readOnlyInfoValue}>
+                <View style={styles.deckItem}>
+                  <View style={styles.deckLeft}>
+                    <View style={[styles.deckIconWrapper, { backgroundColor: '#F0FDF4' }]}>
+                      <Ionicons name="scale-outline" size={18} color="#16A34A" />
+                    </View>
+                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
+                      Weight
+                    </AppText>
+                  </View>
+                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
                     {weight ? `${weight} ${weightUnit.toUpperCase()}` : '—'}
                   </AppText>
                 </View>
@@ -897,37 +926,49 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontSize: 11,
   },
-  readOnlyCardGrid: {
+  premiumDeckCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    borderRadius: 24,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     borderWidth: 1,
-    borderColor: '#E8F5E9',
-    shadowColor: '#2E7D32',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 10,
-    elevation: 2,
-    gap: Spacing.md,
+    borderColor: '#E2E8F0',
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
+    gap: Spacing.sm,
   },
-  readOnlyInfoRow: {
+  deckItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    borderBottomColor: '#F8FAFC',
   },
-  readOnlyInfoLabel: {
-    letterSpacing: 0.5,
-  },
-  readOnlyInfoValue: {
-    fontSize: 15,
-  },
-  readOnlySpeciesTag: {
+  deckLeft: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
+  },
+  deckIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deckLabel: {
+    fontSize: 14,
+    color: '#64748B',
+  },
+  deckValue: {
+    fontSize: 15,
+    textAlign: 'right',
+  },
+  deckTag: {
     backgroundColor: '#DCFCE7',
     paddingHorizontal: 10,
     paddingVertical: 4,
