@@ -168,6 +168,10 @@ function MyCustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 }
 
 export default function TabLayout() {
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
+  const barBgColor = isPremium ? '#FFFDF0' : '#FFFFFF';
+
   return (
     <ContextGuard>
       <Tabs
@@ -175,6 +179,9 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           lazy: true,
+          sceneStyle: {
+            backgroundColor: barBgColor,
+          },
         }}
       >
         <Tabs.Screen name="index" />
