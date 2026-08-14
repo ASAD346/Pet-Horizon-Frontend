@@ -122,7 +122,7 @@ function PlanCard({
             </AppText>
           </AppText>
         </View>
-        {badge ? (
+        {badge && !isPopular ? (
           <View style={styles.saveBadge}>
             <AppText variant="caption" weight="800" color="#B47E00" style={{ fontSize: 9 }}>
               {badge}
