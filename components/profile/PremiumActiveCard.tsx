@@ -1,10 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { Radius, Spacing } from '@/constants/theme';
-import { ProfileTheme } from './profileTheme';
+import { Spacing } from '@/constants/theme';
 
 interface PremiumActiveCardProps {
   planName?: string;
@@ -19,113 +16,60 @@ export function PremiumActiveCard({ planName, expiresAt }: PremiumActiveCardProp
 
   return (
     <View style={styles.wrapper}>
-      <LinearGradient
-        colors={['#FFFDF6', '#FFF4D0']} // Champagne/Soft Gold Gradient
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.banner}
-      >
-        <View style={styles.header}>
-          <View style={styles.badge}>
-            <Ionicons name="star" size={10} color="#FFFFFF" />
-            <AppText variant="bodySmall" weight="800" color="#FFFFFF" style={styles.badgeText}>
-              ACTIVE
+      <View style={styles.banner}>
+        <View style={styles.mainRow}>
+          <View style={styles.planCol}>
+            <AppText variant="caption" color="rgba(255, 255, 255, 0.4)" weight="800" style={styles.label}>
+              ACTIVE SUBSCRIPTION
+            </AppText>
+            <AppText variant="bodySmall" weight="800" color="#FFFFFF">
+              {displayPlan}
             </AppText>
           </View>
-          <Ionicons name="diamond" size={24} color="#D4A017" />
-        </View>
 
-        <AppText variant="h2" weight="800" color="#5C4212" style={styles.title}>
-          {displayPlan}
-        </AppText>
-
-        <View style={styles.divider} />
-
-        <View style={styles.footer}>
-          <View style={styles.footerItem}>
-            <AppText variant="caption" color="#8A7550" weight="700">
-              RENEWAL DATE
+          <View style={styles.infoCol}>
+            <AppText variant="caption" color="rgba(255, 255, 255, 0.4)" weight="800" style={styles.label}>
+              RENEWS
             </AppText>
-            <AppText variant="body" weight="800" color="#2C200B">
+            <AppText variant="bodySmall" weight="800" color="#D4A017">
               {displayDate}
             </AppText>
           </View>
-          <View style={styles.footerItemRight}>
-            <AppText variant="caption" color="#8A7550" weight="700">
-              BENEFITS
-            </AppText>
-            <AppText variant="body" weight="800" color="#1B5E20">
-              Unlimited Access
-            </AppText>
-          </View>
         </View>
-      </LinearGradient>
+      </View>
     </View>
   );
 }
 
-const bannerShadow = Platform.select({
-  ios: {
-    shadowColor: '#5C4212',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-  },
-  android: { elevation: 3 },
-});
-
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-    borderRadius: Radius.xl,
-    ...bannerShadow,
+    marginBottom: Spacing.md,
   },
   banner: {
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
-    borderWidth: 1.5,
-    borderColor: '#D4A017',
+    backgroundColor: '#0F2E1E', // Solid premium dark forest green
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 160, 23, 0.2)', // subtle gold border
   },
-  header: {
+  mainRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
   },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1B5E20', // Forest green for contrast
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-    gap: 4,
+  planCol: {
+    flexDirection: 'column',
+    gap: 1,
   },
-  badgeText: {
-    fontSize: 10,
-    letterSpacing: 0.5,
-  },
-  title: {
-    fontSize: 22,
-    letterSpacing: 0.5,
-    marginBottom: Spacing.md,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(212, 160, 23, 0.25)',
-    marginBottom: Spacing.md,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  footerItem: {
-    gap: 2,
-  },
-  footerItemRight: {
+  infoCol: {
+    flexDirection: 'column',
     alignItems: 'flex-end',
-    gap: 2,
+    gap: 1,
+  },
+  label: {
+    fontSize: 8,
+    letterSpacing: 0.6,
   },
 });
