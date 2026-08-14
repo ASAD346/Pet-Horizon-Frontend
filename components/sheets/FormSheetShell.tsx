@@ -147,16 +147,7 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              {isReadOnly && !compact ? (
-                <View style={{ marginBottom: 14, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#FEF3C7', borderWidth: 1, borderColor: '#FCD34D', borderRadius: 12, flexDirection: 'row', alignItems: 'center' }}>
-                  <MaterialCommunityIcons name="lock-outline" size={16} color="#B45309" style={{ marginRight: 8 }} />
-                  <AppText variant="caption" weight="700" color="#B45309">
-                    Read-only access mode.
-                  </AppText>
-                </View>
-              ) : null}
-
-              <View pointerEvents="auto" style={isReadOnly ? { opacity: 0.85 } : undefined}>
+              <View pointerEvents={isReadOnly ? "none" : "auto"} style={isReadOnly ? { opacity: 0.65 } : undefined}>
                 {children}
               </View>
 
