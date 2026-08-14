@@ -86,26 +86,30 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
         </View>
       ) : (
         visibleActivities.map((item) => (
-          <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
-            <ColorIconBadge
-              color={item.color}
-              backgroundColor={item.bg}
-              materialIcon={item.icon}
-              size={44}
-              iconSize={22}
-              style={styles.iconBadge}
-            />
-            <View style={styles.textBlock}>
-              <AppText variant="bodySmall">
-                <Text style={{ fontWeight: 'bold', color: HomeTheme.text }}>
-                  {item.actorName}
-                </Text>
-                <Text style={{ color: HomeTheme.textMuted }}>
-                  {' '}{formatRawString(item.actionText)}
-                  {item.icon === 'walk' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
-                </Text>
-              </AppText>
-              <AppText variant="caption" color={HomeTheme.textMuted}>
+          <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+              <ColorIconBadge
+                color={item.color}
+                backgroundColor={item.bg}
+                materialIcon={item.icon}
+                size={44}
+                iconSize={22}
+                style={styles.iconBadge}
+              />
+              <View style={styles.textBlock}>
+                <AppText variant="bodySmall">
+                  <Text style={{ fontWeight: 'bold', color: HomeTheme.text }}>
+                    {item.actorName}
+                  </Text>
+                  <Text style={{ color: HomeTheme.textMuted }}>
+                    {' '}{formatRawString(item.actionText)}
+                    {item.icon === 'walk' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
+                  </Text>
+                </AppText>
+              </View>
+            </View>
+            <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
+              <AppText variant="caption" color={HomeTheme.textMuted} style={{ fontSize: 10 }}>
                 {item.time}
               </AppText>
             </View>

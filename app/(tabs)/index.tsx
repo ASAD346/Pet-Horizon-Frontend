@@ -375,10 +375,19 @@ export default function HomeScreen() {
       const date = new Date(entry.createdAt);
       const dayEntry = formatInTimeZone(date, timezone, 'yyyy-MM-dd');
       const dayNow = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
-      const isToday = dayEntry === dayNow;
-      const timeLabel = isToday
-        ? formatInTimeZone(date, timezone, 'h:mm a')
-        : formatInTimeZone(date, timezone, 'MMM d');
+      
+      let timeLabel = formatInTimeZone(date, timezone, 'h:mm a');
+      if (dayEntry !== dayNow) {
+        const entryMidnight = new Date(dayEntry + 'T00:00:00');
+        const nowMidnight = new Date(dayNow + 'T00:00:00');
+        const diffTime = Math.abs(nowMidnight.getTime() - entryMidnight.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) {
+          timeLabel = 'Yesterday';
+        } else {
+          timeLabel = `${diffDays} days ago`;
+        }
+      }
 
       const actorName = entry.userId?._id === user?._id || entry.userId === user?._id 
         ? 'You' 
