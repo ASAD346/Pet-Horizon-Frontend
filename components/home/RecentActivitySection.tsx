@@ -35,7 +35,13 @@ interface RecentActivitySectionProps {
 function formatRawString(text: string) {
   if (!text) return '';
   // Strip any existing (X min) duration suffixes to avoid duplicate display
-  const cleaned = text.replace(/\s*\(\d+\s*min\)/gi, '');
+  const cleaned = text.replace(/\s*\(\d+\s*min\)/gi, '').trim();
+  
+  if (cleaned.startsWith('added journal:')) {
+    const detail = cleaned.replace(/^added journal:\s*/i, '');
+    return `added journal: ${getTaskDisplayName(detail)}`;
+  }
+  
   if (cleaned.includes(':')) {
     const parts = cleaned.split(':');
     const prefix = parts[0].trim();
