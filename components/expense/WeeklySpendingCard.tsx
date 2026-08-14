@@ -8,7 +8,7 @@ import { Radius, Spacing } from '../../constants/theme';
 import { parseSafeDate } from '@/lib/timezone';
 
 const FREE_GRAD: readonly [string, string] = ['#2E7D32', '#1B5E20']; // Rich emerald green gradient
-const PREM_GRAD: readonly [string, string, string] = ['#151517', '#1E1E21', '#2C2C30']; // Sleek midnight carbon gradient
+const PREM_GRAD: readonly [string, string, string] = ['#0A2617', '#144026', '#1D5A37']; // Deep premium forest/emerald green gradient
 
 interface WeeklySpendingCardProps {
   periodLabel: string;
@@ -62,6 +62,7 @@ export function WeeklySpendingCard({
       {
         borderColor: isPremium ? '#D4A017' : 'rgba(255, 255, 255, 0.08)',
         borderWidth: isPremium ? 1.5 : 0.5,
+        backgroundColor: isPremium ? '#0A2617' : '#1B5E20',
       }
     ]}>
       <LinearGradient
