@@ -8,11 +8,6 @@
     "scheme": "pethorizon",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "androidNavigationBar": {
-      "visible": "always",
-      "barStyle": "dark-content",
-      "backgroundColor": "#FFFDF0"
-    },
     "ios": {
       "supportsTablet": true,
       "associatedDomains": [

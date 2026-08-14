@@ -11,9 +11,8 @@ import { ToastHost } from '@/components/ui/ToastHost';
 import { ensureNotificationHandler, registerBackgroundFetchAsync } from '@/lib/push/notificationSetup';
 import { store } from '@/redux/store';
 import { useColorScheme } from '../hooks/use-color-scheme';
-import { AppState, Platform } from 'react-native';
+import { AppState } from 'react-native';
 import React, { useEffect } from 'react';
-import * as NavigationBar from 'expo-navigation-bar';
 import { NotificationProvider, useNotificationStore } from '@/context/NotificationContext';
 import { useAuth } from '@/hooks/useAuth';
 import { ActiveWalkProvider } from '@/context/ActiveWalkContext';
@@ -44,21 +43,6 @@ function InnerLayout() {
   const { syncWithServer } = useNotificationStore();
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      const NB = NavigationBar as any;
-      if (typeof NB.setBackgroundColorAsync === 'function') {
-        void NB.setBackgroundColorAsync('#FFFDF0').catch(() => {});
-      }
-      if (typeof NB.setButtonStyleAsync === 'function') {
-        void NB.setButtonStyleAsync('dark').catch(() => {});
-      } else if (typeof NB.setStyle === 'function') {
-        try {
-          NB.setStyle('dark');
-        } catch (e) {
-          console.warn('NavigationBar.setStyle failed', e);
-        }
-      }
-    }
     runNotificationSystemAudit().catch(() => {});
   }, []);
 
