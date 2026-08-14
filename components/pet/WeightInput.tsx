@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Platform } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { Palette, Radius, Spacing } from '../../constants/theme';
 
@@ -10,10 +10,28 @@ interface WeightInputProps {
   unit: WeightUnit;
   onValueChange: (text: string) => void;
   onUnitChange: (unit: WeightUnit) => void;
+  readOnly?: boolean;
 }
 
-export function WeightInput({ value, unit, onValueChange, onUnitChange }: WeightInputProps) {
+export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly }: WeightInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+
+  // ── Read-only info card: show "10 kg" as a single line ──────
+  if (readOnly) {
+    const displayWeight = value ? `${value} ${unit.toUpperCase()}` : '—';
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Weight
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
+            {displayWeight}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -79,6 +97,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     marginLeft: 4,
   },
+  // ── Editable row ────────────────────────────────────────────
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -141,5 +160,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 2,
+  },
+  // ── Read-only info card ──────────────────────────────────────
+  readOnlyCard: {
+    height: 52,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#D1FAE5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#5CB35D',
+    paddingHorizontal: Spacing.md,
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#5CB35D',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
+  },
+  readOnlyText: {
+    fontSize: 14,
   },
 });

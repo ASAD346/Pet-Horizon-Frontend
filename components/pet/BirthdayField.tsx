@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Palette, Spacing } from '../../constants/theme';
@@ -9,6 +9,7 @@ interface BirthdayFieldProps {
   value: Date | null;
   onChange: (date: Date) => void;
   error?: string;
+  readOnly?: boolean;
 }
 
 function formatDate(date: Date) {
@@ -19,8 +20,25 @@ function formatDate(date: Date) {
   });
 }
 
-export function BirthdayField({ value, onChange, error }: BirthdayFieldProps) {
+export function BirthdayField({ value, onChange, error, readOnly }: BirthdayFieldProps) {
   const [showPicker, setShowPicker] = useState(false);
+
+  // ── Read-only info card ──────────────────────────────────────
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Birthday
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
+            {value ? formatDate(value) : '—'}
+          </AppText>
+          <Ionicons name="lock-closed-outline" size={16} color="#A3C8A4" />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -70,6 +88,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     marginLeft: 4,
   },
+  // ── Editable field ──────────────────────────────────────────
   field: {
     height: 52,
     backgroundColor: '#FCFCFD',
@@ -96,5 +115,32 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: Spacing.xs,
     marginLeft: 4,
+  },
+  // ── Read-only info card ──────────────────────────────────────
+  readOnlyCard: {
+    height: 52,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#D1FAE5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#5CB35D',
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#5CB35D',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
+  },
+  readOnlyText: {
+    fontSize: 14,
+    flex: 1,
   },
 });

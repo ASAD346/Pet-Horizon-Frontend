@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
@@ -15,6 +16,7 @@ interface BreedSelectorProps {
   breeds: string[];
   loading?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
   error?: string;
   onChange: (breed: string) => void;
 }
@@ -24,6 +26,7 @@ export function BreedSelector({
   breeds,
   loading = false,
   disabled = false,
+  readOnly = false,
   error,
   onChange,
 }: BreedSelectorProps) {
@@ -31,6 +34,22 @@ export function BreedSelector({
 
   const placeholder = loading ? 'Loading breeds…' : breeds.length ? 'Select breed' : 'No breeds available';
   const displayValue = value || placeholder;
+
+  // ── Read-only info card ──────────────────────────────────────
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Breed
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText} numberOfLines={1}>
+            {value || '—'}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -90,6 +109,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     marginLeft: 4,
   },
+  // ── Editable field ──────────────────────────────────────────
   field: {
     height: 52,
     backgroundColor: '#FCFCFD',
@@ -123,5 +143,29 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: Spacing.xs,
     marginLeft: 4,
+  },
+  // ── Read-only info card ──────────────────────────────────────
+  readOnlyCard: {
+    height: 52,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#D1FAE5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#5CB35D',
+    paddingHorizontal: Spacing.md,
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#5CB35D',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
+  },
+  readOnlyText: {
+    fontSize: 14,
   },
 });

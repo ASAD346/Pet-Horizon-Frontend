@@ -11,9 +11,10 @@ import { PhotoPickerBottomSheet } from '@/components/shared/PhotoPickerBottomShe
 interface PetPhotoPickerProps {
   imageUri?: string | null;
   onImageChange?: (uri: string | null) => void;
+  readOnly?: boolean;
 }
 
-export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps) {
+export function PetPhotoPicker({ imageUri, onImageChange, readOnly }: PetPhotoPickerProps) {
   const [isModalVisible, setModalVisible] = useState(false);
 
   const applyPickedUri = useCallback(
@@ -84,6 +85,26 @@ export function PetPhotoPicker({ imageUri, onImageChange }: PetPhotoPickerProps)
 
     setModalVisible(true);
   }, [imageUri, onImageChange, pickFromLibrary]);
+
+  // ── Read-only: plain avatar circle, no upload badge ──────────
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <View style={styles.avatarContainer}>
+          <View style={styles.circle}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.preview} contentFit="cover" />
+            ) : (
+              <View style={styles.placeholderContainer}>
+                <MaterialCommunityIcons name="paw" size={38} color="#81C784" />
+              </View>
+            )}
+          </View>
+          {/* No + badge in read-only mode */}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>

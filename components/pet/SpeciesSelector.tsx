@@ -4,6 +4,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Platform,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
@@ -17,6 +18,7 @@ interface SpeciesSelectorProps {
   onChange: (species: string) => void;
   loading?: boolean;
   disabled?: boolean;
+  readOnly?: boolean;
   error?: string;
 }
 
@@ -28,6 +30,7 @@ export function SpeciesSelector({
   onChange,
   loading = false,
   disabled = false,
+  readOnly = false,
   error,
 }: SpeciesSelectorProps) {
   // Sort by popularity: Dog, Cat, Bird, etc.
@@ -40,6 +43,36 @@ export function SpeciesSelector({
       return valA - valB;
     });
   }, [speciesList]);
+
+  // ── Read-only: show only the selected species as a status badge ───────────
+  if (readOnly) {
+    const icon = value ? getSpeciesIcon(value) : null;
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Species
+        </AppText>
+        <View style={styles.readOnlyRow}>
+          {icon ? (
+            <View style={styles.readOnlyBadge}>
+              <MaterialCommunityIcons name={icon} size={24} color="#2E7D32" />
+              <AppText
+                variant="caption"
+                color="#1B5E20"
+                weight="800"
+                style={styles.readOnlyBadgeLabel}
+                numberOfLines={1}
+              >
+                {value}
+              </AppText>
+            </View>
+          ) : (
+            <AppText variant="bodySmall" color={Palette.gray[500]}>—</AppText>
+          )}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -153,5 +186,34 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: Spacing.xs,
     marginLeft: 4,
+  },
+  // ── Read-only single-badge ────────────────────────────────────
+  readOnlyRow: {
+    flexDirection: 'row',
+    paddingVertical: 2,
+  },
+  readOnlyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#4CAF50',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  readOnlyBadgeLabel: {
+    fontSize: 13,
+    textTransform: 'capitalize',
   },
 });

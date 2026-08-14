@@ -11,10 +11,26 @@ import { Palette, Radius, Spacing } from '../../constants/theme';
 
 interface PetLabeledInputProps extends Pick<TextInputProps, 'value' | 'onChangeText' | 'placeholder' | 'keyboardType'> {
   label: string;
+  readOnly?: boolean;
 }
 
-export function PetLabeledInput({ label, value, onChangeText, placeholder, keyboardType }: PetLabeledInputProps) {
+export function PetLabeledInput({ label, value, onChangeText, placeholder, keyboardType, readOnly }: PetLabeledInputProps) {
   const [isFocused, setIsFocused] = useState(false);
+
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          {label}
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
+            {value || '—'}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -50,6 +66,7 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     marginLeft: 4,
   },
+  // ── Editable input ───────────────────────────────────────────
   inputContainer: {
     height: 52,
     backgroundColor: '#FCFCFD',
@@ -79,5 +96,29 @@ const styles = StyleSheet.create({
     color: Palette.gray[800],
     fontWeight: '600',
     paddingVertical: 0,
+  },
+  // ── Read-only info card ──────────────────────────────────────
+  readOnlyCard: {
+    height: 52,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#D1FAE5',
+    borderLeftWidth: 3,
+    borderLeftColor: '#5CB35D',
+    paddingHorizontal: Spacing.md,
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#5CB35D',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
+  },
+  readOnlyText: {
+    fontSize: 14,
   },
 });

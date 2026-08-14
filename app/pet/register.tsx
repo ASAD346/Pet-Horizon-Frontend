@@ -480,20 +480,25 @@ export default function RegisterPetScreen() {
 
               {!hasEditPermission && (
                 <View style={styles.viewOnlyBanner}>
-                  <Ionicons name="information-circle" size={20} color="#4A5568" />
-                  <AppText variant="bodySmall" color="#4A5568" style={styles.viewOnlyText}>
-                    This profile is view-only. Only the pet owner can make changes.
+                  <Ionicons name="lock-closed" size={16} color="#2E7D32" />
+                  <AppText variant="bodySmall" color="#2E7D32" weight="700" style={styles.viewOnlyText}>
+                    View only — only the pet owner can edit this profile.
                   </AppText>
                 </View>
               )}
 
-              <View pointerEvents={hasEditPermission ? 'auto' : 'none'} style={!hasEditPermission && { opacity: 0.6 }}>
-                <PetPhotoPicker imageUri={photoUri} onImageChange={setPhotoUri} />
+              {/* Photo avatar — readOnly hides the + badge */}
+              <PetPhotoPicker
+                imageUri={photoUri}
+                onImageChange={setPhotoUri}
+                readOnly={!hasEditPermission}
+              />
 
               <PetLabeledInput
                 label="Pet Name"
                 placeholder="Pet Name"
                 value={petName}
+                readOnly={!hasEditPermission}
                 onChangeText={(text) => {
                   setPetName(text);
                   if (fieldErrors.petName) {
@@ -501,20 +506,25 @@ export default function RegisterPetScreen() {
                   }
                 }}
               />
-              {fieldErrors.petName ? (
+              {!hasEditPermission ? null : fieldErrors.petName ? (
                 <AppText variant="caption" color="#C62828" style={styles.inlineError}>
                   {fieldErrors.petName}
                 </AppText>
               ) : null}
 
-              <GenderSelect value={gender} onChange={setGender} />
+              <GenderSelect
+                value={gender}
+                onChange={setGender}
+                readOnly={!hasEditPermission}
+              />
 
               <SpeciesSelector
                 speciesList={speciesList}
                 value={species}
                 onChange={handleSpeciesChange}
                 loading={speciesLoading}
-                disabled={isEditMode}
+                disabled={isEditMode && hasEditPermission}
+                readOnly={!hasEditPermission}
                 error={fieldErrors.species}
               />
 
@@ -522,7 +532,8 @@ export default function RegisterPetScreen() {
                 value={breed}
                 breeds={breeds}
                 loading={breedsLoading}
-                disabled={isEditMode || !species}
+                disabled={(isEditMode || !species) && hasEditPermission}
+                readOnly={!hasEditPermission}
                 error={fieldErrors.breed}
                 onChange={(next) => {
                   setBreed(next);
@@ -534,6 +545,7 @@ export default function RegisterPetScreen() {
 
               <BirthdayField
                 value={birthday}
+                readOnly={!hasEditPermission}
                 onChange={(date) => {
                   setBirthday(date);
                   if (fieldErrors.birthday) {
@@ -546,39 +558,51 @@ export default function RegisterPetScreen() {
               <WeightInput
                 value={weight}
                 unit={weightUnit}
+                readOnly={!hasEditPermission}
                 onValueChange={setWeight}
                 onUnitChange={setWeightUnit}
               />
-              {fieldErrors.weight ? (
+              {!hasEditPermission ? null : fieldErrors.weight ? (
                 <AppText variant="caption" color="#C62828" style={styles.inlineError}>
                   {fieldErrors.weight}
                 </AppText>
               ) : null}
-              </View>
             </View>
           </ScrollView>
 
           <View style={styles.footer}>
             <View style={[styles.formContainer, styles.footerRow]}>
-              {isEditMode ? (
-                <TouchableOpacity
-                  onPress={handleDeletePet}
-                  disabled={loading || !hasEditPermission}
-                  style={styles.smallDeleteButton}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#DC2626" />
-                </TouchableOpacity>
-              ) : null}
-              <CustomButton
-                title={isEditMode ? 'Save Changes' : 'Add Pet'}
-                onPress={handleAddPet}
-                isLoading={loading}
-                disabled={speciesLoading || loading || !hasEditPermission}
-                variant="primary"
-                style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
-                textStyle={styles.addButtonText}
-              />
+              {!hasEditPermission ? (
+                /* View-only footer: clean pill — no actions */
+                <View style={styles.viewOnlyFooterPill}>
+                  <Ionicons name="eye-outline" size={16} color="#5CB35D" />
+                  <AppText variant="bodySmall" weight="700" color="#2E7D32" style={styles.viewOnlyFooterText}>
+                    View Only
+                  </AppText>
+                </View>
+              ) : (
+                <>
+                  {isEditMode ? (
+                    <TouchableOpacity
+                      onPress={handleDeletePet}
+                      disabled={loading}
+                      style={styles.smallDeleteButton}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                    </TouchableOpacity>
+                  ) : null}
+                  <CustomButton
+                    title={isEditMode ? 'Save Changes' : 'Add Pet'}
+                    onPress={handleAddPet}
+                    isLoading={loading}
+                    disabled={speciesLoading || loading}
+                    variant="primary"
+                    style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
+                    textStyle={styles.addButtonText}
+                  />
+                </>
+              )}
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -712,16 +736,33 @@ const styles = StyleSheet.create({
   viewOnlyBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#EDFDF2',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: Spacing.lg,
-    borderWidth: 1,
-    borderColor: '#C6F6D5',
+    backgroundColor: '#F0FDF4',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    marginBottom: Spacing.md,
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    gap: 8,
   },
   viewOnlyText: {
-    marginLeft: 8,
     flex: 1,
+    lineHeight: 16,
+  },
+  viewOnlyFooterPill: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 52,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+  },
+  viewOnlyFooterText: {
+    fontSize: 14,
   },
   // ── Track-selection landing ──────────────────────────────────
   trackContainer: {
