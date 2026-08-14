@@ -1,7 +1,8 @@
-import { useSubscription } from '@/context/SubscriptionContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useAppThemeColor() {
-  const { isPremium } = useSubscription();
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
   
   // Vibrant brand green for Free, luxurious dark emerald green for Premium
   const accentColor = isPremium ? '#184F2E' : '#5CB35D';

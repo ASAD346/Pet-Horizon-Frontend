@@ -229,8 +229,6 @@ const PREMIUM_GRADIENT: readonly [string, string, string] = ['#0A2419', '#114227
 /** Shared accent for outline/text variants */
 const ACCENT_GREEN = '#114227';
 
-import { useSubscription } from '@/context/SubscriptionContext';
-
 export function CustomButton({
   title,
   onPress,
@@ -242,7 +240,8 @@ export function CustomButton({
   textStyle,
   accessibilityLabel,
 }: CustomButtonProps) {
-  const { isPremium } = useSubscription();
+  const { user } = useAuth();
+  const isPremium = user?.premiumStatus === 'premium';
 
   const scale = useSharedValue(1);
 

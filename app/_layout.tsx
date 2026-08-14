@@ -86,8 +86,6 @@ function InnerLayout() {
   );
 }
 
-import { SubscriptionProvider } from '@/context/SubscriptionContext';
-
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -95,11 +93,9 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <NotificationProvider>
             <ActiveWalkProvider>
-              <SubscriptionProvider>
-                <AuthBootstrap />
-                <ToastHost />
-                <InnerLayout />
-              </SubscriptionProvider>
+              <AuthBootstrap />
+              <ToastHost />
+              <InnerLayout />
             </ActiveWalkProvider>
           </NotificationProvider>
         </SafeAreaProvider>
