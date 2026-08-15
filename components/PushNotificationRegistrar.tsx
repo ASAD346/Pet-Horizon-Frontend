@@ -85,7 +85,9 @@ export function PushNotificationRegistrar() {
         const scheduleId = String(data?.relatedScheduleItemId || data?.id || '');
         const type = data?.type;
 
-        if (actionIdentifier === 'mark-done' && scheduleId && token) {
+        if (data?.screen) {
+          router.push(data.screen as any);
+        } else if (actionIdentifier === 'mark-done' && scheduleId && token) {
           (async () => {
             try {
               if (type === 'feeding') {

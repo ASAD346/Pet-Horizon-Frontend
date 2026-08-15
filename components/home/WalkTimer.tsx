@@ -114,7 +114,7 @@ export function WalkTimer({
               body: '🦮 Walk time is complete! Tap to open the app and log your activity.',
               sound: true,
               categoryIdentifier: 'care-alert',
-              data: { id: scheduleId, type: 'walk' },
+              data: { id: scheduleId, type: 'walk', screen: '/explore' },
             },
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

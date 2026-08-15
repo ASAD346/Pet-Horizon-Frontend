@@ -22,6 +22,7 @@ export async function runNotificationSystemAudit() {
         title: 'Pet Horizon Audit 🐾',
         body: 'This is a test notification for the verification audit.',
         sound: true,
+        data: { screen: '/explore' },
       },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
@@ -57,7 +58,7 @@ export async function runNotificationSystemAudit() {
     const ghostNotifId = `feeding-${ghostScheduleId}`;
     await Notifications.scheduleNotificationAsync({
       identifier: ghostNotifId,
-      content: { title: 'Ghost Alert', body: 'Test' },
+      content: { title: 'Ghost Alert', body: 'Test', data: { screen: '/explore' } },
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
         seconds: 3600,
