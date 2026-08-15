@@ -82,22 +82,7 @@ export async function ensureNotificationHandler(): Promise<void> {
   });
 
   if (Platform.OS !== 'web') {
-    Notifications.setNotificationCategoryAsync('care-alert', [
-      {
-        identifier: 'mark-done',
-        buttonTitle: 'Mark as Done 🐾',
-        options: {
-          opensAppToForeground: false,
-        },
-      },
-      {
-        identifier: 'snooze',
-        buttonTitle: 'Snooze 5m ⏰',
-        options: {
-          opensAppToForeground: false,
-        },
-      },
-    ]).catch(() => {});
+    Notifications.setNotificationCategoryAsync('care-alert', []).catch(() => {});
   }
   handlerConfigured = true;
 }
