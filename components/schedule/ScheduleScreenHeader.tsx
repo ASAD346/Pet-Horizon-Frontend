@@ -78,14 +78,17 @@ export function ScheduleScreenHeader({
                 >
                   Care Schedules
                 </AppText>
-                <AppText 
-                  variant="caption" 
-                  weight="800" 
-                  color="rgba(255, 255, 255, 0.7)" 
-                  style={[styles.eyebrowText, { marginTop: 2 }]}
-                >
-                  DAILY ROUTINE
-                </AppText>
+                <View style={[
+                  styles.eyebrowChip,
+                  isPremium && {
+                    borderColor: 'rgba(212, 160, 23, 0.35)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                  },
+                ]}>
+                  <AppText variant="caption" weight="800" color="#FFFFFF" style={styles.eyebrowText}>
+                    DAILY ROUTINE
+                  </AppText>
+                </View>
               </View>
             </View>
 
