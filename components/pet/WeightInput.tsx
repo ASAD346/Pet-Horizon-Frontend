@@ -16,23 +16,6 @@ interface WeightInputProps {
 export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly }: WeightInputProps) {
   const [isFocused, setIsFocused] = useState(false);
 
-  // ── Read-only info card: show "10 kg" as a single line ──────
-  if (readOnly) {
-    const displayWeight = value ? `${value} ${unit.toUpperCase()}` : '—';
-    return (
-      <View style={styles.wrapper}>
-        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
-          Weight
-        </AppText>
-        <View style={styles.readOnlyCard}>
-          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
-            {displayWeight}
-          </AppText>
-        </View>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
@@ -43,6 +26,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
           style={[
             styles.valueInputContainer,
             isFocused && styles.containerFocused,
+            readOnly && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
           ]}
         >
           <TextInput
@@ -53,14 +37,20 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
             placeholderTextColor={Palette.gray[400]}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            style={styles.valueInput}
+            style={[styles.valueInput, readOnly && { color: Palette.gray[500] }]}
+            editable={!readOnly}
           />
         </View>
-        <View style={styles.unitToggle}>
+        <View style={[styles.unitToggle, readOnly && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }]}>
           <TouchableOpacity
-            style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}
-            onPress={() => onUnitChange('kg')}
-            activeOpacity={0.85}
+            style={[
+              styles.unitBtn, 
+              unit === 'kg' && styles.unitBtnActive,
+              readOnly && unit === 'kg' && { backgroundColor: '#A2D0A4' }
+            ]}
+            onPress={() => !readOnly && onUnitChange('kg')}
+            activeOpacity={readOnly ? 1 : 0.85}
+            disabled={readOnly}
           >
             <AppText
               variant="bodySmall"
@@ -71,9 +61,14 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.unitBtn, unit === 'lbs' && styles.unitBtnActive]}
-            onPress={() => onUnitChange('lbs')}
-            activeOpacity={0.85}
+            style={[
+              styles.unitBtn, 
+              unit === 'lbs' && styles.unitBtnActive,
+              readOnly && unit === 'lbs' && { backgroundColor: '#A2D0A4' }
+            ]}
+            onPress={() => !readOnly && onUnitChange('lbs')}
+            activeOpacity={readOnly ? 1 : 0.85}
+            disabled={readOnly}
           >
             <AppText
               variant="bodySmall"

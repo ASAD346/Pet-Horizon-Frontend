@@ -467,138 +467,7 @@ export default function RegisterPetScreen() {
             <ActivityIndicator size="large" color="#5CB35D" />
           </View>
         </SafeAreaView>
-      ) : !hasEditPermission ? (
-        /* High-end Premium Companion Details View */
-        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-          {/* Header */}
-          <View style={styles.headerOuter}>
-            <View style={styles.headerRow}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                <Ionicons name="chevron-back" size={16} color="#0E3821" />
-              </TouchableOpacity>
-              <View style={styles.headerTextContainer}>
-                <AppText variant="h3" weight="800" color="#1E3A2B" style={styles.title}>
-                  {petName ? `${petName}'s Profile` : 'Companion Details'}
-                </AppText>
-                <AppText variant="bodySmall" color="#475569" style={styles.subtitle}>
-                  Verified Companion Information
-                </AppText>
-              </View>
-            </View>
-          </View>
-
-          <ScrollView style={styles.flex} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            <View style={styles.readOnlyContainer}>
-              {/* Pet Avatar with Glowing Ring */}
-              <View style={styles.readOnlyAvatarSection}>
-                <PetPhotoPicker imageUri={photoUri} readOnly={true} />
-                <View style={styles.readOnlyPillBadge}>
-                  <Ionicons name="shield-checkmark" size={12} color="#0F766E" />
-                  <AppText variant="caption" weight="800" color="#0F766E" style={styles.readOnlyPillBadgeText}>
-                    Verified Member Access
-                  </AppText>
-                </View>
-              </View>
-
-              {/* High-end Info Deck */}
-              <View style={styles.premiumDeckCard}>
-                {/* Pet Name */}
-                <View style={styles.deckItem}>
-                  <View style={styles.deckLeft}>
-                    <View style={[styles.deckIconWrapper, { backgroundColor: '#ECFDF5' }]}>
-                      <Ionicons name="text-outline" size={18} color="#059669" />
-                    </View>
-                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
-                      Pet Name
-                    </AppText>
-                  </View>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
-                    {petName || '—'}
-                  </AppText>
-                </View>
-
-                {/* Gender */}
-                <View style={styles.deckItem}>
-                  <View style={styles.deckLeft}>
-                    <View style={[styles.deckIconWrapper, { backgroundColor: '#EFF6FF' }]}>
-                      <Ionicons name="transgender-outline" size={18} color="#2563EB" />
-                    </View>
-                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
-                      Gender
-                    </AppText>
-                  </View>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
-                    {gender || '—'}
-                  </AppText>
-                </View>
-
-                {/* Species */}
-                <View style={styles.deckItem}>
-                  <View style={styles.deckLeft}>
-                    <View style={[styles.deckIconWrapper, { backgroundColor: '#FDF2F8' }]}>
-                      <Ionicons name="paw-outline" size={18} color="#DB2777" />
-                    </View>
-                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
-                      Species
-                    </AppText>
-                  </View>
-                  <View style={styles.deckTag}>
-                    <AppText variant="caption" weight="800" color="#0F766E" style={{ textTransform: 'capitalize' }}>
-                      {species || '—'}
-                    </AppText>
-                  </View>
-                </View>
-
-                {/* Breed */}
-                <View style={styles.deckItem}>
-                  <View style={styles.deckLeft}>
-                    <View style={[styles.deckIconWrapper, { backgroundColor: '#F5F5F4' }]}>
-                      <Ionicons name="git-branch-outline" size={18} color="#78716C" />
-                    </View>
-                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
-                      Breed
-                    </AppText>
-                  </View>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue} numberOfLines={1}>
-                    {breed || '—'}
-                  </AppText>
-                </View>
-
-                {/* Birthday */}
-                <View style={styles.deckItem}>
-                  <View style={styles.deckLeft}>
-                    <View style={[styles.deckIconWrapper, { backgroundColor: '#FEF3C7' }]}>
-                      <Ionicons name="calendar-outline" size={18} color="#D97706" />
-                    </View>
-                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
-                      Birthday
-                    </AppText>
-                  </View>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
-                    {birthday ? birthday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}
-                  </AppText>
-                </View>
-
-                {/* Weight */}
-                <View style={styles.deckItem}>
-                  <View style={styles.deckLeft}>
-                    <View style={[styles.deckIconWrapper, { backgroundColor: '#F0FDF4' }]}>
-                      <Ionicons name="scale-outline" size={18} color="#16A34A" />
-                    </View>
-                    <AppText variant="body" weight="700" color="#475569" style={styles.deckLabel}>
-                      Weight
-                    </AppText>
-                  </View>
-                  <AppText variant="body" weight="800" color="#0F172A" style={styles.deckValue}>
-                    {weight ? `${weight} ${weightUnit.toUpperCase()}` : '—'}
-                  </AppText>
-                </View>
-              </View>
-            </View>
-          </ScrollView>
-        </SafeAreaView>
       ) : (
-
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -607,17 +476,21 @@ export default function RegisterPetScreen() {
           {/* Fixed Top Header */}
           <View style={styles.headerOuter}>
             <View style={styles.headerRow}>
-              {(isEditMode || isAddMode) && (
+              {(isEditMode || isAddMode || !hasEditPermission) && (
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                   <Ionicons name="chevron-back" size={16} color="#0E3821" />
                 </TouchableOpacity>
               )}
               <View style={styles.headerTextContainer}>
                 <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
-                  {isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!'}
+                  {!hasEditPermission
+                    ? (petName ? `${petName}'s Profile` : 'Companion Details')
+                    : (isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!')}
                 </AppText>
                 <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle}>
-                  Let&apos;s create a profile to help you track their healthy lifestyle.
+                  {!hasEditPermission
+                    ? 'Verified Companion Information'
+                    : "Let's create a profile to help you track their healthy lifestyle."}
                 </AppText>
               </View>
             </View>
@@ -635,14 +508,14 @@ export default function RegisterPetScreen() {
               <PetPhotoPicker
                 imageUri={photoUri}
                 onImageChange={setPhotoUri}
-                readOnly={false}
+                readOnly={!hasEditPermission}
               />
 
               <PetLabeledInput
                 label="Pet Name"
                 placeholder="Pet Name"
                 value={petName}
-                readOnly={false}
+                readOnly={!hasEditPermission}
                 onChangeText={(text) => {
                   setPetName(text);
                   if (fieldErrors.petName) {
@@ -659,7 +532,7 @@ export default function RegisterPetScreen() {
               <GenderSelect
                 value={gender}
                 onChange={setGender}
-                readOnly={false}
+                readOnly={!hasEditPermission}
               />
 
               <SpeciesSelector
@@ -667,8 +540,8 @@ export default function RegisterPetScreen() {
                 value={species}
                 onChange={handleSpeciesChange}
                 loading={speciesLoading}
-                disabled={isEditMode}
-                readOnly={false}
+                disabled={isEditMode || !hasEditPermission}
+                readOnly={!hasEditPermission}
                 error={fieldErrors.species}
               />
 
@@ -676,8 +549,8 @@ export default function RegisterPetScreen() {
                 value={breed}
                 breeds={breeds}
                 loading={breedsLoading}
-                disabled={isEditMode || !species}
-                readOnly={false}
+                disabled={isEditMode || !species || !hasEditPermission}
+                readOnly={!hasEditPermission}
                 error={fieldErrors.breed}
                 onChange={(next) => {
                   setBreed(next);
@@ -689,7 +562,7 @@ export default function RegisterPetScreen() {
 
               <BirthdayField
                 value={birthday}
-                readOnly={false}
+                readOnly={!hasEditPermission}
                 onChange={(date) => {
                   setBirthday(date);
                   if (fieldErrors.birthday) {
@@ -702,7 +575,7 @@ export default function RegisterPetScreen() {
               <WeightInput
                 value={weight}
                 unit={weightUnit}
-                readOnly={false}
+                readOnly={!hasEditPermission}
                 onValueChange={setWeight}
                 onUnitChange={setWeightUnit}
               />
@@ -714,32 +587,33 @@ export default function RegisterPetScreen() {
             </View>
           </ScrollView>
 
-          <View style={styles.footer}>
-            <View style={[styles.formContainer, styles.footerRow]}>
-              {isEditMode ? (
-                <TouchableOpacity
-                  onPress={handleDeletePet}
-                  disabled={loading}
-                  style={styles.smallDeleteButton}
-                  activeOpacity={0.8}
-                >
-                  <Ionicons name="trash-outline" size={20} color="#DC2626" />
-                </TouchableOpacity>
-              ) : null}
-              <CustomButton
-                title={isEditMode ? 'Save Changes' : 'Add Pet'}
-                onPress={handleAddPet}
-                isLoading={loading}
-                disabled={speciesLoading || loading}
-                variant="primary"
-                style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
-                textStyle={styles.addButtonText}
-              />
+          {hasEditPermission && (
+            <View style={styles.footer}>
+              <View style={[styles.formContainer, styles.footerRow]}>
+                {isEditMode ? (
+                  <TouchableOpacity
+                    onPress={handleDeletePet}
+                    disabled={loading}
+                    style={styles.smallDeleteButton}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                  </TouchableOpacity>
+                ) : null}
+                <CustomButton
+                  title={isEditMode ? 'Save Changes' : 'Add Pet'}
+                  onPress={handleAddPet}
+                  isLoading={loading}
+                  disabled={speciesLoading || loading}
+                  variant="primary"
+                  style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
+                  textStyle={styles.addButtonText}
+                />
+              </View>
             </View>
-          </View>
+          )}
         </KeyboardAvoidingView>
       </SafeAreaView>
-
       )}
 
       <AppConfirmModal

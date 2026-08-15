@@ -33,6 +33,8 @@ export function SpeciesSelector({
   readOnly = false,
   error,
 }: SpeciesSelectorProps) {
+  const isComponentDisabled = disabled || readOnly;
+
   // Sort by popularity: Dog, Cat, Bird, etc.
   const sortedList = React.useMemo(() => {
     return [...speciesList].sort((a, b) => {
@@ -43,36 +45,6 @@ export function SpeciesSelector({
       return valA - valB;
     });
   }, [speciesList]);
-
-  // ── Read-only: show only the selected species as a status badge ───────────
-  if (readOnly) {
-    const icon = value ? getSpeciesIcon(value) : null;
-    return (
-      <View style={styles.wrapper}>
-        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
-          Species
-        </AppText>
-        <View style={styles.readOnlyRow}>
-          {icon ? (
-            <View style={styles.readOnlyBadge}>
-              <MaterialCommunityIcons name={icon} size={24} color="#2E7D32" />
-              <AppText
-                variant="caption"
-                color="#1B5E20"
-                weight="800"
-                style={styles.readOnlyBadgeLabel}
-                numberOfLines={1}
-              >
-                {value}
-              </AppText>
-            </View>
-          ) : (
-            <AppText variant="bodySmall" color={Palette.gray[500]}>—</AppText>
-          )}
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.wrapper}>
@@ -102,11 +74,11 @@ export function SpeciesSelector({
                 style={[
                   styles.tile,
                   selected && styles.tileSelected,
-                  disabled && styles.tileDisabled,
+                  isComponentDisabled && styles.tileDisabled,
                 ]}
-                onPress={() => !disabled && onChange(species)}
-                activeOpacity={disabled ? 1 : 0.85}
-                disabled={disabled}
+                onPress={() => !isComponentDisabled && onChange(species)}
+                activeOpacity={isComponentDisabled ? 1 : 0.85}
+                disabled={isComponentDisabled}
               >
                 <MaterialCommunityIcons
                   name={icon}
@@ -116,7 +88,7 @@ export function SpeciesSelector({
                 <AppText
                   variant="caption"
                   color={labelColor}
-                  style={[styles.tileLabel, selected && styles.tileLabelSelected, disabled && styles.tileLabelDisabled]}
+                  style={[styles.tileLabel, selected && styles.tileLabelSelected, isComponentDisabled && styles.tileLabelDisabled]}
                   numberOfLines={1}
                 >
                   {species}
