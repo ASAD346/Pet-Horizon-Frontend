@@ -310,6 +310,11 @@ export function FamilyHubView() {
             />
 
             {/* Join another family workspace via QR scan */}
+            <View style={styles.sectionHeader}>
+              <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
+                Collaborate
+              </AppText>
+            </View>
             <TouchableOpacity
               style={styles.joinFamilyCard}
               onPress={() => setQrScannerVisible(true)}
@@ -487,5 +492,14 @@ const styles = StyleSheet.create({
   chipDenied: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.lg,
+    marginTop: -14,
+    marginBottom: Spacing.xs,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    lineHeight: 22,
   },
 });

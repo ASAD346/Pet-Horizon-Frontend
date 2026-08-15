@@ -67,7 +67,7 @@ export function MembersListSection({
       <View style={styles.sectionHeader}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-            Care Team {!isOwner ? '(Guest Access)' : ''}
+            Care Team
           </AppText>
         </View>
         <View style={[styles.activeBadge, { backgroundColor: isPremium ? '#E8F5E9' : '#EEF8EE' }]}>
@@ -186,13 +186,13 @@ export function MembersListSection({
 const styles = StyleSheet.create({
   section: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
+    paddingBottom: 12,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.md,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
