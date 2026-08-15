@@ -42,6 +42,7 @@ interface FormSheetShellProps {
   compact?: boolean;
   error?: string | null;
   isReadOnly?: boolean;
+  blockIfReadOnly?: boolean;
   children: React.ReactNode;
 }
 
@@ -60,6 +61,7 @@ export function FormSheetShell({
   compact = false,
   error,
   isReadOnly = false,
+  blockIfReadOnly = true,
   children,
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
@@ -147,7 +149,7 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              {isReadOnly ? (
+              {isReadOnly && blockIfReadOnly ? (
                 <View style={{ paddingVertical: 20, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
                   <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                     <MaterialCommunityIcons name="lock" size={32} color="#DC2626" />

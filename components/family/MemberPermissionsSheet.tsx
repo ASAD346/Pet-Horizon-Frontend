@@ -176,7 +176,7 @@ export function MemberPermissionsSheet({
       showErrorToast(getErrorMessage(err));
     },
     onSuccess: (data) => {
-      const serverPermissions = data.member?.permissions || data.permissions || memberPermissions;
+      const serverPermissions = (data as any).member?.permissions || (data as any).permissions || memberPermissions;
       queryClient.setQueryData(['family-permissions', targetUserId], serverPermissions);
       
       const allowedModules = Object.keys(serverPermissions).filter((k) => serverPermissions[k]);
@@ -206,7 +206,7 @@ export function MemberPermissionsSheet({
   });
 
   const handleSave = () => {
-    mutation.mutate(memberPermissions || {});
+    mutation.mutate((memberPermissions || {}) as Record<string, boolean>);
   };
 
   const handleRemove = async () => {
@@ -244,6 +244,7 @@ export function MemberPermissionsSheet({
       saveDisabled={removing}
       error={error}
       isReadOnly={isReadOnly}
+      blockIfReadOnly={false}
       compact
     >
       <FormSection title="Allowed Modules">
