@@ -143,7 +143,7 @@ export function MembersListSection({
                   ) : null}
                 </View>
 
-                <View style={styles.rightActionRow}>
+                 <View style={styles.rightActionRow}>
                   {member.isAdmin ? (
                     <View style={[styles.roleBadge, { backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9', borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(92, 179, 93, 0.18)' }]}>
                       <Ionicons name="shield-checkmark" size={11} color={isPremium ? '#D4A017' : HomeTheme.cardGreen} />
@@ -152,8 +152,9 @@ export function MembersListSection({
                       </AppText>
                     </View>
                   ) : (
-                    <View style={styles.roleBadgeNormal}>
-                      <AppText variant="caption" weight="700" color={HomeTheme.textMuted} style={styles.roleText}>
+                    <View style={[styles.roleBadgeNormal, { borderColor: '#DBEAFE', backgroundColor: '#EFF6FF', borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full }]}>
+                      <Ionicons name="person-outline" size={11} color="#2563EB" />
+                      <AppText variant="caption" weight="800" color="#2563EB" style={styles.roleText}>
                         MEMBER
                       </AppText>
                     </View>
@@ -171,6 +172,8 @@ export function MembersListSection({
                   ) : null}
                 </View>
               </View>
+
+
 
             </CardContainer>
           );
@@ -384,4 +387,5 @@ const styles = StyleSheet.create({
   hostBadgeText: {
     fontSize: 9,
   },
+
 });

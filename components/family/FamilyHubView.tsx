@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -428,9 +429,18 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.lg,
     marginTop: Spacing.sm,
     marginBottom: Spacing.lg,
-    borderWidth: 1.5,
-    borderColor: '#EFEFEF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     gap: Spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
+      },
+      android: { elevation: 1 },
+    }),
   },
   joinIconBg: {
     width: 44,
