@@ -4,6 +4,7 @@ import { SafeModal } from '@/components/ui/SafeModal';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ProfileModalShellProps {
   visible: boolean;
@@ -23,12 +24,14 @@ export function ProfileModalShell({
   titleIcon,
   children,
 }: ProfileModalShellProps) {
+  const insets = useSafeAreaInsets();
+
   return (
     <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
 
-        <View style={styles.sheet}>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}>
           <View style={styles.handleRow}>
             <View style={styles.handle} />
           </View>
@@ -145,7 +148,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 28,
+    paddingBottom: 16,
     paddingTop: 12,
   },
 });
