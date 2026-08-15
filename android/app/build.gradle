@@ -87,6 +87,7 @@ android {
     compileSdk = rootProject.ext.compileSdkVersion
     namespace 'com.anonymous.PetHorizon'
     defaultConfig {
+        missingDimensionStrategy "platform", "play"
         applicationId 'com.anonymous.PetHorizon'
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
