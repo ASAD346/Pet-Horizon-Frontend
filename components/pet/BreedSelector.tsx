@@ -34,9 +34,22 @@ export function BreedSelector({
 
   const placeholder = loading ? 'Loading breeds…' : breeds.length ? 'Select breed' : 'No breeds available';
   const displayValue = value || placeholder;
-  const isComponentDisabled = disabled || readOnly;
 
-  console.log('BreedSelector debug:', { value, breedsLength: breeds.length, displayValue, readOnly, isComponentDisabled });
+  // ── Read-only info card ──────────────────────────────────────
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Breed
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText} numberOfLines={1}>
+            {value || '—'}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.wrapper}>
@@ -48,27 +61,21 @@ export function BreedSelector({
         <Skeleton width="100%" height={52} borderRadius={14} />
       ) : (
       <TouchableOpacity
-        style={[
-          styles.field, 
-          error ? styles.fieldError : null, 
-          isComponentDisabled ? styles.fieldDisabled : null, 
-          visible && styles.fieldActive,
-          readOnly && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
-        ]}
-        onPress={() => !isComponentDisabled && breeds.length > 0 && setVisible(true)}
-        activeOpacity={isComponentDisabled ? 1 : 0.85}
-        disabled={isComponentDisabled || breeds.length === 0}
+        style={[styles.field, error ? styles.fieldError : null, disabled ? styles.fieldDisabled : null, visible && styles.fieldActive]}
+        onPress={() => !disabled && breeds.length > 0 && setVisible(true)}
+        activeOpacity={0.8}
+        disabled={disabled || breeds.length === 0}
       >
         <AppText
           variant="body"
-          color={value ? (readOnly ? Palette.gray[500] : Palette.gray[800]) : Palette.gray[400]}
+          color={value ? Palette.gray[800] : Palette.gray[400]}
           weight="600"
           style={styles.fieldText}
           numberOfLines={1}
         >
           {displayValue}
         </AppText>
-        <Ionicons name="chevron-down" size={20} color={readOnly ? Palette.gray[400] : "#5CB35D"} />
+        <Ionicons name="chevron-down" size={20} color="#5CB35D" />
       </TouchableOpacity>
       )}
 

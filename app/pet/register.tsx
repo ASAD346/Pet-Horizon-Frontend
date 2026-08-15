@@ -1,23 +1,5 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Keyboard,
-  Alert,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { CustomButton } from '@/components/ui/AppButton';
-import { AppText } from '@/components/ui/AppText';
-import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
-import { QrScannerModal } from '@/components/family/QrScannerModal';
 import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
+import { QrScannerModal } from '@/components/family/QrScannerModal';
 import {
   BirthdayField,
   BreedSelector,
@@ -29,27 +11,45 @@ import {
   WeightInput,
   WeightUnit,
 } from '@/components/pet';
+import { CustomButton } from '@/components/ui/AppButton';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
+import { AppText } from '@/components/ui/AppText';
+import { Palette, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
-import { useQueryClient } from '@tanstack/react-query';
-import { clearPetListCache } from '@/lib/pet/petListCache';
-import { clearActivePetCache } from '@/lib/pet/activePetCache';
 import { getErrorMessage } from '@/lib/api/errors';
-import { LoginTheme, Palette, Spacing } from '@/constants/theme';
-import { log } from '@/lib/log';
-import { dateToApiDateString } from '@/lib/grooming/groomingForm';
-import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, fetchSpecies, updatePet } from '@/services/pets/petApi';
-import { parseSafeDate } from '@/lib/timezone';
-import { parseSafeDateOrNull } from '@/lib/pet/birthdayUtils';
-import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { isPetOwner } from '@/lib/family/formatters';
-import { uploadPetImage } from '@/services/pets/uploadPetImage';
+import { dateToApiDateString } from '@/lib/grooming/groomingForm';
+import { log } from '@/lib/log';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { clearActivePetCache } from '@/lib/pet/activePetCache';
+import { parseSafeDateOrNull } from '@/lib/pet/birthdayUtils';
+import { clearPetListCache } from '@/lib/pet/petListCache';
+import { canAddAnotherPet } from '@/lib/premium/canAddPet';
+import { createAndActivatePet, deletePet, fetchBreeds, fetchPetById, fetchPets, fetchSpecies, updatePet } from '@/services/pets/petApi';
+import { uploadPetImage } from '@/services/pets/uploadPetImage';
 import {
   hasRegisterPetFieldErrors,
   validateRegisterPetForm,
   type RegisterPetFieldErrors,
 } from '@/services/pets/validation';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { getSpeciesIcon } from '@/services/pets/speciesIcons';
+import { useQueryClient } from '@tanstack/react-query';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LoginHeaderDecor } from '@/components/auth/login';
 
@@ -101,7 +101,7 @@ export default function RegisterPetScreen() {
       try {
         const existing = await fetchPetById(token, editPetId);
         if (!mounted) return;
-        
+
         setPetName(existing.name ?? '');
         setSpecies(existing.species ?? '');
         setBreed(existing.breed ?? '');
@@ -334,7 +334,7 @@ export default function RegisterPetScreen() {
 
   const confirmDeletePet = useCallback(async () => {
     if (!token || !editPetId) return;
-    
+
     setDeleteConfirmVisible(false);
     setLoading(true);
     try {
@@ -468,152 +468,254 @@ export default function RegisterPetScreen() {
           </View>
         </SafeAreaView>
       ) : (
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.flex}
-        >
-          {/* Fixed Top Header */}
-          <View style={styles.headerOuter}>
-            <View style={styles.headerRow}>
-              {(isEditMode || isAddMode || !hasEditPermission) && (
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                  <Ionicons name="chevron-back" size={16} color="#0E3821" />
-                </TouchableOpacity>
-              )}
-              <View style={styles.headerTextContainer}>
-                <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
-                  {!hasEditPermission
-                    ? (petName ? `${petName}'s Profile` : 'Companion Details')
-                    : (isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!')}
-                </AppText>
-                <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle}>
-                  {!hasEditPermission
-                    ? 'Verified Companion Information'
-                    : "Let's create a profile to help you track their healthy lifestyle."}
-                </AppText>
-              </View>
-            </View>
-          </View>
-
-          <ScrollView
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={styles.flex}
-            contentContainerStyle={styles.scrollContent}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
           >
-            <View style={styles.formContainer}>
-
-              {/* Photo avatar — readOnly hides the + badge */}
-              <PetPhotoPicker
-                imageUri={photoUri}
-                onImageChange={setPhotoUri}
-                readOnly={!hasEditPermission}
-              />
-
-              <PetLabeledInput
-                label="Pet Name"
-                placeholder="Pet Name"
-                value={petName}
-                readOnly={!hasEditPermission}
-                onChangeText={(text) => {
-                  setPetName(text);
-                  if (fieldErrors.petName) {
-                    setFieldErrors((prev) => ({ ...prev, petName: undefined }));
-                  }
-                }}
-              />
-              {fieldErrors.petName ? (
-                <AppText variant="caption" color="#C62828" style={styles.inlineError}>
-                  {fieldErrors.petName}
-                </AppText>
-              ) : null}
-
-              <GenderSelect
-                value={gender}
-                onChange={setGender}
-                readOnly={!hasEditPermission}
-              />
-
-              <SpeciesSelector
-                speciesList={speciesList}
-                value={species}
-                onChange={handleSpeciesChange}
-                loading={speciesLoading}
-                disabled={isEditMode || !hasEditPermission}
-                readOnly={!hasEditPermission}
-                error={fieldErrors.species}
-              />
-
-              <BreedSelector
-                value={breed}
-                breeds={breeds}
-                loading={breedsLoading}
-                disabled={isEditMode || !species || !hasEditPermission}
-                readOnly={!hasEditPermission}
-                error={fieldErrors.breed}
-                onChange={(next) => {
-                  setBreed(next);
-                  if (fieldErrors.breed) {
-                    setFieldErrors((prev) => ({ ...prev, breed: undefined }));
-                  }
-                }}
-              />
-
-              <BirthdayField
-                value={birthday}
-                readOnly={!hasEditPermission}
-                onChange={(date) => {
-                  setBirthday(date);
-                  if (fieldErrors.birthday) {
-                    setFieldErrors((prev) => ({ ...prev, birthday: undefined }));
-                  }
-                }}
-                error={fieldErrors.birthday}
-              />
-
-              <WeightInput
-                value={weight}
-                unit={weightUnit}
-                readOnly={!hasEditPermission}
-                onValueChange={setWeight}
-                onUnitChange={setWeightUnit}
-              />
-              {fieldErrors.weight ? (
-                <AppText variant="caption" color="#C62828" style={styles.inlineError}>
-                  {fieldErrors.weight}
-                </AppText>
-              ) : null}
-            </View>
-          </ScrollView>
-
-          {hasEditPermission && (
-            <View style={styles.footer}>
-              <View style={[styles.formContainer, styles.footerRow]}>
-                {isEditMode ? (
-                  <TouchableOpacity
-                    onPress={handleDeletePet}
-                    disabled={loading}
-                    style={styles.smallDeleteButton}
-                    activeOpacity={0.8}
-                  >
-                    <Ionicons name="trash-outline" size={20} color="#DC2626" />
+            {/* Fixed Top Header */}
+            <View style={styles.headerOuter}>
+              <View style={styles.headerRow}>
+                {(isEditMode || isAddMode || !hasEditPermission) && (
+                  <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                    <Ionicons name="chevron-back" size={16} color="#0E3821" />
                   </TouchableOpacity>
-                ) : null}
-                <CustomButton
-                  title={isEditMode ? 'Save Changes' : 'Add Pet'}
-                  onPress={handleAddPet}
-                  isLoading={loading}
-                  disabled={speciesLoading || loading}
-                  variant="primary"
-                  style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
-                  textStyle={styles.addButtonText}
-                />
+                )}
+                <View style={styles.headerTextContainer}>
+                  <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.title}>
+                    {!hasEditPermission
+                      ? (petName ? `${petName}'s Profile` : 'Companion Details')
+                      : (isEditMode ? 'Edit Pet Profile' : isAddMode ? 'Add Another Pet' : 'Tell us about your furry friend!')}
+                  </AppText>
+                  <AppText variant="bodySmall" color={Palette.gray[500]} style={styles.subtitle}>
+                    {!hasEditPermission
+                      ? 'Verified Companion Information'
+                      : "Let's create a profile to help you track their healthy lifestyle."}
+                  </AppText>
+                </View>
               </View>
             </View>
-          )}
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+
+            <ScrollView
+              style={styles.flex}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.formContainer}>
+
+                {/* Photo avatar — readOnly hides the + badge */}
+                <PetPhotoPicker
+                  imageUri={photoUri}
+                  onImageChange={setPhotoUri}
+                  readOnly={!hasEditPermission}
+                />
+
+                {!hasEditPermission ? (
+                  <View style={styles.readOnlyContainer}>
+                    {/* Pet Name Field */}
+                    <View style={styles.fieldWrapper}>
+                      <AppText variant="bodySmall" weight="700" color="#475569" style={styles.fieldLabel}>
+                        Pet Name
+                      </AppText>
+                      <View style={styles.fieldContainer}>
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#F0FDF4' }]}>
+                          <Ionicons name="paw-outline" size={18} color="#16A34A" />
+                        </View>
+                        <AppText style={styles.fieldValue} weight="600" color="#1A2B4E">
+                          {petName || '—'}
+                        </AppText>
+                        <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" style={{ marginLeft: 'auto' }} />
+                      </View>
+                    </View>
+
+                    {/* Gender Field */}
+                    <View style={styles.fieldWrapper}>
+                      <AppText variant="bodySmall" weight="700" color="#475569" style={styles.fieldLabel}>
+                        Gender
+                      </AppText>
+                      <View style={styles.fieldContainer}>
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#EFF6FF' }]}>
+                          <Ionicons name="transgender-outline" size={18} color="#2563EB" />
+                        </View>
+                        <AppText style={styles.fieldValue} weight="600" color="#1A2B4E">
+                          {gender || '—'}
+                        </AppText>
+                        <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" style={{ marginLeft: 'auto' }} />
+                      </View>
+                    </View>
+
+                    {/* Species Field */}
+                    <View style={styles.fieldWrapper}>
+                      <AppText variant="bodySmall" weight="700" color="#475569" style={styles.fieldLabel}>
+                        Species
+                      </AppText>
+                      <View style={styles.fieldContainer}>
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#FDF2F8' }]}>
+                          <MaterialCommunityIcons name={(species ? getSpeciesIcon(species) : 'paw') as any} size={18} color="#DB2777" />
+                        </View>
+                        <AppText style={[styles.fieldValue, { textTransform: 'capitalize' }]} weight="600" color="#1A2B4E">
+                          {species || '—'}
+                        </AppText>
+                        <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" style={{ marginLeft: 'auto' }} />
+                      </View>
+                    </View>
+
+                    {/* Breed Field */}
+                    <View style={styles.fieldWrapper}>
+                      <AppText variant="bodySmall" weight="700" color="#475569" style={styles.fieldLabel}>
+                        Breed
+                      </AppText>
+                      <View style={styles.fieldContainer}>
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#FFF7ED' }]}>
+                          <Ionicons name="git-branch-outline" size={18} color="#D97706" />
+                        </View>
+                        <AppText style={styles.fieldValue} weight="600" color="#1A2B4E">
+                          {breed || '—'}
+                        </AppText>
+                        <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" style={{ marginLeft: 'auto' }} />
+                      </View>
+                    </View>
+
+                    {/* Birthday Field */}
+                    <View style={styles.fieldWrapper}>
+                      <AppText variant="bodySmall" weight="700" color="#475569" style={styles.fieldLabel}>
+                        Birthday
+                      </AppText>
+                      <View style={styles.fieldContainer}>
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#FFF1F2' }]}>
+                          <Ionicons name="calendar-outline" size={18} color="#E11D48" />
+                        </View>
+                        <AppText style={styles.fieldValue} weight="600" color="#1A2B4E">
+                          {birthday ? birthday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '—'}
+                        </AppText>
+                        <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" style={{ marginLeft: 'auto' }} />
+                      </View>
+                    </View>
+
+                    {/* Weight Field */}
+                    <View style={styles.fieldWrapper}>
+                      <AppText variant="bodySmall" weight="700" color="#475569" style={styles.fieldLabel}>
+                        Weight
+                      </AppText>
+                      <View style={styles.fieldContainer}>
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#F0FDFA' }]}>
+                          <Ionicons name="scale-outline" size={18} color="#0D9488" />
+                        </View>
+                        <AppText style={styles.fieldValue} weight="600" color="#1A2B4E">
+                          {weight ? `${weight} ${weightUnit.toUpperCase()}` : '—'}
+                        </AppText>
+                        <Ionicons name="lock-closed-outline" size={14} color="#94A3B8" style={{ marginLeft: 'auto' }} />
+                      </View>
+                    </View>
+                  </View>
+                ) : (
+                  <>
+                    <PetLabeledInput
+                      label="Pet Name"
+                      placeholder="Pet Name"
+                      value={petName}
+                      readOnly={!hasEditPermission}
+                      onChangeText={(text) => {
+                        setPetName(text);
+                        if (fieldErrors.petName) {
+                          setFieldErrors((prev) => ({ ...prev, petName: undefined }));
+                        }
+                      }}
+                    />
+                    {fieldErrors.petName ? (
+                      <AppText variant="caption" color="#C62828" style={styles.inlineError}>
+                        {fieldErrors.petName}
+                      </AppText>
+                    ) : null}
+
+                    <GenderSelect
+                      value={gender}
+                      onChange={setGender}
+                      readOnly={!hasEditPermission}
+                    />
+
+                    <SpeciesSelector
+                      speciesList={speciesList}
+                      value={species}
+                      onChange={handleSpeciesChange}
+                      loading={speciesLoading}
+                      disabled={isEditMode || !hasEditPermission}
+                      readOnly={!hasEditPermission}
+                      error={fieldErrors.species}
+                    />
+
+                    <BreedSelector
+                      value={breed}
+                      breeds={breeds}
+                      loading={breedsLoading}
+                      disabled={isEditMode || !species || !hasEditPermission}
+                      readOnly={!hasEditPermission}
+                      error={fieldErrors.breed}
+                      onChange={(next) => {
+                        setBreed(next);
+                        if (fieldErrors.breed) {
+                          setFieldErrors((prev) => ({ ...prev, breed: undefined }));
+                        }
+                      }}
+                    />
+
+                    <BirthdayField
+                      value={birthday}
+                      readOnly={!hasEditPermission}
+                      onChange={(date) => {
+                        setBirthday(date);
+                        if (fieldErrors.birthday) {
+                          setFieldErrors((prev) => ({ ...prev, birthday: undefined }));
+                        }
+                      }}
+                      error={fieldErrors.birthday}
+                    />
+
+                    <WeightInput
+                      value={weight}
+                      unit={weightUnit}
+                      readOnly={!hasEditPermission}
+                      onValueChange={setWeight}
+                      onUnitChange={setWeightUnit}
+                    />
+                    {fieldErrors.weight ? (
+                      <AppText variant="caption" color="#C62828" style={styles.inlineError}>
+                        {fieldErrors.weight}
+                      </AppText>
+                    ) : null}
+                  </>
+                )}
+              </View>
+            </ScrollView>
+
+            {hasEditPermission && (
+              <View style={styles.footer}>
+                <View style={[styles.formContainer, styles.footerRow]}>
+                  {isEditMode ? (
+                    <TouchableOpacity
+                      onPress={handleDeletePet}
+                      disabled={loading}
+                      style={styles.smallDeleteButton}
+                      activeOpacity={0.8}
+                    >
+                      <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                    </TouchableOpacity>
+                  ) : null}
+                  <CustomButton
+                    title={isEditMode ? 'Save Changes' : 'Add Pet'}
+                    onPress={handleAddPet}
+                    isLoading={loading}
+                    disabled={speciesLoading || loading}
+                    variant="primary"
+                    style={[styles.addButton, isEditMode ? styles.addButtonWithDelete : null]}
+                    textStyle={styles.addButtonText}
+                  />
+                </View>
+              </View>
+            )}
+          </KeyboardAvoidingView>
+        </SafeAreaView>
       )}
 
       <AppConfirmModal
@@ -778,6 +880,45 @@ const styles = StyleSheet.create({
   },
   readOnlyContainer: {
     paddingTop: Spacing.md,
+  },
+  fieldWrapper: {
+    marginBottom: Spacing.md,
+  },
+  fieldLabel: {
+    marginBottom: 6,
+    marginLeft: 4,
+    fontSize: 12,
+  },
+  fieldContainer: {
+    height: 52,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: Spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.02,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
+  },
+  fieldIconWrapper: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fieldValue: {
+    fontSize: 14,
+    color: '#1A2B4E',
   },
   readOnlyAvatarSection: {
     alignItems: 'center',

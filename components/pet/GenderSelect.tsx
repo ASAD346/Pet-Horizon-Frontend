@@ -23,25 +23,35 @@ interface GenderSelectProps {
 export function GenderSelect({ value, onChange, readOnly }: GenderSelectProps) {
   const [open, setOpen] = useState(false);
 
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Gender
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
+            {value || '—'}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Gender
       </AppText>
       <TouchableOpacity 
-        style={[
-          styles.field, 
-          open && styles.fieldActive,
-          readOnly && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
-        ]} 
-        onPress={() => !readOnly && setOpen(true)} 
-        activeOpacity={readOnly ? 1 : 0.8}
-        disabled={readOnly}
+        style={[styles.field, open && styles.fieldActive]} 
+        onPress={() => setOpen(true)} 
+        activeOpacity={0.8}
       >
-        <AppText variant="body" color={readOnly ? Palette.gray[500] : Palette.gray[800]} weight="600">
+        <AppText variant="body" color={Palette.gray[800]} weight="600">
           {value}
         </AppText>
-        <Ionicons name="chevron-down" size={18} color={readOnly ? Palette.gray[400] : "#5CB35D"} />
+        <Ionicons name="chevron-down" size={18} color="#5CB35D" />
       </TouchableOpacity>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>

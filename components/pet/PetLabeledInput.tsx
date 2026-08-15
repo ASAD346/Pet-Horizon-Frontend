@@ -17,6 +17,21 @@ interface PetLabeledInputProps extends Pick<TextInputProps, 'value' | 'onChangeT
 export function PetLabeledInput({ label, value, onChangeText, placeholder, keyboardType, readOnly }: PetLabeledInputProps) {
   const [isFocused, setIsFocused] = useState(false);
 
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          {label}
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
+            {value || '—'}
+          </AppText>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
@@ -26,7 +41,6 @@ export function PetLabeledInput({ label, value, onChangeText, placeholder, keybo
         style={[
           styles.inputContainer,
           isFocused ? styles.containerFocused : null,
-          readOnly && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
         ]}
       >
         <TextInput
@@ -37,8 +51,7 @@ export function PetLabeledInput({ label, value, onChangeText, placeholder, keybo
           keyboardType={keyboardType}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          style={[styles.input, readOnly && { color: Palette.gray[500] }]}
-          editable={!readOnly}
+          style={styles.input}
         />
       </View>
     </View>

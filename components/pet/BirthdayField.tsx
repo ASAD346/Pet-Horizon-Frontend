@@ -23,30 +23,41 @@ function formatDate(date: Date) {
 export function BirthdayField({ value, onChange, error, readOnly }: BirthdayFieldProps) {
   const [showPicker, setShowPicker] = useState(false);
 
+  // ── Read-only info card ──────────────────────────────────────
+  if (readOnly) {
+    return (
+      <View style={styles.wrapper}>
+        <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
+          Birthday
+        </AppText>
+        <View style={styles.readOnlyCard}>
+          <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
+            {value ? formatDate(value) : '—'}
+          </AppText>
+          <Ionicons name="lock-closed-outline" size={16} color="#A3C8A4" />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Birthday
       </AppText>
       <TouchableOpacity
-        style={[
-          styles.field, 
-          showPicker && styles.fieldActive, 
-          error ? styles.fieldError : null,
-          readOnly && { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' }
-        ]}
-        onPress={() => !readOnly && setShowPicker(true)}
-        activeOpacity={readOnly ? 1 : 0.8}
-        disabled={readOnly}
+        style={[styles.field, showPicker && styles.fieldActive, error ? styles.fieldError : null]}
+        onPress={() => setShowPicker(true)}
+        activeOpacity={0.8}
       >
         <AppText
           variant="body"
-          color={value ? (readOnly ? Palette.gray[500] : Palette.gray[800]) : Palette.gray[400]}
+          color={value ? Palette.gray[800] : Palette.gray[400]}
           weight="600"
         >
           {value ? formatDate(value) : 'Select Birthday'}
         </AppText>
-        <Ionicons name="calendar-outline" size={20} color={readOnly ? Palette.gray[400] : "#5CB35D"} />
+        <Ionicons name="calendar-outline" size={20} color="#5CB35D" />
       </TouchableOpacity>
 
       {error ? (
