@@ -186,7 +186,7 @@ export function MembersListSection({
 const styles = StyleSheet.create({
   section: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: 12,
+    paddingBottom: 8,
   },
   sectionHeader: {
     flexDirection: 'row',

@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.md,
     marginHorizontal: Spacing.lg,
-    marginTop: Spacing.sm,
+    marginTop: 0,
     marginBottom: Spacing.lg,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   sectionHeader: {
     paddingHorizontal: Spacing.lg,
-    marginTop: -14,
+    marginTop: 0,
     marginBottom: Spacing.xs,
   },
   sectionTitle: {
