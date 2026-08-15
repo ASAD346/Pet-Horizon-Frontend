@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, TextInput, Switch, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets, SafeAreaView } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { CustomButton } from '@/components/ui/AppButton';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
@@ -380,14 +380,10 @@ export function StickyActionFooter({
   saving = false,
   saveDisabled = false,
 }: StickyActionFooterProps) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <View
-      style={[
-        styles.stickyFooter,
-        { paddingBottom: Math.max(insets.bottom, 20) },
-      ]}
+    <SafeAreaView
+      edges={['bottom']}
+      style={styles.stickyFooter}
     >
       <CustomButton
         title={saveLabel}
@@ -396,7 +392,7 @@ export function StickyActionFooter({
         disabled={saveDisabled || saving}
         style={styles.saveButtonCustom}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
