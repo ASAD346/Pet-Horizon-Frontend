@@ -60,6 +60,7 @@ export function FamilyOverviewCard({
           {
             borderWidth: isPremium ? 1.5 : 1,
             borderColor,
+            paddingVertical: showInviteSection ? 18 : 12,
           }
         ]}
       >
@@ -91,10 +92,19 @@ export function FamilyOverviewCard({
             )}
           </View>
 
-          <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.8)" style={styles.stats}>
-            {memberCount} active member{memberCount === 1 ? '' : 's'} • {petCount} pet
-            {petCount === 1 ? '' : 's'}
-          </AppText>
+          <View style={[styles.statsRow, { marginBottom: showInviteSection ? Spacing.md : 0 }]}>
+            <Ionicons name="people-outline" size={13} color="rgba(255, 255, 255, 0.75)" style={{ marginRight: 4 }} />
+            <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.85)" style={styles.statsText}>
+              {memberCount} active member{memberCount === 1 ? '' : 's'}
+            </AppText>
+            <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.4)" style={styles.separator}>
+              •
+            </AppText>
+            <Ionicons name="paw-outline" size={13} color="rgba(255, 255, 255, 0.75)" style={{ marginRight: 4 }} />
+            <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.85)" style={styles.statsText}>
+              {petCount} pet{petCount === 1 ? '' : 's'}
+            </AppText>
+          </View>
 
           {showInviteSection ? (
             <>
@@ -224,9 +234,17 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.5,
   },
-  stats: {
-    marginBottom: Spacing.md,
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  statsText: {
+    fontSize: 12,
     opacity: 0.9,
+  },
+  separator: {
+    marginHorizontal: Spacing.sm,
   },
   codeBox: {
     flexDirection: 'row',
