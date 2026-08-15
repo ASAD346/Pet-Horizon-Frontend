@@ -378,7 +378,7 @@ export default function EditProfileScreen() {
         title="Delete Account"
         message="Are you sure you want to permanently delete your account? This action cannot be undone and all your pet profiles, schedules, and data will be lost forever."
         confirmLabel="Delete"
-        cancelLabel="Keep account"
+        cancelLabel="Cancel"
         variant="danger"
         loading={deleting}
         onConfirm={handleDeleteConfirm}
