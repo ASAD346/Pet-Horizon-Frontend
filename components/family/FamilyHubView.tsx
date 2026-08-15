@@ -26,6 +26,7 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { usePetMembers } from '@/hooks/usePetMembers';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { usePetContext } from '@/hooks/usePetContext';
+import { usePets } from '@/hooks/usePets';
 import { LogJournalSheet } from '@/components/journal';
 import { QrScannerModal } from '@/components/family/QrScannerModal';
 import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
@@ -58,9 +59,15 @@ export function FamilyHubView() {
   const { token, user } = useAuth();
   const { activePetId } = usePetContext();
   const { pet, loading: petLoading, reload: reloadPet } = useActivePet(token);
+  // isOwner: whether the user is the admin of the *currently viewed* pet (may be a shared pet)
   const isOwner = isPetOwner(pet?.ownerUserId, user?._id);
   const { members, setMembers, loading: membersLoading, error: membersError, reload: reloadMembers } =
     usePetMembers(token, activePetId ?? pet?._id ?? null, true);
+
+  // Load ALL pets to determine if user owns at least one pet themselves
+  const { pets: allPets } = usePets(token, activePetId ?? null, user?._id);
+  // userHasOwnedPet: true when the user is the registered owner of at least one pet
+  const userHasOwnedPet = allPets.some((p) => isPetOwner(p.ownerUserId, user?._id));
   const { showErrorToast } = useToast();
 
   useEffect(() => {
@@ -104,7 +111,14 @@ export function FamilyHubView() {
   );
 
   const isPremium = dbPremium ?? (user?.premiumStatus === 'premium');
+
+  // canInvite: user can invite to the *active* pet only if they own it and are premium
   const canInvite = Boolean(pet?._id && token && isOwner && isPremium);
+
+  // canManageFamilyGlobally: premium subscriber's global right to manage their own family circle.
+  // This is intentionally decoupled from isOwner of the currently-viewed pet, so that a premium
+  // user who is browsing a shared pet (as a caregiver) still sees their own family management UI.
+  const canManageFamilyGlobally = isPremium && userHasOwnedPet;
 
   const userName = user?.fullName?.split(' ')[0] ?? user?.email?.split('@')[0] ?? null;
   const familyName = isOwner
@@ -263,9 +277,15 @@ export function FamilyHubView() {
           </View>
         ) : null}
 
-        {pet && !isOwner ? (
+        {pet && !isOwner && !canManageFamilyGlobally ? (
           <View style={styles.bannerWrap}>
             <AuthInfoBanner message="Only the pet owner can invite members and manage family access." />
+          </View>
+        ) : null}
+
+        {pet && !isOwner && canManageFamilyGlobally ? (
+          <View style={styles.bannerWrap}>
+            <AuthInfoBanner message="You are viewing a shared pet. Switch to your own pet to invite caregivers and manage your family circle." />
           </View>
         ) : null}
 
@@ -279,12 +299,14 @@ export function FamilyHubView() {
               joinCode={joinCode}
               loadingInvite={false}
               canInvite={canInvite}
-              showInviteSection={isOwner}
+              // Show invite section if: user owns this pet, OR user has global management rights
+              // (premium + owns at least one other pet). Hides it only for non-premium caregivers.
+              showInviteSection={isOwner || canManageFamilyGlobally}
               onShareCode={handleShareCode}
               onInvitePress={() => setInviteSheetVisible(true)}
             />
 
-            {!isPremium && isOwner ? (
+            {!isPremium && (isOwner || userHasOwnedPet) ? (
               <View style={styles.bannerWrap}>
                 <AuthInfoBanner message="Upgrade to Premium to generate invite links and add family members to care for your pet." />
               </View>
