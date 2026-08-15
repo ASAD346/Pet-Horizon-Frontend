@@ -49,7 +49,7 @@ function MyCustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
   const activeColor = isPremium ? '#D4A017' : '#2E7D32';
   const inactiveColor = '#94A3B8';
-  const barBgColor = isPremium ? '#FFFDF0' : '#FFFFFF';
+  const barBgColor = '#FFFFFF';
   const borderColor = isPremium ? 'rgba(212, 160, 23, 0.2)' : 'rgba(0, 0, 0, 0.05)';
 
   return (
@@ -170,7 +170,7 @@ function MyCustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 export default function TabLayout() {
   const { user } = useAuth();
   const isPremium = user?.premiumStatus === 'premium';
-  const barBgColor = isPremium ? '#FFFDF0' : '#FFFFFF';
+  const barBgColor = '#FFFFFF';
 
   return (
     <ContextGuard>
