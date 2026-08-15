@@ -58,7 +58,7 @@ async function createAndroidChannel(
     name,
     importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#5CB35D',
+    lightColor: '#1B4D3E',
     sound: 'default',
     enableVibrate: true,
     showBadge: true,
