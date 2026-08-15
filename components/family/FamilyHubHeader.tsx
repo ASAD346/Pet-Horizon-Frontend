@@ -82,22 +82,14 @@ export function FamilyHubHeader({
                 >
                   Family Hub
                 </AppText>
-                <View style={[
-                  styles.eyebrowChip,
-                  isPremium && {
-                    borderColor: 'rgba(212, 160, 23, 0.35)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  },
-                ]}>
-                  <AppText 
-                    variant="caption" 
-                    weight="800" 
-                    color="#FFFFFF" 
-                    style={styles.eyebrowText}
-                  >
-                    COLLABORATE
-                  </AppText>
-                </View>
+                <AppText 
+                  variant="caption" 
+                  weight="800" 
+                  color="rgba(255, 255, 255, 0.7)" 
+                  style={[styles.eyebrowText, { marginTop: 2 }]}
+                >
+                  COLLABORATE
+                </AppText>
               </View>
             </View>
 
