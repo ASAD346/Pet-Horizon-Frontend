@@ -170,7 +170,8 @@ export default function EditProfileScreen() {
       const emailChanged = email.trim().toLowerCase() !== initialEmail.trim().toLowerCase();
       if (emailChanged) {
         const response = await requestEmailChange(token, email.trim());
-        await setSession({ token, user: nextUser });
+        // Preserve activePetId — nextUser returned from server does not contain it
+        await setSession({ token, user: { ...nextUser, activePetId: user?.activePetId } });
         setSaving(false);
 
         router.push({
@@ -191,7 +192,8 @@ export default function EditProfileScreen() {
         setPasswordSectionExpanded(false);
       }
 
-      await setSession({ token, user: nextUser });
+      // Preserve activePetId — nextUser returned from server does not contain it
+      await setSession({ token, user: { ...nextUser, activePetId: user?.activePetId } });
       showToast('Profile updated successfully!');
       router.back();
     } catch (err) {
