@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View, Animated } from 'react-native';
 import { SafeModal } from './SafeModal';
 import { AppButton } from './AppButton';
 import { AppText } from './AppText';
@@ -70,38 +70,71 @@ export function AppConfirmModal({
 
   const { iconName, iconColor, iconBg, btnBg, btnText } = getIconAndColors();
 
+  const scaleAnim = React.useRef(new Animated.Value(0.85)).current;
+  const opacityAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    if (visible) {
+      scaleAnim.setValue(0.85);
+      opacityAnim.setValue(0);
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          tension: 120,
+          friction: 9,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 180,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [visible, scaleAnim, opacityAnim]);
+
   return (
     <SafeModal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
       <Pressable style={styles.overlay} onPress={onCancel}>
-        <Pressable style={styles.card} onPress={(e) => e.stopPropagation()}>
-          <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
-            <Ionicons name={iconName} size={36} color={iconColor} />
-          </View>
+        <Animated.View
+          style={[
+            styles.card,
+            {
+              transform: [{ scale: scaleAnim }],
+              opacity: opacityAnim,
+            },
+          ]}
+        >
+          <Pressable style={{ width: '100%', alignItems: 'center' }} onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
+              <Ionicons name={iconName} size={36} color={iconColor} />
+            </View>
 
-          <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.title}>
-            {title}
-          </AppText>
-          <AppText variant="body" color={HomeTheme.textMuted} style={styles.message}>
-            {message}
-          </AppText>
+            <AppText variant="h3" weight="800" color={HomeTheme.text} style={styles.title}>
+              {title}
+            </AppText>
+            <AppText variant="body" color={HomeTheme.textMuted} style={styles.message}>
+              {message}
+            </AppText>
 
-          <View style={styles.buttonRow}>
-            <AppButton
-              title={cancelLabel}
-              onPress={onCancel}
-              variant="outline"
-              disabled={loading}
-              style={styles.flexButton}
-            />
-            <AppButton
-              title={confirmLabel}
-              onPress={onConfirm}
-              loading={loading}
-              style={[styles.flexButton, { backgroundColor: btnBg }]}
-              textStyle={{ color: btnText }}
-            />
-          </View>
-        </Pressable>
+            <View style={styles.buttonRow}>
+              <AppButton
+                title={cancelLabel}
+                onPress={onCancel}
+                variant="outline"
+                disabled={loading}
+                style={styles.flexButton}
+              />
+              <AppButton
+                title={confirmLabel}
+                onPress={onConfirm}
+                loading={loading}
+                style={[styles.flexButton, { backgroundColor: btnBg }]}
+                textStyle={{ color: btnText }}
+              />
+            </View>
+          </Pressable>
+        </Animated.View>
       </Pressable>
     </SafeModal>
   );
