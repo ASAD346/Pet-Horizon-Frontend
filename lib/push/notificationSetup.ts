@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import { isExpoGo } from '@/lib/runtime/isExpoGo';
 import { log } from '@/lib/log';
+import { API_BASE_URL } from '@/constants/api';
+import AsyncStorageStatic from '@react-native-async-storage/async-storage';
 
 export const DEFAULT_NOTIFICATION_CHANNEL_ID = 'default';
 export const FCM_FALLBACK_CHANNEL_ID = 'fcm_fallback_notification_channel';
@@ -19,13 +21,64 @@ export async function ensureNotificationHandler(): Promise<void> {
 
   const Notifications = await getNotificationsModule();
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+    handleNotification: async (notification) => {
+      const data = notification.request.content.data;
+      const scheduleId = data?.relatedScheduleItemId || data?.id;
+      const petId = data?.petId;
+
+      if (scheduleId && petId) {
+        try {
+          const token = await AsyncStorageStatic.getItem('auth_token');
+          if (token) {
+            const url = `${API_BASE_URL}/schedules/today?petId=${petId}`;
+            const response = await fetch(url, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/json',
+              },
+            });
+            if (response.ok) {
+              const schedules = await response.json();
+              let isMuted = false;
+
+              if (Array.isArray(schedules)) {
+                const sched = schedules.find((s: any) => String(s._id || s.id) === String(scheduleId)) as any;
+                if (!sched || sched.status === 'done' || sched.status === 'skipped' || sched.isComplete === true) {
+                  isMuted = true;
+                }
+              } else if (schedules && typeof schedules === 'object') {
+                const allScheds = Object.values(schedules).flat();
+                const sched = allScheds.find((s: any) => String(s._id || s.id) === String(scheduleId)) as any;
+                if (!sched || sched.status === 'done' || sched.status === 'skipped' || sched.isComplete === true) {
+                  isMuted = true;
+                }
+              }
+
+              if (isMuted) {
+                log.info(SCOPE, `Suppressing notification for completed/skipped/deleted schedule: ${scheduleId}`);
+                return {
+                  shouldShowAlert: false,
+                  shouldPlaySound: false,
+                  shouldSetBadge: false,
+                  shouldShowBanner: false,
+                  shouldShowList: false,
+                };
+              }
+            }
+          }
+        } catch (err) {
+          log.warn(SCOPE, 'SmartGuard check failed, displaying fallback', err instanceof Error ? err.message : String(err));
+        }
+      }
+
+      return {
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      };
+    },
   });
 
   if (Platform.OS !== 'web') {
@@ -148,7 +201,6 @@ export async function acquireDevicePushToken(): Promise<string | null> {
 // ─────────────────────────────────────────────────────────────
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
-import AsyncStorageStatic from '@react-native-async-storage/async-storage';
 
 export const BACKGROUND_FETCH_TASK = 'BACKGROUND-NOTIFICATION-FETCH';
 
