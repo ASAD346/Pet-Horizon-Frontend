@@ -79,13 +79,13 @@ export function FamilyOverviewCard({
             {isPremium ? (
               <View style={styles.premiumPill}>
                 <MaterialCommunityIcons name="crown" size={10} color="#D4A017" style={{ marginRight: 3 }} />
-                <AppText weight="800" color="#D4A017" style={styles.pillText}>
+                <AppText variant="caption" weight="800" color="#D4A017" style={styles.pillText}>
                   PREMIUM
                 </AppText>
               </View>
             ) : (
               <View style={styles.freePill}>
-                <AppText weight="800" color="rgba(255, 255, 255, 0.9)" style={styles.pillText}>
+                <AppText variant="caption" weight="800" color="rgba(255, 255, 255, 0.9)" style={styles.pillText}>
                   FREE PLAN
                 </AppText>
               </View>
@@ -231,8 +231,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   pillText: {
-    fontSize: 8.5,
+    fontSize: 9,
     letterSpacing: 0.4,
+    lineHeight: 11,
   },
   statsRow: {
     flexDirection: 'row',
