@@ -92,8 +92,7 @@ export function MembersListSection({
       ) : (
         members.map((member) => {
           const canManage = manageableIds.includes(member.id);
-          const isSelf = currentUserId && member.id === currentUserId;
-          const isPressable = canManage || isSelf;
+          const isPressable = canManage;
           const CardContainer = isPressable ? TouchableOpacity : View;
 
           const lowercaseAllowed = (member.allowedModules ?? []).map(m => m.toLowerCase().trim());

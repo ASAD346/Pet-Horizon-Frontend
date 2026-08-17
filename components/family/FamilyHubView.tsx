@@ -332,29 +332,33 @@ export function FamilyHubView() {
             />
 
             {/* Join another family workspace via QR scan */}
-            <View style={styles.sectionHeader}>
-              <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-                Collaborate
-              </AppText>
-            </View>
-            <TouchableOpacity
-              style={styles.joinFamilyCard}
-              onPress={() => setQrScannerVisible(true)}
-              activeOpacity={0.85}
-            >
-              <View style={styles.joinIconBg}>
-                <Ionicons name="qr-code-outline" size={24} color="#3A8F3B" />
-              </View>
-              <View style={styles.joinTextContainer}>
-                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                  Join Another Family
-                </AppText>
-                <AppText variant="caption" color={HomeTheme.textMuted}>
-                  Scan a QR invitation to co-manage another pet.
-                </AppText>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
-            </TouchableOpacity>
+            {isOwner ? (
+              <>
+                <View style={styles.sectionHeader}>
+                  <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
+                    Collaborate
+                  </AppText>
+                </View>
+                <TouchableOpacity
+                  style={styles.joinFamilyCard}
+                  onPress={() => setQrScannerVisible(true)}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.joinIconBg}>
+                    <Ionicons name="qr-code-outline" size={24} color="#3A8F3B" />
+                  </View>
+                  <View style={styles.joinTextContainer}>
+                    <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                      Join Another Family
+                    </AppText>
+                    <AppText variant="caption" color={HomeTheme.textMuted}>
+                      Scan a QR invitation to co-manage another pet.
+                    </AppText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
+                </TouchableOpacity>
+              </>
+            ) : null}
           </>
         ) : null}
       </ScrollView>
