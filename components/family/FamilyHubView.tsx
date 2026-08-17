@@ -301,7 +301,7 @@ export function FamilyHubView() {
               canInvite={canInvite}
               // Show invite section if: user owns this pet, OR user has global management rights
               // (premium + owns at least one other pet). Hides it only for non-premium caregivers.
-              showInviteSection={isOwner || canManageFamilyGlobally}
+              showInviteSection={isOwner}
               onShareCode={handleShareCode}
               onInvitePress={() => setInviteSheetVisible(true)}
             />

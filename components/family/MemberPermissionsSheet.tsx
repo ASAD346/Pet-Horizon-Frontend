@@ -549,7 +549,9 @@ export function MemberPermissionsSheet({
 
               {/* Always-on modules info */}
               <View style={s.infoCard}>
-                <Ionicons name="information-circle-outline" size={14} color="#64748B" />
+                <View style={s.infoIconWrap}>
+                  <Ionicons name="information-circle-outline" size={16} color="#3B82F6" />
+                </View>
                 <AppText style={s.infoText}>
                   Journal and Expenses are always enabled for all members.
                 </AppText>
@@ -821,15 +823,32 @@ const s = StyleSheet.create({
   // Info
   infoCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 12,
+    borderColor: '#ECEEF2',
+    padding: 14,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+      },
+      android: { elevation: 2 },
+    }),
   },
-  infoText: { flex: 1, color: '#64748B', fontSize: 12, fontWeight: '500', lineHeight: 17 },
+  infoIconWrap: {
+    width: 25,
+    height: 25,
+    borderRadius: 7,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoText: { flex: 1, color: '#64748B', fontSize: 12, fontWeight: '600', lineHeight: 17 },
 
   // Error
   errorCard: {
