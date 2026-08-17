@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "Pet Horizon",
+    "jsEngine": "hermes",
     "slug": "Pet-Horizon",
     "version": "1.0.0",
     "orientation": "portrait",

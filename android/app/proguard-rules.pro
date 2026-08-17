@@ -12,3 +12,25 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# Keep essential React Native bridge and layout components
+-keep class com.facebook.react.** { *; }
+-keep class com.facebook.systrace.** { *; }
+-keep class com.facebook.yoga.** { *; }
+-keep class com.facebook.proguard.annotations.** { *; }
+
+# Keep native methods and classes used by JNI
+-keepclasseswithmembers class * {
+    native <methods>;
+}
+
+# Keep JS/Hermes internal bridge classes
+-keep class com.facebook.hermes.unicode.** { *; }
+-keep class com.facebook.jni.** { *; }
+
+# Optimization & Obfuscation Tweaks
+-repackageclasses ''
+-allowaccessmodification
+-dontobfuscate false
+-dontshrink false
+-dontoptimize false

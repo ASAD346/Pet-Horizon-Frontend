@@ -19,7 +19,9 @@ import { ActiveWalkProvider } from '@/context/ActiveWalkContext';
 import { ActiveWalkOverlay } from '@/components/home/ActiveWalkOverlay';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { runSecurityGuards } from '@/lib/security/guards';
 
+runSecurityGuards();
 void ensureNotificationHandler();
 
 // Prevent the native splash screen from automatically hiding
