@@ -35,6 +35,8 @@ import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
 import { useToast } from '@/hooks/useToast';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearActivePetCache } from '@/lib/pet/activePetCache';
 
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
@@ -95,6 +97,7 @@ const ACTIVITY_COLORS: Record<string, { color: string; bg: string }> = {
 };
 
 export default function HomeScreen() {
+  const queryClient = useQueryClient();
   const isFocused = useIsFocused();
   const { timezone } = useTimezone();
   const { clearance: tabBarClearance } = useTabBarLayout();
@@ -491,6 +494,11 @@ export default function HomeScreen() {
     setTargetPetId(petId);
     setIsSwitching(true);
     
+    // Cancel inflight queries and wipe cache synchronously to prevent data contamination
+    clearActivePetCache();
+    queryClient.cancelQueries();
+    queryClient.clear();
+    
     try {
       if (user) {
         await activatePetSession({
@@ -510,7 +518,7 @@ export default function HomeScreen() {
     } finally {
       setIsSwitching(false);
     }
-  }, [token, pet?._id, user, setSession, reloadPet, reloadPets, refetchDashboard]);
+  }, [token, pet?._id, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient]);
 
   const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {

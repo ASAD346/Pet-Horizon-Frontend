@@ -42,7 +42,8 @@ export function ContextGuard({ children }: ContextGuardProps) {
     setResetting(true);
     clearPetPermissionCache();
 
-    // STRICT ISOLATION: Clear the query cache immediately to prevent old pet's data from leaking
+    // STRICT ISOLATION: Cancel all in-flight queries and clear the cache immediately to prevent old pet's data from leaking
+    queryClient.cancelQueries();
     queryClient.clear();
 
     const timer = setTimeout(() => {

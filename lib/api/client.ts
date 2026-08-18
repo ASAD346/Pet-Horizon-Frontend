@@ -10,6 +10,7 @@ export interface RequestOptions {
   token?: string | null;
   headers?: Record<string, string>;
   timeoutMs?: number;
+  signal?: AbortSignal;
 }
 
 interface ApiErrorBody {
@@ -66,6 +67,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     token,
     headers = {},
     timeoutMs = 30000,
+    signal,
   } = options;
 
   const url = `${API_BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
@@ -106,7 +108,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       method,
       headers: requestHeaders,
       body: body !== undefined ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
+      signal: signal || controller.signal,
     });
 
     clearTimeout(timeoutId);
