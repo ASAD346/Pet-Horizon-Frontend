@@ -98,6 +98,14 @@ export function setSession(session: AuthSession): AppThunk<Promise<void>> {
   return async (dispatch) => {
     await saveSession(session);
     dispatch(setSessionAction(session));
+    // Invalidate subscription query cache to propagate changes instantly across all screens
+    try {
+      queryClient.invalidateQueries({ queryKey: ['subscription'] });
+    } catch (e) {
+      log.warn('Auth', 'Failed to invalidate subscription queries on session update', {
+        message: e instanceof Error ? e.message : String(e),
+      });
+    }
   };
 }
 

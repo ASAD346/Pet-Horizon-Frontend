@@ -15,6 +15,7 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
@@ -179,6 +180,7 @@ function ConfettiParticle({ delay, color, startX }: { delay: number; color: stri
 // ── Main Component ────────────────────────────────────────────────────────
 export function PremiumHubContent() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
   const { token, user, setSession } = useAuth();
@@ -329,6 +331,7 @@ export function PremiumHubContent() {
       if (verifyRes.success) {
         const profile = await fetchUserProfile(token, user._id);
         await setSession({ token, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
+        queryClient.invalidateQueries({ queryKey: ['subscription'] });
         setIsPremium(true);
         setCheckoutVisible(false);
         setSuccessVisible(true);

@@ -19,7 +19,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { getErrorMessage } from '@/lib/api/errors';
 import { fetchUserProfile, deleteAccount } from '@/services/users/userApi';
-import { fetchPremiumStatus } from '@/services/premium/premiumApi';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import type { PremiumStatusResponse } from '@/types/premium';
 import { PremiumUpgradeBanner } from './PremiumUpgradeBanner';
 import { PremiumActiveCard } from './PremiumActiveCard';
@@ -55,7 +55,7 @@ export function ProfileHubView() {
   
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [premiumStatus, setPremiumStatus] = useState<PremiumStatusResponse | null>(null);
+  const { premiumStatus, isPremium, refetch: refetchPremium } = usePremiumStatus();
   
   const [termsVisible, setTermsVisible] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
@@ -73,7 +73,6 @@ export function ProfileHubView() {
   const reload = useCallback(async () => {
     if (!token || !user?._id) {
       reset();
-      setPremiumStatus(null);
       return;
     }
 
@@ -81,15 +80,14 @@ export function ProfileHubView() {
     if (block) setLoading(true);
 
     try {
-      const [profile, status] = await Promise.all([
+      const [profile] = await Promise.all([
         fetchUserProfile(token, user._id),
-        fetchPremiumStatus(token),
+        refetchPremium(),
       ]);
       // Preserve activePetId — the /users/:id endpoint doesn't return it,
       // so naively overwriting the session would clear it and trigger
       // the ContextGuard reconciliation screen on every profile visit.
       await setSession({ token, user: { ...profile, activePetId: user.activePetId } });
-      setPremiumStatus(status);
       markLoaded();
     } catch (error) {
       if (block) {
@@ -98,7 +96,7 @@ export function ProfileHubView() {
     } finally {
       setLoading(false);
     }
-  }, [token, user?._id, setSession, shouldBlockUI, markLoaded, reset]);
+  }, [token, user?._id, setSession, shouldBlockUI, markLoaded, reset, refetchPremium]);
 
   useFocusReload(reload, Boolean(token && user?._id));
 
@@ -138,7 +136,6 @@ export function ProfileHubView() {
   }, [token, user?._id, logout, router]);
 
   const displayName = user?.fullName?.trim() || user?.email?.split('@')[0] || 'User';
-  const isPremium = premiumStatus?.isPremium ?? user?.premiumStatus === 'premium';
 
   // Gradient selection matching Home Header
   const gradientColors = isPremium

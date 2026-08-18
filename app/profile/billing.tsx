@@ -21,9 +21,9 @@ import { getErrorMessage } from '@/lib/api/errors';
 import {
   cancelPremium,
   fetchPaymentInvoices,
-  fetchPremiumStatus,
   subscribePremium,
 } from '@/services/premium/premiumApi';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { SecureCheckoutSheet } from '@/components/profile/SecureCheckoutSheet';
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
@@ -192,7 +192,7 @@ function InvoiceRow({ invoice }: { invoice: PaymentInvoice }) {
 export default function BillingScreen() {
   const router = useRouter();
   const { token, user } = useAuth();
-  const [status, setStatus] = useState<PremiumStatusResponse | null>(null);
+  const { premiumStatus: status, isPremium, refetch: refetchPremium } = usePremiumStatus();
   const [invoices, setInvoices] = useState<PaymentInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
@@ -228,24 +228,21 @@ export default function BillingScreen() {
     }
   };
 
-  const isPremium = status?.isPremium ?? user?.premiumStatus === 'premium';
-
   const reload = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const [premiumStatus, invoiceList] = await Promise.all([
-        fetchPremiumStatus(token),
+      const [, invoiceList] = await Promise.all([
+        refetchPremium(),
         fetchPaymentInvoices(token),
       ]);
-      setStatus(premiumStatus);
       setInvoices(invoiceList);
     } catch (err) {
       showErrorToast(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, refetchPremium]);
 
   useEffect(() => { reload(); }, [reload]);
 
