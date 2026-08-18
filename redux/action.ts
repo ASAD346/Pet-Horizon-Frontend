@@ -1,4 +1,4 @@
-import type { Action } from 'redux';
+import type { UnknownAction } from '@reduxjs/toolkit';
 import type { ThunkAction } from 'redux-thunk';
 import { log } from '@/lib/log';
 import { loginWithEmailPassword, loginWithGoogle as loginWithGoogleApi } from '@/services/auth/authApi';
@@ -9,95 +9,37 @@ import { initializeActivePetCache } from '@/lib/pet/activePetCache';
 import { initializePetPermissionCache, clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
 import { queryClient } from '@/app/_layout';
 import {
-  AUTH_BOOTSTRAP_COMPLETE,
-  AUTH_CLEAR_SESSION,
-  AUTH_SET_SESSION,
-  HIDE_TOAST,
-  SHOW_TOAST,
-  SET_FORM_READ_ONLY,
-  UPDATE_MEMBER_PERMISSIONS_SUCCESS,
-} from './action-types';
+  setSessionAction,
+  clearSessionAction,
+  bootstrapCompleteAction,
+  showToastActionInternal,
+  hideToastAction,
+  setFormReadOnlyAction,
+  updateMemberPermissionsSuccess,
+} from './reducer';
 import type { AppState, ToastState } from './types';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
   AppState,
   unknown,
-  Action<string>
+  UnknownAction
 >;
 
-export interface SetSessionAction {
-  type: typeof AUTH_SET_SESSION;
-  payload: AuthSession;
-}
+export type AppAction = UnknownAction;
 
-export interface ClearSessionAction {
-  type: typeof AUTH_CLEAR_SESSION;
-}
+export const showToastAction = (message: string, type: ToastState['type'] = 'info') =>
+  showToastActionInternal({ message, type });
 
-export interface BootstrapCompleteAction {
-  type: typeof AUTH_BOOTSTRAP_COMPLETE;
-}
-
-export interface ShowToastAction {
-  type: typeof SHOW_TOAST;
-  payload: { message: string; type: ToastState['type'] };
-}
-
-export interface HideToastAction {
-  type: typeof HIDE_TOAST;
-}
-
-export interface SetFormReadOnlyAction {
-  type: typeof SET_FORM_READ_ONLY;
-  payload: boolean;
-}
-
-export interface UpdateMemberPermissionsSuccessAction {
-  type: typeof UPDATE_MEMBER_PERMISSIONS_SUCCESS;
-  payload: { memberId: string; permissions: any };
-}
-
-export type AppAction =
-  | SetSessionAction
-  | ClearSessionAction
-  | BootstrapCompleteAction
-  | ShowToastAction
-  | HideToastAction
-  | SetFormReadOnlyAction
-  | UpdateMemberPermissionsSuccessAction;
-
-export const setSessionAction = (session: AuthSession): SetSessionAction => ({
-  type: AUTH_SET_SESSION,
-  payload: session,
-});
-
-export const clearSessionAction = (): ClearSessionAction => ({
-  type: AUTH_CLEAR_SESSION,
-});
-
-export const bootstrapCompleteAction = (): BootstrapCompleteAction => ({
-  type: AUTH_BOOTSTRAP_COMPLETE,
-});
-
-export const showToastAction = (message: string, type: ToastState['type'] = 'info'): ShowToastAction => ({
-  type: SHOW_TOAST,
-  payload: { message, type },
-});
-
-export const hideToastAction = (): HideToastAction => ({
-  type: HIDE_TOAST,
-});
-
-export const setFormReadOnlyAction = (isReadOnly: boolean): SetFormReadOnlyAction => ({
-  type: SET_FORM_READ_ONLY,
-  payload: isReadOnly,
-});
-
-export const updateMemberPermissionsSuccess = (memberId: string, permissions: any): UpdateMemberPermissionsSuccessAction => ({
-  type: UPDATE_MEMBER_PERMISSIONS_SUCCESS,
-  payload: { memberId, permissions },
-});
+// Re-export actions for backward compatibility
+export {
+  setSessionAction,
+  clearSessionAction,
+  bootstrapCompleteAction,
+  hideToastAction,
+  setFormReadOnlyAction,
+  updateMemberPermissionsSuccess,
+};
 
 export function bootstrapAuth(): AppThunk {
   return async (dispatch) => {
@@ -209,6 +151,6 @@ export function logout(): AppThunk<Promise<void>> {
 
 export function showToast(message: string): AppThunk {
   return (dispatch) => {
-    dispatch(showToastAction(message));
+    dispatch(showToastAction(message, 'info'));
   };
 }

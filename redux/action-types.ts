@@ -1,9 +1,4 @@
-export const AUTH_BOOTSTRAP_COMPLETE = 'AUTH_BOOTSTRAP_COMPLETE';
-export const AUTH_SET_SESSION = 'AUTH_SET_SESSION';
-export const AUTH_CLEAR_SESSION = 'AUTH_CLEAR_SESSION';
-
-export const SHOW_TOAST = 'SHOW_TOAST';
-export const HIDE_TOAST = 'HIDE_TOAST';
-
-export const SET_FORM_READ_ONLY = 'SET_FORM_READ_ONLY';
-export const UPDATE_MEMBER_PERMISSIONS_SUCCESS = 'family/updateMemberPermissionsSuccess';
+/**
+ * @deprecated Legacy action types. Slices handle action types automatically now.
+ */
+export {};

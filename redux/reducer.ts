@@ -1,14 +1,6 @@
-import { combineReducers, type AnyAction } from 'redux';
-import {
-  AUTH_BOOTSTRAP_COMPLETE,
-  AUTH_CLEAR_SESSION,
-  AUTH_SET_SESSION,
-  HIDE_TOAST,
-  SHOW_TOAST,
-  SET_FORM_READ_ONLY,
-  UPDATE_MEMBER_PERMISSIONS_SUCCESS,
-} from './action-types';
-import type { AppState, AuthState, ToastState, UiState } from './types';
+import { combineReducers, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { AuthSession } from '@/types/auth';
+import type { AppState, AuthState, ToastState, UiState, FamilyState } from './types';
 
 const initialAuthState: AuthState = {
   user: null,
@@ -24,82 +16,96 @@ const initialUiState: UiState = {
   isFormReadOnly: false,
 };
 
-interface FamilyState {
-  members: any[];
-}
-
 const initialFamilyState: FamilyState = {
   members: [],
 };
 
-function familyReducer(state = initialFamilyState, action: AnyAction): FamilyState {
-  switch (action.type) {
-    case UPDATE_MEMBER_PERMISSIONS_SUCCESS:
-      return {
-        ...state,
-        members: state.members.map((m: any) =>
-          String(m._id || m.id || m.userId?._id) === String(action.payload.memberId)
-            ? { ...m, permissions: action.payload.permissions }
-            : m
-        ),
-      };
-    default:
-      return state;
-  }
-}
-
-function authReducer(state = initialAuthState, action: AnyAction): AuthState {
-  switch (action.type) {
-    case AUTH_SET_SESSION:
-      return {
-        ...state,
-        user: action.payload.user,
-        token: action.payload.token,
-      };
-    case AUTH_CLEAR_SESSION:
-      return {
-        ...state,
-        user: null,
-        token: null,
-      };
-    case AUTH_BOOTSTRAP_COMPLETE:
-      return {
-        ...state,
-        isBootstrapping: false,
-      };
-    default:
-      return state;
-  }
-}
-
-function toastReducer(state = initialToastState, action: AnyAction): ToastState {
-  switch (action.type) {
-    case SHOW_TOAST:
-      return { message: action.payload.message, type: action.payload.type };
-    case HIDE_TOAST:
-      return { message: null, type: undefined };
-    default:
-      return state;
-  }
-}
-
-function uiReducer(state = initialUiState, action: AnyAction): UiState {
-  switch (action.type) {
-    case SET_FORM_READ_ONLY:
-      return { ...state, isFormReadOnly: action.payload };
-    default:
-      return state;
-  }
-}
-
-export const rootReducer = combineReducers({
-  auth: authReducer,
-  toast: toastReducer,
-  ui: uiReducer,
-  family: familyReducer,
+const authSlice = createSlice({
+  name: 'auth',
+  initialState: initialAuthState,
+  reducers: {
+    setSession: (state, action: PayloadAction<AuthSession>) => {
+      state.user = action.payload.user;
+      state.token = action.payload.token;
+    },
+    clearSession: (state) => {
+      state.user = null;
+      state.token = null;
+    },
+    bootstrapComplete: (state) => {
+      state.isBootstrapping = false;
+    },
+  },
 });
 
-export type { AppState, AuthState, ToastState, UiState } from './types';
+const toastSlice = createSlice({
+  name: 'toast',
+  initialState: initialToastState,
+  reducers: {
+    showToast: (state, action: PayloadAction<{ message: string; type: ToastState['type'] }>) => {
+      state.message = action.payload.message;
+      state.type = action.payload.type;
+    },
+    hideToast: (state) => {
+      state.message = null;
+      state.type = undefined;
+    },
+  },
+});
+
+const uiSlice = createSlice({
+  name: 'ui',
+  initialState: initialUiState,
+  reducers: {
+    setFormReadOnly: (state, action: PayloadAction<boolean>) => {
+      state.isFormReadOnly = action.payload;
+    },
+  },
+});
+
+const familySlice = createSlice({
+  name: 'family',
+  initialState: initialFamilyState,
+  reducers: {
+    updateMemberPermissionsSuccess: (state, action: PayloadAction<{ memberId: string; permissions: any }>) => {
+      state.members = state.members.map((m: any) =>
+        String(m._id || m.id || m.userId?._id) === String(action.payload.memberId)
+          ? { ...m, permissions: action.payload.permissions }
+          : m
+      );
+    },
+  },
+});
+
+export const {
+  setSession: setSessionAction,
+  clearSession: clearSessionAction,
+  bootstrapComplete: bootstrapCompleteAction,
+} = authSlice.actions;
+
+export const {
+  showToast: showToastActionInternal,
+  hideToast: hideToastAction,
+} = toastSlice.actions;
+
+export const {
+  setFormReadOnly: setFormReadOnlyAction,
+} = uiSlice.actions;
+
+export const {
+  updateMemberPermissionsSuccess,
+} = familySlice.actions;
+
+export const rootReducer = combineReducers({
+  auth: authSlice.reducer,
+  toast: toastSlice.reducer,
+  ui: uiSlice.reducer,
+  family: familySlice.reducer,
+});
+
+export type { AppState, AuthState, ToastState, UiState, FamilyState } from './types';
+
+// Typed selectors
 export const selectAuthUser = (state: AppState) => state.auth.user;
 export const selectAuthToken = (state: AppState) => state.auth.token;
 export const selectIsAuthenticated = (state: AppState) => Boolean(state.auth.token);

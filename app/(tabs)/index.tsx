@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useAppSelector } from '@/redux/store';
+import { selectAuthUser } from '@/redux/reducer';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
 import { useNotificationStore } from '@/context/NotificationContext';
 
@@ -106,12 +107,11 @@ export default function HomeScreen() {
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
 
-  const currentPetWorkspace = useSelector((state: any) => (state.pet?.activeWorkspace || state.family?.activeWorkspace)); 
-  const currentUser = useSelector((state: any) => state.auth.user);
+  const currentPetWorkspace = useAppSelector((state) => ((state as any).pet?.activeWorkspace || (state.family as any)?.activeWorkspace)); 
+  const currentUser = useAppSelector(selectAuthUser);
 
-  // Directly locate this user's live database permission block
   const myPermissions = currentPetWorkspace?.members?.find(
-      (m: any) => String(m.userId || m.id) === String(currentUser?._id || currentUser?.id)
+      (m: any) => String(m.userId || m.id) === String((currentUser as any)?._id || (currentUser as any)?.id)
   )?.permissions || currentPetWorkspace?.permissions;
 
   const petPermissions = usePetPermissions(token, pet, user?._id);

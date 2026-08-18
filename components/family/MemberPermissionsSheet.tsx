@@ -13,7 +13,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDispatch } from 'react-redux';
+import { useAppDispatch } from '@/redux/store';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { SafeModal } from '@/components/ui/SafeModal';
 import { AppText } from '@/components/ui/AppText';
@@ -147,7 +147,7 @@ export function MemberPermissionsSheet({
 }: MemberPermissionsSheetProps) {
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
   const [removing, setRemoving] = useState(false);

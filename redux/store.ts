@@ -1,13 +1,18 @@
-import { applyMiddleware, createStore } from 'redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, type TypedUseSelectorHook } from 'react-redux';
-import { thunk, type ThunkDispatch } from 'redux-thunk';
-import type { AppAction, AppThunk } from './action';
+import type { AppThunk } from './action';
 import { rootReducer } from './reducer';
 import type { AppState } from './types';
 
-export const store = createStore(rootReducer, applyMiddleware(thunk));
+export const store = configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+});
 
-export type AppDispatch = ThunkDispatch<AppState, unknown, AppAction>;
+export type AppDispatch = typeof store.dispatch;
 export type { AppThunk };
 
 export const useAppDispatch = () => useDispatch<AppDispatch>();
