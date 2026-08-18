@@ -109,6 +109,11 @@ export default function HomeScreen() {
   const { token, user, setSession } = useAuth();
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [targetPetId, setTargetPetId] = useState<string | null | undefined>(pet?._id);
+
+  const effectivePet = isSwitching ? null : pet;
+  const effectiveLoading = isSwitching || loading;
 
   const currentPetWorkspace = useAppSelector((state) => ((state as any).pet?.activeWorkspace || (state.family as any)?.activeWorkspace)); 
   const currentUser = useAppSelector(selectAuthUser);
@@ -117,7 +122,7 @@ export default function HomeScreen() {
       (m: any) => String(m.userId || m.id) === String((currentUser as any)?._id || (currentUser as any)?.id)
   )?.permissions || currentPetWorkspace?.permissions;
 
-  const petPermissions = usePetPermissions(token, pet, user?._id);
+  const petPermissions = usePetPermissions(token, effectivePet, user?._id);
   const {
     canView,
     canEdit,
@@ -128,12 +133,9 @@ export default function HomeScreen() {
 
   const { pets, switchingId, switchPet, reload: reloadPets } = usePets(
     token,
-    pet?._id ?? user?.activePetId,
+    effectivePet?._id ?? user?.activePetId,
     user?._id,
   );
-
-  const [targetPetId, setTargetPetId] = useState<string | null | undefined>(pet?._id);
-  const [isSwitching, setIsSwitching] = useState(false);
 
   useEffect(() => {
     if (pet?._id && !switchingId) {
@@ -243,37 +245,39 @@ export default function HomeScreen() {
     return true;
   };
 
-  const rawFeeding = (dashboardData?.todaySchedules?.feeding ?? []).filter(isDateWithinRange);
+  const effectiveDashboardData = isSwitching ? null : dashboardData;
+
+  const rawFeeding = (effectiveDashboardData?.todaySchedules?.feeding ?? []).filter(isDateWithinRange);
   const feedingSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawFeeding, (s: any) => `${s.time || ''}-${s.mealType || ''}-${s.amount || ''}-${s.unit || ''}`),
     [rawFeeding]
   );
 
-  const rawWalk = (dashboardData?.todaySchedules?.walk ?? []).filter(isDateWithinRange);
+  const rawWalk = (effectiveDashboardData?.todaySchedules?.walk ?? []).filter(isDateWithinRange);
   const walkSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawWalk, (s: any) => `${s.time || ''}-${s.duration || ''}`),
     [rawWalk]
   );
 
-  const rawMedicine = (dashboardData?.todaySchedules?.medicine ?? []).filter(isDateWithinRange);
+  const rawMedicine = (effectiveDashboardData?.todaySchedules?.medicine ?? []).filter(isDateWithinRange);
   const medicineSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawMedicine, (s: any) => `${s.time || ''}-${s.medicineName || ''}-${s.dose || ''}`),
     [rawMedicine]
   );
 
-  const rawGrooming = (dashboardData?.todaySchedules?.grooming ?? []).filter(isDateWithinRange);
+  const rawGrooming = (effectiveDashboardData?.todaySchedules?.grooming ?? []).filter(isDateWithinRange);
   const groomingRecords = useMemo(() => 
     deduplicateByIdOrProps(rawGrooming, (s: any) => `${s.time || ''}-${s.groomingType || ''}`),
     [rawGrooming]
   );
 
-  const rawVaccination = (dashboardData?.todaySchedules?.vaccination ?? []).filter(isDateWithinRange);
+  const rawVaccination = (effectiveDashboardData?.todaySchedules?.vaccination ?? []).filter(isDateWithinRange);
   const vaccinationSchedules = useMemo(() => 
     deduplicateByIdOrProps(rawVaccination, (s: any) => `${s.dueDate || s.date || ''}-${s.vaccineName || ''}`),
     [rawVaccination]
   );
 
-  const rawTasks = (dashboardData?.upcomingTasks ?? []).filter((task: any) => {
+  const rawTasks = (effectiveDashboardData?.upcomingTasks ?? []).filter((task: any) => {
     // For upcoming tasks, check if the date is scheduled for today (supporting multiple field formats)
     const taskDateStr = task.scheduledDate || task.date || task.dateTime || task.scheduleDate;
     if (taskDateStr) {
@@ -292,14 +296,14 @@ export default function HomeScreen() {
   const { unreadCount: globalUnreadCount, setUnreadCount } = useNotificationStore();
 
   useEffect(() => {
-    if (dashboardData?.notifications?.unreadCount !== undefined) {
-      setUnreadCount(dashboardData.notifications.unreadCount);
+    if (effectiveDashboardData?.notifications?.unreadCount !== undefined) {
+      setUnreadCount(effectiveDashboardData.notifications.unreadCount);
     }
-  }, [dashboardData?.notifications?.unreadCount, setUnreadCount]);
+  }, [effectiveDashboardData?.notifications?.unreadCount, setUnreadCount]);
 
   const unreadCount = globalUnreadCount;
   
-  const scheduleLoading = dashboardLoading && !dashboardFetching;
+  const scheduleLoading = isSwitching || (dashboardLoading && !dashboardFetching);
 
   const visibleFeedingSchedules = feedingSchedules;
   const visibleWalkSchedules = walkSchedules;
@@ -309,25 +313,25 @@ export default function HomeScreen() {
 
 
 
-  const profileStats = dashboardData?.activePet;
+  const profileStats = effectiveDashboardData?.activePet;
   const isPremium = profileStats?.isPremium ?? user?.premiumStatus === 'premium';
 
   const profile = useMemo(() => {
     let baseProfile: any = null;
-    if (profileStats && profileStats.petId === pet?._id) {
+    if (profileStats && profileStats.petId === effectivePet?._id) {
       baseProfile = {
         ...profileStats,
-        species: profileStats.species || pet?.species || '—',
-        birthday: profileStats.birthday || pet?.birthday,
+        species: profileStats.species || effectivePet?.species || '—',
+        birthday: profileStats.birthday || effectivePet?.birthday,
         activity: profileStats.plan ? String(profileStats.plan).toUpperCase() : 'FREE',
         health: profileStats.weight != null ? `${profileStats.weight} ${String(profileStats.weightUnit || 'kg').toUpperCase()}` : '—',
         mood: profileStats.isPremium ? 'Premium' : 'Free',
       };
-    } else if (pet) {
-      const mapped = petToProfileProps(pet);
+    } else if (effectivePet) {
+      const mapped = petToProfileProps(effectivePet);
       baseProfile = {
         ...mapped,
-        species: pet.species || '—',
+        species: effectivePet.species || '—',
         activity: isPremium ? 'PREMIUM' : 'FREE',
         health: mapped.weight,
         mood: isPremium ? 'Premium' : 'Free',
@@ -358,19 +362,19 @@ export default function HomeScreen() {
       };
     }
     return null;
-  }, [pet, profileStats, isPremium]);
+  }, [effectivePet, profileStats, isPremium]);
 
   const petImageUrl = resolveMediaUrl(
-    profileStats?.petId === pet?._id ? profileStats?.photoUrl ?? pet?.image : pet?.image,
+    profileStats?.petId === effectivePet?._id ? profileStats?.photoUrl ?? effectivePet?.image : effectivePet?.image,
   );
 
-  const petBirthday = profileStats?.birthday ?? pet?.birthday ?? null;
+  const petBirthday = profileStats?.birthday ?? effectivePet?.birthday ?? null;
   const showBirthdayBanner =
-    !loading && Boolean(pet?.name) && isBirthdayToday(petBirthday);
-  const petCardLoading = loading && !pet;
+    !effectiveLoading && Boolean(effectivePet?.name) && isBirthdayToday(petBirthday);
+  const petCardLoading = effectiveLoading && !effectivePet;
 
   const recentActivities = useMemo(() => {
-    const list = dashboardData?.recentActivities ?? [];
+    const list = effectiveDashboardData?.recentActivities ?? [];
     return list.slice(0, 5).map((entry) => {
       const category = mapActivityTypeToCategory(entry.activityType);
       const colors = ACTIVITY_COLORS[category] || ACTIVITY_COLORS.general;
@@ -636,12 +640,12 @@ export default function HomeScreen() {
           loading={petCardLoading}
           isBirthdayToday={showBirthdayBanner}
           isPremium={isPremium}
-          onPress={pet ? () => setPetSwitcherVisible(true) : undefined}
-          onEditPress={pet ? () => router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: pet._id } }) : undefined}
+          onPress={effectivePet ? () => setPetSwitcherVisible(true) : undefined}
+          onEditPress={effectivePet ? () => router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: effectivePet._id } }) : undefined}
         />
 
         {showBirthdayBanner ? (
-          <PetBirthdayBanner petName={pet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
+          <PetBirthdayBanner petName={effectivePet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
         ) : null}
 
 
@@ -700,7 +704,7 @@ export default function HomeScreen() {
         <LogFoodSheet
           visible={logFoodVisible}
           onClose={() => setLogFoodVisible(false)}
-          petId={pet?._id ?? null}
+          petId={effectivePet?._id ?? null}
           token={token}
           onSaved={() => {
             void refetchDashboard();
@@ -711,7 +715,7 @@ export default function HomeScreen() {
         <LogWalkSheet
           visible={logWalkVisible}
           onClose={() => setLogWalkVisible(false)}
-          petId={pet?._id ?? null}
+          petId={effectivePet?._id ?? null}
           token={token}
           isReadOnly={!canEdit('walks')}
           onSaved={() => {
@@ -722,7 +726,7 @@ export default function HomeScreen() {
         <LogMedicineSheet
           visible={logMedicineVisible}
           onClose={() => setLogMedicineVisible(false)}
-          petId={pet?._id ?? null}
+          petId={effectivePet?._id ?? null}
           token={token}
           isReadOnly={!canEdit('medicine')}
           onSaved={() => {
@@ -733,7 +737,7 @@ export default function HomeScreen() {
         <LogGroomingSheet
           visible={logGroomingVisible}
           onClose={() => setLogGroomingVisible(false)}
-          petId={pet?._id ?? null}
+          petId={effectivePet?._id ?? null}
           token={token}
           isReadOnly={!canEdit('grooming')}
           onSaved={() => {
@@ -744,7 +748,7 @@ export default function HomeScreen() {
         <LogVaccinationSheet
           visible={logVaccinationVisible}
           onClose={() => setLogVaccinationVisible(false)}
-          petId={pet?._id ?? null}
+          petId={effectivePet?._id ?? null}
           token={token}
           isReadOnly={!canEdit('vaccination')}
           onSaved={() => {
@@ -772,7 +776,7 @@ export default function HomeScreen() {
         <PetSwitcherSheet
           visible={petSwitcherVisible}
           pets={pets}
-          activePetId={pet?._id}
+          activePetId={effectivePet?._id}
           currentUserId={user?._id}
           switchingId={switchingId}
           onClose={() => setPetSwitcherVisible(false)}
