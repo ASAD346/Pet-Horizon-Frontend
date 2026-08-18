@@ -95,6 +95,7 @@ export function useNotifications(token: string | null) {
     items,
     unreadCount,
     loading,
+    hasLoaded: hasLoadedNotifications,
     error,
     reload,
     markRead,

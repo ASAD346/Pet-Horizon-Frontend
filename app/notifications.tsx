@@ -200,7 +200,7 @@ function groupNotifications(items: any[]): GroupedNotifications[] {
 export default function NotificationsScreen() {
   const router = useRouter();
   const { token } = useAuth();
-  const { items, loading, error, reload, markRead, markAllRead, remove } = useNotifications(token);
+  const { items, loading, hasLoaded, error, reload, markRead, markAllRead, remove } = useNotifications(token);
   const [refreshing, setRefreshing] = React.useState(false);
   const { showErrorToast } = useToast();
 
@@ -297,7 +297,7 @@ export default function NotificationsScreen() {
         </View>
       </View>
 
-      {loading && items.length === 0 ? (
+      {loading && !hasLoaded && items.length === 0 ? (
         <SkeletonNotificationList />
       ) : (
         <ScrollView
@@ -601,10 +601,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#EAF0EA',
-    padding: 10,
+    padding: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     ...Platform.select({
       ios: { shadowColor: '#0E380E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 8 },
       android: { elevation: 1 },

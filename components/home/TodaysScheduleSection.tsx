@@ -355,8 +355,8 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
               style={({ pressed }) => [
                 styles.doneBtn,
                 {
-                  backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9',
-                  borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)',
+                  backgroundColor: isPremium ? '#D4A017' : '#3A8F3B',
+                  borderColor: isPremium ? '#D4A017' : '#3A8F3B',
                 },
                 pressed && styles.pressedBtn
               ]}
@@ -364,9 +364,9 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color={isPremium ? '#B7791F' : '#2E7D32'} />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <AppText variant="caption" weight="800" color={isPremium ? '#B7791F' : '#2E7D32'}>
+                <AppText variant="caption" weight="800" color="#FFFFFF">
                   Done
                 </AppText>
               )}
@@ -391,8 +391,8 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
               style={({ pressed }) => [
                 styles.doneBtn,
                 {
-                  backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9',
-                  borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)',
+                  backgroundColor: isPremium ? '#D4A017' : '#3A8F3B',
+                  borderColor: isPremium ? '#D4A017' : '#3A8F3B',
                 },
                 pressed && styles.pressedBtn
               ]}
@@ -400,9 +400,9 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color={isPremium ? '#B7791F' : '#2E7D32'} />
+                <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <AppText variant="caption" weight="800" color={isPremium ? '#B7791F' : '#2E7D32'}>
+                <AppText variant="caption" weight="800" color="#FFFFFF">
                   Done
                 </AppText>
               )}
@@ -414,8 +414,8 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
           style={({ pressed }) => [
             styles.doneBtn,
             {
-              backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9',
-              borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)',
+              backgroundColor: isPremium ? '#D4A017' : '#3A8F3B',
+              borderColor: isPremium ? '#D4A017' : '#3A8F3B',
             },
             pressed && styles.pressedBtn
           ]}
@@ -423,9 +423,9 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
           onPress={handleComplete}
         >
           {completeBusy ? (
-            <ActivityIndicator size="small" color={isPremium ? '#B7791F' : '#2E7D32'} />
+            <ActivityIndicator size="small" color="#FFFFFF" />
           ) : (
-            <AppText variant="caption" weight="800" color={isPremium ? '#B7791F' : '#2E7D32'}>
+            <AppText variant="caption" weight="800" color="#FFFFFF">
               Done
             </AppText>
           )}

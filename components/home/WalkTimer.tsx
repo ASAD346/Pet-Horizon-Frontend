@@ -246,9 +246,8 @@ export function WalkTimer({
 
   const timerExpired = elapsedSeconds >= targetDuration * 60;
 
-  const doneBtnBg = isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9';
-  const doneBtnBorder = isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)';
-  const doneBtnColor = isPremium ? '#B7791F' : '#2E7D32';
+  const doneBtnBg = isPremium ? '#D4A017' : '#3A8F3B';
+  const doneBtnBorder = isPremium ? '#D4A017' : '#3A8F3B';
 
   return (
     <View style={styles.actionRow}>
@@ -272,7 +271,7 @@ export function WalkTimer({
         disabled={busy}
         onPress={handleComplete}
       >
-        {busy ? <ActivityIndicator size="small" color={doneBtnColor} /> : <AppText variant="caption" weight="800" color={doneBtnColor}>Done</AppText>}
+        {busy ? <ActivityIndicator size="small" color="#FFFFFF" /> : <AppText variant="caption" weight="800" color="#FFFFFF">Done</AppText>}
       </Pressable>
     </View>
   );
