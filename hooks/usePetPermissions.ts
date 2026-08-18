@@ -34,10 +34,20 @@ export function usePetPermissions(
 ): UsePetPermissionsResult {
   const scopeKey = token && pet?._id ? `${token}:${pet._id}` : null;
   const cached = getPetPermissionCache(scopeKey);
+  
+  const [prevScopeKey, setPrevScopeKey] = useState<string | null>(null);
   const [permissions, setPermissions] = useState<PetPermissionsResponse | null>(cached);
   const [loading, setLoading] = useState(() => Boolean(scopeKey && !petPermissionCacheLoaded(scopeKey)));
   const [error, setError] = useState<string | null>(null);
   const { shouldBlockUI, markLoaded } = useStaleLoadScope(scopeKey);
+
+  // Sync state during render if scopeKey changes to avoid loading flashes
+  if (scopeKey !== prevScopeKey) {
+    setPrevScopeKey(scopeKey);
+    setPermissions(cached);
+    setLoading(Boolean(scopeKey && !petPermissionCacheLoaded(scopeKey)));
+    setError(null);
+  }
 
   const reload = useCallback(async () => {
     if (!token || !pet?._id || pet._id === 'fallback-pet-id-123') {
