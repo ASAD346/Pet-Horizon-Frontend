@@ -36,7 +36,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
           }
         }
       } catch (err) {
-        log.warn('NotificationStore', 'Failed to load stored count', err);
+        log.warn('NotificationStore', 'Failed to load stored count', err as any);
       }
     }
     loadStoredCount();
@@ -51,7 +51,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         await Notifications.setBadgeCountAsync(safeCount).catch(() => {});
       }
     } catch (err) {
-      log.warn('NotificationStore', 'Failed to save count', err);
+      log.warn('NotificationStore', 'Failed to save count', err as any);
     }
   }, []);
 
@@ -79,7 +79,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       await setUnreadCount(count);
       return count;
     } catch (err) {
-      log.fail('NotificationStore', 'Failed to sync unread count', err);
+      log.fail('NotificationStore', 'Failed to sync unread count', err as any);
       return unreadCount;
     }
   }, [setUnreadCount, unreadCount]);

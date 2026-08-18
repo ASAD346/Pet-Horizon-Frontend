@@ -51,6 +51,7 @@ export function useNotifications(token: string | null) {
       }
     },
     setLoading,
+    initialLoaded: hasLoadedNotifications,
   });
 
   const markRead = useCallback(

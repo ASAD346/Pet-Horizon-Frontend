@@ -49,6 +49,7 @@ export function usePets(
       }
     },
     setLoading,
+    initialLoaded: Boolean(scopeKey && petListCacheLoaded(scopeKey)),
   });
 
   const switchPet = useCallback(

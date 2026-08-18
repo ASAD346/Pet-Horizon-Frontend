@@ -10,6 +10,7 @@ interface StaleFocusLoaderOptions<T> {
   onError?: (error: unknown, isFirstLoad: boolean) => void;
   setLoading: (loading: boolean) => void;
   focusReload?: boolean;
+  initialLoaded?: boolean;
 }
 
 /** Standard stale-while-revalidate loader for tab screens. */
@@ -22,8 +23,9 @@ export function useStaleFocusLoader<T>({
   onError,
   setLoading,
   focusReload = true,
+  initialLoaded = false,
 }: StaleFocusLoaderOptions<T>) {
-  const { shouldBlockUI, markLoaded, reset } = useStaleLoadScope(scopeKey);
+  const { shouldBlockUI, markLoaded, reset } = useStaleLoadScope(scopeKey, initialLoaded);
 
   // Use refs for transient callback parameters to keep the callback reference stable.
   const loadRef = useRef(load);
@@ -90,7 +92,7 @@ export function useStaleFocusLoader<T>({
 
   useEffect(() => {
     if (enabled && scopeKey) {
-      void reload(true);
+      void reload(false);
     } else {
       reset();
       onClearRef.current();
