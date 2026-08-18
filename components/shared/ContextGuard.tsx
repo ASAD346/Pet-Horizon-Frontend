@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePetContext } from '@/hooks/usePetContext';
+import { useAuth } from '@/hooks/useAuth';
+import { getPetListCache } from '@/lib/pet/petListCache';
 import { AppText } from '@/components/ui/AppText';
 import { clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
 
@@ -12,6 +14,12 @@ interface ContextGuardProps {
 export function ContextGuard({ children }: ContextGuardProps) {
   const { activePetId } = usePetContext();
   const queryClient = useQueryClient();
+  const { token, user } = useAuth();
+
+  const scopeKey = token && user?._id ? `${token}:${user._id}` : token;
+  const cachedPets = getPetListCache(scopeKey);
+  const targetPet = cachedPets?.find((p: any) => p._id === activePetId);
+  const petName = targetPet?.name || 'your pet';
 
   // Use a sentinel so the *first* arrival of an activePetId doesn't trigger reconciliation.
   // Only an actual switch from one known pet ID to a different known pet ID should fire.
@@ -34,22 +42,22 @@ export function ContextGuard({ children }: ContextGuardProps) {
     setResetting(true);
     clearPetPermissionCache();
 
-    // Use invalidateQueries instead of resetQueries:
-    //  - resetQueries aborts in-flight requests → causes "6000ms timeout exceeded" toasts
-    //  - invalidateQueries marks data as stale and refetches when each query is next observed
-    queryClient
-      .invalidateQueries()
-      .finally(() => {
-        setResetting(false);
-      });
+    // STRICT ISOLATION: Clear the query cache immediately to prevent old pet's data from leaking
+    queryClient.clear();
+
+    const timer = setTimeout(() => {
+      setResetting(false);
+    }, 600);
+
+    return () => clearTimeout(timer);
   }, [activePetId, queryClient]);
 
   if (resetting) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#3A8F3B" />
-        <AppText variant="bodySmall" weight="700" color="#5C6470" style={styles.text}>
-          Reconciling pet workspace context...
+        <ActivityIndicator size="large" color="#184F2E" />
+        <AppText variant="bodySmall" weight="800" color="#184F2E" style={styles.text}>
+          Loading {petName}'s workspace...
         </AppText>
       </View>
     );
