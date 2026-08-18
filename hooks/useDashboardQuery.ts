@@ -201,12 +201,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 1. Feeding Complete Mutation
   const completeFeedingMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.feeding?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await completeFeedingSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async (scheduleId) => {
@@ -237,12 +239,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 2. Feeding Skip Mutation
   const skipFeedingMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.feeding?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await skipFeedingSchedule(token!, scheduleId, {
         status: 'skipped',
         date: localDateStr,
         completedAt: new Date().toISOString(),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async (scheduleId) => {
@@ -273,13 +277,15 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 3. Walk Complete Mutation
   const completeWalkMutation = useMutation({
     mutationFn: async ({ scheduleId, elapsedMinutes }: { scheduleId: string; elapsedMinutes?: number }) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.walk?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await completeWalkSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
         ...(elapsedMinutes ? { duration: elapsedMinutes } : {}),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async ({ scheduleId }) => {
@@ -310,12 +316,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 4. Medicine Complete Mutation
   const completeMedicineMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.medicine?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await completeMedicineSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async (scheduleId) => {
@@ -346,8 +354,10 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 5. Grooming Complete Mutation
   const completeGroomingMutation = useMutation({
     mutationFn: async (recordId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.grooming?.find((s: any) => s._id === recordId || s.id === recordId);
       const res = await completeGroomingRecord(token!, recordId);
-      await cancelTaskNotifications(recordId);
+      await cancelTaskNotifications(recordId, (scheduleItem as any)?.metadata);
       return res;
     },
     onMutate: async (recordId) => {
@@ -378,12 +388,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 6. Vaccination Complete Mutation
   const completeVaccinationMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.vaccination?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await completeVaccinationSchedule(token!, scheduleId, {
         status: 'done',
         date: localDateStr,
         completedAt: new Date().toISOString(),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async (scheduleId) => {
@@ -414,12 +426,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 7. Walk Skip Mutation
   const skipWalkMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.walk?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await completeWalkSchedule(token!, scheduleId, {
         status: 'skipped',
         date: localDateStr,
         completedAt: new Date().toISOString(),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async (scheduleId) => {
@@ -450,12 +464,14 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
   // 8. Medicine Skip Mutation
   const skipMedicineMutation = useMutation({
     mutationFn: async (scheduleId: string) => {
+      const cached = queryClient.getQueryData<UnifiedDashboardData>(['dashboard', petId, localDateStr]);
+      const scheduleItem = cached?.todaySchedules?.medicine?.find((s: any) => s._id === scheduleId || s.id === scheduleId);
       const res = await completeMedicineSchedule(token!, scheduleId, {
         status: 'skipped',
         date: localDateStr,
         completedAt: new Date().toISOString(),
       });
-      await cancelTaskNotifications(scheduleId);
+      await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
       return res;
     },
     onMutate: async (scheduleId) => {

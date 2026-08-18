@@ -27,6 +27,7 @@ import {
   buildVaccinationDatePayload,
   validateScheduleDate,
 } from '@/lib/schedule/scheduleDate';
+import { scheduleLocalNotificationsForEntry } from '@/lib/push/notificationSetup';
 import type {
   FeedingEntryState,
   GroomingEntryState,
@@ -116,12 +117,20 @@ async function saveFeedingEntry(token: string, petId: string, entry: FeedingEntr
     ...buildScheduleDatePayload(entry.scheduleDate),
   };
 
+  const notificationIds = await scheduleLocalNotificationsForEntry(entry, 'feeding', petId);
+  const bodyWithMetadata = {
+    ...body,
+    metadata: {
+      notificationIds,
+    },
+  };
+
   if (entry.scheduleId) {
-    await updateFeedingSchedule(token, entry.scheduleId, body);
+    await updateFeedingSchedule(token, entry.scheduleId, bodyWithMetadata);
     return;
   }
 
-  await createFeedingSchedule(token, { petId, ...body });
+  await createFeedingSchedule(token, { petId, ...bodyWithMetadata });
 }
 
 async function saveWalkEntry(token: string, petId: string, entry: WalkEntryState) {
@@ -144,15 +153,23 @@ async function saveWalkEntry(token: string, petId: string, entry: WalkEntryState
     ...buildScheduleDatePayload(entry.scheduleDate),
   };
 
+  const notificationIds = await scheduleLocalNotificationsForEntry(entry, 'walk', petId);
+  const bodyWithMetadata = {
+    ...body,
+    metadata: {
+      notificationIds,
+    },
+  };
+
   if (entry.scheduleId) {
-    await updateWalkSchedule(token, entry.scheduleId, body);
+    await updateWalkSchedule(token, entry.scheduleId, bodyWithMetadata);
     return;
   }
 
   await createWalkSchedule(token, {
     petId,
     walkTime: entry.walkTime,
-    ...body,
+    ...bodyWithMetadata,
   });
 }
 
@@ -173,6 +190,12 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
   const noteText = entry.notes.trim();
   const datePayload = buildScheduleDatePayload(entry.scheduleDate);
 
+  const reminderTime = entry.reminderOn
+    ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
+    : undefined;
+
+  const notificationIds = await scheduleLocalNotificationsForEntry(entry, 'medicine', petId);
+
   if (entry.scheduleId) {
     await updateMedicineSchedule(token, entry.scheduleId, {
       dose,
@@ -183,10 +206,11 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
       notes: noteText || undefined,
       reminder: entry.reminderOn,
       reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
-      reminderTime: entry.reminderOn
-        ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
-        : undefined,
-    });
+      reminderTime,
+      metadata: {
+        notificationIds,
+      },
+    } as any);
     return;
   }
 
@@ -204,10 +228,11 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
     ...datePayload,
     reminder: entry.reminderOn,
     reminderMinutes: entry.reminderOn ? entry.reminderMinutes : undefined,
-    reminderTime: entry.reminderOn
-      ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
-      : undefined,
-  });
+    reminderTime,
+    metadata: {
+      notificationIds,
+    },
+  } as any);
 }
 
 async function saveVaccinationEntry(token: string, petId: string, entry: VaccinationEntryState) {
@@ -219,6 +244,8 @@ async function saveVaccinationEntry(token: string, petId: string, entry: Vaccina
   const reminderTime = dateToTimeHHmm(entry.reminderTime);
   const datePayload = buildVaccinationDatePayload(entry.scheduleDate);
 
+  const notificationIds = await scheduleLocalNotificationsForEntry(entry, 'vaccination', petId);
+
   if (entry.scheduleId) {
     await updateVaccinationSchedule(token, entry.scheduleId, {
       ...datePayload,
@@ -226,7 +253,10 @@ async function saveVaccinationEntry(token: string, petId: string, entry: Vaccina
       frequency: entry.frequency,
       reminderTime,
       notes: noteText || undefined,
-    });
+      metadata: {
+        notificationIds,
+      },
+    } as any);
     return;
   }
 
@@ -245,7 +275,10 @@ async function saveVaccinationEntry(token: string, petId: string, entry: Vaccina
     isRecurring: entry.isRecurring,
     recurrenceInterval: entry.isRecurring ? entry.recurrenceInterval : undefined,
     notes: noteText || undefined,
-  });
+    metadata: {
+      notificationIds,
+    },
+  } as any);
 }
 
 async function saveGroomingEntry(
@@ -269,6 +302,8 @@ async function saveGroomingEntry(
     reminder: entry.reminderOn,
     notes: noteText || undefined,
   };
+
+  await scheduleLocalNotificationsForEntry(entry, 'grooming', petId);
 
   if (entry.recordId) {
     await updateGroomingRecord(token, entry.recordId, body);

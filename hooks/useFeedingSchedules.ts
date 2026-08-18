@@ -49,18 +49,17 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         return;
       }
       setActionId(scheduleId);
-      // Optimistic: mark as done locally so it vanishes from Today's Schedule immediately
       setSchedules((prev) =>
         prev.map((s) => s._id === scheduleId ? { ...s, status: 'done' as const, completedAt: new Date().toISOString() } : s),
       );
       try {
         await completeFeedingSchedule(token, scheduleId, { status: 'done' });
-        await cancelTaskNotifications(scheduleId);
+        const scheduleItem = schedules.find((s) => s._id === scheduleId || (s as any).id === scheduleId);
+        await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Feeding marked done successfully!');
       } catch (error) {
-        // Revert optimistic update on failure
         setSchedules((prev) =>
           prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const, completedAt: undefined } : s),
         );
@@ -71,7 +70,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         setActionId(null);
       }
     },
-    [token, reload, showToast, queryClient, petId],
+    [token, reload, showToast, queryClient, petId, schedules],
   );
 
   const skipFeeding = useCallback(
@@ -81,18 +80,17 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         return;
       }
       setActionId(scheduleId);
-      // Optimistic: mark as skipped locally so it vanishes from Today's Schedule immediately
       setSchedules((prev) =>
         prev.map((s) => s._id === scheduleId ? { ...s, status: 'skipped' as const } : s),
       );
       try {
         await skipFeedingSchedule(token, scheduleId);
-        await cancelTaskNotifications(scheduleId);
+        const scheduleItem = schedules.find((s) => s._id === scheduleId || (s as any).id === scheduleId);
+        await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Feeding skipped successfully!');
       } catch (error) {
-        // Revert optimistic update on failure
         setSchedules((prev) =>
           prev.map((s) => s._id === scheduleId ? { ...s, status: 'pending' as const } : s),
         );
@@ -103,7 +101,7 @@ export function useFeedingSchedules(token: string | null, petId: string | null |
         setActionId(null);
       }
     },
-    [token, reload, showToast, queryClient, petId],
+    [token, reload, showToast, queryClient, petId, schedules],
   );
 
   return {

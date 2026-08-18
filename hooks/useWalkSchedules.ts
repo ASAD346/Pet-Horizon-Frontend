@@ -51,7 +51,8 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
       );
       try {
         await completeWalkSchedule(token, scheduleId, { status: 'done' });
-        await cancelTaskNotifications(scheduleId);
+        const scheduleItem = schedules.find((s) => s._id === scheduleId || (s as any).id === scheduleId);
+        await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
         void reload(false);
         showToast('Walk marked done successfully!');
@@ -67,7 +68,7 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
         setActionId(null);
       }
     },
-    [token, reload, showToast, queryClient, petId],
+    [token, reload, showToast, queryClient, petId, schedules],
   );
 
   return {

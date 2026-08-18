@@ -74,7 +74,8 @@ export function useVaccinationSchedules(token: string | null, petId: string | nu
       );
       try {
         await completeVaccinationSchedule(token, scheduleId, body);
-        await cancelTaskNotifications(scheduleId);
+        const scheduleItem = schedules.find((s) => s._id === scheduleId || (s as any).id === scheduleId);
+        await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
         void reload(false);
         showToast('Vaccination marked done successfully!');
       } catch (error) {
