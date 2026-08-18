@@ -52,27 +52,29 @@ export function ContextGuard({ children }: ContextGuardProps) {
     return () => clearTimeout(timer);
   }, [activePetId, queryClient]);
 
-  if (resetting) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#184F2E" />
-        <AppText variant="bodySmall" weight="800" color="#184F2E" style={styles.text}>
-          Loading {petName}'s workspace...
-        </AppText>
-      </View>
-    );
-  }
-
-  return <>{children}</>;
+  return (
+    <View style={{ flex: 1 }}>
+      {children}
+      {resetting && (
+        <View style={styles.container}>
+          <ActivityIndicator size="large" color="#184F2E" />
+          <AppText variant="bodySmall" weight="800" color="#184F2E" style={styles.text}>
+            Loading {petName}'s workspace...
+          </AppText>
+        </View>
+      )}
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: '#F1F7F1',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+    zIndex: 9999,
   },
   text: {
     marginTop: 8,
