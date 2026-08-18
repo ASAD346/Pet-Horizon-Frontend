@@ -38,7 +38,7 @@ import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StyleSheet, Pressable, TouchableOpacity, View } from 'react-native';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
@@ -318,9 +318,11 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
         <View style={styles.actionRow}>
           {((row.kind === 'feeding' && onSkipFeeding) ||
             (row.kind === 'medicine' && onSkipMedicine)) ? (
-            <TouchableOpacity
-              style={styles.skipBtn}
-              activeOpacity={0.85}
+            <Pressable
+              style={({ pressed }) => [
+                styles.skipBtn,
+                pressed && styles.pressedBtn
+              ]}
               disabled={busy}
               onPress={
                 row.kind === 'feeding' ? handleSkip :
@@ -340,74 +342,94 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
               }
             >
               {skipBusy ? (
-                <ActivityIndicator size="small" color="#7A869A" />
+                <ActivityIndicator size="small" color="#4B5563" />
               ) : (
-                <AppText variant="caption" weight="800" color="#7A869A">
+                <AppText variant="caption" weight="800" color="#4B5563">
                   Skip
                 </AppText>
               )}
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
           {onComplete ? (
-            <TouchableOpacity
-              style={[styles.doneBtn, { backgroundColor: isPremium ? '#D4A017' : '#3A8F3B', borderColor: isPremium ? '#D4A017' : '#3A8F3B' }]}
-              activeOpacity={0.85}
+            <Pressable
+              style={({ pressed }) => [
+                styles.doneBtn,
+                {
+                  backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9',
+                  borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)',
+                },
+                pressed && styles.pressedBtn
+              ]}
               disabled={busy}
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={isPremium ? '#B7791F' : '#2E7D32'} />
               ) : (
-                <AppText variant="caption" weight="800" color="#FFFFFF">
+                <AppText variant="caption" weight="800" color={isPremium ? '#B7791F' : '#2E7D32'}>
                   Done
                 </AppText>
               )}
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
         </View>
       ) : row.kind === 'grooming' && (onManageGrooming || onComplete) ? (
         <View style={styles.actionRow}>
           {onManageGrooming ? (
-            <TouchableOpacity
-              style={styles.skipBtn}
-              activeOpacity={0.85}
+            <Pressable
+              style={({ pressed }) => [
+                styles.settingsBtn,
+                pressed && styles.pressedBtn
+              ]}
               onPress={() => onManageGrooming(rowId(row))}
             >
               <Ionicons name="settings-outline" size={16} color="#7A869A" />
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
           {onComplete ? (
-            <TouchableOpacity
-              style={[styles.doneBtn, { backgroundColor: isPremium ? '#D4A017' : '#3A8F3B', borderColor: isPremium ? '#D4A017' : '#3A8F3B' }]}
-              activeOpacity={0.85}
+            <Pressable
+              style={({ pressed }) => [
+                styles.doneBtn,
+                {
+                  backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9',
+                  borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)',
+                },
+                pressed && styles.pressedBtn
+              ]}
               disabled={busy}
               onPress={handleComplete}
             >
               {completeBusy ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={isPremium ? '#B7791F' : '#2E7D32'} />
               ) : (
-                <AppText variant="caption" weight="800" color="#FFFFFF">
+                <AppText variant="caption" weight="800" color={isPremium ? '#B7791F' : '#2E7D32'}>
                   Done
                 </AppText>
               )}
-            </TouchableOpacity>
+            </Pressable>
           ) : null}
         </View>
       ) : onComplete ? (
-        <TouchableOpacity
-          style={[styles.doneBtn, { backgroundColor: isPremium ? '#D4A017' : '#3A8F3B', borderColor: isPremium ? '#D4A017' : '#3A8F3B' }]}
-          activeOpacity={0.85}
+        <Pressable
+          style={({ pressed }) => [
+            styles.doneBtn,
+            {
+              backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9',
+              borderColor: isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)',
+            },
+            pressed && styles.pressedBtn
+          ]}
           disabled={busy}
           onPress={handleComplete}
         >
           {completeBusy ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
+            <ActivityIndicator size="small" color={isPremium ? '#B7791F' : '#2E7D32'} />
           ) : (
-            <AppText variant="caption" weight="800" color="#FFFFFF">
+            <AppText variant="caption" weight="800" color={isPremium ? '#B7791F' : '#2E7D32'}>
               Done
             </AppText>
           )}
-        </TouchableOpacity>
+        </Pressable>
       ) : null}
     </View>
   );
@@ -724,13 +746,24 @@ const styles = StyleSheet.create({
     marginLeft: -8,
   },
   doneBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 100,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 58,
+    minWidth: 64,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   actionRow: {
     flexDirection: 'row',
@@ -738,15 +771,62 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skipBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
-    backgroundColor: 'rgba(122, 134, 154, 0.05)',
-    borderColor: 'rgba(122, 134, 154, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 100,
+    backgroundColor: '#F3F4F6', // Clean light gray tint
+    borderColor: '#E5E7EB', // Crisp contrast gray border
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 54,
+    minWidth: 60,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  settingsBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 100,
+    backgroundColor: '#F3F4F6',
+    borderColor: '#E5E7EB',
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 44,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  pressedBtn: {
+    transform: [{ scale: 0.96 }, { translateY: 2 }],
+    opacity: 0.95,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 1,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   moreBtn: {
     alignItems: 'center',

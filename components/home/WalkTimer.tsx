@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Animated } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, ActivityIndicator, Animated, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius } from '@/constants/theme';
@@ -217,22 +217,38 @@ export function WalkTimer({
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const buttonBg = isPremium ? '#D4A017' : '#3A8F3B';
-
   if (startedAt === null) {
     return (
       <View style={styles.actionRow}>
-        <TouchableOpacity style={styles.skipBtn} activeOpacity={0.85} disabled={busy} onPress={handleSkip}>
-          {busy ? <ActivityIndicator size="small" color="#7A869A" /> : <AppText variant="caption" weight="800" color="#7A869A">Skip</AppText>}
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.doneBtn, { backgroundColor: '#2563EB', borderColor: '#2563EB' }]} activeOpacity={0.85} onPress={handleStart}>
-          <AppText variant="caption" weight="800" color="#FFFFFF">Start</AppText>
-        </TouchableOpacity>
+        <Pressable
+          style={({ pressed }) => [
+            styles.skipBtn,
+            pressed && styles.pressedBtn
+          ]}
+          disabled={busy}
+          onPress={handleSkip}
+        >
+          {busy ? <ActivityIndicator size="small" color="#4B5563" /> : <AppText variant="caption" weight="800" color="#4B5563">Skip</AppText>}
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.doneBtn,
+            { backgroundColor: 'rgba(37, 99, 235, 0.08)', borderColor: 'rgba(37, 99, 235, 0.15)' },
+            pressed && styles.pressedBtn
+          ]}
+          onPress={handleStart}
+        >
+          <AppText variant="caption" weight="800" color="#2563EB">Start</AppText>
+        </Pressable>
       </View>
     );
   }
 
   const timerExpired = elapsedSeconds >= targetDuration * 60;
+
+  const doneBtnBg = isPremium ? 'rgba(212, 160, 23, 0.12)' : '#E8F5E9';
+  const doneBtnBorder = isPremium ? 'rgba(212, 160, 23, 0.25)' : 'rgba(46, 125, 50, 0.15)';
+  const doneBtnColor = isPremium ? '#B7791F' : '#2E7D32';
 
   return (
     <View style={styles.actionRow}>
@@ -247,9 +263,17 @@ export function WalkTimer({
           {formatTime(elapsedSeconds)}
         </AppText>
       </View>
-      <TouchableOpacity style={[styles.doneBtn, { backgroundColor: buttonBg, borderColor: buttonBg }]} activeOpacity={0.85} disabled={busy} onPress={handleComplete}>
-        {busy ? <ActivityIndicator size="small" color="#FFFFFF" /> : <AppText variant="caption" weight="800" color="#FFFFFF">Done</AppText>}
-      </TouchableOpacity>
+      <Pressable
+        style={({ pressed }) => [
+          styles.doneBtn,
+          { backgroundColor: doneBtnBg, borderColor: doneBtnBorder },
+          pressed && styles.pressedBtn
+        ]}
+        disabled={busy}
+        onPress={handleComplete}
+      >
+        {busy ? <ActivityIndicator size="small" color={doneBtnColor} /> : <AppText variant="caption" weight="800" color={doneBtnColor}>Done</AppText>}
+      </Pressable>
     </View>
   );
 }
@@ -261,24 +285,60 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skipBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
-    backgroundColor: 'rgba(122, 134, 154, 0.05)',
-    borderColor: 'rgba(122, 134, 154, 0.15)',
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 100,
+    backgroundColor: '#F3F4F6', // Clean light gray tint
+    borderColor: '#E5E7EB', // Crisp contrast gray border
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 54,
+    minWidth: 60,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
   },
   doneBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: Radius.full,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+    borderRadius: 100,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 58,
+    minWidth: 64,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  pressedBtn: {
+    transform: [{ scale: 0.96 }, { translateY: 2 }],
+    opacity: 0.95,
+    ...Platform.select({
+      ios: {
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 1,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
   },
   checks: {
     flexDirection: 'row',

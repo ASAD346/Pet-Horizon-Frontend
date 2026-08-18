@@ -11,9 +11,12 @@ import type { ApiNotification } from '@/types/notification';
 import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useNotificationStore } from '@/context/NotificationContext';
 
+let cachedNotifications: ApiNotification[] = [];
+let hasLoadedNotifications = false;
+
 export function useNotifications(token: string | null) {
-  const [items, setItems] = useState<ApiNotification[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<ApiNotification[]>(() => cachedNotifications);
+  const [loading, setLoading] = useState(() => Boolean(token && !hasLoadedNotifications));
   const [error, setError] = useState<string | null>(null);
   const { unreadCount, setUnreadCount, decrementUnreadCount, clearBadge } = useNotificationStore();
 
@@ -27,17 +30,21 @@ export function useNotifications(token: string | null) {
     enabled: Boolean(token),
     load,
     onSuccess: (rows) => {
+      cachedNotifications = rows;
+      hasLoadedNotifications = true;
       setItems(rows);
       setError(null);
       const computedUnread = rows.filter((item) => !item.isRead).length;
       setUnreadCount(computedUnread);
     },
     onClear: () => {
-      setItems([]);
+      if (!hasLoadedNotifications) {
+        setItems([]);
+      }
       setError(null);
     },
     onError: (err, isFirstLoad) => {
-      if (isFirstLoad) {
+      if (isFirstLoad && !hasLoadedNotifications) {
         setItems([]);
         setError(getErrorMessage(err));
         log.fail('Notifications', 'Load failed', getErrorMessage(err));
@@ -54,8 +61,10 @@ export function useNotifications(token: string | null) {
       setItems((prev) =>
         prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
       );
-      await markNotificationRead(token, id);
-      await reload();
+      // Non-blocking background API update
+      void markNotificationRead(token, id).then(() => {
+        void reload(false, true);
+      });
     },
     [token, reload, decrementUnreadCount],
   );
@@ -65,15 +74,19 @@ export function useNotifications(token: string | null) {
     // Optimistic update
     clearBadge();
     setItems((prev) => prev.map((item) => ({ ...item, isRead: true })));
-    await markAllNotificationsRead(token);
-    await reload();
+    void markAllNotificationsRead(token).then(() => {
+      void reload(false, true);
+    });
   }, [token, reload, clearBadge]);
 
   const remove = useCallback(
     async (id: string) => {
       if (!token) return;
-      await deleteNotification(token, id);
-      await reload();
+      // Optimistic update: instantly remove from list
+      setItems((prev) => prev.filter((item) => item._id !== id));
+      void deleteNotification(token, id).then(() => {
+        void reload(false, true);
+      });
     },
     [token, reload],
   );

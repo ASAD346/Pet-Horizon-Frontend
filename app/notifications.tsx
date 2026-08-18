@@ -11,6 +11,8 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { AppText } from '@/components/ui/AppText';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
@@ -214,6 +216,21 @@ export default function NotificationsScreen() {
     setRefreshing(false);
   }, [reload]);
 
+  const renderRightActions = (id: string) => (progress: any, dragX: any) => {
+    return (
+      <TouchableOpacity
+        style={styles.deleteAction}
+        onPress={() => remove(id)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
+        <AppText variant="caption" weight="800" color="#FFFFFF" style={{ marginTop: 2, fontSize: 10 }}>
+          Delete
+        </AppText>
+      </TouchableOpacity>
+    );
+  };
+
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const isPremium = user?.premiumStatus === 'premium';
@@ -232,7 +249,8 @@ export default function NotificationsScreen() {
   const groupedData = React.useMemo(() => groupNotifications(items), [items]);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: screenBg }]} edges={[]}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={[styles.container, { backgroundColor: screenBg }]} edges={[]}>
       <View style={[styles.headerWrapper, { shadowColor }]}>
         <View style={styles.curveClipper}>
           <LinearGradient
@@ -307,81 +325,94 @@ export default function NotificationsScreen() {
                   {group.title.toUpperCase()}
                 </AppText>
                 
-                <View style={styles.groupContainer}>
-                  {group.data.map((item, index) => {
-                    const category = getNotificationCategory(item);
-                    const config = CATEGORY_STYLES[category] || CATEGORY_STYLES.general;
-                    const isUnread = !item.isRead;
-                    const isLast = index === group.data.length - 1;
+                {group.data.map((item, index) => {
+                  const category = getNotificationCategory(item);
+                  const config = CATEGORY_STYLES[category] || CATEGORY_STYLES.general;
+                  const isUnread = !item.isRead;
 
-                    let petName = '';
-                    let displayTitle = cleanNotificationText(item.title);
-                    let displayBody = cleanNotificationText(item.body || '');
+                  let petName = '';
+                  let displayTitle = cleanNotificationText(item.title);
+                  let displayBody = cleanNotificationText(item.body || '');
 
-                    if (displayTitle === '🐾 Pet Horizon · Care Alert' && displayBody.includes('\n')) {
-                      const lines = displayBody.split('\n');
-                      displayTitle = lines[0].trim();
-                      displayBody = lines.slice(1).join('\n').trim();
+                  if (displayTitle === '🐾 Pet Horizon · Care Alert' && displayBody.includes('\n')) {
+                    const lines = displayBody.split('\n');
+                    displayTitle = lines[0].trim();
+                    displayBody = lines.slice(1).join('\n').trim();
 
-                      // Try to extract pet name from the header line e.g. "🥣 Bunty's Evening Meal Time"
-                      const match = displayTitle.match(/^[^\w\s]*\s*(\w+)'s\s/);
-                      if (match) {
-                        petName = match[1];
-                      }
-                    } else if (item.title.includes('—')) {
-                      const parts = item.title.split('—');
+                    // Try to extract pet name from the header line e.g. "🥣 Bunty's Evening Meal Time"
+                    const match = displayTitle.match(/^[^\w\s]*\s*(\w+)'s\s/);
+                    if (match) {
+                      petName = match[1];
+                    }
+                  } else if (item.title.includes('—')) {
+                    const parts = item.title.split('—');
+                    petName = parts[0].trim();
+                    displayTitle = parts[1].trim();
+                  } else if (item.title.includes('-')) {
+                    const parts = item.title.split('-');
+                    petName = parts[0].trim();
+                    displayTitle = parts[1].trim();
+                  }
+
+                  if (!petName && displayBody.includes(':')) {
+                    const parts = displayBody.split(':');
+                    if (parts[0].trim().length < 15) {
                       petName = parts[0].trim();
-                      displayTitle = parts[1].trim();
-                    } else if (item.title.includes('-')) {
-                      const parts = item.title.split('-');
-                      petName = parts[0].trim();
-                      displayTitle = parts[1].trim();
+                      displayBody = parts.slice(1).join(':').trim();
                     }
+                  }
 
-                    if (!petName && displayBody.includes(':')) {
-                      const parts = displayBody.split(':');
-                      if (parts[0].trim().length < 15) {
-                        petName = parts[0].trim();
-                        displayBody = parts.slice(1).join(':').trim();
-                      }
-                    }
-
-                    displayTitle = getTaskDisplayName(displayTitle);
-                    if (displayBody.toLowerCase().startsWith('time for:')) {
-                      const suffix = displayBody.slice(9).trim();
-                      displayBody = `Time for: ${getTaskDisplayName(suffix)}`;
-                    } else {
-                      displayBody = getTaskDisplayName(displayBody);
-                    }
-
-                    // Map generic 'Reminder' titles to category-specific titles
-                    if (displayTitle.toLowerCase() === 'reminder') {
-                      if (category === 'feeding') displayTitle = 'Feeding Time';
-                      else if (category === 'walk') displayTitle = 'Walk Reminder';
-                      else if (category === 'medicine') displayTitle = 'Medication Due';
-                      else if (category === 'grooming') displayTitle = 'Grooming Appointment';
-                      else if (category === 'vaccination') displayTitle = 'Vaccination Alert';
-                      else displayTitle = 'Alert';
-                    }
+                  if (petName) {
+                    const cleanRegex = new RegExp(`^${petName}'s\\s*|\\b${petName}'s\\b|\\b${petName}\\b`, 'gi');
+                    displayTitle = displayTitle.replace(cleanRegex, '').trim();
+                    displayBody = displayBody.replace(cleanRegex, '').trim();
                     
-                    return (
-                      <View key={item._id}>
+                    // Cleanup leading separator characters if any remain (e.g. "- Evening Meal" or "Evening Meal")
+                    displayTitle = displayTitle.replace(/^[-—:\s]+/, '').trim();
+                    displayBody = displayBody.replace(/^[-—:\s]+/, '').trim();
+                    
+                    if (displayTitle) {
+                      displayTitle = displayTitle.charAt(0).toUpperCase() + displayTitle.slice(1);
+                    }
+                  }
+
+                  displayTitle = getTaskDisplayName(displayTitle);
+                  if (displayBody.toLowerCase().startsWith('time for:')) {
+                    const suffix = displayBody.slice(9).trim();
+                    displayBody = `Time for: ${getTaskDisplayName(suffix)}`;
+                  } else {
+                    displayBody = getTaskDisplayName(displayBody);
+                  }
+
+                  // Map generic 'Reminder' titles to category-specific titles
+                  if (displayTitle.toLowerCase() === 'reminder' || !displayTitle) {
+                    if (category === 'feeding') displayTitle = 'Feeding Time';
+                    else if (category === 'walk') displayTitle = 'Walk Reminder';
+                    else if (category === 'medicine') displayTitle = 'Medication Due';
+                    else if (category === 'grooming') displayTitle = 'Grooming Appointment';
+                    else if (category === 'vaccination') displayTitle = 'Vaccination Alert';
+                    else displayTitle = 'Alert';
+                  }
+                  
+                  return (
+                    <View key={item._id} style={{ marginBottom: 8 }}>
+                      <Swipeable
+                        renderRightActions={renderRightActions(item._id)}
+                        friction={2}
+                        rightThreshold={40}
+                      >
                         <TouchableOpacity
                           style={[
-                            styles.row,
-                            isUnread && styles.unreadRow,
+                            styles.card,
+                            isUnread && styles.unreadCard,
                           ]}
                           onPress={() => markRead(item._id)}
-                          onLongPress={() => remove(item._id)}
                           activeOpacity={0.7}
                         >
                           <View style={styles.iconContainer}>
                             <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>
                               <Ionicons name={config.icon as any} size={18} color={config.color} />
                             </View>
-                            {isUnread && (
-                              <View style={[styles.absoluteUnreadDot, { backgroundColor: config.color }]} />
-                            )}
                           </View>
                           
                           <View style={styles.cardContent}>
@@ -398,11 +429,9 @@ export default function NotificationsScreen() {
                                   {displayTitle}
                                 </AppText>
                               </View>
-                              {item.createdAt ? (
-                                <AppText variant="caption" color={HomeTheme.textMuted} style={styles.timeText}>
-                                  {formatNotificationDate(item.createdAt)}
-                                </AppText>
-                              ) : null}
+                              {isUnread && (
+                                <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
+                              )}
                             </View>
                             
                             {displayBody ? (
@@ -410,19 +439,25 @@ export default function NotificationsScreen() {
                                 {displayBody}
                               </AppText>
                             ) : null}
+
+                            {item.createdAt ? (
+                              <AppText variant="caption" color="#94A3B8" style={styles.timeText}>
+                                {formatNotificationDate(item.createdAt)}
+                              </AppText>
+                            ) : null}
                           </View>
                         </TouchableOpacity>
-                        {!isLast && <View style={styles.divider} />}
-                      </View>
-                    );
-                  })}
-                </View>
+                      </Swipeable>
+                    </View>
+                  );
+                })}
               </View>
             ))
           )}
         </ScrollView>
       )}
     </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
@@ -561,51 +596,43 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     marginTop: 4,
   },
-  groupContainer: {
+  card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E8EFE8',
-    overflow: 'hidden',
+    borderColor: '#EAF0EA',
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     ...Platform.select({
-      ios: { shadowColor: '#0E380E', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.03, shadowRadius: 12 },
-      android: { elevation: 2 },
+      ios: { shadowColor: '#0E380E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 8 },
+      android: { elevation: 1 },
     }),
   },
-  row: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 14,
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: '#FFFFFF',
-  },
-  unreadRow: {
+  unreadCard: {
     backgroundColor: '#F7FCF8',
+    borderColor: '#D2ECD5',
   },
   iconContainer: {
-    position: 'relative',
-  },
-  absoluteUnreadDot: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  unreadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginLeft: 8,
+  },
   cardContent: {
     flex: 1,
-    marginLeft: 2,
   },
   titleRow: {
     flexDirection: 'row',
@@ -614,8 +641,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   petBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
     borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
@@ -626,7 +653,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -635,19 +662,23 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   body: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 11,
+    lineHeight: 14,
     color: '#64748B',
+    marginBottom: 2,
   },
   timeText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#94A3B8',
-    alignSelf: 'flex-start',
-    marginTop: 2,
+    marginTop: 1,
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#F3F6F3',
-    marginLeft: 60, // Aligns divider perfectly after the icon circle
+  deleteAction: {
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    height: '100%',
+    borderRadius: 16,
+    marginLeft: 8,
   },
 });
