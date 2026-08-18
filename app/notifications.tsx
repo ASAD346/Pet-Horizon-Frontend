@@ -30,7 +30,9 @@ function cleanNotificationText(str: string): string {
     .replace(/Walk Walk/gi, 'Walk')
     .replace(/feed feeding/gi, 'feeding')
     .replace(/walk walking/gi, 'walking')
-    .replace(/walk walk/gi, 'walk');
+    .replace(/walk walk/gi, 'walk')
+    .replace(/\s*\.?\s*Tap To Open App And Log Activity\.?/gi, '')
+    .trim();
 }
 
 function getNotificationCategory(item: any): string {
@@ -241,7 +243,7 @@ export default function NotificationsScreen() {
 
   const shadowColor = isPremium ? '#082113' : '#1B5E20';
 
-  const screenBg = isPremium ? '#FFFDF0' : '#F5F6F8';
+  const screenBg = HomeTheme.background;
   const emptyCircleBg = isPremium ? 'rgba(212, 160, 23, 0.1)' : '#F3F4F6';
   const iconColor = isPremium ? '#D4A017' : '#9CA3AF';
 
@@ -370,6 +372,9 @@ export default function NotificationsScreen() {
                     // Cleanup leading separator characters if any remain (e.g. "- Evening Meal" or "Evening Meal")
                     displayTitle = displayTitle.replace(/^[-—:\s]+/, '').trim();
                     displayBody = displayBody.replace(/^[-—:\s]+/, '').trim();
+                    
+                    // Cleanup trailing "to" or "to." if pet name was removed from the end of the sentence
+                    displayBody = displayBody.replace(/\s+to\s*[\s\.]*$/gi, '').trim();
                     
                     if (displayTitle) {
                       displayTitle = displayTitle.charAt(0).toUpperCase() + displayTitle.slice(1);
