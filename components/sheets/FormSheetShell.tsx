@@ -43,6 +43,7 @@ interface FormSheetShellProps {
   error?: string | null;
   isReadOnly?: boolean;
   blockIfReadOnly?: boolean;
+  isLoading?: boolean;
   children: React.ReactNode;
 }
 
@@ -62,6 +63,7 @@ export function FormSheetShell({
   error,
   isReadOnly = false,
   blockIfReadOnly = true,
+  isLoading = false,
   children,
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
@@ -70,13 +72,13 @@ export function FormSheetShell({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (visible) {
+    if (visible && !isLoading) {
       dispatch(setFormReadOnlyAction(isReadOnly));
     }
     return () => {
       dispatch(setFormReadOnlyAction(false));
     };
-  }, [visible, isReadOnly, dispatch]);
+  }, [visible, isReadOnly, isLoading, dispatch]);
 
   const contextValue = React.useMemo(() => ({
     setOverlay: (key: string, node: ReactNode) => setOverlays(prev => ({ ...prev, [key]: node })),
@@ -149,7 +151,7 @@ export function FormSheetShell({
                 />
               ) : null}
 
-              {isReadOnly && blockIfReadOnly ? (
+              {isReadOnly && blockIfReadOnly && !isLoading ? (
                 <View style={{ paddingVertical: 20, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
                   <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                     <MaterialCommunityIcons name="lock" size={32} color="#DC2626" />

@@ -22,15 +22,16 @@ export function usePermissionGuard(
 
   const access = usePetPermissions(token, targetPet as any, currentUserId);
 
+  const isPremiumUser = user?.premiumStatus === 'premium';
   const normalized = normalizeModuleId(moduleId);
-  const canEdit = isOwner ? true : (normalized ? access.canEdit(normalized) : false);
-  const canView = isOwner ? true : (normalized ? access.canView(normalized) : false);
+  const canEdit = isOwner || isPremiumUser ? true : (normalized ? access.canEdit(normalized) : false);
+  const canView = isOwner || isPremiumUser ? true : (normalized ? access.canView(normalized) : false);
 
   return {
     canEdit,
     canView,
-    loading: isOwner ? false : access.loading,
-    isOwner: isOwner || access.isOwner,
-    isReadOnly: isOwner ? false : access.isReadOnly,
+    loading: isOwner || isPremiumUser ? false : access.loading,
+    isOwner: isOwner || isPremiumUser || access.isOwner,
+    isReadOnly: isOwner || isPremiumUser ? false : access.isReadOnly,
   };
 }

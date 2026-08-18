@@ -137,6 +137,7 @@ export function LogWalkSheet({
         saving={false}
         error={null}
         isReadOnly={true}
+        isLoading={true}
         compact
       >
         <View style={{ padding: 16, gap: 16 }}>
