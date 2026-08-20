@@ -35,6 +35,22 @@ function cleanNotificationText(str: string): string {
     .trim();
 }
 
+function stripEmojis(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // surrogate pairs (emojis)
+    .replace(/[\u2600-\u27BF]/g, '')               // dingbats / symbols
+    .replace(/[\uE000-\uF8FF]/g, '')               // private use areas
+    .trim();
+}
+
+function cleanTaskLabel(label: string): string {
+  if (!label) return '';
+  let cleaned = label.replace(/\s+Time$/i, '');
+  cleaned = cleaned.split(/[-—]/)[0].trim();
+  return cleaned;
+}
+
 function getNotificationCategory(item: any): string {
   const t = (item.title || '').toLowerCase();
   const b = (item.body || '').toLowerCase();
@@ -333,129 +349,133 @@ export default function NotificationsScreen() {
                   const isUnread = !item.isRead;
 
                   let petName = '';
-                  let displayTitle = cleanNotificationText(item.title);
-                  let displayBody = cleanNotificationText(item.body || '');
+                  const cleanTitleInput = stripEmojis(item.title);
+                  let displayTitle = cleanNotificationText(cleanTitleInput);
+                  let displayBody = cleanNotificationText(stripEmojis(item.body || ''));
 
-                  if (displayTitle === '🐾 Pet Horizon · Care Alert' && displayBody.includes('\n')) {
-                    const lines = displayBody.split('\n');
-                    displayTitle = lines[0].trim();
-                    displayBody = lines.slice(1).join('\n').trim();
-
-                    // Try to extract pet name from the header line e.g. "🥣 Bunty's Evening Meal Time"
-                    const match = displayTitle.match(/^[^\w\s]*\s*(\w+)'s\s/);
-                    if (match) {
-                      petName = match[1];
-                    }
-                  } else if (item.title.includes('—')) {
-                    const parts = item.title.split('—');
-                    petName = parts[0].trim();
-                    displayTitle = parts[1].trim();
-                  } else if (item.title.includes('-')) {
-                    const parts = item.title.split('-');
-                    petName = parts[0].trim();
-                    displayTitle = parts[1].trim();
-                  }
-
-                  if (!petName && displayBody.includes(':')) {
-                    const parts = displayBody.split(':');
-                    if (parts[0].trim().length < 15) {
-                      petName = parts[0].trim();
-                      displayBody = parts.slice(1).join(':').trim();
-                    }
-                  }
-
-                  if (petName) {
-                    const cleanRegex = new RegExp(`^${petName}'s\\s*|\\b${petName}'s\\b|\\b${petName}\\b`, 'gi');
-                    displayTitle = displayTitle.replace(cleanRegex, '').trim();
-                    displayBody = displayBody.replace(cleanRegex, '').trim();
-                    
-                    // Cleanup leading separator characters if any remain (e.g. "- Evening Meal" or "Evening Meal")
-                    displayTitle = displayTitle.replace(/^[-—:\s]+/, '').trim();
-                    displayBody = displayBody.replace(/^[-—:\s]+/, '').trim();
-                    
-                    // Cleanup trailing "to" or "to." if pet name was removed from the end of the sentence
-                    displayBody = displayBody.replace(/\s+to\s*[\s\.]*$/gi, '').trim();
-                    
-                    if (displayTitle) {
-                      displayTitle = displayTitle.charAt(0).toUpperCase() + displayTitle.slice(1);
-                    }
-                  }
-
-                  displayTitle = getTaskDisplayName(displayTitle);
-                  if (displayBody.toLowerCase().startsWith('time for:')) {
-                    const suffix = displayBody.slice(9).trim();
-                    displayBody = `Time for: ${getTaskDisplayName(suffix)}`;
+                  // Extract pet name and clean title
+                  const titleMatch = cleanTitleInput.match(/^([A-Za-z0-9]+)'s\s+(.+?)\s+Time$/i);
+                  if (titleMatch) {
+                    petName = titleMatch[1];
+                    displayTitle = titleMatch[2];
                   } else {
-                    displayBody = getTaskDisplayName(displayBody);
+                    const altTitleMatch = cleanTitleInput.match(/^([A-Za-z0-9]+)'s\s+(.+)$/i);
+                    if (altTitleMatch) {
+                      petName = altTitleMatch[1];
+                      displayTitle = altTitleMatch[2].replace(/\s+Time$/i, '');
+                    }
                   }
 
-                  // Map generic 'Reminder' titles to category-specific titles
-                  if (displayTitle.toLowerCase() === 'reminder' || !displayTitle) {
-                    if (category === 'feeding') displayTitle = 'Feeding Time';
-                    else if (category === 'walk') displayTitle = 'Walk Reminder';
-                    else if (category === 'medicine') displayTitle = 'Medication Due';
-                    else if (category === 'grooming') displayTitle = 'Grooming Appointment';
-                    else if (category === 'vaccination') displayTitle = 'Vaccination Alert';
-                    else displayTitle = 'Alert';
+                  // Core Task Title mapping
+                  let coreTaskTitle = 'Care Reminder';
+                  if (category === 'feeding') {
+                    coreTaskTitle = 'Feeding Due';
+                  } else if (category === 'walk') {
+                    coreTaskTitle = 'Walk Reminder';
+                  } else if (category === 'medicine') {
+                    coreTaskTitle = 'Medicine Reminder';
+                  } else if (category === 'grooming') {
+                    coreTaskTitle = 'Grooming Appointment';
+                  } else if (category === 'vaccination') {
+                    coreTaskTitle = 'Vaccination Alert';
+                  } else if (cleanTitleInput.toLowerCase().includes('birthday')) {
+                    coreTaskTitle = 'Birthday Alert';
                   }
-                  
+
+                  // Clean display title for conversational text usage
+                  const taskName = cleanTaskLabel(displayTitle);
+
+                  // Polished conversational body text
+                  let conversationalBody = displayBody || '';
+                  const pName = petName || 'your pet';
+
+                  if (category === 'medicine') {
+                    conversationalBody = `Time to give ${taskName} to ${pName}. Tap to view and log activity.`;
+                  } else if (category === 'feeding') {
+                    if (taskName && !taskName.toLowerCase().includes('feed')) {
+                      conversationalBody = `Time to feed ${pName} their ${taskName}. Tap to view and log activity.`;
+                    } else {
+                      conversationalBody = `Time to feed ${pName}. Tap to view and log activity.`;
+                    }
+                  } else if (category === 'walk') {
+                    conversationalBody = `Time to take ${pName} for a walk. Tap to view and log activity.`;
+                  } else if (category === 'grooming') {
+                    if (taskName && !taskName.toLowerCase().includes('grooming')) {
+                      conversationalBody = `Time for ${pName}'s ${taskName} grooming session. Tap to view and log activity.`;
+                    } else {
+                      conversationalBody = `Time for ${pName}'s grooming session. Tap to view and log activity.`;
+                    }
+                  } else if (category === 'vaccination') {
+                    conversationalBody = `Time for ${pName}'s ${taskName} vaccination. Tap to view and log activity.`;
+                  } else if (cleanTitleInput.toLowerCase().includes('birthday')) {
+                    conversationalBody = `${pName}'s birthday is coming up! Tap to view and celebrate.`;
+                  } else {
+                    conversationalBody = displayBody
+                      .replace(/is due for/gi, 'is ready for')
+                      .replace(/Tap to log it\.?/gi, 'Tap to view and log activity.')
+                      .replace(/Tap to log the session\.?/gi, 'Tap to view and log activity.')
+                      .replace(/Tap to start tracking\.?/gi, 'Tap to view and log activity.')
+                      .replace(/Tap to log the meal\.?/gi, 'Tap to view and log activity.');
+                  }
+
                   return (
-                    <View key={item._id} style={{ marginBottom: 8 }}>
-                      <Swipeable
-                        renderRightActions={renderRightActions(item._id)}
-                        friction={2}
-                        rightThreshold={40}
-                      >
-                        <TouchableOpacity
-                          style={[
-                            styles.card,
-                            isUnread && styles.unreadCard,
-                          ]}
-                          onPress={() => markRead(item._id)}
-                          activeOpacity={0.7}
-                        >
-                          <View style={styles.iconContainer}>
-                            <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>
-                              <Ionicons name={config.icon as any} size={18} color={config.color} />
-                            </View>
-                          </View>
-                          
-                          <View style={styles.cardContent}>
-                            <View style={styles.cardHeader}>
-                              <View style={styles.titleRow}>
-                                {petName ? (
-                                  <View style={[styles.petBadge, { backgroundColor: config.bg }]}>
-                                    <AppText variant="caption" weight="800" color={config.color} style={styles.petBadgeText}>
-                                      {petName}
-                                    </AppText>
-                                  </View>
-                                ) : null}
-                                <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.cardTitle} numberOfLines={1}>
-                                  {displayTitle}
-                                </AppText>
-                              </View>
-                              {isUnread && (
-                                <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
-                              )}
-                            </View>
-                            
-                            {displayBody ? (
-                              <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
-                                {displayBody}
-                              </AppText>
-                            ) : null}
-
-                            {item.createdAt ? (
-                              <AppText variant="caption" color="#94A3B8" style={styles.timeText}>
-                                {formatNotificationDate(item.createdAt)}
-                              </AppText>
-                            ) : null}
-                          </View>
-                        </TouchableOpacity>
-                      </Swipeable>
-                    </View>
-                  );
-                })}
+                     <View key={item._id} style={{ marginBottom: 8 }}>
+                       <Swipeable
+                         renderRightActions={renderRightActions(item._id)}
+                         friction={2}
+                         rightThreshold={40}
+                       >
+                         <TouchableOpacity
+                           style={[
+                             styles.card,
+                             isUnread && styles.unreadCard,
+                           ]}
+                           onPress={() => markRead(item._id)}
+                           activeOpacity={0.7}
+                         >
+                           <View style={styles.iconContainer}>
+                             <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>
+                               <Ionicons name={config.icon as any} size={18} color={config.color} />
+                             </View>
+                           </View>
+                           
+                           <View style={styles.cardContent}>
+                             <View style={styles.cardHeader}>
+                               <View style={styles.titleRow}>
+                                 {petName ? (
+                                   <View style={styles.petBadge}>
+                                     <AppText variant="caption" weight="800" color="#475569" style={styles.petBadgeText}>
+                                       {petName}
+                                     </AppText>
+                                   </View>
+                                 ) : null}
+                                 <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.cardTitle} numberOfLines={1}>
+                                   {coreTaskTitle}
+                                 </AppText>
+                               </View>
+                               <View style={styles.headerRight}>
+                                 {item.createdAt ? (
+                                   <AppText variant="caption" color="#94A3B8" style={styles.timeText}>
+                                     {formatNotificationDate(item.createdAt)}
+                                   </AppText>
+                                 ) : null}
+                                 {isUnread && (
+                                   <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
+                                 )}
+                               </View>
+                             </View>
+                             
+                             {conversationalBody ? (
+                               <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
+                                 {conversationalBody}
+                               </AppText>
+                             ) : null}
+                           </View>
+                         </TouchableOpacity>
+                       </Swipeable>
+                     </View>
+                   );
+                 })}
               </View>
             ))
           )}
@@ -606,10 +626,10 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: '#EAF0EA',
-    padding: 8,
+    padding: 12,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    alignItems: 'flex-start',
+    gap: 12,
     ...Platform.select({
       ios: { shadowColor: '#0E380E', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.02, shadowRadius: 8 },
       android: { elevation: 1 },
@@ -622,6 +642,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 2,
   },
   iconWrapper: {
     width: 32,
@@ -646,36 +667,45 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   petBadge: {
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderRadius: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   petBadgeText: {
     fontSize: 9,
+    fontWeight: '700',
+    color: '#475569',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   cardTitle: {
     flex: 1,
-    fontSize: 12,
+    fontSize: 13,
+    fontWeight: '800',
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   body: {
-    fontSize: 11,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 16,
     color: '#64748B',
     marginBottom: 2,
   },
   timeText: {
     fontSize: 9,
     color: '#94A3B8',
-    marginTop: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   deleteAction: {
     backgroundColor: '#EF4444',
