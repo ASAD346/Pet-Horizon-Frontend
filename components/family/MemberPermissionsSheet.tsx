@@ -231,10 +231,12 @@ export function MemberPermissionsSheet({
     !!memberPermissions?.[id as keyof typeof memberPermissions];
 
   const toggle = (id: string) => {
-    queryClient.setQueryData(['family-permissions', targetUserId], {
+    const nextVal = !getVal(id);
+    const updatedPerms = {
       ...(memberPermissions || {}),
-      [id]: !getVal(id),
-    });
+      [id]: nextVal,
+    };
+    mutation.mutate(updatedPerms);
   };
 
   // ── Mutation ────────────────────────────────────────────────────────────────
@@ -246,10 +248,6 @@ export function MemberPermissionsSheet({
         'journal',
         'expenses',
       ];
-      dispatch({
-        type: 'family/updateMemberPermissionsSuccess',
-        payload: { memberId: targetUserId, permissions: { ...permsObj, journal: true, expenses: true } },
-      });
       return await updatePetMemberPermissions(token, petId, targetUserId, {
         accessLevel,
         allowedModules,
@@ -259,12 +257,25 @@ export function MemberPermissionsSheet({
     onMutate: async (permsObj) => {
       await queryClient.cancelQueries({ queryKey: ['family-permissions', targetUserId] });
       const prev = queryClient.getQueryData(['family-permissions', targetUserId]);
+      
+      // Update React Query state immediately
       queryClient.setQueryData(['family-permissions', targetUserId], permsObj);
+      
+      // Update Redux state immediately
+      dispatch({
+        type: 'family/updateMemberPermissionsSuccess',
+        payload: { memberId: targetUserId, permissions: { ...permsObj, journal: true, expenses: true } },
+      });
+
       return { previousPermissions: prev };
     },
     onError: (err, _new, ctx) => {
       if (ctx?.previousPermissions) {
         queryClient.setQueryData(['family-permissions', targetUserId], ctx.previousPermissions);
+        dispatch({
+          type: 'family/updateMemberPermissionsSuccess',
+          payload: { memberId: targetUserId, permissions: ctx.previousPermissions },
+        });
       }
       setError(getErrorMessage(err));
       showErrorToast(getErrorMessage(err));
@@ -286,7 +297,6 @@ export function MemberPermissionsSheet({
       queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
       showSuccessToast('Permissions saved successfully.');
       onUpdated({ ...member, accessLevel, allowedModules, permissions: sp } as any);
-      onClose();
     },
   });
 
@@ -572,16 +582,14 @@ export function MemberPermissionsSheet({
                     style={[
                       s.saveBtn,
                       { backgroundColor: accentColor },
-                      (mutation.isPending || removing) && { opacity: 0.65 },
+                      removing && { opacity: 0.65 },
                     ]}
-                    onPress={() => mutation.mutate((memberPermissions || {}) as Record<string, boolean>)}
-                    disabled={mutation.isPending || removing}
+                    onPress={onClose}
+                    disabled={removing}
                     activeOpacity={0.85}
                   >
                     <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
-                    <AppText style={s.saveBtnText}>
-                      {mutation.isPending ? 'Saving…' : 'Save Permissions'}
-                    </AppText>
+                    <AppText style={s.saveBtnText}>Done</AppText>
                   </TouchableOpacity>
 
                   <TouchableOpacity
