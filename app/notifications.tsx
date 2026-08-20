@@ -390,32 +390,32 @@ export default function NotificationsScreen() {
                   const pName = petName || 'your pet';
 
                   if (category === 'medicine') {
-                    conversationalBody = `Time to give ${taskName} to ${pName}. Tap to view and log activity.`;
+                    conversationalBody = `Time to give ${taskName} to ${pName}. Tap to view and manage.`;
                   } else if (category === 'feeding') {
                     if (taskName && !taskName.toLowerCase().includes('feed')) {
-                      conversationalBody = `Time to feed ${pName} their ${taskName}. Tap to view and log activity.`;
+                      conversationalBody = `Time to feed ${pName} their ${taskName}. Tap to view and manage.`;
                     } else {
-                      conversationalBody = `Time to feed ${pName}. Tap to view and log activity.`;
+                      conversationalBody = `Time to feed ${pName}. Tap to view and manage.`;
                     }
                   } else if (category === 'walk') {
-                    conversationalBody = `Time to take ${pName} for a walk. Tap to view and log activity.`;
+                    conversationalBody = `Time to take ${pName} for a walk. Tap to view and manage.`;
                   } else if (category === 'grooming') {
                     if (taskName && !taskName.toLowerCase().includes('grooming')) {
-                      conversationalBody = `Time for ${pName}'s ${taskName} grooming session. Tap to view and log activity.`;
+                      conversationalBody = `Time for ${pName}'s ${taskName} grooming session. Tap to view and manage.`;
                     } else {
-                      conversationalBody = `Time for ${pName}'s grooming session. Tap to view and log activity.`;
+                      conversationalBody = `Time for ${pName}'s grooming session. Tap to view and manage.`;
                     }
                   } else if (category === 'vaccination') {
-                    conversationalBody = `Time for ${pName}'s ${taskName} vaccination. Tap to view and log activity.`;
+                    conversationalBody = `Time for ${pName}'s ${taskName} vaccination. Tap to view and manage.`;
                   } else if (cleanTitleInput.toLowerCase().includes('birthday')) {
                     conversationalBody = `${pName}'s birthday is coming up! Tap to view and celebrate.`;
                   } else {
                     conversationalBody = displayBody
                       .replace(/is due for/gi, 'is ready for')
-                      .replace(/Tap to log it\.?/gi, 'Tap to view and log activity.')
-                      .replace(/Tap to log the session\.?/gi, 'Tap to view and log activity.')
-                      .replace(/Tap to start tracking\.?/gi, 'Tap to view and log activity.')
-                      .replace(/Tap to log the meal\.?/gi, 'Tap to view and log activity.');
+                      .replace(/Tap to log it\.?/gi, 'Tap to view and manage.')
+                      .replace(/Tap to log the session\.?/gi, 'Tap to view and manage.')
+                      .replace(/Tap to start tracking\.?/gi, 'Tap to view and manage.')
+                      .replace(/Tap to log the meal\.?/gi, 'Tap to view and manage.');
                   }
 
                   return (
