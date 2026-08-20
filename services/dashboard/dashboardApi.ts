@@ -36,7 +36,7 @@ export async function fetchUpcomingTasks(token: string): Promise<DashboardTask[]
   }
 }
 
-export async function fetchUnifiedDashboard(token: string, clientDate?: string): Promise<UnifiedDashboardData> {
+export async function fetchUnifiedDashboard(token: string, clientDate?: string, petId?: string | null): Promise<UnifiedDashboardData> {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const now = new Date();
   const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -44,6 +44,9 @@ export async function fetchUnifiedDashboard(token: string, clientDate?: string):
   let queryParams = `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
   if (clientDate) {
     queryParams += `&clientDate=${encodeURIComponent(clientDate)}`;
+  }
+  if (petId) {
+    queryParams += `&petId=${encodeURIComponent(petId)}`;
   }
 
   log.info(SCOPE, `GET /dashboard${queryParams}`);

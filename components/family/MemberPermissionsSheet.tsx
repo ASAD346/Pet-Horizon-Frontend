@@ -255,19 +255,34 @@ export function MemberPermissionsSheet({
       } as any);
     },
     onMutate: async (permsObj) => {
+      // Cancel any in-flight queries for both caches we're about to touch
       await queryClient.cancelQueries({ queryKey: ['family-permissions', targetUserId] });
+      await queryClient.cancelQueries({ queryKey: ['petMembers', petId] });
+
       const prev = queryClient.getQueryData(['family-permissions', targetUserId]);
-      
-      // Update React Query state immediately
+      const prevMembers = queryClient.getQueryData(['petMembers', petId]);
+
+      // Optimistically update the per-user permissions cache
       queryClient.setQueryData(['family-permissions', targetUserId], permsObj);
-      
+
+      // Optimistically update the pet-members list for instant toggle responsiveness
+      const allowedModules = [...Object.keys(permsObj).filter((k) => permsObj[k]), 'journal', 'expenses'];
+      queryClient.setQueryData(['petMembers', petId], (old: any) => {
+        if (!old || !Array.isArray(old)) return old;
+        return old.map((m: any) =>
+          String(m._id || m.id || m.userId?._id) === String(targetUserId)
+            ? { ...m, permissions: { ...permsObj, journal: true, expenses: true }, allowedModules, accessLevel }
+            : m,
+        );
+      });
+
       // Update Redux state immediately
       dispatch({
         type: 'family/updateMemberPermissionsSuccess',
         payload: { memberId: targetUserId, permissions: { ...permsObj, journal: true, expenses: true } },
       });
 
-      return { previousPermissions: prev };
+      return { previousPermissions: prev, previousMembers: prevMembers };
     },
     onError: (err, _new, ctx) => {
       if (ctx?.previousPermissions) {
@@ -276,6 +291,9 @@ export function MemberPermissionsSheet({
           type: 'family/updateMemberPermissionsSuccess',
           payload: { memberId: targetUserId, permissions: ctx.previousPermissions },
         });
+      }
+      if (ctx?.previousMembers !== undefined) {
+        queryClient.setQueryData(['petMembers', petId], ctx.previousMembers);
       }
       setError(getErrorMessage(err));
       showErrorToast(getErrorMessage(err));

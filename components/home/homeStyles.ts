@@ -19,9 +19,9 @@ export const homePillCard = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 8,
-    marginHorizontal: 4, // prevents Android shadow clipping
+    paddingVertical: 10,
+    marginBottom: 10,
+    marginHorizontal: 2, // prevents Android shadow clipping while giving 3D animations room
     minHeight: 56,
     ...homeCardShadow,
   },

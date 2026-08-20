@@ -74,7 +74,7 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     queryKey: ['dashboard', petId, localDateStr.split('T')[0]],
     queryFn: async () => {
       console.log('[useDashboardQuery] Fetching dashboard from API...');
-      return fetchUnifiedDashboard(token!, localDateStr);
+      return fetchUnifiedDashboard(token!, localDateStr, petId);
     },
     enabled: Boolean(token && petId && petId !== 'fallback-pet-id-123' && !isSwitching),
     staleTime: 1000 * 60 * 5,

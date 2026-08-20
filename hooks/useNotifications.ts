@@ -1,4 +1,5 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getErrorMessage } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import {
@@ -8,95 +9,96 @@ import {
   markNotificationRead,
 } from '@/services/notifications/notificationApi';
 import type { ApiNotification } from '@/types/notification';
-import { useStaleFocusLoader } from './useStaleFocusLoader';
 import { useNotificationStore } from '@/context/NotificationContext';
 
-let cachedNotifications: ApiNotification[] = [];
-let hasLoadedNotifications = false;
+// Stable query key factory
+const notificationsKey = (token: string | null) => ['notifications', token] as const;
 
 export function useNotifications(token: string | null) {
-  const [items, setItems] = useState<ApiNotification[]>(() => cachedNotifications);
-  const [loading, setLoading] = useState(() => Boolean(token && !hasLoadedNotifications));
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const { unreadCount, setUnreadCount, decrementUnreadCount, clearBadge } = useNotificationStore();
 
-  const load = useCallback(async () => {
-    if (!token) return [];
-    return fetchNotifications(token);
-  }, [token]);
-
-  const reload = useStaleFocusLoader({
-    scopeKey: token,
-    enabled: Boolean(token),
-    load,
-    onSuccess: (rows) => {
-      cachedNotifications = rows;
-      hasLoadedNotifications = true;
-      setItems(rows);
-      setError(null);
+  // ── React Query with stale-while-revalidate so returning to the screen shows
+  //    cached data immediately (no skeleton flash) while refreshing in the background.
+  const query = useQuery<ApiNotification[], Error>({
+    queryKey: notificationsKey(token),
+    queryFn: async () => {
+      if (!token) return [];
+      const rows = await fetchNotifications(token);
+      // Sync unread badge from the freshly-fetched data
       const computedUnread = rows.filter((item) => !item.isRead).length;
       setUnreadCount(computedUnread);
+      return rows;
     },
-    onClear: () => {
-      if (!hasLoadedNotifications) {
-        setItems([]);
-      }
-      setError(null);
-    },
-    onError: (err, isFirstLoad) => {
-      if (isFirstLoad && !hasLoadedNotifications) {
-        setItems([]);
-        setError(getErrorMessage(err));
-        log.fail('Notifications', 'Load failed', getErrorMessage(err));
-      }
-    },
-    setLoading,
-    initialLoaded: hasLoadedNotifications,
+    enabled: Boolean(token),
+    // Keep previous data visible while revalidating — eliminates skeleton flash on focus
+    staleTime: 1000 * 30,          // 30 s fresh window
+    placeholderData: (prev) => prev,  // show stale data while fetching
+    refetchOnWindowFocus: true,
+    retry: 1,
   });
+
+  const items = query.data ?? [];
+  const loading = query.isLoading;
+  const hasLoaded = query.isFetched;
+  const error = query.error ? getErrorMessage(query.error) : null;
+
+  if (query.error) {
+    log.fail('Notifications', 'Load failed', getErrorMessage(query.error));
+  }
+
+  const reload = useCallback(
+    (forceRefresh = true) => {
+      if (!token) return Promise.resolve();
+      if (forceRefresh) {
+        return queryClient.invalidateQueries({ queryKey: notificationsKey(token) });
+      }
+      return queryClient.refetchQueries({ queryKey: notificationsKey(token) });
+    },
+    [token, queryClient],
+  );
 
   const markRead = useCallback(
     async (id: string) => {
       if (!token) return;
       // Optimistic update
       decrementUnreadCount();
-      setItems((prev) =>
-        prev.map((item) => (item._id === id ? { ...item, isRead: true } : item))
+      queryClient.setQueryData<ApiNotification[]>(notificationsKey(token), (prev) =>
+        prev ? prev.map((item) => (item._id === id ? { ...item, isRead: true } : item)) : prev,
       );
-      // Non-blocking background API update
-      void markNotificationRead(token, id).then(() => {
-        void reload(false, true);
-      });
+      // Non-blocking background API update then revalidate
+      void markNotificationRead(token, id).then(() => reload(false));
     },
-    [token, reload, decrementUnreadCount],
+    [token, queryClient, decrementUnreadCount, reload],
   );
 
   const markAllRead = useCallback(async () => {
     if (!token) return;
     // Optimistic update
     clearBadge();
-    setItems((prev) => prev.map((item) => ({ ...item, isRead: true })));
-    void markAllNotificationsRead(token).then(() => {
-      void reload(false, true);
-    });
-  }, [token, reload, clearBadge]);
+    queryClient.setQueryData<ApiNotification[]>(notificationsKey(token), (prev) =>
+      prev ? prev.map((item) => ({ ...item, isRead: true })) : prev,
+    );
+    void markAllNotificationsRead(token).then(() => reload(false));
+  }, [token, queryClient, clearBadge, reload]);
 
   const remove = useCallback(
     async (id: string) => {
       if (!token) return;
       // Optimistic update: instantly remove from list
-      setItems((prev) => prev.filter((item) => item._id !== id));
-      void deleteNotification(token, id).then(() => {
-        void reload(false, true);
-      });
+      queryClient.setQueryData<ApiNotification[]>(notificationsKey(token), (prev) =>
+        prev ? prev.filter((item) => item._id !== id) : prev,
+      );
+      void deleteNotification(token, id).then(() => reload(false));
     },
-    [token, reload],
+    [token, queryClient, reload],
   );
 
   return {
     items,
     unreadCount,
     loading,
-    hasLoaded: hasLoadedNotifications,
+    hasLoaded,
     error,
     reload,
     markRead,
