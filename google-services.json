@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "162625002184-2lhh4f2l0dqnul5g6nbbj827cck2vdi2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anonymous.PetHorizon",
+            "certificate_hash": "8a7cedc117a1aa1d33e06fb9329db99d00e4e8c1"
+          }
+        },
+        {
           "client_id": "162625002184-h3q2anibl9f98l04s5pjpfh16t01hg44.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

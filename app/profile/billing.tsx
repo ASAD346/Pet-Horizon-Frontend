@@ -21,10 +21,17 @@ import { getErrorMessage } from '@/lib/api/errors';
 import {
   cancelPremium,
   fetchPaymentInvoices,
-  subscribePremium,
 } from '@/services/premium/premiumApi';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
-import { SecureCheckoutSheet } from '@/components/profile/SecureCheckoutSheet';
+import {
+  initConnection,
+  endConnection,
+  fetchProducts,
+  requestPurchase,
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+  finishTransaction,
+} from 'expo-iap';
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
 const FREE_FEATURES = [
@@ -198,32 +205,171 @@ export default function BillingScreen() {
   const [cancelling, setCancelling] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
-  const [checkoutVisible, setCheckoutVisible] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [livePlans, setLivePlans] = useState<any[]>([]);
 
-  const handleSelectPlan = (planId: 'monthly' | 'yearly') => {
-    setSelectedPlan({
-      planId,
-      price: planId === 'yearly' ? 49.99 : 4.99,
-      name: planId === 'yearly' ? 'Yearly Premium' : 'Monthly Premium',
-    });
-    setCheckoutVisible(true);
-  };
+  useEffect(() => {
+    let purchaseUpdateSubscription: any;
+    let purchaseErrorSubscription: any;
 
-  const handleConfirmPayment = async () => {
-    if (!selectedPlan || !token) return;
+    const setupIapListeners = async () => {
+      try {
+        await initConnection();
+        
+        purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase) => {
+          const receipt = purchase.purchaseToken;
+          if (receipt) {
+            try {
+              setCheckoutLoading(true);
+              const { verifyGooglePlayPurchase } = require('@/services/premium/premiumApi');
+              const verifyRes = await verifyGooglePlayPurchase(token!, {
+                productId: purchase.productId,
+                purchaseToken: purchase.purchaseToken!,
+                packageName: 'com.anonymous.PetHorizon',
+              });
+
+              if (verifyRes.success) {
+                await finishTransaction({ purchase, isConsumable: false });
+                showToast('Successfully subscribed to Premium!');
+                await reload();
+              } else {
+                throw new Error('Verification failed.');
+              }
+            } catch (err) {
+              Alert.alert('Verification Failed', 'Could not verify your purchase with Google Play. Please try again or contact support.');
+            } finally {
+              setCheckoutLoading(false);
+            }
+          }
+        });
+
+        purchaseErrorSubscription = purchaseErrorListener((error) => {
+          console.warn('Google Play purchase error:', error);
+          setCheckoutLoading(false);
+        });
+      } catch (err) {
+        console.log('IAP Listener Setup Error:', err);
+      }
+    };
+
+    const fetchLivePlans = async () => {
+      console.log('[IAP Diagnostics] Starting Billing screen plan load...');
+      console.log('[IAP Diagnostics] Target Product ID: pethorizon_premium');
+      console.log('[IAP Diagnostics] Query Type: subs');
+      try {
+        console.log('[IAP Diagnostics] Initializing connection to Google Play Store...');
+        const connResult = await initConnection();
+        console.log('[IAP Diagnostics] Connection initialization result:', connResult);
+
+        console.log('[IAP Diagnostics] Calling fetchProducts with SKU: pethorizon_premium...');
+        const products = await fetchProducts({ skus: ['pethorizon_premium'], type: 'subs' });
+        console.log('[IAP Diagnostics] fetchProducts succeeded. Result count:', products?.length ?? 0);
+        console.log('[IAP Diagnostics] Returned product list details:', JSON.stringify(products, null, 2));
+
+        if (products && products.length > 0) {
+          const premiumProduct = products.find(
+            (p: any) => p.productId === 'pethorizon_premium' || p.id === 'pethorizon_premium'
+          );
+          if (premiumProduct) {
+            const mapped: any[] = [];
+            
+            // Map standard subscriptionOffers
+            const offers = premiumProduct.subscriptionOffers || [];
+            console.log('[IAP Diagnostics] subscriptionOffers count in Billing:', offers.length);
+            offers.forEach((offer: any) => {
+              const basePlanId = offer.basePlanIdAndroid || offer.basePlanId;
+              if (basePlanId === 'monthly' || basePlanId === 'yearly') {
+                console.log(`[IAP Diagnostics] Found basePlanId=${basePlanId} in subscriptionOffers`);
+                mapped.push({
+                  productId: 'pethorizon_premium',
+                  basePlanId,
+                  offerToken: offer.offerTokenAndroid || offer.offerToken || '',
+                });
+              }
+            });
+
+            // Map legacy subscriptionOfferDetailsAndroid
+            if (mapped.length === 0 && (premiumProduct as any).subscriptionOfferDetailsAndroid) {
+              console.log('[IAP Diagnostics] Fallback to subscriptionOfferDetailsAndroid count:', (premiumProduct as any).subscriptionOfferDetailsAndroid.length);
+              (premiumProduct as any).subscriptionOfferDetailsAndroid.forEach((detail: any) => {
+                const basePlanId = detail.basePlanId;
+                if (basePlanId === 'monthly' || basePlanId === 'yearly') {
+                  console.log(`[IAP Diagnostics] Found basePlanId=${basePlanId} in subscriptionOfferDetailsAndroid`);
+                  mapped.push({
+                    productId: 'pethorizon_premium',
+                    basePlanId,
+                    offerToken: detail.offerToken || '',
+                  });
+                }
+              });
+            }
+
+            console.log('[IAP Diagnostics] Mapped live plans to state:', JSON.stringify(mapped));
+            setLivePlans(mapped);
+          } else {
+            console.warn('[IAP Diagnostics] Product pethorizon_premium not found in query results.');
+          }
+        } else {
+          console.warn('[IAP Diagnostics] Google Play returned no products.');
+        }
+      } catch (err: any) {
+        console.error('[IAP Diagnostics ERROR] Failed to fetch subscriptions from Google Play.');
+        console.error('[IAP Diagnostics ERROR] Code:', err?.code || err?.errorCode || 'N/A');
+        console.error('[IAP Diagnostics ERROR] Message:', err?.message || err?.message || 'N/A');
+        console.error('[IAP Diagnostics ERROR] Full Error Details:', JSON.stringify(err, null, 2));
+      }
+    };
+
+    if (token) {
+      setupIapListeners();
+      fetchLivePlans();
+    }
+
+    return () => {
+      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
+      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
+      endConnection();
+    };
+  }, [token]);
+
+  const handleSelectPlan = async (planId: 'monthly' | 'yearly') => {
+    if (isPremium) {
+      Alert.alert('Already Premium', 'You already have an active premium subscription.');
+      return;
+    }
     setCheckoutLoading(true);
+    const matched = livePlans.find((p) => p.basePlanId === planId);
+    if (!matched) {
+      const errorMsg = `Offer for ${planId} plan was not retrieved from Google Play. Please try again.`;
+      console.error(errorMsg);
+      Alert.alert('Subscription Error', errorMsg);
+      setCheckoutLoading(false);
+      return;
+    }
+    const offerToken = matched.offerToken || '';
+    console.log(`IAP Requesting Purchase: sku: pethorizon_premium, basePlanId: ${planId}, offerToken: ${offerToken}`);
     try {
-      await subscribePremium(token, {
-        planId: selectedPlan.planId,
+      await requestPurchase({
+        request: {
+          google: {
+            skus: ['pethorizon_premium'],
+            subscriptionOffers: [
+              {
+                sku: 'pethorizon_premium',
+                offerToken,
+              }
+            ]
+          }
+        },
+        type: 'subs'
       });
-      showToast('Successfully subscribed to Premium!');
-      setCheckoutVisible(false);
-      await reload();
-    } catch (err) {
-      showErrorToast(getErrorMessage(err));
-    } finally {
+    } catch (error: any) {
+      console.error('IAP Purchase Launch Failed:', error);
+      console.error('IAP Purchase Launch Failed details:', JSON.stringify(error, null, 2));
+      Alert.alert(
+        'Purchase Error',
+        `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`
+      );
       setCheckoutLoading(false);
     }
   };
@@ -431,13 +577,7 @@ export default function BillingScreen() {
         </View>
       </ScrollView>
 
-      <SecureCheckoutSheet
-        visible={checkoutVisible}
-        plan={selectedPlan}
-        onClose={() => setCheckoutVisible(false)}
-        onConfirm={handleConfirmPayment}
-        loading={checkoutLoading}
-      />
+
     </SafeAreaView>
   );
 }

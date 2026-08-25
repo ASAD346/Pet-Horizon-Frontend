@@ -25,13 +25,18 @@ import { useActivePet } from '@/hooks/useActivePet';
 import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import {
-  fetchPremiumPlans,
-  fetchPremiumStatus,
-  subscribePremium,
-} from '@/services/premium/premiumApi';
+  initConnection,
+  endConnection,
+  fetchProducts,
+  requestPurchase,
+  purchaseUpdatedListener,
+  purchaseErrorListener,
+  finishTransaction,
+  restorePurchases,
+  getAvailablePurchases,
+} from 'expo-iap';
 import { fetchUserProfile } from '@/services/users/userApi';
 import type { PremiumPlan } from '@/types/premium';
-import { SecureCheckoutSheet } from './SecureCheckoutSheet';
 import { TermsAndConditionsSheet } from './TermsAndConditionsSheet';
 import { PrivacyPolicySheet } from './PrivacyPolicySheet';
 import {
@@ -222,22 +227,169 @@ export function PremiumHubContent() {
     ]).start();
   }, []);
 
+  useEffect(() => {
+    let purchaseUpdateSubscription: any;
+    let purchaseErrorSubscription: any;
+
+    const setupIapListeners = async () => {
+      try {
+        await initConnection();
+        
+        purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase) => {
+          const receipt = purchase.purchaseToken;
+          if (receipt) {
+            try {
+              setCheckoutLoading(true);
+              const { verifyGooglePlayPurchase } = require('@/services/premium/premiumApi');
+              const verifyRes = await verifyGooglePlayPurchase(token!, {
+                productId: purchase.productId,
+                purchaseToken: purchase.purchaseToken!,
+                packageName: 'com.anonymous.PetHorizon',
+              });
+
+              if (verifyRes.success) {
+                await finishTransaction({ purchase, isConsumable: false });
+                
+                if (user?._id) {
+                  const profile = await fetchUserProfile(token!, user._id);
+                  await setSession({ token: token!, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
+                }
+                queryClient.invalidateQueries({ queryKey: ['subscription'] });
+                setIsPremium(true);
+                setCheckoutVisible(false);
+                setSuccessVisible(true);
+                showToast('Successfully subscribed to Premium!');
+              } else {
+                throw new Error('Verification failed.');
+              }
+            } catch (err) {
+              Alert.alert('Verification Failed', 'Could not verify your purchase with Google Play. Please try again or contact support.');
+            } finally {
+              setCheckoutLoading(false);
+            }
+          }
+        });
+
+        purchaseErrorSubscription = purchaseErrorListener((error) => {
+          console.warn('Google Play purchase error:', error);
+          setCheckoutLoading(false);
+        });
+      } catch (err) {
+        console.log('IAP Listener Setup Error:', err);
+      }
+    };
+
+    if (token) {
+      setupIapListeners();
+    }
+
+    return () => {
+      if (purchaseUpdateSubscription) purchaseUpdateSubscription.remove();
+      if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
+      endConnection();
+    };
+  }, [token, user, queryClient, setSession]);
+
   const loadPlans = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const [planList, status] = await Promise.all([
-        fetchPremiumPlans(token),
-        fetchPremiumStatus(token),
-      ]);
-      const filtered = planList.filter((p) => ALLOWED_PLAN_IDS.has(p.planId));
+      const { fetchPremiumStatus } = require('@/services/premium/premiumApi');
+      const status = await fetchPremiumStatus(token);
+      setIsPremium(status.isPremium);
+
+      console.log('[IAP Diagnostics] Starting PremiumHub plan load...');
+      console.log('[IAP Diagnostics] Target Product ID: pethorizon_premium');
+      console.log('[IAP Diagnostics] Query Type: subs');
+      try {
+        console.log('[IAP Diagnostics] Initializing connection to Google Play Store...');
+        const connResult = await initConnection();
+        console.log('[IAP Diagnostics] Connection initialization result:', connResult);
+
+        console.log('[IAP Diagnostics] Calling fetchProducts with SKU: pethorizon_premium...');
+        const products = await fetchProducts({ skus: ['pethorizon_premium'], type: 'subs' });
+        console.log('[IAP Diagnostics] fetchProducts succeeded. Result count:', products?.length ?? 0);
+        console.log('[IAP Diagnostics] Returned product list details:', JSON.stringify(products, null, 2));
+
+        if (products && products.length > 0) {
+          const premiumProduct = products.find(
+            (p: any) => p.productId === 'pethorizon_premium' || p.id === 'pethorizon_premium'
+          );
+          if (premiumProduct) {
+            const mappedPlans: any[] = [];
+            
+            // Standard subscriptionOffers mapping
+            const offers = premiumProduct.subscriptionOffers || [];
+            console.log('[IAP Diagnostics] subscriptionOffers count in PremiumHub:', offers.length);
+            
+            ['monthly', 'yearly'].forEach((targetPlanId) => {
+              const matchedOffer = offers.find(
+                (o: any) => o.basePlanIdAndroid === targetPlanId || o.basePlanId === targetPlanId
+              );
+              
+              let offerToken = (matchedOffer as any)?.offerTokenAndroid || (matchedOffer as any)?.offerToken || '';
+              let priceVal = (matchedOffer as any)?.price ?? (targetPlanId === 'yearly' ? 49.99 : 4.99);
+              let displayPrice = (matchedOffer as any)?.displayPrice || '';
+ 
+              // Legacy subscriptionOfferDetailsAndroid fallback per target plan
+              if (!offerToken && (premiumProduct as any).subscriptionOfferDetailsAndroid) {
+                const details = (premiumProduct as any).subscriptionOfferDetailsAndroid.find(
+                  (d: any) => d.basePlanId === targetPlanId
+                );
+                if (details) {
+                  console.log(`[IAP Diagnostics] Using fallback details mapping for ${targetPlanId}`);
+                  offerToken = details.offerToken || '';
+                  const phase = details.pricingPhases?.pricingPhaseList?.[0];
+                  if (phase) {
+                    displayPrice = phase.formattedPrice;
+                    const micros = parseFloat(phase.priceAmountMicros);
+                    if (!isNaN(micros)) {
+                      priceVal = micros / 1000000;
+                    }
+                  }
+                }
+              }
+ 
+              console.log(`[IAP Diagnostics] Mapped plan ${targetPlanId} -> Price: ${priceVal}, Display: ${displayPrice}`);
+              mappedPlans.push({
+                id: targetPlanId,
+                planId: targetPlanId,
+                name: targetPlanId === 'yearly' ? 'Yearly' : 'Monthly',
+                price: priceVal,
+                periodDays: targetPlanId === 'yearly' ? 365 : 30,
+                offerToken: offerToken || null,
+              });
+            });
+ 
+            console.log('[IAP Diagnostics] Final mapped plans set to state:', JSON.stringify(mappedPlans));
+            setPlans(mappedPlans);
+            const yearly = mappedPlans.find((p) => p.planId === 'yearly');
+            setSelectedPlanId(yearly?.planId ?? mappedPlans[0].planId);
+            setLoading(false);
+            return;
+          } else {
+            console.warn('[IAP Diagnostics] Product pethorizon_premium was not found in results.');
+          }
+        } else {
+          console.warn('[IAP Diagnostics] Google Play returned no products.');
+        }
+      } catch (iapError: any) {
+        console.error('[IAP Diagnostics ERROR] Failed to fetch subscriptions from Google Play.');
+        console.error('[IAP Diagnostics ERROR] Code:', iapError?.code || iapError?.errorCode || 'N/A');
+        console.error('[IAP Diagnostics ERROR] Message:', iapError?.message || iapError || 'N/A');
+        console.error('[IAP Diagnostics ERROR] Full Error Details:', JSON.stringify(iapError, null, 2));
+      }
+
+      const { fetchPremiumPlans } = require('@/services/premium/premiumApi');
+      const planList = await fetchPremiumPlans(token);
+      const filtered = planList.filter((p: PremiumPlan) => ALLOWED_PLAN_IDS.has(p.planId));
       setPlans(filtered);
       setIsPremium(status.isPremium);
       if (filtered.length > 0) {
-        const yearly = filtered.find((p) => p.planId === 'yearly');
+        const yearly = filtered.find((p: PremiumPlan) => p.planId === 'yearly');
         setSelectedPlanId(yearly?.planId ?? filtered[0].planId);
       }
-    } catch (error) {
+    } catch (error: any) {
       Alert.alert('Pet Horizon Premium', getErrorMessage(error));
     } finally {
       setLoading(false);
@@ -303,44 +455,37 @@ export function PremiumHubContent() {
     ]).start();
   };
 
-  const handleStartTrial = () => {
+  const handleStartTrial = async () => {
     if (isPremium) {
       Alert.alert('Already Premium', 'You already have an active premium subscription.');
       return;
     }
-    setCheckoutError(null);
-    setCheckoutVisible(true);
-  };
-
-  const handleConfirmPayment = async () => {
-    if (!token || !selectedPlan || !user?._id) return;
+    if (!selectedPlan) return;
     setCheckoutLoading(true);
     setCheckoutError(null);
+    const offerToken = (selectedPlan as any).offerToken || '';
+    console.log(`IAP Launching Purchase Flow in PremiumHub: sku: pethorizon_premium, basePlanId: ${selectedPlan.planId}, offerToken: ${offerToken}`);
     try {
-      // Import api verification client
-      const { verifyGooglePlayPurchase } = require('@/services/premium/premiumApi');
-      
-      // Perform verify API request (Mocked Google purchase token for testing integration)
-      const mockPurchaseToken = `mock_token_${Date.now()}`;
-      const verifyRes = await verifyGooglePlayPurchase(token, {
-        productId: selectedPlan.planId,
-        purchaseToken: mockPurchaseToken,
-        packageName: 'com.anonymous.PetHorizon',
+      await requestPurchase({
+        request: {
+          google: {
+            skus: ['pethorizon_premium'],
+            subscriptionOffers: [
+              {
+                sku: 'pethorizon_premium',
+                offerToken,
+              }
+            ]
+          }
+        },
+        type: 'subs'
       });
-
-      if (verifyRes.success) {
-        const profile = await fetchUserProfile(token, user._id);
-        await setSession({ token, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
-        queryClient.invalidateQueries({ queryKey: ['subscription'] });
-        setIsPremium(true);
-        setCheckoutVisible(false);
-        setSuccessVisible(true);
-      } else {
-        throw new Error('Google Play verification returned unsuccessful status.');
-      }
-    } catch (error) {
-      setCheckoutError(getErrorMessage(error));
-    } finally {
+    } catch (error: any) {
+      console.error('IAP Purchase Flow Launch Failed in PremiumHub:', error);
+      console.error('IAP Purchase Flow Launch Failed details:', JSON.stringify(error, null, 2));
+      const errMsg = `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`;
+      setCheckoutError(errMsg);
+      Alert.alert('Purchase Error', errMsg);
       setCheckoutLoading(false);
     }
   };
@@ -348,10 +493,52 @@ export function PremiumHubContent() {
   const handleRestorePurchases = async () => {
     if (restoring) return;
     setRestoring(true);
-    // Simulate restore attempt
-    await new Promise((r) => setTimeout(r, 1200));
-    setRestoring(false);
-    showToast('No previous purchases found. Contact support if you believe this is an error.');
+    console.log('IAP Restore: Initiating restore purchases flow...');
+    try {
+      await initConnection();
+      await restorePurchases();
+      const purchases = await getAvailablePurchases();
+      console.log('IAP Restore: Available purchases returned:', JSON.stringify(purchases, null, 2));
+      
+      let restored = false;
+      if (purchases && purchases.length > 0) {
+        const premiumPurchase = purchases.find(
+          (p: any) => p.productId === 'pethorizon_premium' && p.purchaseToken
+        );
+        
+        if (premiumPurchase) {
+          console.log('IAP Restore: Found premium purchase token to verify:', premiumPurchase.purchaseToken);
+          const { verifyGooglePlayPurchase } = require('@/services/premium/premiumApi');
+          const verifyRes = await verifyGooglePlayPurchase(token!, {
+            productId: premiumPurchase.productId,
+            purchaseToken: premiumPurchase.purchaseToken!,
+            packageName: 'com.anonymous.PetHorizon',
+          });
+
+          if (verifyRes.success) {
+            await finishTransaction({ purchase: premiumPurchase, isConsumable: false });
+            if (user?._id) {
+              const profile = await fetchUserProfile(token!, user._id);
+              await setSession({ token: token!, user: { ...profile, premiumStatus: 'premium', activePetId: user.activePetId } });
+            }
+            queryClient.invalidateQueries({ queryKey: ['subscription'] });
+            setIsPremium(true);
+            showToast('Premium subscription successfully restored!');
+            restored = true;
+          }
+        }
+      }
+      
+      if (!restored) {
+        showToast('No active premium subscription found to restore.');
+      }
+    } catch (err: any) {
+      console.error('IAP Restore Failed:', err);
+      Alert.alert('Restore Failed', err?.message || 'Failed to restore purchases. Please verify your Google account setup.');
+    } finally {
+      setRestoring(false);
+      endConnection();
+    }
   };
 
   const scrollToBenefits = () => {
@@ -660,14 +847,7 @@ export function PremiumHubContent() {
         </View>
       </View>
 
-      {/* ── Checkout Sheet ───────────────────────────────────────── */}
-      <SecureCheckoutSheet
-        visible={checkoutVisible}
-        plan={selectedPlan}
-        onClose={() => setCheckoutVisible(false)}
-        onConfirm={handleConfirmPayment}
-        loading={checkoutLoading}
-      />
+
 
       {/* ── Legal Sheets ─────────────────────────────────────────── */}
       <TermsAndConditionsSheet visible={termsVisible} onClose={() => setTermsVisible(false)} />

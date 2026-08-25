@@ -20,14 +20,18 @@ const EXPO_GO_MESSAGE =
 export const LOCAL_RELEASE_SHA1 =
   '5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25';
 
+/** Google Play App Signing key SHA-1 — used by store-distributed builds. */
+export const PLAY_STORE_SHA1 =
+  '8A:7C:ED:C1:17:A1:AA:1D:33:E0:6F:B9:32:9D:B9:9D:00:E4:E8:C1';
+
 export const ANDROID_PACKAGE_NAME = 'com.anonymous.PetHorizon';
 
 export function getGoogleDeveloperErrorMessage(): string {
   return (
-    'Google Sign-In is not configured for this APK. In Firebase Console → Project Settings → ' +
-    `Pet Horizon Android app, add SHA-1 fingerprint ${LOCAL_RELEASE_SHA1}, enable Google under ` +
-    'Authentication → Sign-in method, download a fresh google-services.json, run `npm run google:sync-android`, ' +
-    'then rebuild and reinstall the APK.'
+    'Google Sign-In is not configured for this APK. In Firebase Console → Project Settings → Pet Horizon Android app, add the matching SHA-1 fingerprint:\n' +
+    `- For Local/Debug builds: ${LOCAL_RELEASE_SHA1}\n` +
+    `- For Play Store/Internal builds: ${PLAY_STORE_SHA1}\n\n` +
+    'Then download a fresh google-services.json, run `npm run google:sync-android`, rebuild, and reinstall.'
   );
 }
 
