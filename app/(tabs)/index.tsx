@@ -666,7 +666,12 @@ export default function HomeScreen() {
         />
 
         {showBirthdayBanner ? (
-          <PetBirthdayBanner petName={effectivePet?.name ?? profile?.name ?? 'Your pet'} birthday={petBirthday} />
+          <PetBirthdayBanner
+            petName={effectivePet?.name ?? profile?.name ?? 'Your pet'}
+            birthday={petBirthday}
+            species={effectivePet?.species ?? profile?.species ?? ''}
+            isPremium={isPremium}
+          />
         ) : null}
 
 
