@@ -113,7 +113,7 @@ export function WeeklySpendingCard({
               <Skeleton width="20%" height={12} tone="dark" />
             </View>
           </View>
-        ) : (
+        ) : hasBudget ? (
           <>
             {/* Main Balance Display */}
             <View style={styles.balanceContainer}>
@@ -121,23 +121,21 @@ export function WeeklySpendingCard({
                 AVAILABLE BALANCE
               </AppText>
               <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.balanceText}>
-                {hasBudget ? remainingLabel : '$0.00'}
+                {remainingLabel}
               </AppText>
             </View>
 
             {/* Premium Sleek Progress Bar */}
-            {hasBudget && (
-              <View style={styles.progressContainer}>
-                <View style={styles.progressTrack}>
-                  <View
-                    style={[
-                      styles.progressFill,
-                      { width: `${clampedPercent}%`, backgroundColor: isOver ? '#F87171' : accentColor },
-                    ]}
-                  />
-                </View>
+            <View style={styles.progressContainer}>
+              <View style={styles.progressTrack}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    { width: `${clampedPercent}%`, backgroundColor: isOver ? '#F87171' : accentColor },
+                  ]}
+                />
               </View>
-            )}
+            </View>
 
             {/* Bottom Metadata Info */}
             <View style={styles.bottomRow}>
@@ -155,7 +153,7 @@ export function WeeklySpendingCard({
                   SPENDING LIMIT
                 </AppText>
                 <AppText variant="bodySmall" weight="700" color="#FFFFFF" style={styles.metaVal}>
-                  {hasBudget ? limitLabel : 'NOT SET'}
+                  {limitLabel}
                 </AppText>
               </View>
 
@@ -168,20 +166,29 @@ export function WeeklySpendingCard({
                 </AppText>
               </View>
             </View>
-
-            {!hasBudget && (
-              <TouchableOpacity
-                style={[styles.setupBtn, isPremium && styles.setupBtnPremium]}
-                activeOpacity={0.8}
-                onPress={() => onEditPress?.(true)}
-              >
-                <Ionicons name="add-circle" size={15} color={isPremium ? '#FFF176' : '#FFFFFF'} />
-                <AppText variant="bodySmall" weight="800" color={isPremium ? '#FFF176' : '#FFFFFF'}>
-                  Configure Spending Budget
-                </AppText>
-              </TouchableOpacity>
-            )}
           </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyHeader}>
+              <MaterialCommunityIcons name="wallet-plus-outline" size={24} color={accentColor} />
+              <AppText variant="body" weight="800" color="#FFFFFF" style={styles.emptyTitle}>
+                No Budget Configured
+              </AppText>
+            </View>
+            <AppText variant="caption" color="rgba(255,255,255,0.5)" style={styles.emptySubtitle}>
+              Take control of your pet expenses. Configure a spending limit to start tracking.
+            </AppText>
+            <TouchableOpacity
+              style={[styles.setupBtn, isPremium && styles.setupBtnPremium]}
+              activeOpacity={0.8}
+              onPress={() => onEditPress?.(true)}
+            >
+              <Ionicons name="add-circle" size={15} color={isPremium ? '#FFF176' : '#FFFFFF'} />
+              <AppText variant="bodySmall" weight="800" color={isPremium ? '#FFF176' : '#FFFFFF'}>
+                Configure Spending Budget
+              </AppText>
+            </TouchableOpacity>
+          </View>
         )}
       </LinearGradient>
     </View>
@@ -332,5 +339,23 @@ const styles = StyleSheet.create({
   },
   skeletonBody: {
     marginVertical: 4,
+  },
+  emptyContainer: {
+    paddingVertical: 4,
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  emptyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  emptyTitle: {
+    letterSpacing: -0.2,
+  },
+  emptySubtitle: {
+    lineHeight: 16,
+    marginBottom: 8,
   },
 });
