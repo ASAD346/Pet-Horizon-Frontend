@@ -1,36 +1,43 @@
-import { AppText } from '@/components/ui/AppText';
-import { Radius, Spacing } from '@/constants/theme';
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
+import { Radius, Spacing } from '@/constants/theme';
 import { ProfileModalShell } from './ProfileModalShell';
 
 const SECTIONS = [
   {
     title: 'Information We Collect',
+    summary: 'We collect your name, email, photo, and registered pet profiles/logs.',
     body: 'We collect personal details you provide directly to us: your full name, email address, profile image, and authentication tokens. We also collect and store pet profiles (names, species, breeds, weight histories, and age) and all associated care schedules, budget configurations, and journal records.',
   },
   {
     title: 'Device Permissions & Diagnostics',
+    summary: 'We use camera/photo access for pet images, and alerts for care reminders.',
     body: 'To provide core application features, we request specific permissions: Camera and Media Library access (to upload pet and profile pictures) and Push Notifications (to deliver smart schedule alerts). Anonymized device logs, operating system versions, and app usage metrics may be collected to fix bugs and improve performance.',
   },
   {
     title: 'Third-Party Integrations & Payments',
+    summary: 'Google Play handles payments. Google Auth handles logins. We never sell your data.',
     body: 'We use trusted third parties to facilitate core services, including Google Play Billing Services for managing in-app purchases and Firebase/Google Services for account authentication and push notifications. We do not sell your personal data to advertisers or third parties.',
   },
   {
     title: 'Data Security & Storage',
+    summary: 'All your data is encrypted and saved on secure database servers.',
     body: 'Your personal and pet care information is encrypted during transit (using TLS) and at rest on secure cloud servers. We implement strict server-side access controls to protect your data against unauthorized access, loss, or leakage.',
   },
   {
     title: 'Account Deletion & Data Control',
+    summary: 'You can delete your account under settings. This deletes all your pet logs instantly.',
     body: 'In compliance with Google Play Developer policies, you have complete control over your data. You can edit your profile information or delete your account permanently directly within the app settings. Account deletion immediately and permanently purges your user profile, registered pets, care logs, journal entries, and financial records from our active servers.',
   },
   {
     title: "Children's Privacy",
+    summary: 'We do not collect information from anyone under 13.',
     body: 'Our services are not designed for or targeted at children under the age of 13. We do not knowingly collect personal information from individuals under 13. If you become aware that a child has provided us with personal information, please contact us immediately.',
   },
   {
     title: 'Contact & Support',
+    summary: 'Contact support at: pethorizon2026@gmail.com',
     body: 'If you have any questions or feedback regarding this Privacy Policy or our data practices, please email us at pethorizon2026@gmail.com.',
   },
 ];
@@ -49,7 +56,7 @@ export function PrivacyPolicySheet({ visible, onClose }: PrivacyPolicySheetProps
             Last Updated: July 2026
           </AppText>
           <AppText variant="caption" color="#475569" style={styles.introSub}>
-            This Privacy Policy describes how PetHorizon collects, uses, protects, and handles your personal information and pet data.
+            This Privacy Policy explains how we protect your personal info and pet data.
           </AppText>
         </View>
 
@@ -59,7 +66,13 @@ export function PrivacyPolicySheet({ visible, onClose }: PrivacyPolicySheetProps
               <AppText variant="body" weight="700" color="#1E293B" style={styles.sectionTitle}>
                 {index + 1}. {section.title}
               </AppText>
-              <AppText variant="bodySmall" color="#475569" style={styles.sectionBody}>
+
+              {/* Simplified summary line */}
+              <AppText variant="bodySmall" weight="700" color="#16A34A" style={styles.summaryText}>
+                Summary: {section.summary}
+              </AppText>
+
+              <AppText variant="bodySmall" color="#64748B" style={styles.sectionBody}>
                 {section.body}
               </AppText>
             </View>
@@ -88,6 +101,10 @@ const styles = StyleSheet.create({
   sectionCard: {
     marginBottom: Spacing.lg,
   },
-  sectionTitle: { marginBottom: Spacing.sm },
-  sectionBody: { lineHeight: 20 },
+  sectionTitle: { marginBottom: 2 },
+  summaryText: {
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  sectionBody: { lineHeight: 18 },
 });
