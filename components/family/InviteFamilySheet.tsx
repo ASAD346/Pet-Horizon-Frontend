@@ -249,11 +249,14 @@ export function InviteFamilySheet({
           style={[
             styles.linkRow,
             {
-              borderColor: isPremium ? 'rgba(24, 79, 46, 0.25)' : 'rgba(92, 179, 93, 0.25)',
-              backgroundColor: isPremium ? '#F4F9F4' : '#EEF8EE',
+              borderColor: isPremium ? 'rgba(24, 79, 46, 0.15)' : 'rgba(92, 179, 93, 0.15)',
+              backgroundColor: isPremium ? '#F4F9F4' : '#F0FDF4',
             },
           ]}
         >
+          <View style={styles.linkIconWrap}>
+            <Ionicons name="link-outline" size={16} color={activeGreen} />
+          </View>
           <TouchableOpacity
             style={styles.linkTapArea}
             onPress={handleOpenWebLink}
@@ -265,18 +268,21 @@ export function InviteFamilySheet({
               weight="600"
               color={activeGreen}
               style={styles.linkText}
-              numberOfLines={2}
+              numberOfLines={1}
             >
               {loading ? 'Generating link…' : maskInviteLink(webLink)}
             </AppText>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.copyBtn}
+            style={[
+              styles.copyBtn,
+              { backgroundColor: isPremium ? '#E8F5E9' : '#E8F5E9' },
+            ]}
             onPress={handleCopyLink}
             disabled={loading || !webLink}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={20} color={activeGreen} />
+            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={15} color={activeGreen} />
           </TouchableOpacity>
         </View>
 
@@ -315,15 +321,20 @@ const styles = StyleSheet.create({
   linkRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     paddingRight: Spacing.xs,
     minHeight: 48,
     marginBottom: Spacing.xs,
   },
+  linkIconWrap: {
+    paddingLeft: Spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   linkTapArea: {
     flex: 1,
-    paddingLeft: Spacing.md,
+    paddingLeft: Spacing.xs,
     paddingVertical: Spacing.sm,
     justifyContent: 'center',
   },
@@ -331,10 +342,12 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   copyBtn: {
-    width: 40,
-    height: 40,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    marginRight: Spacing.xs,
   },
   copiedHint: {
     marginBottom: Spacing.sm,
@@ -343,8 +356,15 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: HomeTheme.white,
     borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(148, 163, 184, 0.15)',
     padding: Spacing.md,
     marginBottom: Spacing.sm,
+    shadowColor: '#0F172A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 1,
   },
   qrPlaceholder: {
     width: 180,
