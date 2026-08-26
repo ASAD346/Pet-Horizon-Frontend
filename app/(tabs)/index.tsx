@@ -396,9 +396,22 @@ export default function HomeScreen() {
         }
       }
 
-      const actorName = entry.userId?._id === user?._id || entry.userId === user?._id 
+      const isMe = entry.userId?._id === user?._id || entry.userId === user?._id;
+      const actorName = isMe 
         ? 'You' 
         : (entry.userId?.fullName ? entry.userId.fullName : 'A family member');
+      
+      const actorImage = isMe 
+        ? (user?.profileImage ? resolveMediaUrl(user.profileImage) : undefined) 
+        : (entry.userId?.profileImage ? resolveMediaUrl(entry.userId.profileImage) : undefined);
+      
+      const actorInitial = isMe
+        ? (user?.fullName?.trim()?.charAt(0)?.toUpperCase() || 'Y')
+        : (entry.userId?.fullName?.trim()?.charAt(0)?.toUpperCase() || 'F');
+
+      const actorColor = isMe
+        ? '#2E7D32' 
+        : (entry.userId?.avatarColor || '#5B9BD5');
       
       let actionText = entry.note ? entry.note.trim() : `logged ${category}`;
       // Deduplicate redundant suffix combinations
@@ -432,6 +445,8 @@ export default function HomeScreen() {
         actionText = `${actionText} (${walkDuration} min)`;
       }
 
+      const isSkipped = actionText.toLowerCase().startsWith('skipped');
+
       return {
         id: entry._id,
         actorName,
@@ -443,6 +458,12 @@ export default function HomeScreen() {
         createdAt: entry.createdAt,
         duration: walkDuration,
         durationLabel: walkDuration ? `${walkDuration} min` : undefined,
+        exactTime: formatInTimeZone(date, timezone, 'h:mm a'),
+        actorImage,
+        actorInitial,
+        actorColor,
+        category,
+        isSkipped,
       };
     });
   }, [dashboardData?.recentActivities, user]);
@@ -569,6 +590,17 @@ export default function HomeScreen() {
     await completeVaccination(scheduleId);
   }, [completeVaccination]);
 
+  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
+
+  const handlePullRefresh = useCallback(async () => {
+    setIsPullRefreshing(true);
+    try {
+      await refetchDashboard();
+    } finally {
+      setIsPullRefreshing(false);
+    }
+  }, [refetchDashboard]);
+
   if (petCardLoading && !pet) {
     return (
       <View style={styles.root}>
@@ -589,17 +621,6 @@ export default function HomeScreen() {
       </View>
     );
   }
-
-  const [isPullRefreshing, setIsPullRefreshing] = useState(false);
-
-  const handlePullRefresh = useCallback(async () => {
-    setIsPullRefreshing(true);
-    try {
-      await refetchDashboard();
-    } finally {
-      setIsPullRefreshing(false);
-    }
-  }, [refetchDashboard]);
 
   return (
     <View style={styles.root}>

@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Image } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
-import { homePillCard } from './homeStyles';
+import { homeCardShadow } from './homeStyles';
 import { HomeTheme, Spacing } from '../../constants/theme';
 import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
@@ -22,6 +22,12 @@ export interface RecentActivityItem {
   createdAt?: string;
   duration?: number | null;
   durationLabel?: string;
+  exactTime?: string;
+  actorImage?: string;
+  actorInitial?: string;
+  actorColor?: string;
+  category?: string;
+  isSkipped?: boolean;
 }
 
 interface RecentActivitySectionProps {
@@ -62,9 +68,6 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
     ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border
 
-  const iconColor = isPremium ? '#184F2E' : '#2E7D32';
-  const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
-
   const isActivityToday = (dateStr: string | undefined): boolean => {
     if (!dateStr) return true;
     const d = new Date(dateStr);
@@ -92,32 +95,59 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
         </View>
       ) : (
         visibleActivities.map((item) => (
-          <View key={item.id} style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor, alignItems: 'center', justifyContent: 'space-between', flexDirection: 'row' }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+          <View
+            key={item.id}
+            style={[
+              styles.activityCard,
+              {
+                borderWidth: 1,
+                borderColor: cardBorderColor,
+                borderLeftWidth: 4,
+                borderLeftColor: item.color,
+              }
+            ]}
+          >
+            <View style={styles.cardContent}>
               <ColorIconBadge
                 color={item.color}
                 backgroundColor={item.bg}
                 materialIcon={item.icon}
-                size={44}
-                iconSize={22}
+                size={36}
+                iconSize={18}
                 style={styles.iconBadge}
               />
+              
               <View style={styles.textBlock}>
-                <AppText variant="bodySmall">
-                  <Text style={{ fontWeight: 'bold', color: HomeTheme.text }}>
-                    {item.actorName}
-                  </Text>
-                  <Text style={{ color: HomeTheme.textMuted }}>
-                    {' '}{formatRawString(item.actionText)}
-                    {item.icon === 'walk' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
-                  </Text>
+                {/* Action Title */}
+                <AppText variant="bodySmall" weight="600" style={{ color: HomeTheme.text }}>
+                  {formatRawString(item.actionText)}
+                  {item.icon === 'walk' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
                 </AppText>
+
+                {/* Actor & Time Info Row */}
+                <View style={styles.metaRow}>
+                  {/* Actor Avatar or Badge */}
+                  <View style={[styles.miniAvatar, { backgroundColor: item.actorColor || '#5B9BD5' }]}>
+                    {item.actorImage ? (
+                      <Image source={{ uri: item.actorImage }} style={styles.miniAvatarImage} />
+                    ) : (
+                      <Text style={styles.miniAvatarText}>{item.actorInitial || 'U'}</Text>
+                    )}
+                  </View>
+                  
+                  {/* Actor Name */}
+                  <AppText variant="caption" color={HomeTheme.textMuted} weight="600" style={styles.actorNameText}>
+                    {item.actorName}
+                  </AppText>
+
+                  <Text style={styles.separator}>•</Text>
+
+                  {/* Exact & Relative Time */}
+                  <AppText variant="caption" color={HomeTheme.textMuted} style={{ fontSize: 10 }}>
+                    {item.exactTime} {item.time ? `(${item.time})` : ''}
+                  </AppText>
+                </View>
               </View>
-            </View>
-            <View style={{ alignItems: 'flex-end', justifyContent: 'center' }}>
-              <AppText variant="caption" color={HomeTheme.textMuted} style={{ fontSize: 10 }}>
-                {item.time}
-              </AppText>
             </View>
           </View>
         ))
@@ -135,21 +165,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.lg,
   },
+  activityCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingLeft: 10,
+    paddingRight: 12,
+    paddingVertical: 8,
+    marginBottom: 8,
+    marginHorizontal: 2,
+    minHeight: 52,
+    ...homeCardShadow,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   textBlock: {
     flex: 1,
     marginLeft: Spacing.sm,
-    gap: 2,
   },
-  titleRow: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    marginTop: 2,
   },
-  categoryTag: {
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 4,
-    alignSelf: 'center',
+  miniAvatar: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 6,
+    overflow: 'hidden',
+  },
+  miniAvatarImage: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+  },
+  miniAvatarText: {
+    color: '#FFFFFF',
+    fontSize: 9,
+    fontWeight: 'bold',
+  },
+  actorNameText: {
+    fontSize: 10,
+  },
+  separator: {
+    color: HomeTheme.textMuted,
+    marginHorizontal: 6,
+    fontSize: 9,
   },
   iconBadge: {
     alignSelf: 'center',

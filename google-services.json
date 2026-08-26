@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "162625002184-fh58gf2vpkcnl1h5hqtpffa02icjrnf8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anonymous.PetHorizon",
+            "certificate_hash": "387033475f1f99b585ac3cdbca0f6b4b88cdfa6b"
+          }
+        },
+        {
           "client_id": "162625002184-h3q2anibl9f98l04s5pjpfh16t01hg44.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

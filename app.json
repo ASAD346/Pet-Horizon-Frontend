@@ -3,7 +3,7 @@
     "name": "Pet Horizon",
     "jsEngine": "hermes",
     "slug": "Pet-Horizon",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon.png",
     "notification": {
@@ -41,7 +41,7 @@
         "android.permission.RECEIVE_BOOT_COMPLETED"
       ],
       "package": "com.anonymous.PetHorizon",
-      "versionCode": 2,
+      "versionCode": 15,
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {

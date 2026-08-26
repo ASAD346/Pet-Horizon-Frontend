@@ -160,7 +160,7 @@ export function FormSheetShell({
                     Access Restricted
                   </AppText>
                   <AppText variant="bodySmall" color="#64748B" style={{ textAlign: 'center', lineHeight: 18, marginBottom: 24 }}>
-                    You don't have permission to edit or create this schedule. Please request access from an admin.
+                    {"You don't have permission to edit or create this schedule. Please request access from an admin."}
                   </AppText>
                   
                   <View style={{ width: '100%', marginBottom: 10 }}>

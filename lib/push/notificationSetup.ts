@@ -141,12 +141,35 @@ export async function ensureAndroidNotificationChannels(): Promise<void> {
   channelsConfigured = true;
 }
 
-export async function requestPushPermission(): Promise<boolean> {
+export async function requestPushPermission(force = false): Promise<boolean> {
   if (isExpoGo()) return false;
 
   const Notifications = await getNotificationsModule();
-  const { status: existing } = await Notifications.getPermissionsAsync();
+  const { status: existing, canAskAgain } = await Notifications.getPermissionsAsync();
   if (existing === 'granted') return true;
+
+  // If permission has already been denied and we are not forcing a request,
+  // respect the decision and do not trigger the prompt again.
+  if (existing === 'denied' && !force) {
+    log.info(SCOPE, 'Notification permission was previously denied. Respecting user preference.');
+    return false;
+  }
+
+  // If the OS indicates we cannot ask again, and we aren't forcing, do not attempt to show the prompt.
+  if (!canAskAgain && !force) {
+    log.info(SCOPE, 'Notification permission cannot be asked again. Respecting OS status.');
+    return false;
+  }
+
+  // If force is true and we cannot ask via OS prompt (e.g. denied or canAskAgain is false), open settings.
+  if (force && (existing === 'denied' || !canAskAgain)) {
+    log.info(SCOPE, 'Forcing permission request - redirecting to OS settings');
+    const { Linking } = require('react-native');
+    await Linking.openSettings().catch((err: any) => {
+      log.fail(SCOPE, 'Failed to open system settings', err?.message || String(err));
+    });
+    return false;
+  }
 
   const { status } = await Notifications.requestPermissionsAsync({
     ios: {
@@ -164,7 +187,7 @@ export async function preparePushNotifications(): Promise<boolean> {
 
   await ensureNotificationHandler();
   await ensureAndroidNotificationChannels();
-  return requestPushPermission();
+  return requestPushPermission(false);
 }
 
 /**

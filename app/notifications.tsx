@@ -234,8 +234,8 @@ export default function NotificationsScreen() {
     setRefreshing(false);
   }, [reload]);
 
-  const renderRightActions = (id: string) => (progress: any, dragX: any) => {
-    return (
+  const renderRightActions = (id: string) => {
+    const RightActions = () => (
       <TouchableOpacity
         style={styles.deleteAction}
         onPress={() => remove(id)}
@@ -247,6 +247,8 @@ export default function NotificationsScreen() {
         </AppText>
       </TouchableOpacity>
     );
+    RightActions.displayName = 'RightActions';
+    return RightActions;
   };
 
   const insets = useSafeAreaInsets();
@@ -333,7 +335,7 @@ export default function NotificationsScreen() {
                 No Notifications Yet
               </AppText>
               <AppText variant="bodySmall" color={HomeTheme.textMuted} style={styles.emptyDesc}>
-                We'll notify you here about upcoming schedules, activity updates, and reminders.
+                {"We'll notify you here about upcoming schedules, activity updates, and reminders."}
               </AppText>
             </View>
           ) : (
@@ -586,11 +588,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.xxl,
+    flexGrow: 1,
   },
   emptyWrap: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
-    paddingTop: Spacing.xxl * 1.5,
+    paddingBottom: 80,
   },
   emptyCircle: {
     width: 64,

@@ -31,6 +31,4 @@
 # Optimization & Obfuscation Tweaks
 -repackageclasses ''
 -allowaccessmodification
--dontobfuscate false
--dontshrink false
--dontoptimize false
+

@@ -6,8 +6,6 @@ import type {
   PaymentInvoice,
   PremiumPlan,
   PremiumStatusResponse,
-  SubscribeRequest,
-  SubscribeResponse,
 } from '@/types/premium';
 
 const SCOPE = 'PremiumAPI';
@@ -36,25 +34,6 @@ export async function fetchPremiumStatus(token: string): Promise<PremiumStatusRe
   }
 }
 
-export async function subscribePremium(
-  token: string,
-  payload: SubscribeRequest,
-): Promise<SubscribeResponse> {
-  log.info(SCOPE, 'POST /premium/subscribe', { planId: payload.planId });
-  try {
-    const data = await apiRequest<SubscribeResponse>(API_ENDPOINTS.premium.subscribe, {
-      method: 'POST',
-      token,
-      body: payload,
-    });
-    log.ok(SCOPE, 'Subscribed', { planId: data.planId });
-    return data;
-  } catch (error) {
-    log.fail(SCOPE, 'Subscribe failed', getErrorMessage(error));
-    throw error;
-  }
-}
-
 export async function cancelPremium(token: string): Promise<{ message: string }> {
   log.info(SCOPE, 'POST /premium/cancel');
   try {
@@ -72,7 +51,7 @@ export async function cancelPremium(token: string): Promise<{ message: string }>
 
 export async function verifyGooglePlayPurchase(
   token: string,
-  payload: { productId: string; purchaseToken: string; packageName: string },
+  payload: { productId: string; purchaseToken: string; packageName: string; planId?: string },
 ): Promise<{ success: boolean; expiresAt: string; alreadyProcessed?: boolean }> {
   log.info(SCOPE, 'POST /premium/google-play/verify', { productId: payload.productId });
   try {
@@ -103,4 +82,3 @@ export async function fetchPaymentInvoices(token: string): Promise<PaymentInvoic
     throw error;
   }
 }
-

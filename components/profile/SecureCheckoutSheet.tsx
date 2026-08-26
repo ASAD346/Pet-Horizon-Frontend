@@ -167,7 +167,7 @@ export function SecureCheckoutSheet({
               <View style={styles.divider} />
 
               <AppText variant="caption" color="#5F6368" style={styles.playDisclaimer}>
-                By clicking "Subscribe", you authorize Google Play to charge your selected payment method recurringly. You can cancel at any time under Subscriptions in Google Play Store settings.
+                {"By clicking \"Subscribe\", you authorize Google Play to charge your selected payment method recurringly. You can cancel at any time under Subscriptions in Google Play Store settings."}
               </AppText>
 
               {/* ── Subscribe Button ─────────────────────────────────── */}

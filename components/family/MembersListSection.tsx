@@ -86,7 +86,7 @@ export function MembersListSection({
             No members yet
           </AppText>
           <AppText variant="caption" color={HomeTheme.textMuted} style={styles.emptyMembersDesc}>
-            Invite family members or caregivers to help manage your pet's daily routine.
+            {"Invite family members or caregivers to help manage your pet's daily routine."}
           </AppText>
         </View>
       ) : (

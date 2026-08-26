@@ -129,7 +129,7 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
                   <View style={styles.instructionStep}>
                     <View style={styles.stepNumberBadge}><AppText variant="caption" weight="800" color="#2E7D32">2</AppText></View>
                     <AppText variant="caption" weight="600" color="#E2E8F0" style={styles.stepText}>
-                      Have them tap "Invite Member" to display their QR code.
+                      {"Have them tap \"Invite Member\" to display their QR code."}
                     </AppText>
                   </View>
 

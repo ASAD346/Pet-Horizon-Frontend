@@ -60,7 +60,7 @@ export function ContextGuard({ children }: ContextGuardProps) {
         <View style={styles.container}>
           <ActivityIndicator size="large" color="#184F2E" />
           <AppText variant="bodySmall" weight="800" color="#184F2E" style={styles.text}>
-            Loading {petName}'s workspace...
+            {"Loading "}{petName}{"'s workspace..."}
           </AppText>
         </View>
       )}

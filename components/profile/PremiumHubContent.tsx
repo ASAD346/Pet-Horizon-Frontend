@@ -15,8 +15,10 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Application from 'expo-application';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsFocused } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
 import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
@@ -187,14 +189,24 @@ export function PremiumHubContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const scrollViewRef = useRef<ScrollView>(null);
   const { token, user, setSession } = useAuth();
   const { pet } = useActivePet(token);
   const { showToast } = useToast();
 
+  const isFocusedRef = useRef(isFocused);
+  useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
+
   const [plans, setPlans] = useState<PremiumPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPlanId, setSelectedPlanId] = useState<string>('yearly');
+  const selectedPlanIdRef = useRef(selectedPlanId);
+  useEffect(() => {
+    selectedPlanIdRef.current = selectedPlanId;
+  }, [selectedPlanId]);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
@@ -236,6 +248,10 @@ export function PremiumHubContent() {
         await initConnection();
         
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase) => {
+          if (!isFocusedRef.current) {
+            console.log('[IAP] PremiumHubContent is not focused, skipping purchase verification.');
+            return;
+          }
           const receipt = purchase.purchaseToken;
           if (receipt) {
             try {
@@ -244,7 +260,8 @@ export function PremiumHubContent() {
               const verifyRes = await verifyGooglePlayPurchase(token!, {
                 productId: purchase.productId,
                 purchaseToken: purchase.purchaseToken!,
-                packageName: 'com.anonymous.PetHorizon',
+                packageName: Application.applicationId || 'com.anonymous.PetHorizon',
+                planId: selectedPlanIdRef.current,
               });
 
               if (verifyRes.success) {
@@ -398,6 +415,21 @@ export function PremiumHubContent() {
 
   useEffect(() => {
     loadPlans();
+    
+    // Auto check/restore on mount if user already owns subscription
+    const checkOnMount = async () => {
+      try {
+        await initConnection();
+        const purchases = await getAvailablePurchases();
+        if (purchases && purchases.some(p => p.productId === 'pethorizon_premium' && p.purchaseToken)) {
+          console.log('[IAP Diagnostics] Found existing subscription on PremiumHub mount. Restoring...');
+          await handleRestorePurchases();
+        }
+      } catch (err) {
+        console.log('[IAP Diagnostics] Auto restore check on mount failed:', err);
+      }
+    };
+    checkOnMount();
   }, [loadPlans]);
 
   // Success modal animations
@@ -463,7 +495,33 @@ export function PremiumHubContent() {
     if (!selectedPlan) return;
     setCheckoutLoading(true);
     setCheckoutError(null);
+
+    // Pre-purchase check
+    console.log('[IAP Diagnostics] Pre-purchase check before requestPurchase in PremiumHub...');
+    try {
+      await initConnection();
+      const purchases = await getAvailablePurchases();
+      const premiumPurchase = purchases?.find(
+        (p: any) => p.productId === 'pethorizon_premium' && p.purchaseToken
+      );
+
+      if (premiumPurchase) {
+        console.log('[IAP Diagnostics] Pre-purchase check: User already owns subscription. Restoring...');
+        await handleRestorePurchases();
+        setCheckoutLoading(false);
+        return;
+      }
+    } catch (checkErr) {
+      console.warn('[IAP Diagnostics] Failed pre-purchase check in PremiumHub:', checkErr);
+    }
+
     const offerToken = (selectedPlan as any).offerToken || '';
+    if (!offerToken && Platform.OS === 'android') {
+      const errorMsg = `Subscription details for the ${selectedPlan.name} plan could not be loaded from Google Play Store. Please try again.`;
+      Alert.alert('Subscription Error', errorMsg);
+      setCheckoutLoading(false);
+      return;
+    }
     console.log(`IAP Launching Purchase Flow in PremiumHub: sku: pethorizon_premium, basePlanId: ${selectedPlan.planId}, offerToken: ${offerToken}`);
     try {
       await requestPurchase({
@@ -484,8 +542,20 @@ export function PremiumHubContent() {
       console.error('IAP Purchase Flow Launch Failed in PremiumHub:', error);
       console.error('IAP Purchase Flow Launch Failed details:', JSON.stringify(error, null, 2));
       const errMsg = `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`;
-      setCheckoutError(errMsg);
-      Alert.alert('Purchase Error', errMsg);
+      
+      if (error?.code === 'E_ALREADY_OWNED' || error?.message?.includes('already owned') || error?.code?.includes('already-owned')) {
+        Alert.alert(
+          'Active Subscription',
+          'You already own this subscription. Would you like to restore/sync it now?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Restore', onPress: () => handleRestorePurchases() }
+          ]
+        );
+      } else {
+        setCheckoutError(errMsg);
+        Alert.alert('Purchase Error', errMsg);
+      }
       setCheckoutLoading(false);
     }
   };
@@ -512,7 +582,8 @@ export function PremiumHubContent() {
           const verifyRes = await verifyGooglePlayPurchase(token!, {
             productId: premiumPurchase.productId,
             purchaseToken: premiumPurchase.purchaseToken!,
-            packageName: 'com.anonymous.PetHorizon',
+            packageName: Application.applicationId || 'com.anonymous.PetHorizon',
+            planId: selectedPlanIdRef.current,
           });
 
           if (verifyRes.success) {

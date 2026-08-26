@@ -49,7 +49,7 @@ export function FeedbackSheet({ visible, onClose, token }: FeedbackSheetProps) {
       title="Rate Us & Feedback"
     >
       <AppText variant="bodySmall" color="#64748B" style={styles.intro}>
-        We're always improving PetHorizon. Share your ideas or suggestions with us.
+        {"We're always improving PetHorizon. Share your ideas or suggestions with us."}
       </AppText>
 
       <View style={styles.ratingCard}>

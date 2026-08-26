@@ -11,5 +11,6 @@
     "**/android/.gradle/**",
     "**/node_modules/@react-native/gradle-plugin/**",
     "**/node_modules/expo-modules-core/expo-module-gradle-plugin/**"
-  ]
+  ],
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -99,7 +99,7 @@ export function LoginFormSection({
 
       <View style={styles.signupRow}>
         <AppText variant="bodySmall" color={Palette.gray[500]} weight="600">
-          Don't have an account?{' '}
+          {"Don't have an account? "}
         </AppText>
         <TouchableOpacity onPress={onSignup} disabled={loading}>
           <AppText variant="bodySmall" color="#5CB35D" weight="800">

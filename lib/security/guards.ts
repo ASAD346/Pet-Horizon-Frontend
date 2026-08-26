@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { log } from '@/lib/log';
 
 /**
  * Security checks to guard against tampering and unauthorized debugging in production.
@@ -10,18 +11,7 @@ export function runSecurityGuards() {
   }
 
   try {
-    // 1. Detect Debugger / Breakpoint attachment using execution latency
-    const startTime = Date.now();
-    for (let i = 0; i < 1000; i++) {
-      Math.sqrt(i);
-    }
-    const endTime = Date.now();
-    if (endTime - startTime > 100) {
-      // Latency spike indicates debugger stepping or console interception
-      throw new Error('Security Violation');
-    }
-
-    // 2. Check for common React Native debugger/dev tools globals
+    // Check for common React Native debugger/dev tools globals
     const isObviousDebug =
       (global as any).__REMOTEDEV__ ||
       (global as any).__v8debug__ ||
@@ -32,9 +22,7 @@ export function runSecurityGuards() {
       throw new Error('Security Violation');
     }
   } catch (e) {
-    // Safely trigger JS thread halt on security exception
-    while (true) {
-      // Infinite loop to freeze JS thread if tampered/debugged in production
-    }
+    log.fail('Security', 'Security checks failed', e instanceof Error ? e.message : String(e));
+    throw e;
   }
 }

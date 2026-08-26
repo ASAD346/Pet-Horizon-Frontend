@@ -104,8 +104,9 @@ export function WalkTimer({
         const remainingSeconds = targetSeconds - Math.floor((Date.now() - startedAt) / 1000);
         if (remainingSeconds <= 0) return;
         try {
-          const { status } = await Notifications.requestPermissionsAsync();
-          if (status !== 'granted') return;
+          const { requestPushPermission } = require('@/lib/push/notificationSetup');
+          const granted = await requestPushPermission(false);
+          if (!granted) return;
           try { await Notifications.cancelScheduledNotificationAsync(`walk-done-${scheduleId}`); } catch (_) {}
           await Notifications.scheduleNotificationAsync({
             identifier: `walk-done-${scheduleId}`,

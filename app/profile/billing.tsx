@@ -6,10 +6,13 @@ import {
   View,
   TouchableOpacity,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as Application from 'expo-application';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useIsFocused } from '@react-navigation/native';
 import { AppText } from '@/components/ui/AppText';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme, formatPlanPrice } from '@/components/profile/profileTheme';
@@ -31,6 +34,8 @@ import {
   purchaseUpdatedListener,
   purchaseErrorListener,
   finishTransaction,
+  getAvailablePurchases,
+  restorePurchases,
 } from 'expo-iap';
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
@@ -169,28 +174,39 @@ function PlanCard({
   );
 }
 
-function InvoiceRow({ invoice }: { invoice: PaymentInvoice }) {
+function InvoiceRow({ invoice, isLast }: { invoice: PaymentInvoice; isLast?: boolean }) {
   const statusColor =
-    invoice.status === 'paid' ? '#22C55E' :
+    invoice.status === 'paid' ? '#10B981' :
     invoice.status === 'pending' ? '#F59E0B' : '#EF4444';
 
+  const statusBg =
+    invoice.status === 'paid' ? '#E6FBF3' :
+    invoice.status === 'pending' ? '#FFFBEB' : '#FEF2F2';
+
   return (
-    <View style={styles.invoiceRow}>
-      <View style={styles.invoiceLeft}>
-        <AppText variant="bodySmall" weight="700" color="#1E293B">
-          #{invoice.id.slice(-6).toUpperCase()}
-        </AppText>
-        <AppText variant="caption" color="#64748B">
-          {invoice.date}
-        </AppText>
+    <View style={[styles.invoiceRow, isLast && { borderBottomWidth: 0 }]}>
+      <View style={styles.invoiceLeftContainer}>
+        <View style={styles.invoiceIconContainer}>
+          <Ionicons name="receipt-outline" size={18} color="#1E5838" />
+        </View>
+        <View style={styles.invoiceLeft}>
+          <AppText variant="bodySmall" weight="700" color="#1E293B">
+            #{invoice.id.slice(-6).toUpperCase()}
+          </AppText>
+          <AppText variant="caption" color="#64748B" style={{ fontSize: 11 }}>
+            {invoice.date}
+          </AppText>
+        </View>
       </View>
       <View style={styles.invoiceRight}>
-        <AppText variant="bodySmall" weight="700">
+        <AppText variant="bodySmall" weight="800" color="#0F172A">
           {formatPlanPrice(invoice.amount)}
         </AppText>
-        <AppText variant="caption" weight="700" color={statusColor}>
-          {invoice.status.toUpperCase()}
-        </AppText>
+        <View style={[styles.statusBadge, { backgroundColor: statusBg, borderColor: statusColor }]}>
+          <AppText variant="caption" weight="800" color={statusColor} style={{ fontSize: 9 }}>
+            {invoice.status.toUpperCase()}
+          </AppText>
+        </View>
       </View>
     </View>
   );
@@ -199,14 +215,101 @@ function InvoiceRow({ invoice }: { invoice: PaymentInvoice }) {
 export default function BillingScreen() {
   const router = useRouter();
   const { token, user } = useAuth();
+  const isFocused = useIsFocused();
   const { premiumStatus: status, isPremium, refetch: refetchPremium } = usePremiumStatus();
   const [invoices, setInvoices] = useState<PaymentInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
+  const isFocusedRef = React.useRef(isFocused);
+  React.useEffect(() => {
+    isFocusedRef.current = isFocused;
+  }, [isFocused]);
+
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [livePlans, setLivePlans] = useState<any[]>([]);
+
+  const reload = useCallback(async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const [, invoiceList] = await Promise.all([
+        refetchPremium(),
+        fetchPaymentInvoices(token),
+      ]);
+      setInvoices(invoiceList);
+    } catch (err) {
+      showErrorToast(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [token, refetchPremium]);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  const selectedPlanRef = React.useRef<'monthly' | 'yearly'>('yearly');
+  const [restoring, setRestoring] = useState(false);
+
+  const checkAndRestoreExistingPurchase = useCallback(async (silent = true) => {
+    console.log('[IAP Diagnostics] Checking existing purchases...');
+    try {
+      await initConnection();
+      const purchases = await getAvailablePurchases();
+      console.log('[IAP Diagnostics] Existing purchases:', JSON.stringify(purchases, null, 2));
+
+      if (purchases && purchases.length > 0) {
+        const premiumPurchase: any = purchases.find(
+          (p: any) => p.productId === 'pethorizon_premium' && p.purchaseToken
+        );
+
+        if (premiumPurchase) {
+          console.log('[IAP Diagnostics] Found existing premium purchase:', {
+            productId: premiumPurchase.productId,
+            purchaseState: premiumPurchase.purchaseStateAndroid || premiumPurchase.purchaseState,
+            acknowledged: premiumPurchase.isAcknowledgedAndroid || premiumPurchase.acknowledged,
+            purchaseTokenExists: !!premiumPurchase.purchaseToken,
+          });
+
+          if (!silent) {
+            setCheckoutLoading(true);
+          }
+
+          const { verifyGooglePlayPurchase } = require('@/services/premium/premiumApi');
+          const verifyRes = await verifyGooglePlayPurchase(token!, {
+            productId: premiumPurchase.productId,
+            purchaseToken: premiumPurchase.purchaseToken!,
+            packageName: Application.applicationId || 'com.anonymous.PetHorizon',
+            planId: selectedPlanRef.current,
+          });
+
+          console.log('[IAP Diagnostics] Backend verification result:', verifyRes);
+
+          if (verifyRes.success) {
+            await finishTransaction({ purchase: premiumPurchase, isConsumable: false });
+            if (!silent) {
+              showToast('Premium subscription successfully restored!');
+            }
+            await reload();
+            return true;
+          }
+        }
+      }
+      if (!silent) {
+        showToast('No active premium subscription found to restore.');
+      }
+    } catch (err: any) {
+      console.error('[IAP Diagnostics ERROR] Pre-purchase check / restore failed:', err);
+      if (!silent) {
+        Alert.alert('Restore Failed', err?.message || 'Failed to restore purchases. Please verify your Google account setup.');
+      }
+    } finally {
+      if (!silent) {
+        setCheckoutLoading(false);
+      }
+    }
+    return false;
+  }, [token, reload]);
 
   useEffect(() => {
     let purchaseUpdateSubscription: any;
@@ -217,6 +320,10 @@ export default function BillingScreen() {
         await initConnection();
         
         purchaseUpdateSubscription = purchaseUpdatedListener(async (purchase) => {
+          if (!isFocusedRef.current) {
+            console.log('[IAP] BillingScreen is not focused, skipping purchase verification.');
+            return;
+          }
           const receipt = purchase.purchaseToken;
           if (receipt) {
             try {
@@ -225,7 +332,8 @@ export default function BillingScreen() {
               const verifyRes = await verifyGooglePlayPurchase(token!, {
                 productId: purchase.productId,
                 purchaseToken: purchase.purchaseToken!,
-                packageName: 'com.anonymous.PetHorizon',
+                packageName: Application.applicationId || 'com.anonymous.PetHorizon',
+                planId: selectedPlanRef.current,
               });
 
               if (verifyRes.success) {
@@ -288,18 +396,24 @@ export default function BillingScreen() {
               }
             });
 
-            // Map legacy subscriptionOfferDetailsAndroid
-            if (mapped.length === 0 && (premiumProduct as any).subscriptionOfferDetailsAndroid) {
-              console.log('[IAP Diagnostics] Fallback to subscriptionOfferDetailsAndroid count:', (premiumProduct as any).subscriptionOfferDetailsAndroid.length);
+            // Map legacy subscriptionOfferDetailsAndroid as fallback or supplementary
+            if ((premiumProduct as any).subscriptionOfferDetailsAndroid) {
+              console.log('[IAP Diagnostics] Processing subscriptionOfferDetailsAndroid count:', (premiumProduct as any).subscriptionOfferDetailsAndroid.length);
               (premiumProduct as any).subscriptionOfferDetailsAndroid.forEach((detail: any) => {
                 const basePlanId = detail.basePlanId;
                 if (basePlanId === 'monthly' || basePlanId === 'yearly') {
-                  console.log(`[IAP Diagnostics] Found basePlanId=${basePlanId} in subscriptionOfferDetailsAndroid`);
-                  mapped.push({
-                    productId: 'pethorizon_premium',
-                    basePlanId,
-                    offerToken: detail.offerToken || '',
-                  });
+                  // Only add if not already mapped from subscriptionOffers
+                  const alreadyMapped = mapped.some((m) => m.basePlanId === basePlanId);
+                  if (!alreadyMapped) {
+                    console.log(`[IAP Diagnostics] Found basePlanId=${basePlanId} in subscriptionOfferDetailsAndroid (supplementary)`);
+                    mapped.push({
+                      productId: 'pethorizon_premium',
+                      basePlanId,
+                      offerToken: detail.offerToken || '',
+                    });
+                  } else {
+                    console.log(`[IAP Diagnostics] basePlanId=${basePlanId} already mapped, skipping subscriptionOfferDetailsAndroid`);
+                  }
                 }
               });
             }
@@ -323,6 +437,8 @@ export default function BillingScreen() {
     if (token) {
       setupIapListeners();
       fetchLivePlans();
+      // Step 4: Auto check/restore on screen mount
+      checkAndRestoreExistingPurchase(true);
     }
 
     return () => {
@@ -330,14 +446,37 @@ export default function BillingScreen() {
       if (purchaseErrorSubscription) purchaseErrorSubscription.remove();
       endConnection();
     };
-  }, [token]);
+  }, [token, checkAndRestoreExistingPurchase]);
 
   const handleSelectPlan = async (planId: 'monthly' | 'yearly') => {
     if (isPremium) {
       Alert.alert('Already Premium', 'You already have an active premium subscription.');
       return;
     }
+    selectedPlanRef.current = planId;
     setCheckoutLoading(true);
+
+    // Step 2 & 9: Pre-purchase check
+    console.log('[IAP Diagnostics] Pre-purchase check before requestPurchase...');
+    try {
+      await initConnection();
+      const purchases = await getAvailablePurchases();
+      const premiumPurchase = purchases?.find(
+        (p: any) => p.productId === 'pethorizon_premium' && p.purchaseToken
+      );
+
+      if (premiumPurchase) {
+        console.log('[IAP Diagnostics] Pre-purchase check: User already owns subscription. Restoring...');
+        const restored = await checkAndRestoreExistingPurchase(false);
+        if (restored) {
+          setCheckoutLoading(false);
+          return;
+        }
+      }
+    } catch (checkErr) {
+      console.warn('[IAP Diagnostics] Failed pre-purchase check:', checkErr);
+    }
+
     const matched = livePlans.find((p) => p.basePlanId === planId);
     if (!matched) {
       const errorMsg = `Offer for ${planId} plan was not retrieved from Google Play. Please try again.`;
@@ -366,31 +505,25 @@ export default function BillingScreen() {
     } catch (error: any) {
       console.error('IAP Purchase Launch Failed:', error);
       console.error('IAP Purchase Launch Failed details:', JSON.stringify(error, null, 2));
-      Alert.alert(
-        'Purchase Error',
-        `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`
-      );
+      
+      if (error?.code === 'E_ALREADY_OWNED' || error?.message?.includes('already owned') || error?.code?.includes('already-owned')) {
+        Alert.alert(
+          'Active Subscription',
+          'You already own this subscription. Would you like to restore/sync it now?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Restore', onPress: () => checkAndRestoreExistingPurchase(false) }
+          ]
+        );
+      } else {
+        Alert.alert(
+          'Purchase Error',
+          `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`
+        );
+      }
       setCheckoutLoading(false);
     }
   };
-
-  const reload = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    try {
-      const [, invoiceList] = await Promise.all([
-        refetchPremium(),
-        fetchPaymentInvoices(token),
-      ]);
-      setInvoices(invoiceList);
-    } catch (err) {
-      showErrorToast(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [token, refetchPremium]);
-
-  useEffect(() => { reload(); }, [reload]);
 
   const handleCancel = () => {
     if (!token) return;
@@ -550,6 +683,23 @@ export default function BillingScreen() {
           </TouchableOpacity>
         )}
 
+        {/* Restore Purchases */}
+        <TouchableOpacity
+          style={styles.restoreRow}
+          onPress={() => checkAndRestoreExistingPurchase(false)}
+          activeOpacity={0.7}
+          disabled={checkoutLoading}
+        >
+          {checkoutLoading ? (
+            <ActivityIndicator size="small" color="#1E5838" />
+          ) : (
+            <Ionicons name="refresh" size={13} color="#64748B" />
+          )}
+          <AppText variant="caption" color="#64748B" style={styles.restoreText}>
+            {checkoutLoading ? 'Checking purchases…' : 'Restore Purchases'}
+          </AppText>
+        </TouchableOpacity>
+
         <View style={styles.infoBanner}>
           <Ionicons name="logo-google-playstore" size={18} color="#64748B" />
           <AppText variant="caption" color="#64748B" style={styles.infoText}>
@@ -572,7 +722,13 @@ export default function BillingScreen() {
               </AppText>
             </View>
           ) : (
-            invoices.map((inv) => <InvoiceRow key={inv.id} invoice={inv} />)
+            invoices.map((inv, idx) => (
+              <InvoiceRow
+                key={inv.id}
+                invoice={inv}
+                isLast={idx === invoices.length - 1}
+              />
+            ))
           )}
         </View>
       </ScrollView>
@@ -795,6 +951,17 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'flex-start',
   },
+  restoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 5,
+    paddingVertical: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  restoreText: {
+    fontSize: 12,
+  },
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -820,16 +987,36 @@ const styles = StyleSheet.create({
   invoiceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
+  invoiceLeftContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  invoiceIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E8F5ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   invoiceLeft: {
-    gap: 4,
+    gap: 2,
   },
   invoiceRight: {
     alignItems: 'flex-end',
-    gap: 4,
+    gap: 6,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   emptyContainer: {
     paddingVertical: Spacing.xl,

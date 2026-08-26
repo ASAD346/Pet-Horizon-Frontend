@@ -91,7 +91,7 @@ export function VerifyEmailFormSection({
       <View style={styles.resendContainer}>
         {countdown > 0 ? (
           <AppText variant="bodySmall" color={Palette.gray[500]} weight="700">
-            Didn't receive the code?{' '}
+            {"Didn't receive the code? "}
             <AppText variant="bodySmall" color={Palette.gray[400]} weight="700">
               Resend in {countdown}s
             </AppText>

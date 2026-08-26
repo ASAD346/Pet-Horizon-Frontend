@@ -9,7 +9,24 @@ interface PremiumActiveCardProps {
 }
 
 export function PremiumActiveCard({ planName, expiresAt }: PremiumActiveCardProps) {
-  const displayPlan = planName ? planName.toUpperCase() : 'PREMIUM MEMBER';
+  let displayPlan = 'PREMIUM MEMBER';
+  if (planName) {
+    const lower = planName.toLowerCase();
+    if (lower.includes('yearly') || lower.includes('annual')) {
+      displayPlan = 'Premium Yearly';
+    } else if (lower.includes('monthly')) {
+      displayPlan = 'Premium Monthly';
+    } else if (lower === 'pethorizon_premium' || lower === 'premium') {
+      displayPlan = 'PetHorizon Premium';
+    } else {
+      displayPlan = planName
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    }
+  }
+
   const displayDate = expiresAt 
     ? new Date(expiresAt).toLocaleDateString(undefined, { dateStyle: 'medium' })
     : 'N/A';

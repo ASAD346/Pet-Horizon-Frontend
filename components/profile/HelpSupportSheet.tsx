@@ -94,7 +94,7 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
               Contact Support Team
             </AppText>
             <AppText variant="caption" color="#64748B">
-              We're available 24/7 to help you
+              {"We're available 24/7 to help you"}
             </AppText>
           </View>
           <TouchableOpacity style={styles.emailBtn} onPress={handleContactSupport} activeOpacity={0.8}>
