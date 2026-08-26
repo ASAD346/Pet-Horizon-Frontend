@@ -80,7 +80,7 @@ export function categoryToMaterialIcon(category: Exclude<JournalCategory, 'all'>
     case 'food':
       return 'silverware-fork-knife';
     case 'walk':
-      return 'walk';
+      return 'paw';
     case 'medicine':
       return 'pill';
     case 'grooming':
