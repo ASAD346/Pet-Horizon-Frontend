@@ -8,7 +8,7 @@ export const homeCardShadow = Platform.select({
     shadowRadius: 12,
   },
   android: {
-    elevation: 3,
+    elevation: 0, // Flat card style
   },
 });
 
@@ -21,8 +21,10 @@ export const homePillCard = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     marginBottom: 10,
-    marginHorizontal: 2, // prevents Android shadow clipping while giving 3D animations room
+    marginTop: 2,
+    marginHorizontal: 4, // prevents clipping by adding horizontal room
     minHeight: 56,
+    overflow: 'visible', // ensures borders render completely without clipping
     ...homeCardShadow,
   },
 });

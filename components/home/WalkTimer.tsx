@@ -234,12 +234,12 @@ export function WalkTimer({
         <Pressable
           style={({ pressed }) => [
             styles.doneBtn,
-            { backgroundColor: 'rgba(37, 99, 235, 0.08)', borderColor: 'rgba(37, 99, 235, 0.15)' },
+            { backgroundColor: '#2563EB', borderColor: '#1D4ED8' },
             pressed && styles.pressedBtn
           ]}
           onPress={handleStart}
         >
-          <AppText variant="caption" weight="800" color="#2563EB">Start</AppText>
+          <AppText variant="caption" weight="800" color="#FFFFFF">Start</AppText>
         </Pressable>
       </View>
     );
