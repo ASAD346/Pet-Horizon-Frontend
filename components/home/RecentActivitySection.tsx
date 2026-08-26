@@ -4,7 +4,7 @@ import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
-import { homeCardShadow } from './homeStyles';
+import { homeCardShadow, homePillCard } from './homeStyles';
 import { HomeTheme, Spacing } from '../../constants/theme';
 import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
@@ -98,12 +98,10 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
           <View
             key={item.id}
             style={[
-              styles.activityCard,
+              homePillCard.card,
               {
                 borderWidth: 1,
                 borderColor: cardBorderColor,
-                borderLeftWidth: 4,
-                borderLeftColor: item.color,
               }
             ]}
           >
@@ -119,11 +117,11 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
               
               <View style={styles.textBlock}>
                 {/* Action Title */}
-                <AppText variant="bodySmall" weight="600" style={{ color: HomeTheme.text }}>
+                <AppText variant="bodySmall" weight="700" style={{ color: '#1E293B' }}>
                   {formatRawString(item.actionText)}
                   {item.icon === 'walk' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
                 </AppText>
-
+ 
                 {/* Actor & Time Info Row */}
                 <View style={styles.metaRow}>
                   {/* Actor Avatar or Badge */}
@@ -136,14 +134,14 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                   </View>
                   
                   {/* Actor Name */}
-                  <AppText variant="caption" color={HomeTheme.textMuted} weight="600" style={styles.actorNameText}>
+                  <AppText variant="caption" weight="600" style={styles.actorNameText}>
                     {item.actorName}
                   </AppText>
-
+ 
                   <Text style={styles.separator}>•</Text>
-
+ 
                   {/* Exact & Relative Time */}
-                  <AppText variant="caption" color={HomeTheme.textMuted} style={{ fontSize: 10 }}>
+                  <AppText variant="caption" style={styles.timeText}>
                     {item.exactTime} {item.time && item.time !== item.exactTime ? `(${item.time})` : ''}
                   </AppText>
                 </View>
@@ -165,19 +163,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: Spacing.lg,
   },
-  activityCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingLeft: 10,
-    paddingRight: 12,
-    paddingVertical: 8,
-    marginBottom: 8,
-    marginHorizontal: 2,
-    minHeight: 52,
-    ...homeCardShadow,
-  },
   cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -190,34 +175,39 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
   miniAvatar: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 6,
     overflow: 'hidden',
   },
   miniAvatarImage: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
   },
   miniAvatarText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 8,
     fontWeight: 'bold',
   },
   actorNameText: {
-    fontSize: 10,
+    fontSize: 10.5,
+    color: '#64748B',
   },
   separator: {
-    color: HomeTheme.textMuted,
+    color: '#CBD5E1',
     marginHorizontal: 6,
     fontSize: 9,
+  },
+  timeText: {
+    fontSize: 10,
+    color: '#94A3B8',
   },
   iconBadge: {
     alignSelf: 'center',
