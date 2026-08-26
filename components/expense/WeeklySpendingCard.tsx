@@ -190,39 +190,39 @@ export function WeeklySpendingCard({
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 20,
-    marginBottom: Spacing.md + 2,
+    borderRadius: 16,
+    marginBottom: Spacing.md,
     overflow: 'hidden',
     backgroundColor: '#1E1E21',
     ...Platform.select({
       ios: {
         shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.12,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 6,
+        elevation: 4,
       },
     }),
   },
   card: {
-    padding: 20,
-    borderRadius: 20,
+    padding: 16,
+    borderRadius: 16,
   },
   ambientGlow: {
     position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    top: -120,
-    right: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    top: -110,
+    right: -50,
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   logoContainer: {
     flexDirection: 'row',
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   logoText: {
     letterSpacing: 1.5,
-    fontSize: 10,
+    fontSize: 9,
     opacity: 0.9,
   },
   topRight: {
@@ -240,9 +240,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   actionBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.06)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -250,10 +250,10 @@ const styles = StyleSheet.create({
   statusTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 4,
     backgroundColor: 'rgba(255,255,255,0.06)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: Radius.sm || 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
@@ -263,29 +263,29 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(239, 68, 68, 0.25)',
   },
   statusDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
   statusText: {
-    fontSize: 9,
+    fontSize: 8,
     letterSpacing: 0.5,
   },
   balanceContainer: {
-    marginBottom: 14,
+    marginBottom: 10,
   },
   balanceLabel: {
     letterSpacing: 0.5,
-    fontSize: 9,
-    marginBottom: 4,
+    fontSize: 8,
+    marginBottom: 2,
   },
   balanceText: {
-    fontSize: 32,
-    lineHeight: 36,
+    fontSize: 26,
+    lineHeight: 30,
     letterSpacing: -0.5,
   },
   progressContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   progressTrack: {
     height: 4,
@@ -308,17 +308,17 @@ const styles = StyleSheet.create({
   metaHeader: {
     fontSize: 8,
     letterSpacing: 0.5,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   metaVal: {
-    fontSize: 12,
+    fontSize: 11,
   },
   setupBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     backgroundColor: 'rgba(255,255,255,0.08)',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 10,
     width: '100%',
     justifyContent: 'center',
