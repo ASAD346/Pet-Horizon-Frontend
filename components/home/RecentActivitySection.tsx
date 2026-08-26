@@ -144,7 +144,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
 
                   {/* Exact & Relative Time */}
                   <AppText variant="caption" color={HomeTheme.textMuted} style={{ fontSize: 10 }}>
-                    {item.exactTime} {item.time ? `(${item.time})` : ''}
+                    {item.exactTime} {item.time && item.time !== item.exactTime ? `(${item.time})` : ''}
                   </AppText>
                 </View>
               </View>
