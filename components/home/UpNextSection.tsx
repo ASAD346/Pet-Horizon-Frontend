@@ -27,11 +27,11 @@ function dashboardTaskCaption(task: DashboardTask): string {
   return 'Upcoming';
 }
 
-function dashboardTaskIcon(task: DashboardTask): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' | 'shower' {
+function dashboardTaskIcon(task: DashboardTask): 'silverware-fork-knife' | 'paw' | 'pill' | 'content-cut' | 'needle' | 'shower' {
   const category = task.category?.toLowerCase() ?? '';
   const title = task.title?.toLowerCase() ?? '';
   if (category === 'feeding' || category === 'food') return 'silverware-fork-knife';
-  if (category === 'walk' || category === 'walks') return 'walk';
+  if (category === 'walk' || category === 'walks') return 'paw';
   if (category === 'medicine') return 'pill';
   if (category === 'vaccination') return 'needle';
   if (title.includes('bath') || title.includes('shower') || title.includes('wash')) return 'shower';

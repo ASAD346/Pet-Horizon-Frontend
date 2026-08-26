@@ -9,7 +9,7 @@ import { QUICK_ACTION_MODULES } from '@/lib/pet/petPermissionAccess';
 import type { AppModuleId } from '@/lib/pet/petPermissionAccess';
 import { HomeTheme, Spacing } from '../../constants/theme';
 
-type ActionIcon = 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle';
+type ActionIcon = 'silverware-fork-knife' | 'paw' | 'pill' | 'content-cut' | 'needle';
 
 interface ActionItem {
   label: string;
@@ -28,7 +28,7 @@ const ACTIONS: ActionItem[] = [
   {
     label: 'Log Walk',
     displayLabel: 'Walk',
-    icon: 'walk',
+    icon: 'paw',
     subText: 'Track route',
   },
   {

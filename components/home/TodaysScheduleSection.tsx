@@ -138,9 +138,9 @@ function rowSubtitle(row: ScheduleRow) {
 
 function rowIcon(
   row: ScheduleRow,
-): 'silverware-fork-knife' | 'walk' | 'pill' | 'content-cut' | 'needle' {
+): 'silverware-fork-knife' | 'paw' | 'pill' | 'content-cut' | 'needle' {
   if (row.kind === 'feeding') return 'silverware-fork-knife';
-  if (row.kind === 'walk') return 'walk';
+  if (row.kind === 'walk') return 'paw';
   if (row.kind === 'medicine') return 'pill';
   if (row.kind === 'vaccination') return 'needle';
   return 'content-cut';

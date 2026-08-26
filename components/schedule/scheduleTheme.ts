@@ -17,7 +17,7 @@ export interface ScheduleSectionTheme {
   key: ScheduleSectionKey;
   title: string;
   optional?: boolean;
-  icon: 'bowl-mix-outline' | 'content-cut' | 'pill' | 'walk' | 'shield-plus-outline';
+  icon: 'bowl-mix-outline' | 'content-cut' | 'pill' | 'paw' | 'shield-plus-outline';
   color: string;
   bg: string;
   lightBg: string;
@@ -58,7 +58,7 @@ export const SCHEDULE_SECTIONS: ScheduleSectionTheme[] = [
     key: 'walk',
     title: 'Walks & Exercise',
     optional: true,
-    icon: 'walk',
+    icon: 'paw',
     color: '#2563EB',
     bg: '#DBEAFE',
     lightBg: '#F0F4FF',

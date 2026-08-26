@@ -15,7 +15,7 @@ export interface RecentActivityItem {
   actorName: string;
   actionText: string;
   time: string;
-  icon: 'walk' | 'silverware-fork-knife' | 'pill' | 'content-cut' | 'needle';
+  icon: 'paw' | 'silverware-fork-knife' | 'pill' | 'content-cut' | 'needle';
   color: string;
   bg: string;
   /** ISO date string used to filter today-only on home screen */
@@ -119,7 +119,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                 {/* Action Title */}
                 <AppText variant="bodySmall" weight="700" style={{ color: '#1E293B' }}>
                   {formatRawString(item.actionText)}
-                  {item.icon === 'walk' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
+                  {item.icon === 'paw' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
                 </AppText>
  
                 {/* Actor & Time Info Row */}

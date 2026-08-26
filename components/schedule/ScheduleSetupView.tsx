@@ -565,7 +565,7 @@ export function ScheduleSetupView({
   const filterChips: { key: 'all' | ScheduleSectionKey; label: string; icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'] }[] = [
     { key: 'all',        label: 'All',      icon: 'view-grid-outline' },
     { key: 'feeding',   label: 'Feeding',   icon: 'bowl-mix-outline' },
-    { key: 'walk',      label: 'Walks',     icon: 'walk' },
+    { key: 'walk',      label: 'Walks',     icon: 'paw' },
     { key: 'grooming',  label: 'Grooming',  icon: 'content-cut' },
     { key: 'medicine',  label: 'Medicine',  icon: 'pill' },
     { key: 'vaccination', label: 'Vaccines', icon: 'shield-plus-outline' },

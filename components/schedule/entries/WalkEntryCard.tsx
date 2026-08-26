@@ -139,7 +139,7 @@ export function WalkEntryCard({
   if (embeddedInSheet) {
     return (
       <>
-        <FormSection title="Walk details" icon="walk">
+        <FormSection title="Walk details" icon="paw">
           {cardContent}
         </FormSection>
         {pickers}
