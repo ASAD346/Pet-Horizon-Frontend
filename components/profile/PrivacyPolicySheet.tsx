@@ -31,7 +31,7 @@ const SECTIONS = [
   },
   {
     title: 'Contact & Support',
-    body: 'If you have any questions or feedback regarding this Privacy Policy or our data practices, please email us at support@pethorizon.app.',
+    body: 'If you have any questions or feedback regarding this Privacy Policy or our data practices, please email us at pethorizon2026@gmail.com.',
   },
 ];
 

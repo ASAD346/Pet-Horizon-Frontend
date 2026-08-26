@@ -99,7 +99,7 @@ export function HelpSupportSheet({ visible, onClose }: HelpSupportSheetProps) {
           </View>
           <TouchableOpacity style={styles.emailBtn} onPress={handleContactSupport} activeOpacity={0.8}>
             <AppText variant="bodySmall" weight="700" color="#1E293B">
-              support@pethorizon.app
+              pethorizon2026@gmail.com
             </AppText>
           </TouchableOpacity>
         </View>

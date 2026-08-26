@@ -395,12 +395,6 @@ export function ProfileHubView() {
             onPress={() => setHelpVisible(true)}
           />
           <ProfileMenuRow
-            icon="star-outline"
-            title="Rate Us & Feedback"
-            subtitle="Share your thoughts with us"
-            onPress={() => setFeedbackVisible(true)}
-          />
-          <ProfileMenuRow
             icon="log-out-outline"
             title="Sign Out"
             subtitle="Log out of your active session"
