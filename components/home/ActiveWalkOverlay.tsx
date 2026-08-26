@@ -183,7 +183,7 @@ export function ActiveWalkOverlay() {
               colors={['#E8F5E9', '#C8E6C9']}
               style={styles.iconCircle}
             >
-              <Ionicons name="walk" size={32} color="#2E7D32" />
+              <Ionicons name="paw" size={32} color="#2E7D32" />
             </LinearGradient>
           </View>
 
