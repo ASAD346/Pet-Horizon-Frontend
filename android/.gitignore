@@ -16,3 +16,4 @@ local.properties
 *.jsbundle
 
 debug.keystore
+*.jks
