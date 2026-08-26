@@ -194,10 +194,10 @@ export function InviteFamilySheet({
           {INVITE_PERMISSION_OPTIONS.map((option) => {
             const enabled = modules.includes(option.id);
             const activeColor = isPremium ? '#184F2E' : '#3A8F3B';
-            const activeBg = isPremium ? '#F4F9F4' : '#EEF8EE';
-            const borderColor = enabled ? activeColor : 'rgba(0, 0, 0, 0.08)';
-            const backgroundColor = enabled ? activeBg : '#FFFFFF';
-            const textColor = enabled ? activeColor : HomeTheme.text;
+            const activeBg = isPremium ? '#E8F5E9' : '#EEF8EE';
+            const borderColor = enabled ? activeColor : 'rgba(148, 163, 184, 0.15)';
+            const backgroundColor = enabled ? activeBg : '#F8FAFC';
+            const textColor = enabled ? activeColor : '#475569';
             const iconColor = enabled ? activeColor : '#64748B';
 
             return (
@@ -211,23 +211,30 @@ export function InviteFamilySheet({
                   },
                 ]}
                 onPress={() => toggleModule(option.id)}
-                activeOpacity={0.8}
+                activeOpacity={0.7}
               >
-                <Ionicons name={option.icon} size={16} color={iconColor} />
-                <AppText
-                  variant="caption"
-                  weight="800"
-                  color={textColor}
-                  style={styles.chipText}
-                  numberOfLines={1}
+                <View style={styles.chipLeft}>
+                  <Ionicons name={option.icon} size={16} color={iconColor} />
+                  <AppText
+                    variant="caption"
+                    weight="700"
+                    color={textColor}
+                    style={styles.chipText}
+                    numberOfLines={1}
+                  >
+                    {option.label}
+                  </AppText>
+                </View>
+                <View
+                  style={[
+                    styles.checkmarkCircleInline,
+                    enabled
+                      ? { backgroundColor: activeColor, borderColor: activeColor }
+                      : { borderColor: '#CBD5E1', backgroundColor: '#FFFFFF' }
+                  ]}
                 >
-                  {option.label}
-                </AppText>
-                {enabled ? (
-                  <View style={[styles.checkmarkCircle, { backgroundColor: activeColor }]}>
-                    <Ionicons name="checkmark" size={10} color="#FFFFFF" />
-                  </View>
-                ) : null}
+                  {enabled && <Ionicons name="checkmark" size={10} color="#FFFFFF" />}
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -360,31 +367,30 @@ const styles = StyleSheet.create({
     width: '48%',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 12,
     borderRadius: Radius.md,
     borderWidth: 1.5,
-    position: 'relative',
-    gap: Spacing.xs,
     minHeight: 48,
+  },
+  chipLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    flex: 1,
+    marginRight: 4,
   },
   chipText: {
     flex: 1,
     fontSize: 11,
   },
-  checkmarkCircle: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
+  checkmarkCircleInline: {
     width: 16,
     height: 16,
     borderRadius: 8,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    elevation: 2,
   },
 });
