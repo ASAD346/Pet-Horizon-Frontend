@@ -5,6 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Spacing, Radius } from '@/constants/theme';
 
+import { useToast } from '@/hooks/useToast';
+import { parseInviteTokenFromUrl } from '@/lib/family/inviteLinks';
+
 interface QrScannerModalProps {
   visible: boolean;
   onClose: () => void;
@@ -18,22 +21,22 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [torch, setTorch] = useState(false);
+  const { showErrorToast } = useToast();
 
   const handleBarCodeScanned = ({ data }: { data: string }) => {
     if (scanned) return;
     setScanned(true);
 
-    // Extract token from scanned link or raw token
-    let token = data.trim();
-    if (data.includes('/invite/')) {
-      const parts = data.split('/invite/');
-      token = parts[parts.length - 1].split('?')[0].split('#')[0];
-    } else if (data.includes('/join/family/')) {
-      const parts = data.split('/join/family/');
-      token = parts[parts.length - 1].split('?')[0].split('#')[0];
+    const raw = (data || '').trim();
+    const extractedToken = parseInviteTokenFromUrl(raw);
+
+    if (!extractedToken) {
+      showErrorToast('Invalid QR code. Please scan a valid Pet Horizon invite QR.');
+      setTimeout(() => setScanned(false), 2500);
+      return;
     }
 
-    onScanSuccess(token);
+    onScanSuccess(extractedToken);
     setTimeout(() => setScanned(false), 2000); // Reset scanned lock
   };
 
