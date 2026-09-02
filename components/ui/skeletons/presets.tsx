@@ -33,23 +33,21 @@ export function SkeletonNotificationList({ count = 5 }: { count?: number }) {
 
 export function SkeletonPetProfileCard() {
   return (
-    <View style={styles.profileCard}>
+    <View style={styles.profileCardEmerald}>
       <View style={styles.profileTop}>
-        <SkeletonCircle size={64} />
+        <SkeletonCircle size={56} tone="dark" style={{ borderWidth: 1.5, borderColor: 'rgba(255, 255, 255, 0.2)' }} />
         <View style={styles.profileInfo}>
-          <Skeleton width="65%" height={20} />
-          <Skeleton width="80%" height={12} style={styles.gapSm} />
-          <View style={styles.tagRow}>
-            <Skeleton width={52} height={22} borderRadius={Radius.full} />
-          </View>
+          <Skeleton width="55%" height={18} tone="dark" />
+          <Skeleton width="40%" height={12} tone="dark" style={styles.gapSm} />
         </View>
+        <Skeleton width={50} height={20} borderRadius={8} tone="dark" />
       </View>
-      <Skeleton width="100%" height={1} style={styles.divider} />
+      <View style={styles.dividerEmerald} />
       <View style={styles.statsRow}>
         {[0, 1, 2].map((key) => (
-          <View key={key} style={styles.statCol}>
-            <Skeleton width={48} height={10} style={styles.gapSm} />
-            <Skeleton width={36} height={14} style={styles.gapSm} />
+          <View key={key} style={styles.statColEmerald}>
+            <Skeleton width="70%" height={10} tone="dark" style={styles.gapSm} />
+            <Skeleton width="50%" height={14} tone="dark" />
           </View>
         ))}
       </View>
@@ -344,9 +342,31 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     padding: Spacing.lg,
   },
+  profileCardEmerald: {
+    backgroundColor: '#236527',
+    borderRadius: Radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
   profileTop: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: Spacing.md,
+  },
+  dividerEmerald: {
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    marginVertical: 14,
+  },
+  statColEmerald: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginHorizontal: 4,
   },
   profileInfo: {
     flex: 1,

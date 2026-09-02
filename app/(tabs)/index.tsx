@@ -76,6 +76,7 @@ import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { SkeletonDashboard } from '@/components/ui/skeletons';
 import type { GroomingRecord } from '@/types/grooming';
+import type { ApiPet } from '@/types/pet';
 import { QrScannerModal } from '@/components/family/QrScannerModal';
 import { AcceptInviteModal } from '@/components/family/AcceptInviteModal';
 
@@ -110,10 +111,11 @@ export default function HomeScreen() {
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [selectedPet, setSelectedPet] = useState<ApiPet | null>(null);
   const [targetPetId, setTargetPetId] = useState<string | null | undefined>(pet?._id);
 
-  const effectivePet = isSwitching ? null : pet;
-  const effectiveLoading = isSwitching || loading;
+  const effectivePet = selectedPet || pet;
+  const effectiveLoading = loading && !effectivePet;
 
   const currentPetWorkspace = useAppSelector((state) => ((state as any).pet?.activeWorkspace || (state.family as any)?.activeWorkspace)); 
   const currentUser = useAppSelector(selectAuthUser);
@@ -140,8 +142,9 @@ export default function HomeScreen() {
   useEffect(() => {
     if (pet?._id && !switchingId) {
       setTargetPetId(pet._id);
+      setSelectedPet(pet);
     }
-  }, [pet?._id, switchingId]);
+  }, [pet, switchingId]);
 
   const {
     data: dashboardData,
@@ -245,7 +248,7 @@ export default function HomeScreen() {
     return true;
   };
 
-  const effectiveDashboardData = isSwitching ? null : dashboardData;
+  const effectiveDashboardData = dashboardData;
 
   const rawFeeding = (effectiveDashboardData?.todaySchedules?.feeding ?? []).filter(isDateWithinRange);
   const feedingSchedules = useMemo(() => 
@@ -507,7 +510,7 @@ export default function HomeScreen() {
     setGroomingManageVisible(true);
   }, [groomingRecords]);
   const handleSwitchPet = useCallback(async (petId: string) => {
-    if (!token || petId === pet?._id) {
+    if (!token || petId === effectivePet?._id) {
       setPetSwitcherVisible(false);
       return;
     }
@@ -515,14 +518,14 @@ export default function HomeScreen() {
     // Close switcher sheet instantly for snappy UX
     setPetSwitcherVisible(false);
     
-    // SYNC RESET: Instantly wipe the dashboard UI state so skeletons appear
+    // Immediately select target pet optimistically from current list to avoid blank/loading flash
+    const nextPet = pets.find((p) => p._id === petId) || null;
+    if (nextPet) {
+      setSelectedPet(nextPet);
+    }
+    
     setTargetPetId(petId);
     setIsSwitching(true);
-    
-    // Cancel inflight queries and wipe cache synchronously to prevent data contamination
-    clearActivePetCache();
-    queryClient.cancelQueries();
-    queryClient.clear();
     
     try {
       if (user) {
@@ -533,17 +536,19 @@ export default function HomeScreen() {
           setSession,
         });
       }
-      // Trigger updates in parallel without blocking the main thread
-      void reloadPet(true);
-      void reloadPets();
-      void refetchDashboard();
+      // Reload active pet and dashboard in sync
+      await Promise.all([
+        reloadPet(true),
+        reloadPets(),
+        refetchDashboard(),
+      ]);
     } catch (err) {
       log.fail('Home', 'Switch pet failed', getErrorMessage(err));
       Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
     } finally {
       setIsSwitching(false);
     }
-  }, [token, pet?._id, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient]);
+  }, [token, effectivePet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient]);
 
   const handleAddPet = useCallback(() => {
     if (!canAddAnotherPet(pets.length, isPremium)) {
@@ -601,7 +606,7 @@ export default function HomeScreen() {
     }
   }, [refetchDashboard]);
 
-  if (petCardLoading && !pet) {
+  if (petCardLoading && !effectivePet) {
     return (
       <View style={styles.root}>
         <StatusBar style={isFocused ? "light" : "dark"} />
