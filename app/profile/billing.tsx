@@ -591,7 +591,7 @@ export default function BillingScreen() {
               <View style={styles.detailsRow}>
                 <AppText variant="caption" color="#64748B">Active Plan</AppText>
                 <AppText variant="caption" weight="800" color="#0F172A">
-                  {isYearlyActive ? 'Yearly Premium' : 'Monthly Premium'}
+                  {isYearlyActive ? 'Yearly' : 'Monthly'}
                 </AppText>
               </View>
               
