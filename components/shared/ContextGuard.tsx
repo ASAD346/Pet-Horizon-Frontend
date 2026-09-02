@@ -17,9 +17,9 @@ export function ContextGuard({ children }: ContextGuardProps) {
   const { token, user } = useAuth();
 
   const scopeKey = token && user?._id ? `${token}:${user._id}` : token;
-  const cachedPets = getPetListCache(scopeKey);
+  const cachedPets = getPetListCache(scopeKey) || (token ? getPetListCache(token) : []);
   const targetPet = cachedPets?.find((p: any) => p._id === activePetId);
-  const petName = targetPet?.name || 'your pet';
+  const petName = targetPet?.name || 'Pet';
 
   // Use a sentinel so the *first* arrival of an activePetId doesn't trigger reconciliation.
   // Only an actual switch from one known pet ID to a different known pet ID should fire.

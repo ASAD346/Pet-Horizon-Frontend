@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
-import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl, ActivityIndicator } from 'react-native';
+import { AppText } from '@/components/ui/AppText';
 import { useAppSelector } from '@/redux/store';
 import { selectAuthUser } from '@/redux/reducer';
 import { useRouter, type Href, useFocusEffect } from 'expo-router';
@@ -855,6 +856,13 @@ const styles = StyleSheet.create({
   skeletonArea: {
     flex: 1,
     backgroundColor: '#F1F7F1',
+  },
+  centeredLoadingArea: {
+    flex: 1,
+    backgroundColor: '#F1F7F1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
   },
 });
 
