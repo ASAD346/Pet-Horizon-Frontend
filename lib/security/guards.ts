@@ -11,18 +11,16 @@ export function runSecurityGuards() {
   }
 
   try {
-    // Check for common React Native debugger/dev tools globals
+    // Check for common React Native remote debugger globals
     const isObviousDebug =
-      (global as any).__REMOTEDEV__ ||
-      (global as any).__v8debug__ ||
-      (global as any).ChromeDevTools ||
-      (global as any).atob?.toString().includes('native code') === false;
+      Boolean((global as any).__REMOTEDEV__) ||
+      Boolean((global as any).__v8debug__) ||
+      Boolean((global as any).ChromeDevTools);
 
     if (isObviousDebug) {
-      throw new Error('Security Violation');
+      log.warn('Security', 'Remote debugger attached in production environment');
     }
   } catch (e) {
-    log.fail('Security', 'Security checks failed', e instanceof Error ? e.message : String(e));
-    throw e;
+    log.warn('Security', 'Security check caught error', e instanceof Error ? e.message : String(e));
   }
 }

@@ -37,16 +37,10 @@ export const queryClient = new QueryClient({
   },
 });
 
-import { runNotificationSystemAudit } from '@/lib/push/notificationTest';
-
 function InnerLayout() {
   const colorScheme = useColorScheme();
   const { token, isBootstrapping } = useAuth();
   const { syncWithServer } = useNotificationStore();
-
-  useEffect(() => {
-    runNotificationSystemAudit().catch(() => {});
-  }, []);
 
   useEffect(() => {
     // Initial sync
