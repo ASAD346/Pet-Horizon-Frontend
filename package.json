@@ -12,6 +12,7 @@
     "build:apk": "eas build --platform android --profile preview",
     "build:apk:prod": "eas build --platform android --profile production",
     "build:apk:local": "eas build --platform android --profile preview --local",
+    "build:aab:prod": "eas build --platform android --profile production",
     "build:release:local": "powershell -ExecutionPolicy Bypass -File ./scripts/build-android-release.ps1",
     "google:sha1": "powershell -ExecutionPolicy Bypass -File ./scripts/print-google-signin-sha1.ps1",
     "google:sync-android": "expo prebuild --platform android --no-install"
