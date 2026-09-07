@@ -78,6 +78,14 @@ export async function requestGoogleIdToken(): Promise<string> {
   try {
     await configureGoogleSignIn();
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+
+    // Force Google Account Chooser screen by signing out of any cached native session first
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // Non-fatal if no account was previously signed in
+    }
+
     const response = await GoogleSignin.signIn();
 
     if (!isSuccessResponse(response)) {
