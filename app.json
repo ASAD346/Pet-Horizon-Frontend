@@ -41,7 +41,7 @@
         "android.permission.RECEIVE_BOOT_COMPLETED"
       ],
       "package": "com.anonymous.PetHorizon",
-      "versionCode": 25,
+      "versionCode": 26,
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
