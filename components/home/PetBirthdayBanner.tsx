@@ -247,7 +247,7 @@ export function PetBirthdayBanner({ petName, birthday, species, isPremium = fals
               onPress={() => setModalVisible(false)}
             >
               <AppText variant="bodySmall" weight="800" color="#FFFFFF">
-                Let's Celebrate!
+                {"Let's Celebrate!"}
               </AppText>
             </Pressable>
           </LinearGradient>
