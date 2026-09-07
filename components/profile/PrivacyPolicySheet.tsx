@@ -6,32 +6,40 @@ import { ProfileModalShell } from './ProfileModalShell';
 
 const SECTIONS = [
   {
-    title: 'Information We Collect',
-    body: 'We collect personal details you provide directly to us: your full name, email address, profile image, and authentication tokens. We also collect and store pet profiles (names, species, breeds, weight histories, and age) and all associated care schedules, budget configurations, and journal records.',
+    title: '1. Overview & Data Controller',
+    body: 'PetHorizon ("we", "our", or "us") is dedicated to protecting the privacy and security of your personal information. This Privacy Policy explains what personal and pet-related data we collect, why we collect it, how it is processed and protected, and the rights you have concerning your information when using the PetHorizon mobile application and associated backend services.',
   },
   {
-    title: 'Device Permissions & Diagnostics',
-    body: 'To provide core application features, we request specific permissions: Camera and Media Library access (to upload pet and profile pictures) and Push Notifications (to deliver smart schedule alerts). Anonymized device logs, operating system versions, and app usage metrics may be collected to fix bugs and improve performance.',
+    title: '2. Information We Collect & Why',
+    body: 'We collect the following categories of information strictly to provide and enhance application functionality:\n\n• Account & Authentication Data: When you register or sign in using Google Sign-In / OAuth or email credentials, we receive your name, email address, profile picture URL, and unique account identifier. We do not access your Google password or private credentials.\n\n• Pet Profiles & Care Logs: Information you enter about your pets (names, species, breeds, gender, date of birth, weight logs, vaccinations, medication reminders, medical histories, and dietary preferences).\n\n• Financial & Budget Records: Expense entries, care budgets, and transaction categories you voluntarily track within the app.\n\n• User-Generated Media: Photos of pets or profile images you choose to upload.',
   },
   {
-    title: 'Third-Party Integrations & Payments',
-    body: 'We use trusted third parties to facilitate core services, including Google Play Billing Services for managing in-app purchases and Firebase/Google Services for account authentication and push notifications. We do not sell your personal data to advertisers or third parties.',
+    title: '3. Device Permissions & System Access',
+    body: 'PetHorizon only requests device permissions necessary for specific in-app features:\n\n• Camera & Media Library / Storage: Required exclusively when you choose to take or upload photos for pet avatars and user profiles. We do not scan or access your private photos or media library without explicit user interaction.\n\n• Push & Local Notifications: Used to alert you about scheduled pet care tasks, feeding routines, vet appointments, and medication schedules. You can toggle notifications off at any time in your device settings.',
   },
   {
-    title: 'Data Security & Storage',
-    body: 'Your personal and pet care information is encrypted during transit (using TLS) and at rest on secure cloud servers. We implement strict server-side access controls to protect your data against unauthorized access, loss, or leakage.',
+    title: '4. Third-Party Services & Google OAuth',
+    body: 'We integrate industry-standard third-party services that adhere to rigorous security standards:\n\n• Google Identity Services (OAuth 2.0): Used for secure authentication. PetHorizon complies with the Google API Services User Data Policy, including Limited Use requirements.\n\n• Google Play Billing: Subscription and in-app purchase transactions are processed securely by Google Play. We never receive or store your credit card numbers, bank accounts, or financial payment details.\n\n• Cloud Infrastructure & Hosting: Secure cloud databases and storage for synchronizing your pet logs.\n\nWe do not sell, rent, trade, or monetize your personal or pet data to third parties, data brokers, or advertising networks.',
   },
   {
-    title: 'Account Deletion & Data Control',
-    body: 'In compliance with Google Play Developer policies, you have complete control over your data. You can edit your profile information or delete your account permanently directly within the app settings. Account deletion immediately and permanently purges your user profile, registered pets, care logs, journal entries, and financial records from our active servers.',
+    title: '5. Data Security & Encryption',
+    body: 'We employ industry-standard administrative, physical, and technical safeguards. All data exchanged between the PetHorizon app and our servers is encrypted in transit using Transport Layer Security (TLS 1.2/1.3) and encrypted at rest in secure database infrastructure. Access to backend systems is restricted by strict role-based authentication.',
   },
   {
-    title: "Children's Privacy",
-    body: 'Our services are not designed for or targeted at children under the age of 13. We do not knowingly collect personal information from individuals under 13. If you become aware that a child has provided us with personal information, please contact us immediately.',
+    title: '6. User Rights, Data Retention & Complete Account Deletion',
+    body: 'In strict compliance with Google Play Developer Policy and global data protection regulations (GDPR/CCPA):\n\n• Access & Update: You can view and edit your profile and pet details directly within the app.\n\n• Permanent Account & Data Deletion: You can permanently delete your account at any time directly in the app via Profile > Account Settings > Delete Account. Upon deletion confirmation, your entire user profile, authentication credentials, registered pets, care logs, journal entries, uploaded media, and financial tracking data are permanently and irreversibly purged from our live databases and cloud storage.',
   },
   {
-    title: 'Contact & Support',
-    body: 'If you have any questions or feedback regarding this Privacy Policy or our data practices, please email us at pethorizon2026@gmail.com.',
+    title: "7. Children's Privacy",
+    body: 'PetHorizon is not directed at children under the age of 13 (or 16 in certain jurisdictions). We do not knowingly collect or solicit personal data from children. If we learn that we have inadvertently collected data from a child without verified parental consent, we will promptly delete that information from our records.',
+  },
+  {
+    title: '8. Changes to This Privacy Policy',
+    body: 'We may update this Privacy Policy from time to time to reflect modifications in our features, legal requirements, or Google policies. Material changes will be communicated within the app or through the "Last Updated" revision date at the top of this policy.',
+  },
+  {
+    title: '9. Contact Information & Data Protection Inquiries',
+    body: 'If you have any questions, concerns, requests regarding data deletion, or inquiries about our data handling practices, please contact us:\n\n• Email: pethorizon2026@gmail.com\n• Application: PetHorizon Support Team',
   },
 ];
 
@@ -46,18 +54,18 @@ export function PrivacyPolicySheet({ visible, onClose }: PrivacyPolicySheetProps
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.introBanner}>
           <AppText variant="bodySmall" weight="700" color="#334155" style={styles.introTitle}>
-            Last Updated: July 2026
+            Last Updated: September 2026
           </AppText>
           <AppText variant="caption" color="#475569" style={styles.introSub}>
             This Privacy Policy describes how PetHorizon collects, uses, protects, and handles your personal information and pet data.
           </AppText>
         </View>
 
-        {SECTIONS.map((section, index) => {
+        {SECTIONS.map((section) => {
           return (
             <View key={section.title} style={styles.sectionCard}>
               <AppText variant="body" weight="700" color="#1E293B" style={styles.sectionTitle}>
-                {index + 1}. {section.title}
+                {section.title}
               </AppText>
               <AppText variant="bodySmall" color="#64748B" style={styles.sectionBody}>
                 {section.body}
