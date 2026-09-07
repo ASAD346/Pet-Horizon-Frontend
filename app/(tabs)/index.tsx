@@ -15,16 +15,12 @@ import { getErrorMessage } from '@/lib/api/errors';
 
 import {
     HomeHeader,
-
     PetProfileCard,
-
     QuickActionsSection,
-
     RecentActivitySection,
-
     PetBirthdayBanner,
-
     TodaysScheduleSection,
+    EmptyPetStateCard,
 } from '@/components/home';
 
 import { useAuth } from '@/hooks/useAuth';
@@ -141,9 +137,9 @@ export default function HomeScreen() {
   );
 
   useEffect(() => {
-    if (pet?._id && !switchingId) {
-      setTargetPetId(pet._id);
-      setSelectedPet(pet);
+    if (!switchingId) {
+      setTargetPetId(pet?._id ?? null);
+      setSelectedPet(pet ?? null);
     }
   }, [pet, switchingId]);
 
@@ -552,14 +548,14 @@ export default function HomeScreen() {
   }, [token, effectivePet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient]);
 
   const handleAddPet = useCallback(() => {
-    if (!canAddAnotherPet(pets.length, isPremium)) {
+    if (pets.length > 0 && !canAddAnotherPet(pets.length, isPremium)) {
       setPetSwitcherVisible(false);
       showToast('Free accounts include one pet. Upgrade to Premium to add more.', 'info');
       router.push('/profile/premium' as Href);
       return;
     }
     setPetSwitcherVisible(false);
-    router.push({ pathname: '/pet/register', params: { mode: 'add' } });
+    router.push({ pathname: '/pet/register', params: pets.length > 0 ? { mode: 'add' } : undefined });
   }, [pets.length, isPremium, router, showToast]);
 
 
@@ -661,76 +657,82 @@ export default function HomeScreen() {
 
         <ActiveWalkOverlay />
 
-        <PetProfileCard
-          {...(profile ?? {})}
-          imageUrl={petImageUrl}
-          loading={petCardLoading}
-          isBirthdayToday={showBirthdayBanner}
-          isPremium={isPremium}
-          onPress={effectivePet ? () => setPetSwitcherVisible(true) : undefined}
-          onEditPress={effectivePet ? () => router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: effectivePet._id } }) : undefined}
-        />
-
-        {showBirthdayBanner ? (
-          <PetBirthdayBanner
-            petName={effectivePet?.name ?? profile?.name ?? 'Your pet'}
-            birthday={petBirthday}
-            species={effectivePet?.species ?? profile?.species ?? ''}
+        {!effectivePet && !petCardLoading ? (
+          <EmptyPetStateCard
+            onAddPetPress={handleAddPet}
+            onScanQrPress={() => setQrScannerVisible(true)}
             isPremium={isPremium}
           />
-        ) : null}
+        ) : (
+          <>
+            <PetProfileCard
+              {...(profile ?? {})}
+              imageUrl={petImageUrl}
+              loading={petCardLoading}
+              isBirthdayToday={showBirthdayBanner}
+              isPremium={isPremium}
+              onPress={effectivePet ? () => setPetSwitcherVisible(true) : undefined}
+              onEditPress={effectivePet ? () => router.push({ pathname: '/pet/register', params: { mode: 'edit', petId: effectivePet._id } }) : undefined}
+            />
 
+            {showBirthdayBanner ? (
+              <PetBirthdayBanner
+                petName={effectivePet?.name ?? profile?.name ?? 'Your pet'}
+                birthday={petBirthday}
+                species={effectivePet?.species ?? profile?.species ?? ''}
+                isPremium={isPremium}
+              />
+            ) : null}
 
+            <QuickActionsSection
+              onLogFoodPress={() => setLogFoodVisible(true)}
+              onLogWalkPress={() => setLogWalkVisible(true)}
+              onMedicinePress={() => setLogMedicineVisible(true)}
+              onGroomingPress={() => setLogGroomingVisible(true)}
+              onVaccinationPress={() => setLogVaccinationVisible(true)}
+              groomingVisible={canView('grooming') && getSpeciesFeatures(pet?.species).groomingVisible}
+              walkingVisible={canView('walks') && getSpeciesFeatures(pet?.species).walkingVisible}
+              canView={canView}
+              canEdit={canEdit}
+              isPremium={isPremium}
+              onPermissionDenied={(actionLabel) => {
+                showToast(`You do not have permission to edit ${actionLabel.toLowerCase()}.`);
+              }}
+            />
 
-        <QuickActionsSection
-          onLogFoodPress={() => setLogFoodVisible(true)}
-          onLogWalkPress={() => setLogWalkVisible(true)}
-          onMedicinePress={() => setLogMedicineVisible(true)}
-          onGroomingPress={() => setLogGroomingVisible(true)}
-          onVaccinationPress={() => setLogVaccinationVisible(true)}
-          groomingVisible={canView('grooming') && getSpeciesFeatures(pet?.species).groomingVisible}
-          walkingVisible={canView('walks') && getSpeciesFeatures(pet?.species).walkingVisible}
-          canView={canView}
-          canEdit={canEdit}
-          isPremium={isPremium}
-          onPermissionDenied={(actionLabel) => {
-            showToast(`You do not have permission to edit ${actionLabel.toLowerCase()}.`);
-          }}
-        />
+            <TodaysScheduleSection
+              feedingSchedules={visibleFeedingSchedules}
+              walkSchedules={visibleWalkSchedules}
+              medicineSchedules={visibleMedicineSchedules}
+              groomingRecords={visibleGroomingRecords}
+              vaccinationSchedules={visibleVaccinationSchedules}
+              loading={scheduleLoading}
+              feedingActionId={undefined}
+              walkActionId={undefined}
+              medicineActionId={undefined}
+              groomingActionId={undefined}
+              vaccinationActionId={undefined}
+              onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
+              onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
+              onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
+              onSkipWalk={canEdit('walks') ? handleSkipWalk : undefined}
+              onCompleteMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
+              onSkipMedicine={canEdit('medicine') ? handleSkipMedicine : undefined}
+              onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
+              onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
+              onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
+              isPremium={isPremium}
+              currentUserId={user?._id ?? undefined}
+              token={token ?? undefined}
+            />
 
-
-
-        <TodaysScheduleSection
-          feedingSchedules={visibleFeedingSchedules}
-          walkSchedules={visibleWalkSchedules}
-          medicineSchedules={visibleMedicineSchedules}
-          groomingRecords={visibleGroomingRecords}
-          vaccinationSchedules={visibleVaccinationSchedules}
-          loading={scheduleLoading}
-          feedingActionId={undefined}
-          walkActionId={undefined}
-          medicineActionId={undefined}
-          groomingActionId={undefined}
-          vaccinationActionId={undefined}
-          onCompleteFeeding={canEdit('feeding') ? handleCompleteFeeding : undefined}
-          onSkipFeeding={canEdit('feeding') ? handleSkipFeeding : undefined}
-          onCompleteWalk={canEdit('walks') ? handleCompleteWalk : undefined}
-          onSkipWalk={canEdit('walks') ? handleSkipWalk : undefined}
-          onCompleteMedicine={canEdit('medicine') ? handleCompleteMedicine : undefined}
-          onSkipMedicine={canEdit('medicine') ? handleSkipMedicine : undefined}
-          onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
-          onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
-          onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
-          isPremium={isPremium}
-          currentUserId={user?._id ?? undefined}
-          token={token ?? undefined}
-        />
-
-        <RecentActivitySection
-          activities={recentActivities}
-          isPremium={isPremium}
-          todayOnly={false}
-        />
+            <RecentActivitySection
+              activities={recentActivities}
+              isPremium={isPremium}
+              todayOnly={false}
+            />
+          </>
+        )}
       </ScrollView>
 
         <LogFoodSheet
