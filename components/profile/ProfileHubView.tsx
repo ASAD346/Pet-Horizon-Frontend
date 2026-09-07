@@ -336,7 +336,11 @@ export function ProfileHubView() {
       >
         {/* Subscription Section */}
         {isPremium ? (
-          <PremiumActiveCard planName={premiumStatus?.plan ?? undefined} expiresAt={premiumStatus?.expiresAt ?? undefined} />
+          <PremiumActiveCard
+            planName={premiumStatus?.plan ?? undefined}
+            expiresAt={premiumStatus?.expiresAt ?? undefined}
+            autoRenew={premiumStatus?.autoRenew}
+          />
         ) : (
           <PremiumUpgradeBanner onUpgradePress={() => router.push('/profile/premium' as Href)} />
         )}

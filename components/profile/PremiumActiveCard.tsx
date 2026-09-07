@@ -6,9 +6,10 @@ import { Spacing } from '@/constants/theme';
 interface PremiumActiveCardProps {
   planName?: string;
   expiresAt?: string;
+  autoRenew?: boolean;
 }
 
-export function PremiumActiveCard({ planName, expiresAt }: PremiumActiveCardProps) {
+export function PremiumActiveCard({ planName, expiresAt, autoRenew = true }: PremiumActiveCardProps) {
   let displayPlan = 'PREMIUM MEMBER';
   if (planName) {
     const lower = planName.toLowerCase();
@@ -46,9 +47,9 @@ export function PremiumActiveCard({ planName, expiresAt }: PremiumActiveCardProp
 
           <View style={styles.infoCol}>
             <AppText variant="caption" color="rgba(255, 255, 255, 0.5)" weight="800" style={styles.label}>
-              RENEWS
+              {autoRenew ? 'RENEWS' : 'EXPIRES'}
             </AppText>
-            <AppText variant="bodySmall" weight="800" color="#FFD700">
+            <AppText variant="bodySmall" weight="800" color={autoRenew ? '#FFD700' : '#FCA5A5'}>
               {displayDate}
             </AppText>
           </View>
