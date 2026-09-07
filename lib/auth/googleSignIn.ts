@@ -22,7 +22,7 @@ export const LOCAL_RELEASE_SHA1 =
 
 /** Google Play App Signing key SHA-1 — used by store-distributed builds. */
 export const PLAY_STORE_SHA1 =
-  '8A:7C:ED:C1:17:A1:AA:1D:33:E0:6F:B9:32:9D:B9:9D:00:E4:E8:C1';
+  '70:B5:1B:CF:7B:70:D1:BE:D0:6F:C4:5C:51:3A:82:6C:35:57:8A:3A';
 
 export const ANDROID_PACKAGE_NAME = 'com.anonymous.PetHorizon';
 
