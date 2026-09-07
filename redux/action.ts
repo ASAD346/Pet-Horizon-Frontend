@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeActivePetCache } from '@/lib/pet/activePetCache';
 import { initializePetPermissionCache, clearPetPermissionCache } from '@/lib/pet/petPermissionCache';
 import { queryClient } from '@/app/_layout';
+import { signOutGoogle } from '@/lib/auth/googleSignIn';
 import {
   setSessionAction,
   clearSessionAction,
@@ -151,9 +152,12 @@ export function logout(): AppThunk<Promise<void>> {
   return async (dispatch) => {
     clearPetPermissionCache();
     queryClient.clear();
-    await clearSession();
+    await Promise.allSettled([
+      clearSession(),
+      signOutGoogle(),
+    ]);
     dispatch(clearSessionAction());
-    log.ok('Auth', 'Logged out');
+    log.ok('Auth', 'Logged out and Google session cleared');
   };
 }
 

@@ -116,9 +116,13 @@ export function isGoogleSignInConfigured(): boolean {
   return Boolean(GOOGLE_WEB_CLIENT_ID || GOOGLE_ANDROID_CLIENT_ID);
 }
 
-/** Clears cached Google account so the account picker shows again after a failed login. */
+/** Clears cached Google account so the account picker shows again after logout, account deletion, or failed login. */
 export async function signOutGoogle(): Promise<void> {
   if (!isGoogleSignInSupported()) return;
-  const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-  await GoogleSignin.signOut();
+  try {
+    const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
+    await GoogleSignin.signOut();
+  } catch {
+    // Non-fatal if user was not signed in via Google or native SDK is not initialized
+  }
 }
