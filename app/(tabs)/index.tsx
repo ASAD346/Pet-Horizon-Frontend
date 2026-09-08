@@ -107,7 +107,6 @@ export default function HomeScreen() {
   const { token, user, setSession } = useAuth();
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
-  const [isSwitching, setIsSwitching] = useState(false);
   const [selectedPet, setSelectedPet] = useState<ApiPet | null>(null);
   const [targetPetId, setTargetPetId] = useState<string | null | undefined>(pet?._id);
 
@@ -156,7 +155,7 @@ export default function HomeScreen() {
     skipMedicine,
     completeGrooming,
     completeVaccination,
-  } = useDashboardQuery(token, targetPetId, isSwitching);
+  } = useDashboardQuery(token, targetPetId, false);
 
   const { showToast } = useToast();
 
@@ -303,7 +302,7 @@ export default function HomeScreen() {
 
   const unreadCount = globalUnreadCount;
   
-  const scheduleLoading = isSwitching || (dashboardLoading && !dashboardFetching);
+  const scheduleLoading = dashboardLoading && !dashboardFetching;
 
   const visibleFeedingSchedules = feedingSchedules;
   const visibleWalkSchedules = walkSchedules;
@@ -522,7 +521,6 @@ export default function HomeScreen() {
     }
     
     setTargetPetId(petId);
-    setIsSwitching(true);
     
     try {
       if (user) {
@@ -542,10 +540,8 @@ export default function HomeScreen() {
     } catch (err) {
       log.fail('Home', 'Switch pet failed', getErrorMessage(err));
       Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
-    } finally {
-      setIsSwitching(false);
     }
-  }, [token, effectivePet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient]);
+  }, [token, effectivePet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard]);
 
   const handleAddPet = useCallback(() => {
     if (pets.length > 0 && !canAddAnotherPet(pets.length, isPremium)) {
