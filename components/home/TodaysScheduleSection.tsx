@@ -285,10 +285,20 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
         />
       )}
       <View style={styles.textBlock}>
-        <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+        <AppText
+          style={styles.cardTitle}
+          weight="800"
+          color={HomeTheme.text}
+          numberOfLines={1}
+        >
           {rowTitle(row)}
         </AppText>
-        <AppText variant="caption" color={HomeTheme.textMuted}>
+        <AppText
+          style={styles.cardSubtitle}
+          weight="500"
+          color={HomeTheme.textMuted}
+          numberOfLines={1}
+        >
           {rowSubtitle(row)}
         </AppText>
       </View>
@@ -724,8 +734,20 @@ const styles = StyleSheet.create({
   },
   textBlock: {
     flex: 1,
-    marginLeft: Spacing.sm,
+    marginLeft: 10,
+    marginRight: 6,
+    justifyContent: 'center',
     gap: 2,
+  },
+  cardTitle: {
+    fontSize: 14.5,
+    lineHeight: 19,
+    letterSpacing: -0.2,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0,
   },
   titleRow: {
     flexDirection: 'row',

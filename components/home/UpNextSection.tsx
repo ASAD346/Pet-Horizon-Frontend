@@ -105,10 +105,20 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
         iconSize={18}
       />
       <View style={styles.textBlock}>
-        <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+        <AppText
+          style={styles.cardTitle}
+          weight="800"
+          color={HomeTheme.text}
+          numberOfLines={1}
+        >
           {task.title ? getTaskDisplayName(task.title) : ''}
         </AppText>
-        <AppText variant="caption" color={HomeTheme.textMuted}>
+        <AppText
+          style={styles.cardSubtitle}
+          weight="500"
+          color={HomeTheme.textMuted}
+          numberOfLines={1}
+        >
           {dashboardTaskCaption(task)}
         </AppText>
       </View>
@@ -204,8 +214,20 @@ const styles = StyleSheet.create({
   },
   textBlock: {
     flex: 1,
-    marginLeft: Spacing.sm,
+    marginLeft: 10,
+    marginRight: 6,
+    justifyContent: 'center',
     gap: 2,
+  },
+  cardTitle: {
+    fontSize: 14.5,
+    lineHeight: 19,
+    letterSpacing: -0.2,
+  },
+  cardSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0,
   },
   logBtn: {
     backgroundColor: HomeTheme.cardGreen,
