@@ -6,10 +6,7 @@ import { isExpoGo } from '@/lib/runtime/isExpoGo';
 import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
 import { useAppDispatch } from '@/redux/store';
 import { showToastAction } from '@/redux/action';
-import { completeFeedingSchedule } from '@/services/schedules/feedingApi';
-import { completeWalkSchedule } from '@/services/schedules/walkApi';
-import { completeMedicineSchedule } from '@/services/schedules/medicineApi';
-import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
+
 
 /**
  * Prepares push infrastructure at launch and registers the FCM token after login.
@@ -78,60 +75,31 @@ export function PushNotificationRegistrar() {
     let responseSubscription: { remove: () => void } | undefined;
     let receivedSubscription: { remove: () => void } | undefined;
 
-    import('expo-notifications').then((Notifications) => {
-      responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
-        const { actionIdentifier, notification } = response;
-        const data = notification.request.content.data;
-        const scheduleId = String(data?.relatedScheduleItemId || data?.id || '');
-        const type = data?.type;
-
+    import('expo-notifications').then(async (Notifications) => {
+      const handleResponse = (response: any) => {
+        if (!response) return;
+        const data = response?.notification?.request?.content?.data;
         if (data?.screen) {
           router.push(data.screen as any);
-        } else if (actionIdentifier === 'mark-done' && scheduleId && token) {
-          (async () => {
-            try {
-              if (type === 'feeding') {
-                await completeFeedingSchedule(token, scheduleId, { status: 'done' });
-              } else if (type === 'walk') {
-                await completeWalkSchedule(token, scheduleId, { status: 'done' });
-              } else if (type === 'medicine') {
-                await completeMedicineSchedule(token, scheduleId, { status: 'done' });
-              } else if (type === 'vaccination') {
-                await completeVaccinationSchedule(token, scheduleId);
-              }
-              dispatch(showToastAction('Activity marked as done! 🐾', 'success'));
-            } catch (err) {
-              console.error('Failed to mark done via notification action:', err);
-              dispatch(showToastAction('Failed to complete activity', 'error'));
-            }
-          })();
-        } else if (actionIdentifier === 'snooze') {
-          (async () => {
-            try {
-              const bodyText = notification.request.content.body || '';
-              await Notifications.scheduleNotificationAsync({
-                content: {
-                  title: notification.request.content.title,
-                  body: bodyText.includes('(Snoozed ⏰)')
-                    ? bodyText
-                    : `${bodyText} (Snoozed ⏰)`,
-                  data: notification.request.content.data,
-                  sound: true,
-                  categoryIdentifier: 'care-alert',
-                },
-                trigger: {
-                  type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-                  seconds: 300,
-                },
-              });
-              dispatch(showToastAction('Reminder snoozed for 5 minutes ⏰', 'success'));
-            } catch (err) {
-              console.error('Failed to snooze notification:', err);
-            }
-          })();
         } else {
           router.push('/notifications');
         }
+      };
+
+      // Cold start: Check if app was launched by tapping a notification
+      try {
+        const lastResponse = await Notifications.getLastNotificationResponseAsync();
+        if (lastResponse) {
+          handleResponse(lastResponse);
+        }
+      } catch (err) {
+        if (__DEV__) {
+          console.log('[Push] Error getting last notification response', err);
+        }
+      }
+
+      responseSubscription = Notifications.addNotificationResponseReceivedListener((response) => {
+        handleResponse(response);
       });
 
       receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
