@@ -90,8 +90,8 @@ export default function RootLayout() {
           <NotificationProvider>
             <ActiveWalkProvider>
               <AuthBootstrap />
-              <ToastHost />
               <InnerLayout />
+              <ToastHost />
             </ActiveWalkProvider>
           </NotificationProvider>
         </SafeAreaProvider>
