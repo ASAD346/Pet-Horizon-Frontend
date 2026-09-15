@@ -79,16 +79,26 @@ export async function createFeedingSchedule(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
+
 export async function completeFeedingSchedule(
   token: string,
   scheduleId: string,
   body: CompleteFeedingRequest = { status: 'done' },
 ): Promise<CompleteFeedingResponse> {
   log.info(SCOPE, 'POST /schedules/feeding/:id/complete', { scheduleId, status: body.status });
+  const localDate = body.date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload: CompleteFeedingRequest = {
+    status: body.status || 'done',
+    date: localDate,
+    completedAt: body.completedAt || new Date().toISOString(),
+    ...body,
+  };
   try {
     const data = await apiRequest<CompleteFeedingResponse>(
-      API_ENDPOINTS.schedules.feedingComplete(scheduleId),
-      { method: 'POST', token, body },
+      `${API_ENDPOINTS.schedules.feedingComplete(scheduleId)}${query}`,
+      { method: 'POST', token, body: payload },
     );
     log.ok(SCOPE, 'Feeding marked complete', { scheduleId });
     return data;
@@ -104,10 +114,18 @@ export async function skipFeedingSchedule(
   body: CompleteFeedingRequest = { status: 'skipped' },
 ): Promise<CompleteFeedingResponse> {
   log.info(SCOPE, 'PUT /schedules/feeding/:id/skip', { scheduleId });
+  const localDate = body.date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload: CompleteFeedingRequest = {
+    status: body.status || 'skipped',
+    date: localDate,
+    completedAt: body.completedAt || new Date().toISOString(),
+    ...body,
+  };
   try {
     const data = await apiRequest<CompleteFeedingResponse>(
-      API_ENDPOINTS.schedules.feedingSkip(scheduleId),
-      { method: 'PUT', token, body },
+      `${API_ENDPOINTS.schedules.feedingSkip(scheduleId)}${query}`,
+      { method: 'PUT', token, body: payload },
     );
     log.ok(SCOPE, 'Feeding skipped', { scheduleId });
     return data;

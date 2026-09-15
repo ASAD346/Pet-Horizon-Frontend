@@ -71,16 +71,26 @@ export async function createMedicineSchedule(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
+
 export async function completeMedicineSchedule(
   token: string,
   scheduleId: string,
   body: CompleteMedicineRequest = { status: 'done' },
 ): Promise<CompleteMedicineResponse> {
   log.info(SCOPE, 'POST /schedules/medicine/:id/complete', { scheduleId, status: body.status });
+  const localDate = body.date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload: CompleteMedicineRequest = {
+    status: body.status || 'done',
+    date: localDate,
+    completedAt: body.completedAt || new Date().toISOString(),
+    ...body,
+  };
   try {
     const data = await apiRequest<CompleteMedicineResponse>(
-      API_ENDPOINTS.schedules.medicineComplete(scheduleId),
-      { method: 'POST', token, body },
+      `${API_ENDPOINTS.schedules.medicineComplete(scheduleId)}${query}`,
+      { method: 'POST', token, body: payload },
     );
     log.ok(SCOPE, 'Medicine marked complete', { scheduleId });
     return data;

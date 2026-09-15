@@ -44,13 +44,19 @@ export function useWalkSchedules(token: string | null, petId: string | null | un
         log.warn('Walk', 'Cannot complete — not signed in');
         return;
       }
+      const now = new Date();
+      const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       setActionId(scheduleId);
       // Optimistic: mark as done locally so it vanishes from Today's Schedule immediately
       setSchedules((prev) =>
-        prev.map((s) => s._id === scheduleId ? { ...s, status: 'done' as const, completedAt: new Date().toISOString() } : s),
+        prev.map((s) => s._id === scheduleId ? { ...s, status: 'done' as const, completedAt: now.toISOString() } : s),
       );
       try {
-        await completeWalkSchedule(token, scheduleId, { status: 'done' });
+        await completeWalkSchedule(token, scheduleId, {
+          status: 'done',
+          date: localDateStr,
+          completedAt: now.toISOString(),
+        });
         const scheduleItem = schedules.find((s) => s._id === scheduleId || (s as any).id === scheduleId);
         await cancelTaskNotifications(scheduleId, scheduleItem?.metadata);
         queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });

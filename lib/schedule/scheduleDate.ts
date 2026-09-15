@@ -31,7 +31,8 @@ export const SCHEDULE_DATE_MODE_OPTIONS: { value: ScheduleDateMode; label: strin
 ];
 
 function startOfToday(): Date {
-  return new Date(new Date().toISOString().split('T')[0]);
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 function isSameCalendarDay(a: Date, b: Date): boolean {
@@ -123,30 +124,6 @@ export function validateScheduleDate(state: ScheduleDateState): string | null {
     return 'Select a start date.';
   }
   return null;
-}
-
-function adjustDateForTimezone(date: Date): Date {
-  const localDate = new Date(date);
-  const now = new Date();
-  const utcYear = now.getUTCFullYear();
-  const utcMonth = now.getUTCMonth();
-  const utcDay = now.getUTCDate();
-  
-  const localYear = now.getFullYear();
-  const localMonth = now.getMonth();
-  const localDay = now.getDate();
-  
-  // If local date is ahead of UTC date, shift back by 1 day to match server's date
-  if (
-    localYear > utcYear ||
-    (localYear === utcYear && localMonth > utcMonth) ||
-    (localYear === utcYear && localMonth === utcMonth && localDay > utcDay)
-  ) {
-    const adjusted = new Date(localDate);
-    adjusted.setDate(adjusted.getDate() - 1);
-    return adjusted;
-  }
-  return localDate;
 }
 
 export function buildScheduleDatePayload(state: ScheduleDateState): ScheduleDateApiFields {

@@ -128,16 +128,31 @@ export async function updateGroomingRecord(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
+
 export async function completeGroomingRecord(
   token: string,
   id: string,
+  body?: { completedDate?: string; notes?: string },
 ): Promise<CompleteGroomingResponse> {
   log.info(SCOPE, 'POST /grooming/:id/complete', { id });
+  const localDate = body?.completedDate || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload = {
+    completedDate: localDate,
+    date: localDate,
+    completedAt: new Date().toISOString(),
+    ...body,
+  };
   try {
-    const data = await apiRequest<CompleteGroomingResponse>(API_ENDPOINTS.grooming.complete(id), {
-      method: 'POST',
-      token,
-    });
+    const data = await apiRequest<CompleteGroomingResponse>(
+      `${API_ENDPOINTS.grooming.complete(id)}${query}`,
+      {
+        method: 'POST',
+        token,
+        body: payload,
+      },
+    );
     log.ok(SCOPE, 'Grooming marked complete', { id });
     return data;
   } catch (error) {

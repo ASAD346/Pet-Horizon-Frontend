@@ -77,16 +77,25 @@ export async function updateVaccinationSchedule(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
+
 export async function completeVaccinationSchedule(
   token: string,
   scheduleId: string,
   body: CompleteVaccinationRequest = {},
 ): Promise<CompleteVaccinationResponse> {
   log.info(SCOPE, 'POST /schedules/vaccination/:id/complete', { scheduleId });
+  const localDate = body.administeredDate || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload: CompleteVaccinationRequest = {
+    administeredDate: localDate,
+    date: localDate,
+    ...body,
+  };
   try {
     const data = await apiRequest<CompleteVaccinationResponse>(
-      API_ENDPOINTS.schedules.vaccinationComplete(scheduleId),
-      { method: 'POST', token, body },
+      `${API_ENDPOINTS.schedules.vaccinationComplete(scheduleId)}${query}`,
+      { method: 'POST', token, body: payload },
     );
     log.ok(SCOPE, 'Vaccination marked complete', { scheduleId });
     return data;

@@ -43,3 +43,15 @@ export function formatInTimeZone(
     return String(date);
   }
 }
+
+export function getLocalDateString(d: Date = new Date()): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function getTimezoneQueryParams(customDate?: string): string {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const now = new Date();
+  const localDate = customDate || getLocalDateString(now);
+  const offset = now.getTimezoneOffset();
+  return `?timezone=${encodeURIComponent(timezone)}&localDate=${localDate}&date=${localDate}&offset=${offset}`;
+}

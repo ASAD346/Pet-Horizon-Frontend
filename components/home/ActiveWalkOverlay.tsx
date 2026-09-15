@@ -119,7 +119,8 @@ export function ActiveWalkOverlay() {
     if (token) {
       // Optimistically remove from dashboard query cache to clean up view instantly
       if (activePetId) {
-        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         queryClient.setQueryData(['dashboard', activePetId, todayStr], (prev: any) => {
           if (!prev || !prev.todaySchedules) return prev;
           const todaySchedules = { ...prev.todaySchedules };
@@ -135,8 +136,12 @@ export function ActiveWalkOverlay() {
         });
       }
 
+      const now = new Date();
+      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
       completeWalkSchedule(token, scheduleId, {
         status: 'done',
+        date: localDate,
         completedAt: new Date().toISOString(),
         duration: minutes,
       })

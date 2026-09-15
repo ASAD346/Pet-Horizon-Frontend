@@ -57,16 +57,26 @@ export async function createWalkSchedule(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
+
 export async function completeWalkSchedule(
   token: string,
   scheduleId: string,
   body: CompleteWalkRequest = { status: 'done' },
 ): Promise<CompleteWalkResponse> {
   log.info(SCOPE, 'POST /schedules/walk/:id/complete', { scheduleId, status: body.status });
+  const localDate = body.date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload: CompleteWalkRequest = {
+    status: body.status || 'done',
+    date: localDate,
+    completedAt: body.completedAt || new Date().toISOString(),
+    ...body,
+  };
   try {
     const data = await apiRequest<CompleteWalkResponse>(
-      API_ENDPOINTS.schedules.walkComplete(scheduleId),
-      { method: 'POST', token, body },
+      `${API_ENDPOINTS.schedules.walkComplete(scheduleId)}${query}`,
+      { method: 'POST', token, body: payload },
     );
     log.ok(SCOPE, 'Walk marked complete', { scheduleId });
     return data;

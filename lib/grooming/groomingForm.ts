@@ -15,9 +15,10 @@ export function formatDateLabel(date: Date): string {
 }
 
 export function defaultScheduledDate(): Date {
-  const d = new Date(new Date().toISOString().split('T')[0]);
-  d.setDate(d.getDate() + 7);
-  return d;
+  const d = new Date();
+  const res = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  res.setDate(res.getDate() + 7);
+  return res;
 }
 
 import { getTaskDisplayName } from '@/src/utils/taskMappings';
