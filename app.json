@@ -122,6 +122,12 @@
         }
       ],
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Pet Horizon to access your camera to take pet pictures and scan invite QR codes."
+        }
+      ],
+      [
         "expo-notifications",
         {
           "icon": "./assets/images/app-icon.png",

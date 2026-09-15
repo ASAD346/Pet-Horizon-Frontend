@@ -66,9 +66,20 @@ export function QrScannerModal({ visible, onClose, onScanSuccess }: QrScannerMod
             <AppText variant="bodySmall" color="#64748B" align="center" style={styles.permDesc}>
               Allow camera access to quickly scan QR codes and connect with your family hub.
             </AppText>
-            <TouchableOpacity onPress={requestPermission} style={styles.btn} activeOpacity={0.8}>
+            <TouchableOpacity
+              onPress={async () => {
+                if (!permission.canAskAgain) {
+                  const { Linking } = require('react-native');
+                  await Linking.openSettings().catch(() => {});
+                } else {
+                  await requestPermission();
+                }
+              }}
+              style={styles.btn}
+              activeOpacity={0.8}
+            >
               <AppText variant="body" weight="800" color="#FFFFFF">
-                Grant Access
+                {permission.canAskAgain ? 'Grant Access' : 'Open Settings'}
               </AppText>
             </TouchableOpacity>
             <TouchableOpacity onPress={onClose} style={styles.cancelLink} activeOpacity={0.7}>

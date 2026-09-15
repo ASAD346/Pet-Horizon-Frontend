@@ -30,8 +30,18 @@ export function PetPhotoPicker({ imageUri, onImageChange, readOnly }: PetPhotoPi
     if (!permission.granted) {
       log.fail('AddPet', 'Photo library permission denied');
       Alert.alert(
-        'Photos access',
-        'Allow photo library access in Settings to choose a pet picture.',
+        'Photos Access Required',
+        'Pet Horizon needs photo library access to choose a pet picture. Please enable it in Settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              const { Linking } = require('react-native');
+              Linking.openSettings().catch(() => {});
+            },
+          },
+        ]
       );
       return;
     }
@@ -52,7 +62,20 @@ export function PetPhotoPicker({ imageUri, onImageChange, readOnly }: PetPhotoPi
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (!permission.granted) {
       log.fail('AddPet', 'Camera permission denied');
-      Alert.alert('Camera access', 'Allow camera access in Settings to take a pet photo.');
+      Alert.alert(
+        'Camera Access Required',
+        'Pet Horizon needs camera access to take a pet photo. Please enable it in Settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Open Settings',
+            onPress: () => {
+              const { Linking } = require('react-native');
+              Linking.openSettings().catch(() => {});
+            },
+          },
+        ]
+      );
       return;
     }
 
