@@ -42,6 +42,7 @@ import { ActivityIndicator, Alert, Platform, StyleSheet, Pressable, TouchableOpa
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import { ColorIconBadge } from './ColorIconBadge';
 import { WalkTimer } from './WalkTimer';
 import { SectionHeader } from './SectionHeader';
@@ -687,23 +688,30 @@ export function TodaysScheduleSection({
         </View>
       ) : (
         <>
-          {visibleItems.map((row) => (
-            <ScheduleRowCard
+          {visibleItems.map((row, index) => (
+            <AnimatedStackItem
               key={`${row.kind}-${rowId(row)}`}
-              row={row}
-              onCompleteFeeding={onCompleteFeeding}
-              onSkipFeeding={onSkipFeeding}
-              onCompleteWalk={onCompleteWalk}
-              onSkipWalk={onSkipWalk}
-              onCompleteMedicine={onCompleteMedicine}
-              onSkipMedicine={onSkipMedicine}
-              onCompleteGrooming={onCompleteGrooming}
-              onManageGrooming={onManageGrooming}
-              onCompleteVaccination={onCompleteVaccination}
-              isPremium={isPremium}
-              currentUserId={currentUserId}
-              token={token}
-            />
+              index={index}
+              direction="up"
+              staggerMs={55}
+              distance={24}
+            >
+              <ScheduleRowCard
+                row={row}
+                onCompleteFeeding={onCompleteFeeding}
+                onSkipFeeding={onSkipFeeding}
+                onCompleteWalk={onCompleteWalk}
+                onSkipWalk={onSkipWalk}
+                onCompleteMedicine={onCompleteMedicine}
+                onSkipMedicine={onSkipMedicine}
+                onCompleteGrooming={onCompleteGrooming}
+                onManageGrooming={onManageGrooming}
+                onCompleteVaccination={onCompleteVaccination}
+                isPremium={isPremium}
+                currentUserId={currentUserId}
+                token={token}
+              />
+            </AnimatedStackItem>
           ))}
           {overflowCount > 0 && onViewAll ? (
             <TouchableOpacity

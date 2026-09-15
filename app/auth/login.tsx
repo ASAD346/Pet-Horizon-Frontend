@@ -16,6 +16,7 @@ import {
   LoginHeaderDecor,
   SocialLoginButtons,
 } from '@/components/auth/login';
+import { AnimatedStackItem } from '@/components/ui/AnimatedStackItem';
 import { useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
 import { getAuthLoginErrorMessage } from '@/lib/auth/authErrors';
 import { useAuth } from '@/hooks/useAuth';
@@ -163,43 +164,49 @@ export default function LoginScreen() {
           bounces={false}
         >
           <View style={styles.contentWrapper}>
-            <View>
+            <AnimatedStackItem index={0} direction="down" distance={16} staggerMs={70}>
               <LoginBranding compact={true} />
-            </View>
+            </AnimatedStackItem>
 
             <View style={styles.formWrapper}>
-              <LoginFormSection
-                email={email}
-                password={password}
-                loading={loading || googleLoading}
-                showVerifyAction={showVerifyAction}
-                onEmailChange={handleEmailChange}
-                onPasswordChange={handlePasswordChange}
-                onLogin={handleLogin}
-                onForgotPassword={() =>
-                  router.push({
-                    pathname: '/auth/forgot-password',
-                    params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
-                  })
-                }
-                onSignup={() => router.push('/auth/signup')}
-                onVerifyEmail={handleVerifyEmail}
-                fieldErrors={fieldErrors}
-              />
+              <AnimatedStackItem index={1} direction="up" distance={20} staggerMs={70}>
+                <LoginFormSection
+                  email={email}
+                  password={password}
+                  loading={loading || googleLoading}
+                  showVerifyAction={showVerifyAction}
+                  onEmailChange={handleEmailChange}
+                  onPasswordChange={handlePasswordChange}
+                  onLogin={handleLogin}
+                  onForgotPassword={() =>
+                    router.push({
+                      pathname: '/auth/forgot-password',
+                      params: email.trim() ? { email: email.trim().toLowerCase() } : undefined,
+                    })
+                  }
+                  onSignup={() => router.push('/auth/signup')}
+                  onVerifyEmail={handleVerifyEmail}
+                  fieldErrors={fieldErrors}
+                />
+              </AnimatedStackItem>
 
-              <SocialLoginButtons
-                compact={false}
-                googleLoading={googleLoading}
-                onGooglePress={() => {
-                  clearErrors();
-                  void handleGoogleSignIn(showToast);
-                }}
-                onApplePress={() => {}}
-              />
+              <AnimatedStackItem index={2} direction="up" distance={20} staggerMs={70}>
+                <SocialLoginButtons
+                  compact={false}
+                  googleLoading={googleLoading}
+                  onGooglePress={() => {
+                    clearErrors();
+                    void handleGoogleSignIn(showToast);
+                  }}
+                  onApplePress={() => {}}
+                />
+              </AnimatedStackItem>
             </View>
           </View>
         </ScrollView>
-        <LoginFooterBar />
+        <AnimatedStackItem index={3} direction="up" distance={10} staggerMs={70}>
+          <LoginFooterBar />
+        </AnimatedStackItem>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

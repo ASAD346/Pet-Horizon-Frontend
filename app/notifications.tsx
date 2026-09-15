@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { AppText } from '@/components/ui/AppText';
+import { AnimatedStackItem } from '@/components/ui/AnimatedStackItem';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -421,63 +422,70 @@ export default function NotificationsScreen() {
                   }
 
                   return (
-                     <View key={item._id} style={{ marginBottom: 8 }}>
-                       <Swipeable
-                         renderRightActions={renderRightActions(item._id)}
-                         friction={2}
-                         rightThreshold={40}
-                       >
-                         <TouchableOpacity
-                           style={[
-                             styles.card,
-                             isUnread && styles.unreadCard,
-                           ]}
-                           onPress={() => markRead(item._id)}
-                           activeOpacity={0.7}
-                         >
-                           <View style={styles.iconContainer}>
-                             <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>
-                               <Ionicons name={config.icon as any} size={18} color={config.color} />
-                             </View>
-                           </View>
-                           
-                           <View style={styles.cardContent}>
-                             <View style={styles.cardHeader}>
-                               <View style={styles.titleRow}>
-                                 {petName ? (
-                                   <View style={styles.petBadge}>
-                                     <AppText variant="caption" weight="800" color="#475569" style={styles.petBadgeText}>
-                                       {petName}
-                                     </AppText>
-                                   </View>
-                                 ) : null}
-                                 <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.cardTitle} numberOfLines={1}>
-                                   {coreTaskTitle}
-                                 </AppText>
-                               </View>
-                               <View style={styles.headerRight}>
-                                 {item.createdAt ? (
-                                   <AppText variant="caption" color="#94A3B8" style={styles.timeText}>
-                                     {formatNotificationDate(item.createdAt)}
-                                   </AppText>
-                                 ) : null}
-                                 {isUnread && (
-                                   <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
-                                 )}
-                               </View>
-                             </View>
-                             
-                             {conversationalBody ? (
-                               <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
-                                 {conversationalBody}
-                               </AppText>
-                             ) : null}
-                           </View>
-                         </TouchableOpacity>
-                       </Swipeable>
-                     </View>
-                   );
-                 })}
+                    <AnimatedStackItem
+                      key={item._id}
+                      index={index}
+                      direction="up"
+                      staggerMs={45}
+                      distance={20}
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Swipeable
+                        renderRightActions={renderRightActions(item._id)}
+                        friction={2}
+                        rightThreshold={40}
+                      >
+                        <TouchableOpacity
+                          style={[
+                            styles.card,
+                            isUnread && styles.unreadCard,
+                          ]}
+                          onPress={() => markRead(item._id)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.iconContainer}>
+                            <View style={[styles.iconWrapper, { backgroundColor: config.bg }]}>
+                              <Ionicons name={config.icon as any} size={18} color={config.color} />
+                            </View>
+                          </View>
+                          
+                          <View style={styles.cardContent}>
+                            <View style={styles.cardHeader}>
+                              <View style={styles.titleRow}>
+                                {petName ? (
+                                  <View style={styles.petBadge}>
+                                    <AppText variant="caption" weight="800" color="#475569" style={styles.petBadgeText}>
+                                      {petName}
+                                    </AppText>
+                                  </View>
+                                ) : null}
+                                <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.cardTitle} numberOfLines={1}>
+                                  {coreTaskTitle}
+                                </AppText>
+                              </View>
+                              <View style={styles.headerRight}>
+                                {item.createdAt ? (
+                                  <AppText variant="caption" color="#94A3B8" style={styles.timeText}>
+                                    {formatNotificationDate(item.createdAt)}
+                                  </AppText>
+                                ) : null}
+                                {isUnread && (
+                                  <View style={[styles.unreadDot, { backgroundColor: config.color }]} />
+                                )}
+                              </View>
+                            </View>
+                            
+                            {conversationalBody ? (
+                              <AppText variant="caption" color={HomeTheme.textMuted} style={styles.body}>
+                                {conversationalBody}
+                              </AppText>
+                            ) : null}
+                          </View>
+                        </TouchableOpacity>
+                      </Swipeable>
+                    </AnimatedStackItem>
+                  );
+                })}
               </View>
             ))
           )}

@@ -8,6 +8,7 @@ import { SectionHeader } from './SectionHeader';
 import { QUICK_ACTION_MODULES } from '@/lib/pet/petPermissionAccess';
 import type { AppModuleId } from '@/lib/pet/petPermissionAccess';
 import { HomeTheme, Spacing } from '../../constants/theme';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 
 type ActionIcon = 'silverware-fork-knife' | 'paw' | 'pill' | 'content-cut' | 'needle';
 
@@ -136,7 +137,7 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {visibleActions.map((action) => {
+        {visibleActions.map((action, index) => {
           const handlerKey = ACTION_HANDLERS[action.label];
           const onPress = handlerKey ? handlers[handlerKey] : undefined;
           const moduleId = QUICK_ACTION_MODULES[action.label];
@@ -160,48 +161,55 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
           const finalPlusColor = isDisabled ? 'rgba(0, 0, 0, 0.5)' : colors.plusColor;
 
           return (
-            <TouchableOpacity
+            <AnimatedStackItem
               key={action.label}
-              activeOpacity={isDisabled ? 0.55 : 0.8}
-              disabled={isDisabled}
-              onPress={() => {
-                if (!isDisabled && onPress) {
-                  handlePress(onPress);
-                }
-              }}
-              style={[styles.cardWrapper, isDisabled && { opacity: 0.55 }]}
+              index={index}
+              direction="right"
+              staggerMs={50}
+              distance={30}
             >
-              <LinearGradient
-                colors={cardColors}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={[styles.tileCard, { borderColor: finalBorderColor }]}
+              <TouchableOpacity
+                activeOpacity={isDisabled ? 0.55 : 0.8}
+                disabled={isDisabled}
+                onPress={() => {
+                  if (!isDisabled && onPress) {
+                    handlePress(onPress);
+                  }
+                }}
+                style={[styles.cardWrapper, isDisabled && { opacity: 0.55 }]}
               >
-                {/* Header elements: Icon container on left, plus/lock icon on right */}
-                <View style={styles.cardHeader}>
-                  <View style={[styles.iconCircle, { backgroundColor: finalIconCircleBg }]}>
-                    <MaterialCommunityIcons name={action.icon} size={16} color={finalTint} />
+                <LinearGradient
+                  colors={cardColors}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={[styles.tileCard, { borderColor: finalBorderColor }]}
+                >
+                  {/* Header elements: Icon container on left, plus/lock icon on right */}
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.iconCircle, { backgroundColor: finalIconCircleBg }]}>
+                      <MaterialCommunityIcons name={action.icon} size={16} color={finalTint} />
+                    </View>
+                    <View style={[styles.plusButton, { backgroundColor: finalPlusBg }]}>
+                      {isDisabled ? (
+                        <Feather name="lock" size={9} color={finalPlusColor} style={styles.plusIcon} />
+                      ) : (
+                        <Feather name="plus" size={10} color={finalPlusColor} style={styles.plusIcon} />
+                      )}
+                    </View>
                   </View>
-                  <View style={[styles.plusButton, { backgroundColor: finalPlusBg }]}>
-                    {isDisabled ? (
-                      <Feather name="lock" size={9} color={finalPlusColor} style={styles.plusIcon} />
-                    ) : (
-                      <Feather name="plus" size={10} color={finalPlusColor} style={styles.plusIcon} />
-                    )}
-                  </View>
-                </View>
 
-                {/* Footer elements: Action title and subtext */}
-                <View style={styles.textContainer}>
-                  <AppText variant="bodySmall" weight="800" color={isDisabled ? 'rgba(0,0,0,0.5)' : finalTint} style={styles.label}>
-                    {action.displayLabel}
-                  </AppText>
-                  <AppText variant="caption" weight="500" color={isDisabled ? 'rgba(0,0,0,0.35)' : finalTint} style={styles.subLabel}>
-                    {isDisabled ? 'Restricted' : action.subText}
-                  </AppText>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
+                  {/* Footer elements: Action title and subtext */}
+                  <View style={styles.textContainer}>
+                    <AppText variant="bodySmall" weight="800" color={isDisabled ? 'rgba(0,0,0,0.5)' : finalTint} style={styles.label}>
+                      {action.displayLabel}
+                    </AppText>
+                    <AppText variant="caption" weight="500" color={isDisabled ? 'rgba(0,0,0,0.35)' : finalTint} style={styles.subLabel}>
+                      {isDisabled ? 'Restricted' : action.subText}
+                    </AppText>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            </AnimatedStackItem>
           );
         })}
       </ScrollView>

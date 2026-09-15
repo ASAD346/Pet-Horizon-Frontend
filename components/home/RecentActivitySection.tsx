@@ -6,6 +6,7 @@ import { ColorIconBadge } from './ColorIconBadge';
 import { SectionHeader } from './SectionHeader';
 import { homeCardShadow, homePillCard } from './homeStyles';
 import { HomeTheme, Spacing } from '../../constants/theme';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
 import { getTaskDisplayName } from '@/src/utils/taskMappings';
@@ -94,60 +95,67 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
           />
         </View>
       ) : (
-        visibleActivities.map((item) => (
-          <View
+        visibleActivities.map((item, index) => (
+          <AnimatedStackItem
             key={item.id}
-            style={[
-              homePillCard.card,
-              {
-                borderWidth: 1,
-                borderColor: cardBorderColor,
-              }
-            ]}
+            index={index}
+            direction="up"
+            staggerMs={55}
+            distance={24}
           >
-            <View style={styles.cardContent}>
-              <ColorIconBadge
-                color={item.color}
-                backgroundColor={item.bg}
-                materialIcon={item.icon}
-                size={36}
-                iconSize={18}
-                style={styles.iconBadge}
-              />
-              
-              <View style={styles.textBlock}>
-                {/* Action Title */}
-                <AppText variant="bodySmall" weight="700" style={{ color: '#1E293B' }}>
-                  {formatRawString(item.actionText)}
-                  {item.icon === 'paw' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
-                </AppText>
- 
-                {/* Actor & Time Info Row */}
-                <View style={styles.metaRow}>
-                  {/* Actor Avatar or Badge */}
-                  <View style={[styles.miniAvatar, { backgroundColor: item.actorColor || '#5B9BD5' }]}>
-                    {item.actorImage ? (
-                      <Image source={{ uri: item.actorImage }} style={styles.miniAvatarImage} />
-                    ) : (
-                      <Text style={styles.miniAvatarText}>{item.actorInitial || 'U'}</Text>
-                    )}
+            <View
+              style={[
+                homePillCard.card,
+                {
+                  borderWidth: 1,
+                  borderColor: cardBorderColor,
+                }
+              ]}
+            >
+              <View style={styles.cardContent}>
+                <ColorIconBadge
+                  color={item.color}
+                  backgroundColor={item.bg}
+                  materialIcon={item.icon}
+                  size={36}
+                  iconSize={18}
+                  style={styles.iconBadge}
+                />
+                
+                <View style={styles.textBlock}>
+                  {/* Action Title */}
+                  <AppText variant="bodySmall" weight="700" style={{ color: '#1E293B' }}>
+                    {formatRawString(item.actionText)}
+                    {item.icon === 'paw' && item.durationLabel ? ` • ${item.durationLabel}` : ''}
+                  </AppText>
+   
+                  {/* Actor & Time Info Row */}
+                  <View style={styles.metaRow}>
+                    {/* Actor Avatar or Badge */}
+                    <View style={[styles.miniAvatar, { backgroundColor: item.actorColor || '#5B9BD5' }]}>
+                      {item.actorImage ? (
+                        <Image source={{ uri: item.actorImage }} style={styles.miniAvatarImage} />
+                      ) : (
+                        <Text style={styles.miniAvatarText}>{item.actorInitial || 'U'}</Text>
+                      )}
+                    </View>
+                    
+                    {/* Actor Name */}
+                    <AppText variant="caption" weight="600" style={styles.actorNameText}>
+                      {item.actorName}
+                    </AppText>
+   
+                    <Text style={styles.separator}>•</Text>
+   
+                    {/* Exact & Relative Time */}
+                    <AppText variant="caption" style={styles.timeText}>
+                      {item.exactTime} {item.time && item.time !== item.exactTime ? `(${item.time})` : ''}
+                    </AppText>
                   </View>
-                  
-                  {/* Actor Name */}
-                  <AppText variant="caption" weight="600" style={styles.actorNameText}>
-                    {item.actorName}
-                  </AppText>
- 
-                  <Text style={styles.separator}>•</Text>
- 
-                  {/* Exact & Relative Time */}
-                  <AppText variant="caption" style={styles.timeText}>
-                    {item.exactTime} {item.time && item.time !== item.exactTime ? `(${item.time})` : ''}
-                  </AppText>
                 </View>
               </View>
             </View>
-          </View>
+          </AnimatedStackItem>
         ))
       )}
     </View>
