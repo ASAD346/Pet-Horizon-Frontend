@@ -373,7 +373,9 @@ export default function HomeScreen() {
   const petCardLoading = effectiveLoading && !effectivePet;
 
   const recentActivities = useMemo(() => {
-    const list = effectiveDashboardData?.recentActivities ?? [];
+    const list = (effectiveDashboardData?.recentActivities ?? []).filter(
+      (entry) => entry.status !== 'missed' && !entry.note?.startsWith('Missed:')
+    );
     return list.slice(0, 5).map((entry) => {
       const category = mapActivityTypeToCategory(entry.activityType);
       const colors = ACTIVITY_COLORS[category] || ACTIVITY_COLORS.general;
