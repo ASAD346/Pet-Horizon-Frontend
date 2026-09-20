@@ -68,7 +68,7 @@ export function FamilyHubView() {
   const { pets: allPets } = usePets(token, activePetId ?? null, user?._id);
   // userHasOwnedPet: true when the user is the registered owner of at least one pet
   const userHasOwnedPet = allPets.some((p) => isPetOwner(p.ownerUserId, user?._id));
-  const { showErrorToast } = useToast();
+  const { showToast, showErrorToast } = useToast();
 
   useEffect(() => {
     if (membersError) {
@@ -205,7 +205,19 @@ export function FamilyHubView() {
     setRefreshing(false);
   }, [token, reloadPet, reloadMembers, loadGuestAccess, refetchPremium]);
 
+  const handleInvitePress = useCallback(() => {
+    if (!isPremium) {
+      showToast('Upgrade to Premium to invite family members.', 'info');
+      return;
+    }
+    setInviteSheetVisible(true);
+  }, [isPremium, showToast]);
+
   const handleShareCode = useCallback(async () => {
+    if (!isPremium) {
+      showToast('Upgrade to Premium to invite family members.', 'info');
+      return;
+    }
     if (!invite) return;
     const webLink = resolveInviteWebLink(invite);
     const appLink = resolveInviteAppLink(invite);
@@ -214,7 +226,7 @@ export function FamilyHubView() {
     } catch {
       // User dismissed share sheet.
     }
-  }, [invite]);
+  }, [isPremium, invite, showToast]);
 
   const joinCode = invite ? formatJoinCode(invite.inviteToken) : null;
 
@@ -291,7 +303,7 @@ export function FamilyHubView() {
               // (premium + owns at least one other pet). Hides it only for non-premium caregivers.
               showInviteSection={isOwner}
               onShareCode={handleShareCode}
-              onInvitePress={() => setInviteSheetVisible(true)}
+              onInvitePress={handleInvitePress}
             />
 
             {!isPremium && (isOwner || userHasOwnedPet) ? (

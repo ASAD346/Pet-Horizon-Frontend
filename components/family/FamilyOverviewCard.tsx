@@ -128,7 +128,7 @@ export function FamilyOverviewCard({
                 <TouchableOpacity
                   style={styles.shareBtn}
                   onPress={onShareCode ?? (() => {})}
-                  disabled={!canInvite || !joinCode || loadingInvite}
+                  disabled={loadingInvite}
                   activeOpacity={0.7}
                   accessibilityLabel="Share join code"
                 >
@@ -137,12 +137,9 @@ export function FamilyOverviewCard({
               </View>
 
               <TouchableOpacity
-                style={[
-                  styles.inviteBtn,
-                  (!canInvite || loadingInvite) && { opacity: 0.6 }
-                ]}
+                style={styles.inviteBtn}
                 onPress={onInvitePress ?? (() => {})}
-                disabled={!canInvite || loadingInvite}
+                disabled={loadingInvite}
                 activeOpacity={0.9}
               >
                 <Ionicons name="person-add-outline" size={16} color={themeGreen} />

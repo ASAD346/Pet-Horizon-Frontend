@@ -230,14 +230,8 @@ export default function RegisterPetScreen() {
       const existingPets = await fetchPets(token);
       const isPremium = user?.premiumStatus === 'premium';
       if (!canAddAnotherPet(existingPets.length, isPremium)) {
-        Alert.alert(
-          'Premium required',
-          'Free accounts include one pet. Upgrade to Premium to add more pets.',
-          [
-            { text: 'Not now', style: 'cancel', onPress: () => router.back() },
-            { text: 'View Premium', onPress: () => router.push('/profile/premium') },
-          ],
-        );
+        showToast('Upgrade to Premium to add another pet.', 'info');
+        router.back();
         isSubmitting.current = false;
         return;
       }

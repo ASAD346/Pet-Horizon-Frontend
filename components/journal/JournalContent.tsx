@@ -15,6 +15,7 @@ import { AuthInfoBanner } from '@/components/auth/AuthInfoBanner';
 import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchJournalEntries } from '@/services/journal/journalApi';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
@@ -167,6 +168,8 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
 
   const router = useRouter();
 
+  const { isPremium } = usePremiumStatus();
+
   const handleAddPhoto = useCallback(async () => {
     if (!token || !pet?._id) {
       showErrorToast('Select a pet before adding a photo.');
@@ -177,11 +180,10 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
       return;
     }
 
-    const isPremium = user?.premiumStatus === 'premium';
     const currentPhotoCount = photos.length;
 
     if (!isPremium && currentPhotoCount >= 1) {
-      showToast('Upgrade to Premium to add up to 5 daily photos.', 'info');
+      showToast('Upgrade to Premium to add more photos.', 'info');
       return;
     }
 
@@ -222,7 +224,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
     } finally {
       setUploadingPhoto(false);
     }
-  }, [token, pet?._id, isSelectedToday, dayEntries, reload]);
+  }, [token, pet?._id, isSelectedToday, dayEntries, isPremium, photos.length, reload, showToast, showErrorToast, queryClient]);
 
   if (!petLoading && !pet) {
     return (
@@ -240,7 +242,6 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
     );
   }
 
-  const isPremium = user?.premiumStatus === 'premium';
   const themeColor = isPremium ? '#184F2E' : '#5CB35D';
 
   if (isLoading && entries.length === 0) {
