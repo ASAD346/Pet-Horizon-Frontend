@@ -100,7 +100,7 @@ export function FormSheetShell({
         <Pressable style={formSheetStyles.overlay} onPress={onClose}>
           <Pressable
             style={[formSheetStyles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-            onPress={() => {}}
+            onPress={(e) => e.stopPropagation()}
           >
             {/* Curved linear gradient header */}
             <LinearGradient
@@ -135,11 +135,12 @@ export function FormSheetShell({
             </LinearGradient>
  
             <ScrollView
+              style={{ flexShrink: 1, width: '100%' }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={[
                 formSheetStyles.scrollContent,
-                { paddingBottom: isReadOnly ? 10 : 110 } // Reduce padding when read-only to eliminate space below Close button
+                { paddingBottom: isReadOnly ? 24 : 120 }
               ]}
             >
               {!compact && subtitle ? (

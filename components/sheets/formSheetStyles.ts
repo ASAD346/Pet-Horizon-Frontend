@@ -35,6 +35,7 @@ export const formSheetStyles = StyleSheet.create({
     borderTopLeftRadius: 28, // Premium roundness
     borderTopRightRadius: 28,
     maxHeight: '92%',
+    flexShrink: 1,
     overflow: 'hidden',
     ...Platform.select({
       ios: {
