@@ -1,18 +1,30 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from '../home/ColorIconBadge';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { SkeletonList } from '@/components/ui/skeletons';
 import { homePillCard } from '../home/homeStyles';
 import { useLocalization } from '@/hooks/useLocalization';
+import { useTimezone } from '@/hooks/useTimezone';
+import { formatInTimeZone } from '@/lib/timezone';
 import { EmptyState } from '../ui/EmptyState';
 import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import type { ExpenseTrackerCategory, ExpenseTransaction } from './expenseTrackerData';
 
 const BRAND_GREEN = '#2E7D32';
+const INITIAL_LIMIT = 5;
+
+export type TimeFilter = 'today' | 'week' | 'month';
+
+const TIME_FILTERS: { id: TimeFilter; label: string }[] = [
+  { id: 'today', label: 'Today' },
+  { id: 'week', label: 'This Week' },
+  { id: 'month', label: 'This Month' },
+];
 
 interface RecentTransactionsSectionProps {
   categoryFilter: ExpenseTrackerCategory;
@@ -24,10 +36,45 @@ interface RecentTransactionsSectionProps {
 
 function filterTransactions(
   items: ExpenseTransaction[],
-  filter: ExpenseTrackerCategory,
+  categoryFilter: ExpenseTrackerCategory,
+  timeFilter: TimeFilter,
+  timezone: string,
 ): ExpenseTransaction[] {
-  if (filter === 'all') return items;
-  return items.filter((item) => item.category === filter);
+  let result = items;
+  if (categoryFilter !== 'all') {
+    result = result.filter((item) => item.category === categoryFilter);
+  }
+  if (timeFilter === 'month') {
+    return result;
+  }
+
+  const now = new Date();
+  const todayStr = formatInTimeZone(now, timezone, 'yyyy-MM-dd');
+
+  if (timeFilter === 'today') {
+    return result.filter((item) => {
+      if (!item.expenseDate) return false;
+      const itemDateStr = formatInTimeZone(item.expenseDate, timezone, 'yyyy-MM-dd');
+      return itemDateStr === todayStr;
+    });
+  }
+
+  if (timeFilter === 'week') {
+    // Start of week (Monday) in timezone
+    const dayOfWeek = now.getDay();
+    const diffToMonday = (dayOfWeek + 6) % 7;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - diffToMonday);
+    const mondayStr = formatInTimeZone(monday, timezone, 'yyyy-MM-dd');
+
+    return result.filter((item) => {
+      if (!item.expenseDate) return false;
+      const itemDateStr = formatInTimeZone(item.expenseDate, timezone, 'yyyy-MM-dd');
+      return itemDateStr >= mondayStr && itemDateStr <= todayStr;
+    });
+  }
+
+  return result;
 }
 
 export function RecentTransactionsSection({
@@ -39,26 +86,92 @@ export function RecentTransactionsSection({
 }: RecentTransactionsSectionProps) {
   const router = useRouter();
   const { formatCurrency } = useLocalization();
+  const { timezone } = useTimezone();
+
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('month');
+  const [expanded, setExpanded] = useState(false);
+
   const filtered = useMemo(
-    () => filterTransactions(transactions, categoryFilter),
-    [transactions, categoryFilter],
+    () => filterTransactions(transactions, categoryFilter, timeFilter, timezone),
+    [transactions, categoryFilter, timeFilter, timezone],
   );
 
-  const cardBorderColor = isPremium
-    ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
-    : 'rgba(46, 125, 50, 0.12)';  // Soft green border
+  const visibleItems = expanded ? filtered : filtered.slice(0, INITIAL_LIMIT);
+  const overflowCount = filtered.length - INITIAL_LIMIT;
 
-  const iconColor = isPremium ? '#184F2E' : '#2E7D32';
-  const iconBg = isPremium ? 'rgba(212, 160, 23, 0.08)' : 'rgba(46, 125, 50, 0.06)';
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.35)' // Gold trim for premium
+    : 'rgba(46, 125, 50, 0.12)'; // Soft green border
+
+  const brandColor = isPremium ? '#B8860B' : BRAND_GREEN;
+
+  const handleTimeFilterSelect = (tabId: TimeFilter) => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setTimeFilter(tabId);
+    setExpanded(false); // Reset expansion on filter change
+  };
+
+  const handleToggleExpand = () => {
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setExpanded((prev) => !prev);
+  };
+
+  const emptyDescription = useMemo(() => {
+    const timeLabel = timeFilter === 'today' ? 'today' : timeFilter === 'week' ? 'this week' : 'this month';
+    if (categoryFilter === 'all') {
+      return `No expenses recorded ${timeLabel}. Tap below to log one.`;
+    }
+    return `No ${categoryFilter} expenses recorded ${timeLabel}. Tap below to log one.`;
+  }, [categoryFilter, timeFilter]);
 
   return (
     <View style={styles.section}>
-      {/* Section Header */}
-      <View style={styles.sectionHeader}>
-        <View style={styles.labelRow}>
-          <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-            Recent Transactions
-          </AppText>
+      {/* Section Header with Title, Count and Time Filter Slabs */}
+      <View style={styles.headerContainer}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.labelRow}>
+            <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
+              Recent Transactions
+            </AppText>
+            {filtered.length > 0 && (
+              <View style={[styles.countBadge, isPremium && styles.countBadgePremium]}>
+                <AppText variant="caption" weight="700" color={brandColor} style={styles.countText}>
+                  {filtered.length}
+                </AppText>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Time Slab Pills (Today / This Week / This Month) */}
+        <View style={styles.timePillsRow}>
+          {TIME_FILTERS.map((tab) => {
+            const active = timeFilter === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                onPress={() => handleTimeFilterSelect(tab.id)}
+                style={[
+                  styles.timePill,
+                  active && (isPremium ? styles.timePillActivePremium : styles.timePillActive),
+                ]}
+                activeOpacity={0.8}
+              >
+                <AppText
+                  variant="caption"
+                  weight={active ? '800' : '600'}
+                  color={active ? '#FFFFFF' : HomeTheme.textMuted}
+                  style={styles.timePillText}
+                >
+                  {tab.label}
+                </AppText>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -67,50 +180,79 @@ export function RecentTransactionsSection({
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="receipt-outline"
-          title="No expenses yet"
-          description={categoryFilter === 'all'
-            ? "Start tracking your pet's costs — vet visits, food, grooming, and more. Staying on budget has never been easier."
-            : `No ${categoryFilter} expenses recorded this month. Add one to start tracking.`}
+          title="No expenses found"
+          description={emptyDescription}
           buttonLabel="Log First Expense"
           onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
         />
       ) : (
-        filtered.map((item, index) => (
-          <AnimatedStackItem
-            key={item.id}
-            index={index}
-            direction="up"
-            staggerMs={55}
-            distance={24}
-          >
-            <View style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
-              {/* Category Icon Badge */}
-              <ColorIconBadge
-                color={item.color}
-                backgroundColor={item.bg}
-                materialIcon={item.materialIcon}
-                size={38}
-                iconSize={18}
-                shape="circle"
-              />
+        <>
+          {visibleItems.map((item, index) => (
+            <AnimatedStackItem
+              key={item.id}
+              index={index}
+              direction="up"
+              staggerMs={55}
+              distance={24}
+            >
+              <View style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
+                {/* Category Icon Badge */}
+                <ColorIconBadge
+                  color={item.color}
+                  backgroundColor={item.bg}
+                  materialIcon={item.materialIcon}
+                  size={38}
+                  iconSize={18}
+                  shape="circle"
+                />
 
-              {/* Info */}
-              <View style={styles.textBlock}>
-                <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.title}>
-                  {item.title}
-                </AppText>
-                <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
-                  {item.subtitle}
+                {/* Info */}
+                <View style={styles.textBlock}>
+                  <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.title}>
+                    {item.title}
+                  </AppText>
+                  <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
+                    {item.subtitle}
+                  </AppText>
+                </View>
+
+                {/* Amount */}
+                <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
+                  -{formatCurrency(item.amountVal)}
                 </AppText>
               </View>
+            </AnimatedStackItem>
+          ))}
 
-              {/* Amount */}
-              <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
-                -{formatCurrency(item.amountVal)}
-              </AppText>
-            </View>
-          </AnimatedStackItem>
-        ))
+          {/* See More / Show Less Button */}
+          {filtered.length > INITIAL_LIMIT && (
+            <TouchableOpacity
+              onPress={handleToggleExpand}
+              style={[
+                styles.moreBtn,
+                isPremium && styles.moreBtnPremium,
+              ]}
+              activeOpacity={0.75}
+            >
+              <View style={styles.moreBtnContent}>
+                <AppText
+                  variant="caption"
+                  weight="700"
+                  color={brandColor}
+                >
+                  {expanded
+                    ? 'Show Less'
+                    : `+${overflowCount} more transaction${overflowCount !== 1 ? 's' : ''} · See More`}
+                </AppText>
+                <Ionicons
+                  name={expanded ? 'chevron-up' : 'chevron-down'}
+                  size={14}
+                  color={brandColor}
+                />
+              </View>
+            </TouchableOpacity>
+          )}
+        </>
       )}
     </View>
   );
@@ -120,22 +262,19 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing.lg,
   },
+  headerContainer: {
+    marginBottom: Spacing.sm,
+    gap: 8,
+  },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
   },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  labelDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: BRAND_GREEN,
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 16,
@@ -143,13 +282,41 @@ const styles = StyleSheet.create({
   countBadge: {
     backgroundColor: 'rgba(46,125,50,0.08)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
     borderRadius: Radius.full,
     borderWidth: 1,
     borderColor: 'rgba(46,125,50,0.15)',
   },
+  countBadgePremium: {
+    backgroundColor: 'rgba(212, 160, 23, 0.08)',
+    borderColor: 'rgba(212, 160, 23, 0.2)',
+  },
   countText: {
     fontSize: 11,
+  },
+  timePillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: Radius.full,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  timePillActive: {
+    backgroundColor: BRAND_GREEN,
+    borderColor: BRAND_GREEN,
+  },
+  timePillActivePremium: {
+    backgroundColor: '#0A2617',
+    borderColor: '#D4A017',
+  },
+  timePillText: {
+    fontSize: 11.5,
   },
   transactionRow: {
     flexDirection: 'row',
@@ -188,25 +355,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'right',
   },
-  emptyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.md + 4,
-    paddingVertical: Spacing.xl,
-    paddingHorizontal: Spacing.lg,
+  moreBtn: {
     alignItems: 'center',
-    gap: Spacing.sm,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-    }),
+    justifyContent: 'center',
+    paddingVertical: 9,
+    marginTop: 2,
+    marginHorizontal: 2,
+    borderRadius: Radius.md,
+    backgroundColor: 'rgba(46, 125, 50, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(46, 125, 50, 0.12)',
   },
-  emptyText: {
-    textAlign: 'center',
-    lineHeight: 20,
+  moreBtnPremium: {
+    backgroundColor: 'rgba(212, 160, 23, 0.06)',
+    borderColor: 'rgba(212, 160, 23, 0.2)',
+  },
+  moreBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
 });

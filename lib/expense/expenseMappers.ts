@@ -23,6 +23,7 @@ export type ExpenseTransaction = {
   materialIcon: MciIcon;
   color: string;
   bg: string;
+  expenseDate?: string;
 };
 export const EXPENSE_TRACKER_CATEGORIES: {
   id: ExpenseTrackerCategory;
@@ -101,6 +102,7 @@ export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC', c
     materialIcon: style.icon,
     color: style.color,
     bg: style.bg,
+    expenseDate: expense.expenseDate,
   };
 }
 
