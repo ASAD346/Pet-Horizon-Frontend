@@ -161,7 +161,7 @@ export function MedicineEntryCard({
           required
           value={entry.doseAmount}
           onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
-          placeholder="1"
+          placeholder="e.g. 1"
           unit={getDoseUnitLabel(entry.doseForm)}
         />
       </View>

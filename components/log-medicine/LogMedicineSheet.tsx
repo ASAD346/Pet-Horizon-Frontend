@@ -51,7 +51,7 @@ export function LogMedicineSheet({
   const [entry, setEntry] = useState<MedicineEntryState>(() => initialEntry ?? {
     id: 'draft',
     medicineName: '',
-    doseAmount: '1',
+    doseAmount: '',
     doseForm: 'tablet',
     frequency: 'daily',
     daysOfWeek: [],
@@ -69,7 +69,7 @@ export function LogMedicineSheet({
       setEntry({
         id: 'draft',
         medicineName: '',
-        doseAmount: '1',
+        doseAmount: '',
         doseForm: 'tablet',
         frequency: 'daily',
         daysOfWeek: [],

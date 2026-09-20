@@ -51,7 +51,7 @@ export function LogWalkSheet({
   const [entry, setEntry] = useState<WalkEntryState>(() => ({
     id: 'draft',
     walkTime: WALK_TIME_OPTIONS[0].value,
-    duration: '30',
+    duration: '',
     walkClockTime: defaultWalkTimeDate(),
     scheduleDate: createDefaultScheduleDate('single'),
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
@@ -66,7 +66,7 @@ export function LogWalkSheet({
       setEntry({
         id: 'draft',
         walkTime: WALK_TIME_OPTIONS[0].value,
-        duration: '30',
+        duration: '',
         walkClockTime: defaultWalkTimeDate(),
         scheduleDate: createDefaultScheduleDate('single'),
         reminderMinutes: DEFAULT_REMINDER_MINUTES,

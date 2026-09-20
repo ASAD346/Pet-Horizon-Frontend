@@ -147,7 +147,7 @@ export function WalkEntryCard({
               required
               value={entry.duration}
               onChangeText={(duration) => onChange({ ...entry, duration })}
-              placeholder="30"
+              placeholder="e.g. 30"
               unit="mins"
             />
           </View>

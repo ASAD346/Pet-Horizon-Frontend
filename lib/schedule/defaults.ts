@@ -35,7 +35,7 @@ export function createFeedingEntry(
   return {
     id: newEntryId(),
     mealType,
-    amount: '2',
+    amount: '',
     unit,
     feedingTime: defaultFeedingTimeDate(),
     scheduleDate: createDefaultScheduleDate('single'),
@@ -49,7 +49,7 @@ export function createWalkEntry(): WalkEntryState {
   return {
     id: newEntryId(),
     walkTime: WALK_TIME_OPTIONS[0].value,
-    duration: '30',
+    duration: '',
     walkClockTime: defaultWalkTimeDate(),
     scheduleDate: createDefaultScheduleDate('single'),
     notificationsOn: true,
@@ -62,7 +62,7 @@ export function createMedicineEntry(): MedicineEntryState {
   return {
     id: newEntryId(),
     medicineName: '',
-    doseAmount: '1',
+    doseAmount: '',
     doseForm: 'tablet',
     frequency: 'daily',
     daysOfWeek: [],

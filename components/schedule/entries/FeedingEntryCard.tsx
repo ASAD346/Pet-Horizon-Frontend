@@ -163,7 +163,7 @@ export function FeedingEntryCard({
               required
               value={entry.amount}
               onChangeText={(amount) => onChange({ ...entry, amount })}
-              placeholder="1"
+              placeholder="e.g. 1"
             />
           </View>
           <View style={{ flex: 1 }}>
