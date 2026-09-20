@@ -26,9 +26,11 @@ export const TaskMappings: Record<string, string> = {
   nail_trimming: 'Nail Trim',
   haircut: 'Haircut',
   ear_cleaning: 'Ear Cleaning',
-  brushing: 'Brushing',
+  brushing: 'Hair Brushing',
   wing_trim: 'Wing Trim',
   teeth_brushing: 'Teeth Brushing',
+  flea_treatment: 'Flea Treatment',
+  eye_cleaning: 'Eye Cleaning',
 
   // Categories / Fallbacks
   feeding: 'Feeding',

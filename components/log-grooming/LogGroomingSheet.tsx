@@ -185,6 +185,7 @@ export function LogGroomingSheet({
         visible={visible}
         onClose={onClose}
         title={entry.recordId ? 'Edit Grooming' : 'Log Grooming'}
+        subtitle="Schedule grooming tasks & hygiene alerts"
         icon={GROOMING_THEME.icon}
         accentColor={GROOMING_THEME.color}
         accentBg={GROOMING_THEME.bg}
@@ -211,6 +212,7 @@ export function LogGroomingSheet({
       visible={visible}
       onClose={onClose}
       title={entry.recordId ? 'Edit Grooming' : 'Log Grooming'}
+      subtitle="Schedule grooming tasks & hygiene alerts"
       icon={GROOMING_THEME.icon}
       accentColor={GROOMING_THEME.color}
       accentBg={GROOMING_THEME.bg}
