@@ -68,7 +68,7 @@ export function LogFoodSheet({
     amount: '2',
     unit: '',
     feedingTime: defaultFeedingTimeDate(),
-    scheduleDate: createDefaultScheduleDate('ongoing'),
+    scheduleDate: createDefaultScheduleDate('single'),
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notificationsOn: true,
     notes: '',
@@ -84,7 +84,7 @@ export function LogFoodSheet({
         amount: '2',
         unit: '',
         feedingTime: defaultFeedingTimeDate(),
-        scheduleDate: createDefaultScheduleDate('ongoing'),
+        scheduleDate: createDefaultScheduleDate('single'),
         reminderMinutes: DEFAULT_REMINDER_MINUTES,
         notificationsOn: true,
         notes: '',
@@ -229,6 +229,7 @@ export function LogFoodSheet({
         visible={visible}
         onClose={onClose}
         title={entry.scheduleId ? 'Edit Feeding' : 'Log Food'}
+        subtitle="Schedule meals & feeding reminders"
         icon={FOOD_THEME.icon}
         accentColor={FOOD_THEME.color}
         accentBg={FOOD_THEME.bg}
@@ -255,6 +256,7 @@ export function LogFoodSheet({
       visible={visible}
       onClose={onClose}
       title={entry.scheduleId ? 'Edit Feeding' : 'Log Food'}
+      subtitle="Schedule meals & feeding reminders"
       icon={FOOD_THEME.icon}
       accentColor={FOOD_THEME.color}
       accentBg={FOOD_THEME.bg}

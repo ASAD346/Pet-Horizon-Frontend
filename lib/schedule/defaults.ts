@@ -38,7 +38,7 @@ export function createFeedingEntry(
     amount: '2',
     unit,
     feedingTime: defaultFeedingTimeDate(),
-    scheduleDate: createDefaultScheduleDate('ongoing'),
+    scheduleDate: createDefaultScheduleDate('single'),
     notificationsOn: true,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
