@@ -13,7 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppDispatch } from '@/redux/store';
 import { AppText } from '@/components/ui/AppText';
-import { FormSheetShell, FormSection } from '@/components/sheets';
+import { FormSheetShell } from '@/components/sheets';
 import { Radius, Spacing } from '@/constants/theme';
 import { FormSheetColors } from '@/components/sheets/formSheetStyles';
 import { getErrorMessage } from '@/lib/api/errors';
@@ -337,8 +337,9 @@ export function MemberPermissionsSheet({
       blockIfReadOnly={false}
       compact
     >
-      {/* ── 1. Member Profile Hero Card with Remove Action ── */}
-      <View style={styles.memberCard}>
+      {/* ── Single Unified Permissions Card ── */}
+      <View style={styles.unifiedCard}>
+        {/* 1. Member Profile Header */}
         <View style={styles.memberHeaderRow}>
           <MemberAvatarLarge name={memberName} pictureUrl={memberPicture} />
           <View style={styles.memberInfoCol}>
@@ -366,15 +367,21 @@ export function MemberPermissionsSheet({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Remove member"
             >
-              <Ionicons name="trash-outline" size={19} color="#DC2626" />
+              <Ionicons name="trash-outline" size={18} color="#DC2626" />
             </TouchableOpacity>
           )}
         </View>
-      </View>
 
-      {/* ── 2. Module Permissions ── */}
-      <FormSection title="Module Permissions" icon="view-grid-outline">
-        <View style={styles.modulesCard}>
+        {/* 2. Section Header */}
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.sectionHeaderIconWrap}>
+            <MaterialCommunityIcons name="view-grid-outline" size={14} color="#166534" />
+          </View>
+          <AppText style={styles.sectionHeaderTitle}>MODULE ACCESS</AppText>
+        </View>
+
+        {/* 3. Module Permissions List */}
+        <View style={styles.moduleList}>
           {MODULE_CONFIG.map((mod, idx) => {
             const enabled = getVal(mod.id);
             const isLast = idx === MODULE_CONFIG.length - 1;
@@ -394,13 +401,13 @@ export function MemberPermissionsSheet({
                     {mod.iconLib === 'material' ? (
                       <MaterialCommunityIcons
                         name={mod.icon as any}
-                        size={20}
+                        size={19}
                         color={enabled ? mod.color : '#94A3B8'}
                       />
                     ) : (
                       <Ionicons
                         name={mod.icon as any}
-                        size={20}
+                        size={19}
                         color={enabled ? mod.color : '#94A3B8'}
                       />
                     )}
@@ -440,27 +447,26 @@ export function MemberPermissionsSheet({
           })}
         </View>
 
-        {/* Always-on info note */}
+        {/* 4. Integrated Note Box */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={17} color="#0284C7" />
+          <Ionicons name="information-circle-outline" size={16} color="#0284C7" />
           <AppText style={styles.infoText}>
             Journal and Expenses modules are always enabled for all family members.
           </AppText>
         </View>
-      </FormSection>
+      </View>
     </FormSheetShell>
   );
 }
 
 // ─── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  memberCard: {
+  unifiedCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     padding: Spacing.md,
-    marginBottom: Spacing.sm,
     ...Platform.select({
       ios: {
         shadowColor: '#0F172A',
@@ -474,16 +480,19 @@ const styles = StyleSheet.create({
   memberHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   memberInfoCol: {
     flex: 1,
     gap: 4,
   },
   avatarWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     backgroundColor: '#F8FAFC',
@@ -503,7 +512,7 @@ const styles = StyleSheet.create({
   },
   avatarInitials: {
     color: '#FFFFFF',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '800',
   },
   badgeRow: {
@@ -511,7 +520,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     flexWrap: 'wrap',
-    marginTop: 2,
   },
   memberBadge: {
     flexDirection: 'row',
@@ -520,7 +528,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F5E9',
     borderRadius: 6,
     paddingHorizontal: 7,
-    paddingVertical: 2.5,
+    paddingVertical: 2,
     borderWidth: 1,
     borderColor: '#C8E6C9',
   },
@@ -531,33 +539,42 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
 
-  // Modules card
-  modulesCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
-      },
-      android: { elevation: 1 },
-    }),
+  // Section Header
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  sectionHeaderIconWrap: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionHeaderTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.6,
+  },
+
+  // Modules list
+  moduleList: {
+    marginTop: 2,
   },
   moduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 10,
     gap: 12,
   },
   modIcon: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -565,12 +582,12 @@ const styles = StyleSheet.create({
   },
   modTextCol: {
     flex: 1,
-    gap: 2,
+    gap: 1,
   },
   modDivider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginLeft: 64,
+    marginLeft: 48,
   },
   infoBox: {
     flexDirection: 'row',
@@ -582,7 +599,7 @@ const styles = StyleSheet.create({
     borderColor: '#BAE6FD',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    marginTop: 12,
+    marginTop: 10,
   },
   infoText: {
     flex: 1,
@@ -594,9 +611,9 @@ const styles = StyleSheet.create({
 
   // Header Remove Button
   headerRemoveBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
