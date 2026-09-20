@@ -345,24 +345,12 @@ export function MemberPermissionsSheet({
             <AppText variant="h3" weight="800" color="#0F172A" numberOfLines={1}>
               {memberName}
             </AppText>
-            {memberEmail ? (
-              <AppText variant="caption" color="#64748B" numberOfLines={1} style={styles.emailText}>
-                {memberEmail}
-              </AppText>
-            ) : null}
 
             <View style={styles.badgeRow}>
               <View style={styles.memberBadge}>
                 <Ionicons name="person-circle-outline" size={13} color="#166534" />
                 <AppText style={styles.memberBadgeText}>MEMBER</AppText>
               </View>
-
-              {isPremium && (
-                <View style={styles.premiumBadge}>
-                  <Ionicons name="sparkles" size={11} color="#D97706" />
-                  <AppText style={styles.premiumBadgeText}>Premium</AppText>
-                </View>
-              )}
             </View>
           </View>
 
@@ -490,11 +478,7 @@ const styles = StyleSheet.create({
   },
   memberInfoCol: {
     flex: 1,
-    gap: 2,
-  },
-  emailText: {
-    fontSize: 12,
-    marginBottom: 4,
+    gap: 4,
   },
   avatarWrap: {
     width: 52,
@@ -545,22 +529,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.4,
-  },
-  premiumBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#FEF3C7',
-    borderColor: '#FDE68A',
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2.5,
-  },
-  premiumBadgeText: {
-    color: '#B45309',
-    fontSize: 10,
-    fontWeight: '800',
   },
 
   // Modules card
