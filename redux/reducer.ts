@@ -1,10 +1,12 @@
 import { combineReducers, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { AuthSession } from '@/types/auth';
+import type { ApiPet } from '@/types/pet';
 import type { AppState, AuthState, ToastState, UiState, FamilyState } from './types';
 
 const initialAuthState: AuthState = {
   user: null,
   token: null,
+  activePet: null,
   isBootstrapping: true,
 };
 
@@ -27,10 +29,23 @@ const authSlice = createSlice({
     setSession: (state, action: PayloadAction<AuthSession>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      // If user activePetId changed and activePet._id doesn't match, clear activePet unless specified
+      if (state.activePet && action.payload.user?.activePetId !== state.activePet._id) {
+        state.activePet = null;
+      }
+    },
+    setActivePet: (state, action: PayloadAction<ApiPet | null>) => {
+      state.activePet = action.payload;
+      if (action.payload && state.user) {
+        state.user.activePetId = action.payload._id;
+      } else if (!action.payload && state.user) {
+        state.user.activePetId = null;
+      }
     },
     clearSession: (state) => {
       state.user = null;
       state.token = null;
+      state.activePet = null;
     },
     bootstrapComplete: (state) => {
       state.isBootstrapping = false;
@@ -79,6 +94,7 @@ const familySlice = createSlice({
 
 export const {
   setSession: setSessionAction,
+  setActivePet: setActivePetAction,
   clearSession: clearSessionAction,
   bootstrapComplete: bootstrapCompleteAction,
 } = authSlice.actions;
@@ -108,9 +124,10 @@ export type { AppState, AuthState, ToastState, UiState, FamilyState } from './ty
 // Typed selectors
 export const selectAuthUser = (state: AppState) => state.auth.user;
 export const selectAuthToken = (state: AppState) => state.auth.token;
+export const selectActivePet = (state: AppState) => state.auth.activePet;
 export const selectIsAuthenticated = (state: AppState) => Boolean(state.auth.token);
 export const selectIsBootstrapping = (state: AppState) => state.auth.isBootstrapping;
 export const selectToastMessage = (state: AppState) => state.toast.message;
 export const selectToastType = (state: AppState) => state.toast.type;
 export const selectIsFormReadOnly = (state: AppState) => state.ui.isFormReadOnly;
-export const selectActivePetId = (state: AppState) => state.auth.user?.activePetId || null;
+export const selectActivePetId = (state: AppState) => state.auth.activePet?._id || state.auth.user?.activePetId || null;

@@ -11,51 +11,60 @@ import { fetchActivePetId, fetchPetById } from '@/services/pets/petApi';
 import type { ApiPet } from '@/types/pet';
 import { useFocusReload } from './useStaleLoadScope';
 import { useAuth } from './useAuth';
+import { useAppDispatch, useAppSelector } from '@/redux/store';
+import { selectActivePet, setActivePetAction } from '@/redux/reducer';
 
 export function useActivePet(token: string | null) {
+  const dispatch = useAppDispatch();
+  const reduxPet = useAppSelector(selectActivePet);
   const { user, setSession } = useAuth();
-  const activePetId = user?.activePetId || null;
-  const [pet, setPet] = useState<ApiPet | null>(() => getActivePetCache(token) || null);
-  const [loading, setLoading] = useState(() => Boolean(token && !activePetCacheLoaded(token)));
+  const activePetId = reduxPet?._id || user?.activePetId || null;
+
+  const [localPet, setLocalPet] = useState<ApiPet | null>(() => reduxPet || getActivePetCache(token) || null);
+  const currentPet = reduxPet || localPet;
+  const [loading, setLoading] = useState(() => Boolean(token && !currentPet && !activePetCacheLoaded(token)));
 
   const reload = useCallback(async (force = false) => {
     if (!token) {
-      setPet(null);
+      setLocalPet(null);
+      dispatch(setActivePetAction(null));
       clearActivePetCache();
       setLoading(false);
       return;
     }
 
     const cacheLoaded = activePetCacheLoaded(token);
-    if (cacheLoaded && !force) {
+    const cached = getActivePetCache(token);
+
+    if (cached && !reduxPet) {
+      setLocalPet(cached);
+      dispatch(setActivePetAction(cached));
+    }
+
+    if (cacheLoaded && !force && (reduxPet || cached)) {
       return;
     }
 
-    const cached = getActivePetCache(token);
-    if (cached) {
-      setPet(cached);
-    }
-
-    const block = !cacheLoaded;
+    const block = !reduxPet && !cached;
     if (block) setLoading(true);
 
     try {
       const { activePetId: serverActivePetId } = await fetchActivePetId(token);
       
-      // Preserve User Intent: If activePetId is already set in local Redux state,
-      // lock that selection and do not let background API calls overwrite it.
       const targetId = activePetId || serverActivePetId;
       if (!targetId) {
-        setPet(null);
+        setLocalPet(null);
+        dispatch(setActivePetAction(null));
         clearActivePetCache();
         log.info('Home', 'No active pet');
         return;
       }
+
       const active = await fetchPetById(token, targetId);
-      setPet(active);
+      setLocalPet(active);
+      dispatch(setActivePetAction(active));
       setActivePetCache(token, active);
 
-      // Sync loaded state back to Redux session to lock it
       if (user && user.activePetId !== targetId) {
         await setSession({
           token,
@@ -63,26 +72,38 @@ export function useActivePet(token: string | null) {
         });
       }
     } catch (error) {
-      if (!cached) {
-        setPet(null);
+      if (!currentPet && !cached) {
+        setLocalPet(null);
+        dispatch(setActivePetAction(null));
         clearActivePetCache();
       }
       log.fail('Home', 'Load active pet failed', getErrorMessage(error));
     } finally {
       setLoading(false);
     }
-  }, [token, activePetId, user, setSession]);
+  }, [token, activePetId, user, setSession, dispatch, reduxPet, currentPet]);
 
   useFocusReload(reload, Boolean(token));
 
   useEffect(() => {
-    setPet(getActivePetCache(token) || null);
-    setLoading(Boolean(token && !activePetCacheLoaded(token)));
-    if (token) {
-      void reload(true);
+    if (reduxPet) {
+      setLocalPet(reduxPet);
+      setLoading(false);
+    } else {
+      const cached = getActivePetCache(token);
+      if (cached) {
+        setLocalPet(cached);
+        dispatch(setActivePetAction(cached));
+      }
     }
-  }, [token, activePetId, reload]);
+  }, [reduxPet, token, dispatch]);
 
-  return { pet, loading, reload };
+  useEffect(() => {
+    if (token && !reduxPet) {
+      void reload(false);
+    }
+  }, [token, activePetId, reload, reduxPet]);
+
+  return { pet: currentPet, loading, reload };
 }
 

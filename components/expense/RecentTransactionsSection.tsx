@@ -33,7 +33,7 @@ interface RecentTransactionsSectionProps {
   loading?: boolean;
   isPremium?: boolean;
   onAddExpensePress?: () => void;
-  refreshControl?: React.ReactElement;
+  refreshControl?: React.ReactElement<any>;
   contentPaddingBottom?: number;
 }
 

@@ -33,7 +33,7 @@ import { formatInTimeZone } from '@/lib/timezone';
 import { useToast } from '@/hooks/useToast';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
 import { useQueryClient } from '@tanstack/react-query';
-import { clearActivePetCache } from '@/lib/pet/activePetCache';
+import { prefetchAllPetTabData } from '@/lib/query/prefetchQueries';
 
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
@@ -107,10 +107,7 @@ export default function HomeScreen() {
   const { token, user, setSession } = useAuth();
 
   const { pet, loading, reload: reloadPet } = useActivePet(token);
-  const [selectedPet, setSelectedPet] = useState<ApiPet | null>(null);
-  const [targetPetId, setTargetPetId] = useState<string | null | undefined>(pet?._id);
-
-  const effectivePet = selectedPet || pet;
+  const effectivePet = pet;
   const effectiveLoading = loading && !effectivePet;
 
   const currentPetWorkspace = useAppSelector((state) => ((state as any).pet?.activeWorkspace || (state.family as any)?.activeWorkspace)); 
@@ -135,13 +132,6 @@ export default function HomeScreen() {
     user?._id,
   );
 
-  useEffect(() => {
-    if (!switchingId) {
-      setTargetPetId(pet?._id ?? null);
-      setSelectedPet(pet ?? null);
-    }
-  }, [pet, switchingId]);
-
   const {
     data: dashboardData,
     isLoading: dashboardLoading,
@@ -155,7 +145,7 @@ export default function HomeScreen() {
     skipMedicine,
     completeGrooming,
     completeVaccination,
-  } = useDashboardQuery(token, targetPetId, false);
+  } = useDashboardQuery(token, effectivePet?._id, false);
 
   const { showToast } = useToast();
 
@@ -507,43 +497,46 @@ export default function HomeScreen() {
     setGroomingManageRecord(record);
     setGroomingManageVisible(true);
   }, [groomingRecords]);
-  const handleSwitchPet = useCallback(async (petId: string) => {
-    if (!token || petId === effectivePet?._id) {
-      setPetSwitcherVisible(false);
-      return;
-    }
-    
-    // Close switcher sheet instantly for snappy UX
-    setPetSwitcherVisible(false);
-    
-    // Immediately select target pet optimistically from current list to avoid blank/loading flash
-    const nextPet = pets.find((p) => p._id === petId) || null;
-    if (nextPet) {
-      setSelectedPet(nextPet);
-    }
-    
-    setTargetPetId(petId);
-    
-    try {
-      if (user) {
-        await activatePetSession({
-          token,
-          petId,
-          user,
-          setSession,
-        });
+  const handleSwitchPet = useCallback(
+    async (petId: string, directPet?: ApiPet) => {
+      if (!token || petId === pet?._id) {
+        setPetSwitcherVisible(false);
+        return;
       }
-      // Reload active pet and dashboard in sync
-      await Promise.all([
-        reloadPet(true),
-        reloadPets(),
-        refetchDashboard(),
-      ]);
-    } catch (err) {
-      log.fail('Home', 'Switch pet failed', getErrorMessage(err));
-      Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
-    }
-  }, [token, effectivePet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard]);
+
+      // Close switcher sheet instantly for snappy UX
+      setPetSwitcherVisible(false);
+
+      const nextPet = directPet || pets.find((p) => p._id === petId) || null;
+
+      // Prefetch multi-tab queries immediately in background
+      if (nextPet) {
+        void prefetchAllPetTabData(queryClient, token, nextPet);
+      }
+
+      try {
+        if (user) {
+          await activatePetSession({
+            token,
+            petId,
+            user,
+            setSession,
+            nextPet,
+          });
+        }
+        // Reload active pet, pet list, and dashboard in sync
+        await Promise.all([
+          reloadPet(true),
+          reloadPets(),
+          refetchDashboard(),
+        ]);
+      } catch (err) {
+        log.fail('Home', 'Switch pet failed', getErrorMessage(err));
+        Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
+      }
+    },
+    [token, pet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient],
+  );
 
   const handleAddPet = useCallback(() => {
     if (pets.length > 0 && !canAddAnotherPet(pets.length, isPremium)) {

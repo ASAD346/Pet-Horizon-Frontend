@@ -11,6 +11,7 @@ import { queryClient } from '@/app/_layout';
 import { signOutGoogle } from '@/lib/auth/googleSignIn';
 import {
   setSessionAction,
+  setActivePetAction,
   clearSessionAction,
   bootstrapCompleteAction,
   showToastActionInternal,
@@ -35,6 +36,7 @@ export const showToastAction = (message: string, type: ToastState['type'] = 'inf
 // Re-export actions for backward compatibility
 export {
   setSessionAction,
+  setActivePetAction,
   clearSessionAction,
   bootstrapCompleteAction,
   hideToastAction,
@@ -56,6 +58,7 @@ export function bootstrapAuth(): AppThunk {
             const pet = JSON.parse(cachedPetJson);
             if (pet && typeof pet._id === 'string') {
               initializeActivePetCache(stored.token, pet);
+              dispatch(setActivePetAction(pet));
               log.ok('Auth', 'Cached active pet restored', { petId: pet._id });
             } else {
               log.warn('Auth', 'Discarding corrupted cached active pet', { petId: pet?._id });

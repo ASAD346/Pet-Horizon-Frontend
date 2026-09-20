@@ -1,8 +1,10 @@
 import type { ApiUser } from '@/types/auth';
+import type { ApiPet } from '@/types/pet';
 
 export interface AuthState {
   user: ApiUser | null;
   token: string | null;
+  activePet: ApiPet | null;
   isBootstrapping: boolean;
 }
 
