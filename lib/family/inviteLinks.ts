@@ -43,12 +43,18 @@ export function buildInviteShareMessage(
   webLink: string,
   appLink?: string,
 ): string {
-  const petLine = invite.petName
-    ? `Join ${invite.petName}'s care team on Pet Horizon.`
-    : 'Join my pet on Pet Horizon.';
+  const petName = invite.petName || 'our pet';
   const directLink = appLink || webLink;
 
-  return `${petLine}\n\n${directLink}`;
+  return [
+    `🐾 You've been invited to join ${petName}'s care team on Pet Horizon!`,
+    '',
+    'Steps to join:',
+    '1. Install the Pet Horizon app on your phone (if not already installed).',
+    '2. Tap the link below to accept the invitation and get access:',
+    '',
+    directLink,
+  ].join('\n');
 }
 
 /** Extract invite token from an incoming app or web URL. */
