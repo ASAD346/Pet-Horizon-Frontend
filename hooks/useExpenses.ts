@@ -19,7 +19,7 @@ export function useExpenses(
   const { currency } = useLocalization();
   const queryKey = ['expenses', petId, month, currency];
 
-  const { data, isFetching, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey,
     queryFn: async () => {
       if (!token || !petId) return [];
@@ -27,12 +27,13 @@ export function useExpenses(
       return rows.map((row) => mapExpenseToTransaction(row, timezone, currency));
     },
     enabled: Boolean(token && petId),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 2, // 2 min stale time for instant load
   });
 
   return {
     expenses: data ?? [],
-    loading: isFetching,
+    loading: isLoading && !data,
+    isFetching,
     error: error ? getErrorMessage(error) : null,
     reload: () => refetch(),
     month,
