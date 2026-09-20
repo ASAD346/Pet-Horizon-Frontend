@@ -24,7 +24,28 @@ export type ExpenseTransaction = {
   color: string;
   bg: string;
   expenseDate?: string;
+  createdAt?: string;
 };
+
+export function getExpenseTimestamp(transaction: ExpenseTransaction): number {
+  if (transaction.createdAt) {
+    const t = parseSafeDate(transaction.createdAt).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  if (transaction.id && transaction.id.length === 24) {
+    try {
+      const idTime = parseInt(transaction.id.substring(0, 8), 16) * 1000;
+      if (!isNaN(idTime) && idTime > 0) return idTime;
+    } catch {
+      // ignore
+    }
+  }
+  if (transaction.expenseDate) {
+    const t = parseSafeDate(transaction.expenseDate).getTime();
+    if (!isNaN(t) && t > 0) return t;
+  }
+  return 0;
+}
 export const EXPENSE_TRACKER_CATEGORIES: {
   id: ExpenseTrackerCategory;
   label: string;
@@ -92,7 +113,7 @@ export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC', c
   const style = CATEGORY_STYLE[category];
   const note = expense.note?.trim();
   const title = note || category.charAt(0).toUpperCase() + category.slice(1);
-  const dateIso = expense.expenseDate || expense.createdAt || new Date().toISOString();
+  const dateIso = expense.expenseDate || (expense as any).date || expense.createdAt || new Date().toISOString();
   return {
     id: expense._id,
     title,
@@ -104,6 +125,7 @@ export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC', c
     color: style.color,
     bg: style.bg,
     expenseDate: dateIso,
+    createdAt: expense.createdAt,
   };
 }
 

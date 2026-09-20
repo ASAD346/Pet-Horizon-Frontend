@@ -14,6 +14,7 @@ import { formatInTimeZone, parseSafeDate } from '@/lib/timezone';
 import { EmptyState } from '../ui/EmptyState';
 import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import type { ExpenseTrackerCategory, ExpenseTransaction } from './expenseTrackerData';
+import { getExpenseTimestamp } from './expenseTrackerData';
 
 const BRAND_GREEN = '#2E7D32';
 const INITIAL_LIMIT = 5;
@@ -98,11 +99,7 @@ export function RecentTransactionsSection({
 
   const filtered = useMemo(() => {
     const list = filterTransactions(transactions, categoryFilter, timeFilter, timezone);
-    return [...list].sort((a, b) => {
-      const timeA = a.expenseDate ? parseSafeDate(a.expenseDate).getTime() : 0;
-      const timeB = b.expenseDate ? parseSafeDate(b.expenseDate).getTime() : 0;
-      return timeB - timeA;
-    });
+    return [...list].sort((a, b) => getExpenseTimestamp(b) - getExpenseTimestamp(a));
   }, [transactions, categoryFilter, timeFilter, timezone]);
 
   const visibleItems = expanded ? filtered : filtered.slice(0, INITIAL_LIMIT);
