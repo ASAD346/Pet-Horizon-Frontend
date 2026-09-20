@@ -233,13 +233,6 @@ export function ScheduleDetailSheet({
           icon: 'repeat-outline',
         });
       }
-      if (item.metadata?.remainingPills !== undefined && item.metadata?.remainingPills !== null) {
-        fields.push({
-          label: 'Stock Left',
-          value: `${item.metadata.remainingPills} pills`,
-          icon: 'cube-outline',
-        });
-      }
     }
 
     // Grooming specifics

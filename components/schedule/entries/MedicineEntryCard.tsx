@@ -27,6 +27,7 @@ import {
   DAYS_OF_WEEK_OPTIONS,
   DOSE_FORM_OPTIONS,
   FREQUENCY_OPTIONS,
+  getDoseUnitLabel,
 } from '@/lib/medicine/medicineForm';
 
 const REMINDER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((o) => ({
@@ -95,30 +96,8 @@ export function MedicineEntryCard({
         required
         value={entry.medicineName}
         onChangeText={(medicineName) => onChange({ ...entry, medicineName })}
-        placeholder="e.g. Amoxicillin"
+        placeholder="e.g. Amoxicillin, Eye Drops, Vitamin C"
       />
-
-      <View style={styles.twoColRow}>
-        <View style={styles.halfCol}>
-          <FormNumberInput
-            label="Dose"
-            required
-            value={entry.doseAmount}
-            onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
-            placeholder="1"
-            unit={entry.doseForm === 'tablet' ? 'Qty' : 'ml'}
-          />
-        </View>
-        <View style={styles.halfCol}>
-          <FormNumberInput
-            label="Supply"
-            value={entry.totalPills}
-            onChangeText={(totalPills) => onChange({ ...entry, totalPills })}
-            placeholder="30"
-            unit="Pills"
-          />
-        </View>
-      </View>
 
       <FormSegmentedControl
         label="Form"
@@ -126,6 +105,15 @@ export function MedicineEntryCard({
         options={DOSE_FORM_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
         selected={entry.doseForm}
         onSelect={(doseForm) => onChange({ ...entry, doseForm: doseForm as MedicineEntryState['doseForm'] })}
+      />
+
+      <FormNumberInput
+        label="Dose Amount"
+        required
+        value={entry.doseAmount}
+        onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
+        placeholder="1"
+        unit={getDoseUnitLabel(entry.doseForm)}
       />
 
       {entry.scheduleDate?.mode !== 'single' ? (

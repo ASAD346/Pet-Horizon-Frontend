@@ -11,6 +11,10 @@ export { dateToTimeHHmm, DEFAULT_REMINDER_MINUTES, formatTimeDisplay, REMINDER_M
 export const DOSE_FORM_OPTIONS: { value: MedicineDoseForm; label: string }[] = [
   { value: 'tablet', label: 'Tablet' },
   { value: 'syrup', label: 'Syrup' },
+  { value: 'drops', label: 'Drops' },
+  { value: 'injection', label: 'Injection' },
+  { value: 'cream', label: 'Cream' },
+  { value: 'other', label: 'Other' },
 ];
 
 export const FREQUENCY_OPTIONS: { value: MedicineFrequency; label: string }[] = [
@@ -59,19 +63,48 @@ export function isStartBeforeOrEqualEnd(start: Date, end: Date): boolean {
   return startOfDayDate(start).getTime() <= startOfDayDate(end).getTime();
 }
 
+export function getDoseUnitLabel(doseForm: MedicineDoseForm): string {
+  switch (doseForm) {
+    case 'tablet':
+      return 'Tablets';
+    case 'syrup':
+      return 'ml';
+    case 'drops':
+      return 'Drops';
+    case 'injection':
+      return 'Doses';
+    case 'cream':
+      return 'Apps';
+    case 'other':
+    default:
+      return 'Units';
+  }
+}
+
 export function buildDoseString(amount: string, doseForm: MedicineDoseForm): string | null {
   const trimmed = amount.trim();
   const n = parseFloat(trimmed);
   if (Number.isNaN(n) || n <= 0) return null;
 
-  if (doseForm === 'tablet') {
-    return n === 1 ? '1 tablet' : `${trimmed} tablets`;
+  switch (doseForm) {
+    case 'tablet':
+      return n === 1 ? '1 tablet' : `${trimmed} tablets`;
+    case 'syrup':
+      return `${trimmed} ml`;
+    case 'drops':
+      return n === 1 ? '1 drop' : `${trimmed} drops`;
+    case 'injection':
+      return n === 1 ? '1 injection' : `${trimmed} injections`;
+    case 'cream':
+      return n === 1 ? '1 application' : `${trimmed} applications`;
+    case 'other':
+    default:
+      return n === 1 ? '1 dose' : `${trimmed} doses`;
   }
-
-  return `${trimmed} ml`;
 }
 
 export function parseTotalPills(value: string): number | null {
+  if (!value || !value.trim()) return 0;
   const n = parseInt(value.trim(), 10);
   if (Number.isNaN(n) || n < 0) return null;
   return n;
@@ -80,12 +113,26 @@ export function parseTotalPills(value: string): number | null {
 export function parseDoseString(dose: string): { amount: string; doseForm: MedicineDoseForm } {
   const trimmed = dose.trim().toLowerCase();
   if (!trimmed) return { amount: '1', doseForm: 'tablet' };
+
   if (trimmed.includes('ml')) {
     const n = parseFloat(trimmed);
     return { amount: Number.isNaN(n) ? '1' : String(n), doseForm: 'syrup' };
   }
-  const tabletMatch = trimmed.match(/^([\d.]+)\s*tablets?$/);
+  const dropsMatch = trimmed.match(/^([\d.]+)\s*drops?$/);
+  if (dropsMatch) return { amount: dropsMatch[1], doseForm: 'drops' };
+
+  const injMatch = trimmed.match(/^([\d.]+)\s*injections?$/);
+  if (injMatch) return { amount: injMatch[1], doseForm: 'injection' };
+
+  const creamMatch = trimmed.match(/^([\d.]+)\s*applications?$/);
+  if (creamMatch) return { amount: creamMatch[1], doseForm: 'cream' };
+
+  const tabletMatch = trimmed.match(/^([\d.]+)\s*(?:tablets?|pills?)$/);
   if (tabletMatch) return { amount: tabletMatch[1], doseForm: 'tablet' };
+
+  const doseMatch = trimmed.match(/^([\d.]+)\s*(?:doses?|units?)$/);
+  if (doseMatch) return { amount: doseMatch[1], doseForm: 'other' };
+
   const n = parseFloat(trimmed);
   if (!Number.isNaN(n)) return { amount: String(n), doseForm: 'tablet' };
   return { amount: '1', doseForm: 'tablet' };

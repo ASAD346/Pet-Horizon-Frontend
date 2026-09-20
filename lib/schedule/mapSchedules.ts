@@ -132,7 +132,7 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
         ? String(meta.totalPills)
         : meta.remainingPills != null
           ? String(meta.remainingPills)
-          : '30',
+          : undefined,
     reminderOn: meta.reminder === true,
     reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
     notes: meta.notes ?? item.notes ?? item.description ?? '',

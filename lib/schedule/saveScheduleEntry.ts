@@ -183,8 +183,6 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
   }
   const dateError = validateScheduleDate(entry.scheduleDate);
   if (dateError) throw new Error(dateError);
-  const pills = parseTotalPills(entry.totalPills);
-  if (pills === null) throw new Error('Enter a valid total quantity.');
 
   const timeHHmm = dateToTimeHHmm(entry.medicineTime);
   const noteText = entry.notes.trim();
@@ -201,7 +199,6 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
       dose,
       time: timeHHmm,
       doseForm: entry.doseForm,
-      remainingPills: pills,
       ...datePayload,
       notes: noteText || undefined,
       reminder: entry.reminderOn,
@@ -222,8 +219,6 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
     doseForm: entry.doseForm,
     frequency: entry.frequency,
     daysOfWeek: entry.frequency === 'weekly' ? entry.daysOfWeek : undefined,
-    totalPills: pills,
-    remainingPills: pills,
     notes: noteText || undefined,
     ...datePayload,
     reminder: entry.reminderOn,

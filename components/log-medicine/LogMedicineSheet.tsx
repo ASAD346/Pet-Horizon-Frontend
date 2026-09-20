@@ -56,8 +56,7 @@ export function LogMedicineSheet({
     frequency: 'daily',
     daysOfWeek: [],
     medicineTime: defaultMedicineTimeDate(),
-    scheduleDate: createDefaultScheduleDate('ongoing'),
-    totalPills: '30',
+    scheduleDate: createDefaultScheduleDate('single'),
     reminderOn: true,
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notes: '',
@@ -75,8 +74,7 @@ export function LogMedicineSheet({
         frequency: 'daily',
         daysOfWeek: [],
         medicineTime: defaultMedicineTimeDate(),
-        scheduleDate: createDefaultScheduleDate('ongoing'),
-        totalPills: '30',
+        scheduleDate: createDefaultScheduleDate('single'),
         reminderOn: true,
         reminderMinutes: DEFAULT_REMINDER_MINUTES,
         notes: '',
@@ -123,12 +121,6 @@ export function LogMedicineSheet({
     const dateError = validateScheduleDate(entry.scheduleDate);
     if (dateError) {
       showErrorToast(dateError);
-      return;
-    }
-
-    const pills = parseTotalPills(entry.totalPills);
-    if (pills === null) {
-      showErrorToast('Enter a valid total quantity.');
       return;
     }
 

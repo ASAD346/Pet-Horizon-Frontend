@@ -18,15 +18,12 @@ export function medicineScheduleTitle(item: MedicineScheduleItem): string {
 export function medicineScheduleSubtitle(item: MedicineScheduleItem): string {
   const dose = item.metadata?.dose;
   const doseText = dose ? `${dose} · ` : '';
-  const pills = item.metadata?.remainingPills;
-  const stockText =
-    pills !== undefined && pills !== null ? `${pills} left · ` : '';
 
   if (item.status === 'done') {
     const when = item.completedAt
       ? formatCompletedAt(item.completedAt)
       : formatTimeHHmmDisplay(item.timeOfDay);
-    return `${doseText}${stockText}Done at ${when}`;
+    return `${doseText}Done at ${when}`;
   }
 
   if (item.status === 'skipped') {
@@ -35,7 +32,7 @@ export function medicineScheduleSubtitle(item: MedicineScheduleItem): string {
 
   const freq = item.metadata?.frequency;
   const freqText = freq && freq !== 'daily' ? `${getFrequencyLabel(freq)} · ` : '';
-  return `${doseText}${stockText}${freqText}${formatTimeHHmmDisplay(item.timeOfDay)}`;
+  return `${doseText}${freqText}${formatTimeHHmmDisplay(item.timeOfDay)}`;
 }
 
 export function medicineScheduleColors() {

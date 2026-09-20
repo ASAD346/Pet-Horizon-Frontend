@@ -43,7 +43,7 @@ export interface MedicineEntryState {
   daysOfWeek: DayOfWeekCode[];
   medicineTime: Date;
   scheduleDate: ScheduleDateState;
-  totalPills: string;
+  totalPills?: string;
   reminderOn: boolean;
   reminderMinutes: number;
   notes: string;

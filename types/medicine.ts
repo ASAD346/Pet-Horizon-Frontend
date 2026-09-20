@@ -1,4 +1,4 @@
-export type MedicineDoseForm = 'tablet' | 'syrup';
+export type MedicineDoseForm = 'tablet' | 'syrup' | 'drops' | 'injection' | 'cream' | 'other';
 
 export type MedicineFrequency = 'daily' | 'weekly' | 'monthly';
 

@@ -143,11 +143,6 @@ export async function saveAllSchedules(
         pushError(errors, label, dateError);
         continue;
       }
-      const pills = parseTotalPills(entry.totalPills);
-      if (pills === null) {
-        pushError(errors, label, 'Enter a valid total quantity.');
-        continue;
-      }
       const timeHHmm = dateToTimeHHmm(entry.medicineTime);
       const noteText = entry.notes.trim();
       try {
@@ -159,8 +154,6 @@ export async function saveAllSchedules(
           doseForm: entry.doseForm,
           frequency: entry.frequency,
           daysOfWeek: entry.frequency === 'weekly' ? entry.daysOfWeek : undefined,
-          totalPills: pills,
-          remainingPills: pills,
           notes: noteText || undefined,
           ...buildScheduleDatePayload(entry.scheduleDate),
           reminder: entry.reminderOn,
