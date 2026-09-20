@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
   Image,
   Platform,
   StyleSheet,
@@ -13,6 +12,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppDispatch } from '@/redux/store';
 import { AppText } from '@/components/ui/AppText';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { FormSheetShell } from '@/components/sheets';
 import { Radius, Spacing } from '@/constants/theme';
 import { FormSheetColors } from '@/components/sheets/formSheetStyles';
@@ -123,6 +123,7 @@ export function MemberPermissionsSheet({
     expenses: true,
   });
   const [removing, setRemoving] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { members: membersList } = usePetMembers(token, petId, !isReadOnly);
@@ -176,6 +177,7 @@ export function MemberPermissionsSheet({
 
       setLocalPermissions(initialPerms);
       setError(null);
+      setDeleteConfirmVisible(false);
     }
   }, [member, visible, activeCachedMember]);
 
@@ -276,15 +278,7 @@ export function MemberPermissionsSheet({
 
   // ── Remove Member ───────────────────────────────────────────────────────────
   const confirmRemove = () => {
-    Alert.alert(
-      'Remove Member',
-      `Are you sure you want to remove ${memberName} from this pet's Family Hub? They will lose access immediately.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Remove', style: 'destructive', onPress: handleRemove },
-      ],
-      { cancelable: true },
-    );
+    setDeleteConfirmVisible(true);
   };
 
   const handleRemove = async () => {
@@ -296,6 +290,7 @@ export function MemberPermissionsSheet({
       await queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
       await queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
       showSuccessToast('Member removed from Family Hub successfully.');
+      setDeleteConfirmVisible(false);
       onUpdated(targetUserId);
       onClose();
     } catch (err: any) {
@@ -431,6 +426,20 @@ export function MemberPermissionsSheet({
           </AppText>
         </View>
       </View>
+
+      <AppConfirmModal
+        visible={deleteConfirmVisible}
+        title="Remove Member"
+        message={`Are you sure you want to remove ${memberName} from this pet's Family Hub? They will lose access immediately.`}
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={removing}
+        onConfirm={handleRemove}
+        onCancel={() => {
+          if (!removing) setDeleteConfirmVisible(false);
+        }}
+      />
     </FormSheetShell>
   );
 }
