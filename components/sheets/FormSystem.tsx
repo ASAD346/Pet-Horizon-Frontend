@@ -14,16 +14,33 @@ import { selectIsFormReadOnly } from '@/redux/reducer';
 interface BaseInputProps {
   label?: string;
   error?: string;
+  required?: boolean;
+}
+
+// Helper to render field labels consistently with red asterisk when required
+function renderFieldLabel(label?: string, required?: boolean) {
+  if (!label) return null;
+  return (
+    <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
+      {label}
+      {required ? (
+        <AppText variant="caption" weight="700" color="#EF4444">
+          {' *'}
+        </AppText>
+      ) : null}
+    </AppText>
+  );
 }
 
 // 1. FormSection
 interface FormSectionProps {
   title: string;
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  required?: boolean;
   children: React.ReactNode;
 }
 
-export function FormSection({ title, icon, children }: FormSectionProps) {
+export function FormSection({ title, icon, required, children }: FormSectionProps) {
   const { accentColor, accentBg } = useAppThemeColor();
   return (
     <View style={styles.section}>
@@ -35,6 +52,11 @@ export function FormSection({ title, icon, children }: FormSectionProps) {
         ) : null}
         <AppText variant="caption" weight="800" color={FormSheetColors.label} style={styles.sectionTitle}>
           {title.toUpperCase()}
+          {required ? (
+            <AppText variant="caption" weight="800" color="#EF4444">
+              {' *'}
+            </AppText>
+          ) : null}
         </AppText>
       </View>
       <View style={styles.sectionBody}>{children}</View>
@@ -61,6 +83,7 @@ export function FormTextInput({
   secureTextEntry,
   keyboardType = 'default',
   error,
+  required,
 }: FormTextInputProps) {
   const { accentColor } = useAppThemeColor();
   const [focused, setFocused] = React.useState(false);
@@ -68,11 +91,7 @@ export function FormTextInput({
 
   return (
     <View style={styles.fieldContainer}>
-      {label ? (
-        <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
-          {label}
-        </AppText>
-      ) : null}
+      {renderFieldLabel(label, required)}
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -117,6 +136,7 @@ export function FormNumberInput({
   placeholder,
   unit,
   error,
+  required,
 }: FormNumberInputProps) {
   const { accentColor } = useAppThemeColor();
   const [focused, setFocused] = React.useState(false);
@@ -124,11 +144,7 @@ export function FormNumberInput({
 
   return (
     <View style={styles.fieldContainer}>
-      {label ? (
-        <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
-          {label}
-        </AppText>
-      ) : null}
+      {renderFieldLabel(label, required)}
       <View
         style={[
           styles.inputContainerRow,
@@ -172,15 +188,11 @@ interface FormDateInputProps extends BaseInputProps {
   onPress: () => void;
 }
 
-export function FormDateInput({ label, value, onPress, error }: FormDateInputProps) {
+export function FormDateInput({ label, value, onPress, error, required }: FormDateInputProps) {
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
-      {label ? (
-        <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
-          {label}
-        </AppText>
-      ) : null}
+      {renderFieldLabel(label, required)}
       <TouchableOpacity
         style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
@@ -208,16 +220,12 @@ interface FormTimeInputProps extends BaseInputProps {
   onPress: () => void;
 }
 
-export function FormTimeInput({ label, value, onPress, error }: FormTimeInputProps) {
+export function FormTimeInput({ label, value, onPress, error, required }: FormTimeInputProps) {
   const formattedTime = value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
-      {label ? (
-        <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
-          {label}
-        </AppText>
-      ) : null}
+      {renderFieldLabel(label, required)}
       <TouchableOpacity
         style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
@@ -246,15 +254,11 @@ interface FormSelectInputProps extends BaseInputProps {
   icon?: React.ComponentProps<typeof Ionicons>['name'];
 }
 
-export function FormSelectInput({ label, valueLabel, onPress, icon = 'chevron-down', error }: FormSelectInputProps) {
+export function FormSelectInput({ label, valueLabel, onPress, icon = 'chevron-down', error, required }: FormSelectInputProps) {
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
-      {label ? (
-        <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
-          {label}
-        </AppText>
-      ) : null}
+      {renderFieldLabel(label, required)}
       <TouchableOpacity
         style={[styles.inputContainerRow, styles.standardHeight, isReadOnly ? { backgroundColor: '#F3F4F6' } : null]}
         onPress={onPress}
@@ -288,16 +292,13 @@ export function FormSegmentedControl({
   selected,
   onSelect,
   error,
+  required,
 }: FormSegmentedControlProps) {
   const { accentColor } = useAppThemeColor();
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
-      {label ? (
-        <AppText variant="caption" weight="700" color={FormSheetColors.label} style={styles.fieldLabel}>
-          {label}
-        </AppText>
-      ) : null}
+      {renderFieldLabel(label, required)}
       <View style={[styles.segmentedContainer, isReadOnly ? { opacity: 0.65 } : null]}>
         {options.map((option) => {
           const isSelected = selected === option.value;

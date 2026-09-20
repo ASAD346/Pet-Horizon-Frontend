@@ -172,6 +172,7 @@ export function GroomingManageSheet({
         <View pointerEvents={resolvedReadOnly ? "none" : "auto"} style={resolvedReadOnly ? styles.readOnlyContainer : null}>
           <FormDateInput
             label="Scheduled Date"
+            required
             value={scheduledDate ?? new Date()}
             onPress={() => setPickerVisible(true)}
           />

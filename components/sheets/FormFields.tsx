@@ -6,7 +6,7 @@ import { HomeTheme, Radius } from '@/constants/theme';
 import { FormSheetColors, formSheetStyles } from './formSheetStyles';
 import { useAppThemeColor } from './useAppThemeColor';
 
-export function FormSectionLabel({ text }: { text: string }) {
+export function FormSectionLabel({ text, required }: { text: string; required?: boolean }) {
   return (
     <AppText
       variant="caption"
@@ -15,6 +15,11 @@ export function FormSectionLabel({ text }: { text: string }) {
       style={styles.sectionLabel}
     >
       {text}
+      {required ? (
+        <AppText variant="caption" weight="700" color="#EF4444">
+          {' *'}
+        </AppText>
+      ) : null}
     </AppText>
   );
 }

@@ -11,9 +11,10 @@ interface WeightInputProps {
   onValueChange: (text: string) => void;
   onUnitChange: (unit: WeightUnit) => void;
   readOnly?: boolean;
+  required?: boolean;
 }
 
-export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly }: WeightInputProps) {
+export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly, required }: WeightInputProps) {
   const [isFocused, setIsFocused] = useState(false);
 
   // ── Read-only info card: show "10 kg" as a single line ──────
@@ -23,6 +24,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
       <View style={styles.wrapper}>
         <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
           Weight
+          {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
         </AppText>
         <View style={styles.readOnlyCard}>
           <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
@@ -52,6 +54,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Weight
+        {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
       </AppText>
       <View style={styles.row}>
         <View

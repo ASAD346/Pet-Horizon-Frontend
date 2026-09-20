@@ -57,6 +57,7 @@ export function VaccinationEntryCard({
     <>
       <FormTextInput
         label="Vaccine Name"
+        required
         value={entry.vaccineName}
         onChangeText={(vaccineName) => onChange({ ...entry, vaccineName })}
         placeholder="e.g. Rabies, DHPP"

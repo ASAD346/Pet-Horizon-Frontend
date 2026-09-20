@@ -10,6 +10,7 @@ interface BirthdayFieldProps {
   onChange: (date: Date) => void;
   error?: string;
   readOnly?: boolean;
+  required?: boolean;
 }
 
 function formatDate(date: Date) {
@@ -20,7 +21,7 @@ function formatDate(date: Date) {
   });
 }
 
-export function BirthdayField({ value, onChange, error, readOnly }: BirthdayFieldProps) {
+export function BirthdayField({ value, onChange, error, readOnly, required }: BirthdayFieldProps) {
   const [showPicker, setShowPicker] = useState(false);
 
   // ── Read-only info card ──────────────────────────────────────
@@ -29,6 +30,7 @@ export function BirthdayField({ value, onChange, error, readOnly }: BirthdayFiel
       <View style={styles.wrapper}>
         <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
           Birthday
+          {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
         </AppText>
         <View style={styles.readOnlyCard}>
           <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
@@ -44,6 +46,7 @@ export function BirthdayField({ value, onChange, error, readOnly }: BirthdayFiel
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Birthday
+        {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
       </AppText>
       <TouchableOpacity
         style={[styles.field, showPicker && styles.fieldActive, error ? styles.fieldError : null]}

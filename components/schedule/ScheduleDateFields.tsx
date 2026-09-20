@@ -38,6 +38,7 @@ export function ScheduleDateFields({
     <>
       <FormSegmentedControl
         label={showModeLabel ? "When" : undefined}
+        required={showModeLabel ? true : undefined}
         options={SCHEDULE_DATE_MODE_OPTIONS}
         selected={value.mode}
         onSelect={(mode) => handleModeChange(mode as ScheduleDateMode)}
@@ -46,6 +47,7 @@ export function ScheduleDateFields({
       {value.mode === 'single' ? (
         <FormDateInput
           label="Date"
+          required
           value={value.singleDate ?? new Date()}
           onPress={() => setSinglePickerVisible(true)}
         />
@@ -56,6 +58,7 @@ export function ScheduleDateFields({
           <View style={styles.halfCol}>
             <FormDateInput
               label="Start Date"
+              required
               value={value.startDate ?? new Date()}
               onPress={() => setStartPickerVisible(true)}
             />
@@ -63,6 +66,7 @@ export function ScheduleDateFields({
           <View style={styles.halfCol}>
             <FormDateInput
               label="End Date"
+              required
               value={value.endDate ?? new Date()}
               onPress={() => setEndPickerVisible(true)}
             />
@@ -73,6 +77,7 @@ export function ScheduleDateFields({
       {value.mode === 'ongoing' ? (
         <FormDateInput
           label="Starts On"
+          required
           value={value.startDate ?? new Date()}
           onPress={() => setStartPickerVisible(true)}
         />

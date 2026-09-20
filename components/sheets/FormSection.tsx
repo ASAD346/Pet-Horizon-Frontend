@@ -10,10 +10,11 @@ interface FormSectionProps {
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   accentColor?: string;
   accentBg?: string;
+  required?: boolean;
   children: React.ReactNode;
 }
 
-export function FormSection({ title, icon, children }: FormSectionProps) {
+export function FormSection({ title, icon, required, children }: FormSectionProps) {
   const { accentColor, accentBg } = useAppThemeColor();
   return (
     <View style={formSheetStyles.section}>
@@ -30,6 +31,11 @@ export function FormSection({ title, icon, children }: FormSectionProps) {
         ) : null}
         <AppText variant="caption" weight="800" color={FormSheetColors.text} style={{ letterSpacing: 0.3 }}>
           {title}
+          {required ? (
+            <AppText variant="caption" weight="800" color="#EF4444">
+              {' *'}
+            </AppText>
+          ) : null}
         </AppText>
       </View>
       {children}

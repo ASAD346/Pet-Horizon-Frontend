@@ -80,6 +80,7 @@ export function WalkEntryCard({
     <>
       <FormSegmentedControl
         label="Which walk?"
+        required
         options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
         selected={entry.walkTime}
         onSelect={(walkTime) => onChange({ ...entry, walkTime })}
@@ -89,6 +90,7 @@ export function WalkEntryCard({
         <View style={styles.halfCol}>
           <FormTimeInput
             label="Time"
+            required
             value={entry.walkClockTime}
             onPress={() => setTimePickerVisible(true)}
           />
@@ -96,6 +98,7 @@ export function WalkEntryCard({
         <View style={styles.halfCol}>
           <FormNumberInput
             label="Duration"
+            required
             value={entry.duration}
             onChangeText={(duration) => onChange({ ...entry, duration })}
             placeholder="45"

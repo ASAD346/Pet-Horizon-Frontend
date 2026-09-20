@@ -20,6 +20,7 @@ interface SpeciesSelectorProps {
   disabled?: boolean;
   readOnly?: boolean;
   error?: string;
+  required?: boolean;
 }
 
 const POPULARITY_ORDER = ['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other'];
@@ -32,6 +33,7 @@ export function SpeciesSelector({
   disabled = false,
   readOnly = false,
   error,
+  required,
 }: SpeciesSelectorProps) {
   // Sort by popularity: Dog, Cat, Bird, etc.
   const sortedList = React.useMemo(() => {
@@ -51,6 +53,7 @@ export function SpeciesSelector({
       <View style={styles.wrapper}>
         <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
           Species
+          {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
         </AppText>
         <View style={styles.readOnlyRow}>
           {icon ? (
@@ -78,6 +81,7 @@ export function SpeciesSelector({
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Species
+        {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
       </AppText>
 
       {loading ? (

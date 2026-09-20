@@ -21,6 +21,7 @@ interface AppInputProps {
   error?: string;
   style?: ViewStyle;
   editable?: boolean;
+  required?: boolean;
 }
 
 export function AppInput({
@@ -33,6 +34,7 @@ export function AppInput({
   error,
   style,
   editable = true,
+  required = false,
 }: AppInputProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [hidePassword, setHidePassword] = useState(secureTextEntry);
@@ -50,6 +52,11 @@ export function AppInput({
         style={styles.label}
       >
         {label.toUpperCase()}
+        {required && (
+          <AppText variant="caption" weight="700" color={Palette.error}>
+            {' *'}
+          </AppText>
+        )}
       </AppText>
       <View 
         pointerEvents={editable ? 'auto' : 'none'}

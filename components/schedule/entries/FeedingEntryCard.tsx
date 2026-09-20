@@ -101,6 +101,7 @@ export function FeedingEntryCard({
     <>
       <FormSegmentedControl
         label="Meal Type"
+        required
         options={mealTypeOptions}
         selected={entry.mealType}
         onSelect={(mealType) => onChange({ ...entry, mealType })}
@@ -110,6 +111,7 @@ export function FeedingEntryCard({
         <View style={{ flex: 1.15 }}>
           <FormNumberInput
             label="Amount"
+            required
             value={entry.amount}
             onChangeText={(amount) => onChange({ ...entry, amount })}
             placeholder="0"
@@ -118,6 +120,7 @@ export function FeedingEntryCard({
         <View style={{ flex: 1 }}>
           <FormSelectInput
             label="Unit"
+            required
             valueLabel={unitOptions.find((o) => o.value === entry.unit)?.label || entry.unit || 'Select'}
             icon="scale-outline"
             onPress={() => setUnitPickerVisible(true)}
@@ -135,6 +138,7 @@ export function FeedingEntryCard({
         <View style={styles.halfCol}>
           <FormTimeInput
             label="Time"
+            required
             value={entry.feedingTime}
             onPress={() => setTimePickerVisible(true)}
           />

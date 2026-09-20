@@ -18,6 +18,7 @@ interface BreedSelectorProps {
   disabled?: boolean;
   readOnly?: boolean;
   error?: string;
+  required?: boolean;
   onChange: (breed: string) => void;
 }
 
@@ -28,6 +29,7 @@ export function BreedSelector({
   disabled = false,
   readOnly = false,
   error,
+  required,
   onChange,
 }: BreedSelectorProps) {
   const [visible, setVisible] = useState(false);
@@ -41,6 +43,7 @@ export function BreedSelector({
       <View style={styles.wrapper}>
         <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
           Breed
+          {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
         </AppText>
         <View style={styles.readOnlyCard}>
           <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText} numberOfLines={1}>
@@ -55,6 +58,7 @@ export function BreedSelector({
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Breed
+        {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
       </AppText>
 
       {loading ? (

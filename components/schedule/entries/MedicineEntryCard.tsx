@@ -92,6 +92,7 @@ export function MedicineEntryCard({
     <>
       <FormTextInput
         label="Name"
+        required
         value={entry.medicineName}
         onChangeText={(medicineName) => onChange({ ...entry, medicineName })}
         placeholder="e.g. Amoxicillin"
@@ -101,6 +102,7 @@ export function MedicineEntryCard({
         <View style={styles.halfCol}>
           <FormNumberInput
             label="Dose"
+            required
             value={entry.doseAmount}
             onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
             placeholder="1"
@@ -120,6 +122,7 @@ export function MedicineEntryCard({
 
       <FormSegmentedControl
         label="Form"
+        required
         options={DOSE_FORM_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
         selected={entry.doseForm}
         onSelect={(doseForm) => onChange({ ...entry, doseForm: doseForm as MedicineEntryState['doseForm'] })}
@@ -128,6 +131,7 @@ export function MedicineEntryCard({
       {entry.scheduleDate?.mode !== 'single' ? (
         <FormSegmentedControl
           label="Frequency"
+          required
           options={FREQUENCY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
           selected={entry.frequency}
           onSelect={(frequency) =>
@@ -143,7 +147,7 @@ export function MedicineEntryCard({
       {entry.scheduleDate?.mode !== 'single' && entry.frequency === 'weekly' ? (
         <View style={styles.daysContainer}>
           <AppText variant="caption" weight="700" color="#5C6470" style={{ marginBottom: 4 }}>
-            DAYS OF WEEK
+            DAYS OF WEEK <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
           </AppText>
           <View style={styles.daysRow}>
             {DAYS_OF_WEEK_OPTIONS.map((option) => {
@@ -168,6 +172,7 @@ export function MedicineEntryCard({
         <View style={styles.halfCol}>
           <FormTimeInput
             label="Time"
+            required
             value={entry.medicineTime}
             onPress={() => setTimePickerVisible(true)}
           />

@@ -25,6 +25,8 @@ interface AuthTextFieldProps
   > {
   placeholder: string;
   icon: AuthFieldIcon;
+  label?: string;
+  required?: boolean;
   compact?: boolean;
   error?: string;
   style?: ViewStyle;
@@ -34,6 +36,8 @@ interface AuthTextFieldProps
 export function AuthTextField({
   placeholder,
   icon,
+  label,
+  required,
   value,
   onChangeText,
   keyboardType,
@@ -54,6 +58,12 @@ export function AuthTextField({
 
   return (
     <View style={[styles.wrapper, compact && styles.wrapperCompact, style]}>
+      {label ? (
+        <AppText variant="caption" weight="700" color="#1A2B4E" style={styles.fieldLabel}>
+          {label}
+          {required ? <AppText variant="caption" weight="700" color="#EF4444"> *</AppText> : null}
+        </AppText>
+      ) : null}
       <View
         style={[
           styles.container,
@@ -111,6 +121,11 @@ const styles = StyleSheet.create({
   },
   wrapperCompact: {
     marginBottom: Spacing.sm,
+  },
+  fieldLabel: {
+    marginBottom: 6,
+    marginLeft: 4,
+    letterSpacing: 0.3,
   },
   container: {
     flexDirection: 'row',

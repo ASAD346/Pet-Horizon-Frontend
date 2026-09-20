@@ -40,6 +40,7 @@ export function GroomingEntryCard({
     <>
       <FormSegmentedControl
         label="Task Type"
+        required
         options={typeOptions.map((t) => ({ value: t.value, label: t.label }))}
         selected={entry.groomingType}
         onSelect={(groomingType) => onChange({ ...entry, groomingType })}

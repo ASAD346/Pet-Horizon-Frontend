@@ -18,9 +18,10 @@ interface GenderSelectProps {
   value: PetGender;
   onChange: (gender: PetGender) => void;
   readOnly?: boolean;
+  required?: boolean;
 }
 
-export function GenderSelect({ value, onChange, readOnly }: GenderSelectProps) {
+export function GenderSelect({ value, onChange, readOnly, required }: GenderSelectProps) {
   const [open, setOpen] = useState(false);
 
   if (readOnly) {
@@ -28,6 +29,7 @@ export function GenderSelect({ value, onChange, readOnly }: GenderSelectProps) {
       <View style={styles.wrapper}>
         <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
           Gender
+          {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
         </AppText>
         <View style={styles.readOnlyCard}>
           <AppText variant="body" color="#1A2B4E" weight="600" style={styles.readOnlyText}>
@@ -42,6 +44,7 @@ export function GenderSelect({ value, onChange, readOnly }: GenderSelectProps) {
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
         Gender
+        {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
       </AppText>
       <TouchableOpacity 
         style={[styles.field, open && styles.fieldActive]} 
