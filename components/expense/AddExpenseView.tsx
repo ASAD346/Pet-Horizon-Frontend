@@ -2,21 +2,20 @@ import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TextInput,
   Platform,
   Pressable,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { SheetColors } from '../sheets/sheetUi';
-import { Radius, Spacing } from '../../constants/theme';
+import { Radius, Spacing, HomeTheme } from '../../constants/theme';
 import { API_EXPENSE_CATEGORIES } from '@/lib/expense/expenseMappers';
 import { getErrorMessage } from '@/lib/api/errors';
 import { createExpense } from '@/services/expense/expenseApi';
-import { ExpenseCategoryChips } from './ExpenseCategoryChips';
 import { useLocalization } from '@/hooks/useLocalization';
-import { FormSheetShell, FormSection, SheetOptionPicker, useAppThemeColor, FormSheetColors } from '../sheets';
+import { FormSheetShell, FormTextInput, useAppThemeColor, FormSheetColors } from '../sheets';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -31,6 +30,23 @@ interface AddExpenseViewProps {
   onSaved?: (expense: ApiExpense, budgetStatus?: any) => void;
   isPremium?: boolean;
 }
+
+const CATEGORY_ITEMS: {
+  value: string;
+  label: string;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+  color: string;
+  bg: string;
+}[] = [
+  { value: 'food', label: 'Food', icon: 'silverware-fork-knife', color: '#16A34A', bg: '#DCFCE7' },
+  { value: 'vet', label: 'Vet & Health', icon: 'medical-bag', color: '#2563EB', bg: '#DBEAFE' },
+  { value: 'grooming', label: 'Grooming', icon: 'content-cut', color: '#9333EA', bg: '#F3E8FF' },
+  { value: 'medicine', label: 'Medicine', icon: 'pill', color: '#EA580C', bg: '#FFEDD5' },
+  { value: 'accessories', label: 'Accessories', icon: 'tag-heart', color: '#E11D48', bg: '#FFE4E6' },
+  { value: 'training', label: 'Training', icon: 'school', color: '#4F46E5', bg: '#EEF2FF' },
+  { value: 'boarding', label: 'Boarding', icon: 'home-heart', color: '#0D9488', bg: '#CCFBF1' },
+  { value: 'other', label: 'Other', icon: 'dots-horizontal', color: '#475569', bg: '#F1F5F9' },
+];
 
 export function AddExpenseView({
   visible,
@@ -51,47 +67,24 @@ export function AddExpenseView({
     GBP: '£',
     CAD: '$',
     AUD: '$',
+    EUR: '€',
   };
   const currencySymbol = CURRENCY_SYMBOLS[currency] || '$';
 
-  const [category, setCategory] = useState<string | null>(null);
-  const [pickerVisible, setPickerVisible] = useState(false);
+  const [category, setCategory] = useState<string>('food');
   const [amount, setAmount] = useState('');
   const [merchant, setMerchant] = useState('');
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Refs to correctly manage focus targets
   const amountRef = useRef<TextInput>(null);
-  const merchantRef = useRef<TextInput>(null);
-
   const { accentColor } = useAppThemeColor();
-
-  // Focus tracking for input states
   const [activeField, setActiveField] = useState<'amount' | 'merchant' | 'note' | null>(null);
-
-  const dropdownOptions = React.useMemo(() => {
-    const CATEGORY_META: Record<string, { mciIcon: any; color: string; bg: string; subtitle: string }> = {
-      food:        { mciIcon: 'silverware-fork-knife', color: '#5CB35D', bg: '#E8F5E9', subtitle: 'Meals, treats, and pet food' },
-      vet:         { mciIcon: 'medical-bag',           color: '#5B9BD5', bg: '#E3F2FD', subtitle: 'Doctor visits and checkups' },
-      grooming:    { mciIcon: 'content-cut',           color: '#9C27B0', bg: '#F3E5F5', subtitle: 'Baths, trims, and clipping' },
-      medicine:    { mciIcon: 'pill',                  color: '#FF9800', bg: '#FFF3E0', subtitle: 'Prescriptions and supplements' },
-      accessories: { mciIcon: 'tag-heart',             color: '#E91E63', bg: '#FCE4EC', subtitle: 'Toys, collars, and leashes' },
-      training:    { mciIcon: 'school',                color: '#3F51B5', bg: '#E8EAF6', subtitle: 'Classes and behavior coaching' },
-      boarding:    { mciIcon: 'home-heart',            color: '#009688', bg: '#E0F2F1', subtitle: 'Pet sitting and daycare' },
-      other:       { mciIcon: 'dots-horizontal',       color: '#607D8B', bg: '#ECEFF1', subtitle: 'Miscellaneous expenses' },
-    };
-    return API_EXPENSE_CATEGORIES.map((item) => ({
-      value: item.value,
-      label: item.label,
-      ...CATEGORY_META[item.value],
-    }));
-  }, []);
 
   const handleSubmit = async () => {
     if (!canEdit) {
-      showToast("Read-only access: You cannot modify this entry.");
+      showToast('Read-only access: You cannot modify this entry.');
       return;
     }
     if (saving || resolvedReadOnly) return;
@@ -115,7 +108,7 @@ export function AddExpenseView({
       const now = new Date();
       const pad = (n: number) => String(n).padStart(2, '0');
       const localDate = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-      
+
       const data = await createExpense(token, {
         petId,
         category: category ?? 'other',
@@ -124,12 +117,11 @@ export function AddExpenseView({
         date: localDate,
       });
       showToast('Expense added successfully!');
-      
-      // Reset state on successful submission
+
       setAmount('');
       setMerchant('');
       setNote('');
-      setCategory(null);
+      setCategory('food');
       setError(null);
 
       onSaved?.(data.expense, data.budgetStatus);
@@ -147,16 +139,9 @@ export function AddExpenseView({
       setAmount('');
       setMerchant('');
       setNote('');
-      setCategory(null);
+      setCategory('food');
       setError(null);
     }
-    return () => {
-      setAmount('');
-      setMerchant('');
-      setNote('');
-      setCategory(null);
-      setError(null);
-    };
   }, [visible]);
 
   if (permissionsLoading) {
@@ -165,8 +150,8 @@ export function AddExpenseView({
         visible={visible}
         onClose={onClose}
         title="Add Expense"
-        subtitle="Track your pet's spending"
-        icon="plus-circle-outline"
+        subtitle="Track your pet's daily spending"
+        icon="wallet-outline"
         saveLabel={undefined}
         onSave={undefined}
         saving={false}
@@ -190,9 +175,9 @@ export function AddExpenseView({
       visible={visible}
       onClose={onClose}
       title="Add Expense"
-      subtitle="Track your pet's spending"
-      icon="plus-circle-outline"
-      saveLabel={resolvedReadOnly ? undefined : "Add Expense"}
+      subtitle="Track your pet's daily spending"
+      icon="wallet-outline"
+      saveLabel={resolvedReadOnly ? undefined : 'Save Expense'}
       onSave={handleSubmit}
       saving={saving}
       saveDisabled={saving || !amount || resolvedReadOnly}
@@ -201,57 +186,63 @@ export function AddExpenseView({
       compact
     >
       <View style={styles.formContainer}>
-        {/* Category */}
-        <FormSection title="Category" required>
-          {(() => {
-            const meta = category ? dropdownOptions.find((o) => o.value === category) : null;
-            return (
-              <Pressable
-                onPress={() => setPickerVisible(true)}
-                style={[
-                  styles.categoryTrigger,
-                  meta && { borderColor: meta.color ?? FormSheetColors.inputBorder },
-                ]}
-              >
-                {/* Icon badge */}
-                <View style={[styles.catIconBadge, { backgroundColor: meta?.bg ?? '#F3F4F6' }]}>
-                  {meta?.mciIcon ? (
-                    <MaterialCommunityIcons
-                      name={meta.mciIcon as any}
-                      size={18}
-                      color={meta?.color ?? '#9CA3AF'}
-                    />
-                  ) : (
-                    <Ionicons name="grid-outline" size={18} color="#9CA3AF" />
-                  )}
-                </View>
-
-                {/* Label */}
-                <AppText
-                  variant="bodySmall"
-                  weight="600"
-                  color={meta ? (meta.color ?? '#1A1A1A') : '#9CA3AF'}
-                  style={{ flex: 1 }}
+        {/* Category Card */}
+        <View style={styles.sectionCard}>
+          <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+            CATEGORY <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
+          </AppText>
+          <View style={styles.categoryGrid}>
+            {CATEGORY_ITEMS.map((item) => {
+              const isSelected = category === item.value;
+              return (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chipCard,
+                    isSelected && {
+                      borderColor: item.color,
+                      backgroundColor: item.bg,
+                    },
+                  ]}
+                  onPress={() => setCategory(item.value)}
+                  activeOpacity={0.7}
+                  disabled={resolvedReadOnly}
                 >
-                  {meta ? meta.label : 'Select a category'}
-                </AppText>
+                  <MaterialCommunityIcons
+                    name={item.icon}
+                    size={20}
+                    color={isSelected ? item.color : '#64748B'}
+                  />
+                  <AppText
+                    variant="caption"
+                    weight={isSelected ? '700' : '600'}
+                    color={isSelected ? item.color : '#334155'}
+                    style={styles.chipText}
+                  >
+                    {item.label}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
-                <Ionicons name="chevron-down" size={16} color="#94A3B8" />
-              </Pressable>
-            );
-          })()}
-        </FormSection>
-
-        {/* Amount */}
-        <FormSection title="Amount" required>
-          <Pressable 
+        {/* Amount Card */}
+        <View style={styles.sectionCard}>
+          <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+            AMOUNT <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
+          </AppText>
+          <Pressable
             onPress={() => amountRef.current?.focus()}
-            style={[styles.amountField, activeField === 'amount' && { borderColor: accentColor, borderWidth: 1.5 }]}
+            style={[
+              styles.amountField,
+              activeField === 'amount' && { borderColor: '#16A34A', borderWidth: 1.5 },
+            ]}
           >
             <AppText
               variant="h2"
               weight="800"
-              color={activeField === 'amount' ? accentColor : '#94A3B8'}
+              color={activeField === 'amount' ? '#16A34A' : '#64748B'}
               style={styles.currency}
             >
               {currencySymbol}
@@ -269,65 +260,71 @@ export function AddExpenseView({
               editable={!resolvedReadOnly}
             />
           </Pressable>
-        </FormSection>
+        </View>
 
-        {/* Details (Merchant & Notes) */}
-        <FormSection title="Details">
-          <View style={styles.detailsGroup}>
-            <Pressable 
-              onPress={() => merchantRef.current?.focus()}
-              style={[styles.regularField, activeField === 'merchant' && { borderColor: accentColor, borderWidth: 1.5 }]}
-            >
-              <Ionicons
-                name="storefront-outline"
-                size={18}
-                color={activeField === 'merchant' ? accentColor : '#94A3B8'}
-              />
-              <TextInput
-                ref={merchantRef}
-                value={merchant}
-                onChangeText={setMerchant}
-                style={styles.regularInput}
-                placeholder="Store or vendor name"
-                placeholderTextColor={SheetColors.placeholder}
-                onFocus={() => setActiveField('merchant')}
-                onBlur={() => setActiveField(null)}
-                editable={!resolvedReadOnly}
-              />
-            </Pressable>
+        {/* Merchant & Notes Card */}
+        <View style={styles.sectionCard}>
+          <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+            DETAILS & NOTES
+          </AppText>
 
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder="Add notes (optional)..."
-              placeholderTextColor={SheetColors.placeholder}
-              style={[styles.noteInput, activeField === 'note' && { borderColor: accentColor, borderWidth: 1.5 }]}
-              multiline
-              textAlignVertical="top"
-              onFocus={() => setActiveField('note')}
-              onBlur={() => setActiveField(null)}
-              editable={!resolvedReadOnly}
-            />
-          </View>
-        </FormSection>
+          <FormTextInput
+            label="Store or Vendor"
+            value={merchant}
+            onChangeText={setMerchant}
+            placeholder="e.g. PetSmart, Vet Clinic, Chewy"
+          />
+
+          <FormTextInput
+            label="Notes"
+            value={note}
+            onChangeText={setNote}
+            placeholder="Optional details..."
+            multiline
+          />
+        </View>
       </View>
-
-      <SheetOptionPicker
-        visible={pickerVisible}
-        title="Select Category"
-        options={dropdownOptions}
-        selectedValue={category || ''}
-        onClose={() => setPickerVisible(false)}
-        onSelect={setCategory}
-        useNativeModal={false}
-      />
     </FormSheetShell>
   );
 }
 
 const styles = StyleSheet.create({
   formContainer: {
-    paddingBottom: Spacing.xs,
+    gap: 14,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    gap: 12,
+  },
+  sectionHeader: {
+    letterSpacing: 0.6,
+    marginBottom: -2,
+  },
+  categoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chipCard: {
+    flexBasis: '47%',
+    flexGrow: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+  },
+  chipText: {
+    fontSize: 12,
   },
   amountField: {
     flexDirection: 'row',
@@ -337,71 +334,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: FormSheetColors.inputBorder,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 14 : 10,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
     gap: Spacing.xs,
   },
   currency: {
-    fontSize: 24,
-    lineHeight: 30,
+    fontSize: 22,
+    lineHeight: 28,
   },
   amountInput: {
     flex: 1,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
     color: '#1A1A1A',
     padding: 0,
-  },
-  detailsGroup: {
-    gap: Spacing.md,
-  },
-  regularField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-    gap: Spacing.sm,
-    minHeight: 44,
-  },
-  regularInput: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1A1A1A',
-    padding: 0,
-  },
-  noteInput: {
-    backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    minHeight: 80,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1A1A1A',
-  },
-  categoryTrigger: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: FormSheetColors.inputBg,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: FormSheetColors.inputBorder,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    gap: 10,
-    minHeight: 48,
-  },
-  catIconBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
