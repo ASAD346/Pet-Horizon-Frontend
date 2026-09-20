@@ -25,12 +25,11 @@ interface HomeHeaderProps {
 
 
 function getGreeting(userName: string): string {
-  const hours = new Date().getHours();
   const name = userName.trim();
-  if (hours >= 5 && hours < 12) return `Good morning, ${name} 👋`;
-  if (hours >= 12 && hours < 17) return `Good afternoon, ${name} 👋`;
-  if (hours >= 17 && hours < 22) return `Good evening, ${name} 👋`;
-  return `Good night, ${name} 🌙`;
+  if (!name || name.toLowerCase() === 'there' || name.toLowerCase() === 'friend') {
+    return 'Hey, Friend! 👋';
+  }
+  return `Hey, ${name}! 👋`;
 }
 
 export function HomeHeader({
