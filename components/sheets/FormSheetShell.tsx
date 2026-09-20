@@ -35,6 +35,7 @@ interface FormSheetShellProps {
   icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   accentColor?: string;
   accentBg?: string;
+  headerGradientColors?: readonly [string, string, ...string[]];
   saveLabel?: string;
   onSave?: () => void;
   saving?: boolean;
@@ -55,6 +56,7 @@ export function FormSheetShell({
   icon,
   accentColor: _accentColor,
   accentBg: _accentBg,
+  headerGradientColors,
   saveLabel,
   onSave,
   saving,
@@ -68,6 +70,7 @@ export function FormSheetShell({
 }: FormSheetShellProps) {
   const insets = useSafeAreaInsets();
   const { accentColor, accentBg, gradientColors } = useAppThemeColor();
+  const activeGradient = headerGradientColors ?? gradientColors;
   const [overlays, setOverlays] = useState<Record<string, ReactNode>>({});
   const dispatch = useAppDispatch();
 
@@ -109,7 +112,7 @@ export function FormSheetShell({
           >
             {/* Curved linear gradient header */}
             <LinearGradient
-              colors={gradientColors}
+              colors={activeGradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={formSheetStyles.gradientHeader}

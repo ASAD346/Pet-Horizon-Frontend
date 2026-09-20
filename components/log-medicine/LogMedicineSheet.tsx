@@ -152,6 +152,7 @@ export function LogMedicineSheet({
         visible={visible}
         onClose={onClose}
         title={entry.scheduleId ? 'Edit Medicine' : 'Log Medicine'}
+        subtitle="Schedule doses & medication reminders"
         icon={MEDICINE_THEME.icon}
         accentColor={MEDICINE_THEME.color}
         accentBg={MEDICINE_THEME.bg}
@@ -178,6 +179,7 @@ export function LogMedicineSheet({
       visible={visible}
       onClose={onClose}
       title={entry.scheduleId ? 'Edit Medicine' : 'Log Medicine'}
+      subtitle="Schedule doses & medication reminders"
       icon={MEDICINE_THEME.icon}
       accentColor={MEDICINE_THEME.color}
       accentBg={MEDICINE_THEME.bg}
