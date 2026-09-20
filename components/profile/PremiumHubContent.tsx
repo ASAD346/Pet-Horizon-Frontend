@@ -742,7 +742,7 @@ export function PremiumHubContent() {
           >
             {/* Gold badge */}
             <View style={styles.goldBadge}>
-              <Ionicons name="sparkles" size={10} color="#D4A017" />
+              <Ionicons name="star" size={10} color="#D4A017" />
               <AppText variant="caption" weight="800" color="#D4A017" style={styles.goldBadgeText}>
                 Pet Horizon Premium
               </AppText>
@@ -959,9 +959,9 @@ export function PremiumHubContent() {
               end={{ x: 1, y: 1 }}
               style={styles.successGradientHeader}
             >
-              {/* Decorative sparkles */}
+              {/* Decorative stars */}
               <Animated.View style={[styles.sparkleDeco, { left: 30, top: 18, transform: [{ scale: sparkleAnim1 }] }]}>
-                <Ionicons name="sparkles" size={18} color="rgba(212,160,23,0.8)" />
+                <Ionicons name="star" size={16} color="rgba(212,160,23,0.8)" />
               </Animated.View>
               <Animated.View style={[styles.sparkleDeco, { right: 36, top: 22, transform: [{ scale: sparkleAnim2 }] }]}>
                 <Ionicons name="flash" size={15} color="rgba(255,255,255,0.5)" />
@@ -970,7 +970,7 @@ export function PremiumHubContent() {
                 <Ionicons name="star" size={13} color="rgba(212,160,23,0.6)" />
               </Animated.View>
               <Animated.View style={[styles.sparkleDeco, { right: 55, bottom: 14, transform: [{ scale: sparkleAnim1 }] }]}>
-                <Ionicons name="sparkles" size={11} color="rgba(255,255,255,0.4)" />
+                <Ionicons name="star" size={11} color="rgba(255,255,255,0.4)" />
               </Animated.View>
 
               {/* Crown icon */}

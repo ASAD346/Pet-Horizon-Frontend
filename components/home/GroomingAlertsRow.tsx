@@ -25,7 +25,7 @@ function getGroomingIcon(type: string): React.ComponentProps<typeof Ionicons>['n
   if (t.includes('bath') || t.includes('wash') || t.includes('shower')) return 'water';
   if (t.includes('cut') || t.includes('hair') || t.includes('trim')) return 'cut';
   if (t.includes('nail') || t.includes('claw')) return 'cut-outline';
-  if (t.includes('brush') || t.includes('comb')) return 'sparkles';
+  if (t.includes('brush') || t.includes('comb')) return 'brush-outline';
   return 'water'; // fallback
 }
 

@@ -39,7 +39,7 @@ export function LoginFormSection({
       {/* Form Section Header */}
       <View style={styles.headerBlock}>
         <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.welcomeTitle}>
-          Welcome Back <Ionicons name="sparkles" size={18} color="#F48024" />
+          Welcome Back
         </AppText>
         
         {/* Soft rounded accent line */}
