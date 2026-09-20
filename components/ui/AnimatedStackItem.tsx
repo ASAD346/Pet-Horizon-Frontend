@@ -1,11 +1,10 @@
 import React from 'react';
 import { StyleProp, ViewStyle } from 'react-native';
 import Animated, {
-  FadeInDown,
-  FadeInRight,
-  FadeInUp,
-  FadeIn,
   LinearTransition,
+  withDelay,
+  withSpring,
+  EntryAnimationsValues,
 } from 'react-native-reanimated';
 
 export type AnimationDirection = 'up' | 'down' | 'right' | 'left' | 'fade';
@@ -13,7 +12,7 @@ export type AnimationDirection = 'up' | 'down' | 'right' | 'left' | 'fade';
 export interface AnimatedStackItemProps {
   /** Index in the list to calculate stagger delay */
   index?: number;
-  /** Milliseconds delay per index step (default: 55ms) */
+  /** Milliseconds delay per index step (default: 45ms) */
   staggerMs?: number;
   /** Base delay before animation starts (default: 0ms) */
   baseDelayMs?: number;
@@ -21,11 +20,11 @@ export interface AnimatedStackItemProps {
   direction?: AnimationDirection;
   /** Distance to travel in pixels (default: 24) */
   distance?: number;
-  /** Spring damping (default: 18) */
+  /** Spring damping (default: 15) */
   damping?: number;
   /** Spring stiffness (default: 140) */
   stiffness?: number;
-  /** Mass of spring (default: 0.9) */
+  /** Mass of spring (default: 0.8) */
   mass?: number;
   /** Style applied to the animated wrapper view */
   style?: StyleProp<ViewStyle>;
@@ -36,67 +35,67 @@ export interface AnimatedStackItemProps {
 export const AnimatedStackItem: React.FC<AnimatedStackItemProps> = React.memo(
   ({
     index = 0,
-    staggerMs = 55,
+    staggerMs = 45,
     baseDelayMs = 0,
     direction = 'up',
     distance = 24,
-    damping = 18,
+    damping = 15,
     stiffness = 140,
-    mass = 0.9,
+    mass = 0.8,
     style,
     children,
   }) => {
     const delay = Math.max(0, baseDelayMs + index * staggerMs);
 
-    const enteringAnimation = React.useMemo(() => {
-      let anim;
-      switch (direction) {
-        case 'up':
-          // Moves from down to up
-          anim = FadeInDown.springify()
-            .damping(damping)
-            .stiffness(stiffness)
-            .mass(mass)
-            .withInitialValues({ transform: [{ translateY: distance }], opacity: 0 });
-          break;
-        case 'down':
-          // Moves from up to down
-          anim = FadeInUp.springify()
-            .damping(damping)
-            .stiffness(stiffness)
-            .mass(mass)
-            .withInitialValues({ transform: [{ translateY: -distance }], opacity: 0 });
-          break;
-        case 'right':
-          // Moves from right to left
-          anim = FadeInRight.springify()
-            .damping(damping)
-            .stiffness(stiffness)
-            .mass(mass)
-            .withInitialValues({ transform: [{ translateX: distance }], opacity: 0 });
-          break;
-        case 'left':
-          // Moves from left to right
-          anim = FadeInRight.springify()
-            .damping(damping)
-            .stiffness(stiffness)
-            .mass(mass)
-            .withInitialValues({ transform: [{ translateX: -distance }], opacity: 0 });
-          break;
-        case 'fade':
-        default:
-          anim = FadeIn.duration(300);
-          break;
-      }
+    const enteringAnimation = React.useCallback(
+      (_targetValues: EntryAnimationsValues) => {
+        'worklet';
+        const initialTranslateY =
+          direction === 'up' ? distance : direction === 'down' ? -distance : 0;
+        const initialTranslateX =
+          direction === 'right' ? distance : direction === 'left' ? -distance : 0;
 
-      return delay > 0 ? anim.delay(delay) : anim;
-    }, [direction, distance, damping, stiffness, mass, delay]);
+        return {
+          initialValues: {
+            opacity: 1,
+            transform: [
+              { translateY: initialTranslateY },
+              { translateX: initialTranslateX },
+              { scale: 0.94 },
+            ],
+          },
+          animations: {
+            transform: [
+              {
+                translateY: withDelay(
+                  delay,
+                  withSpring(0, { damping, stiffness, mass })
+                ),
+              },
+              {
+                translateX: withDelay(
+                  delay,
+                  withSpring(0, { damping, stiffness, mass })
+                ),
+              },
+              {
+                scale: withDelay(
+                  delay,
+                  withSpring(1, { damping, stiffness, mass })
+                ),
+              },
+            ],
+          },
+        };
+      },
+      [delay, direction, distance, damping, stiffness, mass]
+    );
 
     return (
       <Animated.View
         entering={enteringAnimation}
         layout={LinearTransition.springify().damping(18).stiffness(140)}
-        style={style}
+        style={[{ backgroundColor: 'transparent' }, style]}
       >
         {children}
       </Animated.View>
