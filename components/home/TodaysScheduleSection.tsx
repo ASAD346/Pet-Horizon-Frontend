@@ -46,6 +46,7 @@ import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import { ColorIconBadge } from './ColorIconBadge';
 import { WalkTimer } from './WalkTimer';
 import { SectionHeader } from './SectionHeader';
+import { ScheduleDetailSheet } from './ScheduleDetailSheet';
 import { homePillCard } from './homeStyles';
 
 type ScheduleRow =
@@ -180,6 +181,7 @@ function rowOnComplete(
 // Subcomponent for individual rows to handle independent Skip/Done busy indicators
 interface ScheduleRowCardProps {
   row: ScheduleRow;
+  onOpenDetail?: (row: ScheduleRow) => void;
   onCompleteFeeding?: (id: string) => void | Promise<void>;
   onSkipFeeding?: (id: string) => void | Promise<void>;
   onCompleteWalk?: (id: string, elapsedMinutes?: number) => void | Promise<void>;
@@ -196,6 +198,7 @@ interface ScheduleRowCardProps {
 
 const ScheduleRowCard = React.memo(function ScheduleRowCard({
   row,
+  onOpenDetail,
   onCompleteFeeding,
   onSkipFeeding,
   onCompleteWalk,
@@ -274,35 +277,40 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
 
   return (
     <View style={[homePillCard.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
-      {isDone ? (
-        <ColorIconBadge color={iconColor} completed size={36} iconSize={18} shape="circle" />
-      ) : (
-        <ColorIconBadge
-          color={iconColor}
-          backgroundColor={iconBg}
-          materialIcon={rowIcon(row)}
-          size={36}
-          iconSize={18}
-        />
-      )}
-      <View style={styles.textBlock}>
-        <AppText
-          style={styles.cardTitle}
-          weight="800"
-          color={HomeTheme.text}
-          numberOfLines={1}
-        >
-          {rowTitle(row)}
-        </AppText>
-        <AppText
-          style={styles.cardSubtitle}
-          weight="500"
-          color={HomeTheme.textMuted}
-          numberOfLines={2}
-        >
-          {rowSubtitle(row)}
-        </AppText>
-      </View>
+      <Pressable
+        style={styles.cardContentPressable}
+        onPress={() => onOpenDetail?.(row)}
+      >
+        {isDone ? (
+          <ColorIconBadge color={iconColor} completed size={36} iconSize={18} shape="circle" />
+        ) : (
+          <ColorIconBadge
+            color={iconColor}
+            backgroundColor={iconBg}
+            materialIcon={rowIcon(row)}
+            size={36}
+            iconSize={18}
+          />
+        )}
+        <View style={styles.textBlock}>
+          <AppText
+            style={styles.cardTitle}
+            weight="800"
+            color={HomeTheme.text}
+            numberOfLines={1}
+          >
+            {rowTitle(row)}
+          </AppText>
+          <AppText
+            style={styles.cardSubtitle}
+            weight="500"
+            color={HomeTheme.textMuted}
+            numberOfLines={2}
+          >
+            {rowSubtitle(row)}
+          </AppText>
+        </View>
+      </Pressable>
       {isDone ? (
         <View style={styles.checks}>
           <Ionicons name="checkmark" size={16} color={HomeTheme.cardGreen} />
@@ -634,7 +642,33 @@ export function TodaysScheduleSection({
     grooming: groomingRecords,
     vaccination: vaccinationSchedules,
   };
-  console.log("DEBUG: Rendering TodaySchedules:", todaySchedules);
+  const [selectedDetailRow, setSelectedDetailRow] = useState<ScheduleRow | null>(null);
+
+  const handleDetailComplete = async (id: string, elapsedMinutes?: number) => {
+    if (!selectedDetailRow) return;
+    if (selectedDetailRow.kind === 'feeding' && onCompleteFeeding) {
+      await onCompleteFeeding(id);
+    } else if (selectedDetailRow.kind === 'walk' && onCompleteWalk) {
+      await onCompleteWalk(id, elapsedMinutes);
+    } else if (selectedDetailRow.kind === 'medicine' && onCompleteMedicine) {
+      await onCompleteMedicine(id);
+    } else if (selectedDetailRow.kind === 'grooming' && onCompleteGrooming) {
+      await onCompleteGrooming(id);
+    } else if (selectedDetailRow.kind === 'vaccination' && onCompleteVaccination) {
+      await onCompleteVaccination(id);
+    }
+  };
+
+  const handleDetailSkip = async (id: string) => {
+    if (!selectedDetailRow) return;
+    if (selectedDetailRow.kind === 'feeding' && onSkipFeeding) {
+      await onSkipFeeding(id);
+    } else if (selectedDetailRow.kind === 'walk' && onSkipWalk) {
+      await onSkipWalk(id);
+    } else if (selectedDetailRow.kind === 'medicine' && onSkipMedicine) {
+      await onSkipMedicine(id);
+    }
+  };
 
   const items = useMemo(
     () => {
@@ -698,6 +732,7 @@ export function TodaysScheduleSection({
             >
               <ScheduleRowCard
                 row={row}
+                onOpenDetail={setSelectedDetailRow}
                 onCompleteFeeding={onCompleteFeeding}
                 onSkipFeeding={onSkipFeeding}
                 onCompleteWalk={onCompleteWalk}
@@ -726,6 +761,15 @@ export function TodaysScheduleSection({
           ) : null}
         </>
       )}
+
+      <ScheduleDetailSheet
+        visible={!!selectedDetailRow}
+        row={selectedDetailRow}
+        onClose={() => setSelectedDetailRow(null)}
+        onComplete={handleDetailComplete}
+        onSkip={handleDetailSkip}
+        isPremium={isPremium}
+      />
     </View>
   );
 }
@@ -739,6 +783,11 @@ const styles = StyleSheet.create({
   },
   emptyCard: {
     justifyContent: 'center',
+  },
+  cardContentPressable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   textBlock: {
     flex: 1,
