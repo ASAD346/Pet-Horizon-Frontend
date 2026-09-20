@@ -104,17 +104,10 @@ export function RecentTransactionsSection({
                 </AppText>
               </View>
 
-              {/* Amount + badge */}
-              <View style={styles.amountBlock}>
-                <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
-                  -{formatCurrency(item.amountVal)}
-                </AppText>
-                <View style={styles.categoryPill}>
-                  <AppText variant="caption" weight="700" color={item.color} style={styles.categoryText}>
-                    {item.category}
-                  </AppText>
-                </View>
-              </View>
+              {/* Amount */}
+              <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
+                -{formatCurrency(item.amountVal)}
+              </AppText>
             </View>
           </AnimatedStackItem>
         ))
@@ -191,24 +184,9 @@ const styles = StyleSheet.create({
     fontSize: 10.5,
     lineHeight: 14,
   },
-  amountBlock: {
-    alignItems: 'flex-end',
-    gap: 2,
-  },
   amount: {
-    fontSize: 13.5,
-    lineHeight: 17,
-  },
-  categoryPill: {
-    backgroundColor: 'rgba(0,0,0,0.04)',
-    paddingHorizontal: 6,
-    paddingVertical: 1.5,
-    borderRadius: 4,
-  },
-  categoryText: {
-    fontSize: 8.5,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    fontSize: 14,
+    textAlign: 'right',
   },
   emptyCard: {
     backgroundColor: '#FFFFFF',
