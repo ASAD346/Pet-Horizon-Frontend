@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, Text, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, Text, Image, Pressable } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
@@ -10,6 +10,7 @@ import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
 import { getTaskDisplayName } from '@/src/utils/taskMappings';
+import { ActivityDetailSheet } from './ActivityDetailSheet';
 
 export interface RecentActivityItem {
   id: string;
@@ -65,6 +66,8 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
   todayOnly = true,
 }: RecentActivitySectionProps) {
   const { timezone } = useTimezone();
+  const [selectedItem, setSelectedItem] = useState<RecentActivityItem | null>(null);
+
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'  // Gold trim for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border
@@ -103,14 +106,16 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
             staggerMs={55}
             distance={24}
           >
-            <View
-              style={[
+            <Pressable
+              style={({ pressed }) => [
                 homePillCard.card,
                 {
                   borderWidth: 1,
                   borderColor: cardBorderColor,
-                }
+                },
+                pressed && styles.cardPressed,
               ]}
+              onPress={() => setSelectedItem(item)}
             >
               <View style={styles.cardContent}>
                 <ColorIconBadge
@@ -154,10 +159,17 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                   </View>
                 </View>
               </View>
-            </View>
+            </Pressable>
           </AnimatedStackItem>
         ))
       )}
+
+      <ActivityDetailSheet
+        visible={!!selectedItem}
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        isPremium={isPremium}
+      />
     </View>
   );
 });
@@ -218,5 +230,9 @@ const styles = StyleSheet.create({
   },
   iconBadge: {
     alignSelf: 'center',
+  },
+  cardPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }],
   },
 });

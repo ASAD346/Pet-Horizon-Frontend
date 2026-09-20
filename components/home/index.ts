@@ -9,4 +9,5 @@ export { ReminderCardsRow } from './ReminderCardsRow';
 export { SectionHeader } from './SectionHeader';
 export { TodaysScheduleSection } from './TodaysScheduleSection';
 export { EmptyPetStateCard } from './EmptyPetStateCard';
+export { ActivityDetailSheet } from './ActivityDetailSheet';
 
