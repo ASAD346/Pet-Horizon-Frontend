@@ -28,7 +28,7 @@ export function walkScheduleSubtitle(item: WalkScheduleItem): string {
     return `${durationText}Skipped today`;
   }
 
-  return `${durationText}Scheduled for ${formatTimeHHmmDisplay(item.timeOfDay)}`;
+  return `${durationText}${formatTimeHHmmDisplay(item.timeOfDay)}`;
 }
 
 export function walkScheduleColors(item: WalkScheduleItem) {

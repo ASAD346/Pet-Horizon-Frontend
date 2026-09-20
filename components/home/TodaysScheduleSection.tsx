@@ -298,7 +298,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
           style={styles.cardSubtitle}
           weight="500"
           color={HomeTheme.textMuted}
-          numberOfLines={1}
+          numberOfLines={2}
         >
           {rowSubtitle(row)}
         </AppText>

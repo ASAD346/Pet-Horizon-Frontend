@@ -42,7 +42,7 @@ export function feedingScheduleSubtitle(item: FeedingScheduleItem): string {
     return `${portion}Skipped today`;
   }
 
-  return `${portion}Scheduled for ${formatTimeHHmmDisplay(item.timeOfDay)}`;
+  return `${portion}${formatTimeHHmmDisplay(item.timeOfDay)}`;
 }
 
 export function feedingScheduleColors(item: FeedingScheduleItem) {
