@@ -24,10 +24,10 @@ export function LogJournalSheet({ visible, onClose }: LogJournalSheetProps) {
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.flex}>
-        <Pressable style={styles.overlay} onPress={onClose}>
-          <Pressable
+        <View style={styles.overlay}>
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+          <View
             style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
-            onPress={(e) => e.stopPropagation()}
           >
             <View style={styles.handle} />
 
@@ -43,8 +43,8 @@ export function LogJournalSheet({ visible, onClose }: LogJournalSheetProps) {
             <View style={styles.body}>
               <JournalContent active={visible} onClose={onClose} />
             </View>
-          </Pressable>
-        </Pressable>
+          </View>
+        </View>
       </View>
     </Modal>
   );

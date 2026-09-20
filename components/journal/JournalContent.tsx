@@ -251,6 +251,11 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
     <>
     <ScrollView
       showsVerticalScrollIndicator={false}
+      nestedScrollEnabled={true}
+      scrollEventThrottle={16}
+      keyboardShouldPersistTaps="handled"
+      bounces={true}
+      overScrollMode="always"
       contentContainerStyle={styles.content}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={themeColor} />
