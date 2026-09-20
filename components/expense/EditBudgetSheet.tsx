@@ -1,15 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Switch, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, View, Switch, TouchableOpacity, TextInput, Platform, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
   FormSheetShell,
-  FormSection,
   FormSegmentedControl,
-  FormNumberInput,
+  FormSheetColors,
 } from '@/components/sheets';
+import { SheetColors } from '../sheets/sheetUi';
+import { Radius, Spacing } from '@/constants/theme';
 import { getErrorMessage } from '@/lib/api/errors';
 import { setBudget, updateBudget } from '@/services/expense/expenseApi';
+import { useLocalization } from '@/hooks/useLocalization';
 import { useToast } from '@/hooks/useToast';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -44,19 +46,31 @@ export function EditBudgetSheet({
   periodEnd,
   autoRenew: initialAutoRenew = true,
 }: EditBudgetSheetProps) {
+  const { currency } = useLocalization();
   const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'expenses');
   const resolvedReadOnly = !canEdit;
+
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    USD: '$',
+    GBP: '£',
+    CAD: '$',
+    AUD: '$',
+    EUR: '€',
+  };
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || '$';
 
   const [amount, setAmount] = useState('');
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>(initialPeriodType);
   const [autoRenew, setAutoRenew] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAmountFocused, setIsAmountFocused] = useState(false);
+  const amountRef = useRef<TextInput>(null);
   const { showToast } = useToast();
 
   useEffect(() => {
     if (visible) {
-      setAmount(currentLimit != null ? String(currentLimit) : '');
+      setAmount(currentLimit != null && currentLimit > 0 ? String(currentLimit) : '');
       setPeriodType(initialPeriodType);
       setAutoRenew(initialAutoRenew ?? true);
       setError(null);
@@ -65,7 +79,7 @@ export function EditBudgetSheet({
 
   const handleSave = async () => {
     if (!canEdit) {
-      showToast("Read-only access: You cannot modify this entry.");
+      showToast('Read-only access: You cannot modify this entry.');
       return;
     }
     if (saving || resolvedReadOnly) return;
@@ -100,7 +114,7 @@ export function EditBudgetSheet({
         visible={visible}
         onClose={onClose}
         title={budgetId ? 'Edit Budget' : 'Set Budget'}
-        subtitle="Configure your spending limit"
+        subtitle="Configure your pet spending limit"
         icon="wallet-outline"
         saveLabel={undefined}
         onSave={undefined}
@@ -125,92 +139,168 @@ export function EditBudgetSheet({
       visible={visible}
       onClose={onClose}
       title={budgetId ? 'Edit Budget' : 'Set Budget'}
-      subtitle="Configure your spending limit"
+      subtitle="Configure your pet spending limit"
       icon="wallet-outline"
-      saveLabel={resolvedReadOnly ? undefined : "Save Budget"}
+      saveLabel={resolvedReadOnly ? undefined : 'Save Budget'}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={resolvedReadOnly}
+      saveDisabled={resolvedReadOnly || !amount}
       error={error}
       isReadOnly={resolvedReadOnly}
       compact
     >
-      {periodStart && periodEnd ? (
-        <View style={styles.activePeriodBox}>
-          <Ionicons name="calendar-outline" size={14} color="#5C6470" />
-          <AppText variant="caption" weight="700" color="#5C6470">
-            Active Period: {formatDate(periodStart)} – {formatDate(periodEnd)}
+      <View style={styles.formContainer}>
+        {periodStart && periodEnd ? (
+          <View style={styles.activePeriodBox}>
+            <Ionicons name="calendar-outline" size={14} color="#5C6470" />
+            <AppText variant="caption" weight="700" color="#5C6470">
+              Active Period: {formatDate(periodStart)} – {formatDate(periodEnd)}
+            </AppText>
+          </View>
+        ) : null}
+
+        {/* Period Card */}
+        <View style={styles.sectionCard}>
+          <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+            BUDGET CYCLE <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
           </AppText>
-        </View>
-      ) : null}
-
-      <FormSection title="Budget Settings">
-        <FormSegmentedControl
-          label="Budget Period"
-          options={[
-            { value: 'weekly', label: 'Weekly' },
-            { value: 'monthly', label: 'Monthly' },
-          ]}
-          selected={periodType}
-          onSelect={(val) => setPeriodType(val as 'weekly' | 'monthly')}
-        />
-
-        <FormNumberInput
-          label="Budget Limit (USD)"
-          value={amount}
-          onChangeText={setAmount}
-          placeholder="500"
-          unit="$"
-        />
-      </FormSection>
-
-      {/* Auto-renew card */}
-      <TouchableOpacity
-        activeOpacity={0.85}
-        onPress={() => setAutoRenew(!autoRenew)}
-        style={[
-          styles.autoRenewCard,
-          autoRenew ? styles.autoRenewCardActive : styles.autoRenewCardInactive,
-        ]}
-      >
-        {/* Icon badge */}
-        <View style={[
-          styles.autoRenewIconBadge,
-          { backgroundColor: autoRenew ? '#E8F5E9' : '#F3F4F6' },
-        ]}>
-          <Ionicons
-            name="refresh"
-            size={20}
-            color={autoRenew ? '#2E7D32' : '#9CA3AF'}
+          <FormSegmentedControl
+            label="Frequency"
+            options={[
+              { value: 'weekly', label: 'Weekly' },
+              { value: 'monthly', label: 'Monthly' },
+            ]}
+            selected={periodType}
+            onSelect={(val) => setPeriodType(val as 'weekly' | 'monthly')}
           />
         </View>
 
-        {/* Text */}
-        <View style={styles.autoRenewTextCol}>
-          <AppText variant="bodySmall" weight="700" color={autoRenew ? '#1C3A1E' : '#374151'}>
-            Auto-renew budget
+        {/* Limit Amount Card */}
+        <View style={styles.sectionCard}>
+          <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+            BUDGET LIMIT ({currency}) <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
           </AppText>
-          <AppText variant="caption" weight="500" color={autoRenew ? '#4CAF50' : '#9CA3AF'} style={styles.autoRenewSub}>
-            {autoRenew
-              ? `Resets every ${periodType === 'weekly' ? 'week' : 'month'} automatically`
-              : 'One-time budget — expires after this period'}
-          </AppText>
+          <Pressable
+            onPress={() => amountRef.current?.focus()}
+            style={[
+              styles.amountField,
+              isAmountFocused && { borderColor: '#16A34A', borderWidth: 1.5 },
+            ]}
+          >
+            <AppText
+              variant="h2"
+              weight="800"
+              color={isAmountFocused ? '#16A34A' : '#64748B'}
+              style={styles.currency}
+            >
+              {currencySymbol}
+            </AppText>
+            <TextInput
+              ref={amountRef}
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="decimal-pad"
+              style={styles.amountInput}
+              placeholder="e.g. 250"
+              placeholderTextColor={SheetColors.placeholder}
+              onFocus={() => setIsAmountFocused(true)}
+              onBlur={() => setIsAmountFocused(false)}
+              editable={!resolvedReadOnly}
+            />
+          </Pressable>
         </View>
 
-        {/* Switch */}
-        <Switch
-          value={autoRenew}
-          onValueChange={setAutoRenew}
-          trackColor={{ false: '#E5E7EB', true: '#A5D6A7' }}
-          thumbColor={autoRenew ? '#2E7D32' : '#FFFFFF'}
-          ios_backgroundColor="#E5E7EB"
-        />
-      </TouchableOpacity>
+        {/* Auto-renew card */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => setAutoRenew(!autoRenew)}
+          disabled={resolvedReadOnly}
+          style={[
+            styles.autoRenewCard,
+            autoRenew ? styles.autoRenewCardActive : styles.autoRenewCardInactive,
+          ]}
+        >
+          <View
+            style={[
+              styles.autoRenewIconBadge,
+              { backgroundColor: autoRenew ? '#E8F5E9' : '#F3F4F6' },
+            ]}
+          >
+            <Ionicons
+              name="refresh"
+              size={20}
+              color={autoRenew ? '#2E7D32' : '#9CA3AF'}
+            />
+          </View>
+
+          <View style={styles.autoRenewTextCol}>
+            <AppText variant="bodySmall" weight="700" color={autoRenew ? '#1C3A1E' : '#374151'}>
+              Auto-renew budget
+            </AppText>
+            <AppText
+              variant="caption"
+              weight="500"
+              color={autoRenew ? '#4CAF50' : '#9CA3AF'}
+              style={styles.autoRenewSub}
+            >
+              {autoRenew
+                ? `Resets every ${periodType === 'weekly' ? 'week' : 'month'} automatically`
+                : 'One-time budget — expires after this period'}
+            </AppText>
+          </View>
+
+          <Switch
+            value={autoRenew}
+            onValueChange={setAutoRenew}
+            trackColor={{ false: '#E5E7EB', true: '#A5D6A7' }}
+            thumbColor={autoRenew ? '#2E7D32' : '#FFFFFF'}
+            ios_backgroundColor="#E5E7EB"
+            disabled={resolvedReadOnly}
+          />
+        </TouchableOpacity>
+      </View>
     </FormSheetShell>
   );
 }
 
 const styles = StyleSheet.create({
+  formContainer: {
+    gap: 14,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    gap: 12,
+  },
+  sectionHeader: {
+    letterSpacing: 0.6,
+    marginBottom: -2,
+  },
+  amountField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: FormSheetColors.inputBg,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: FormSheetColors.inputBorder,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+    gap: Spacing.xs,
+  },
+  currency: {
+    fontSize: 22,
+    lineHeight: 28,
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    padding: 0,
+  },
   activePeriodBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -219,7 +309,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    marginBottom: 16,
   },
   autoRenewCard: {
     flexDirection: 'row',
@@ -229,7 +318,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 14,
     borderWidth: 1.5,
-    marginTop: 12,
   },
   autoRenewCardActive: {
     backgroundColor: '#F0FAF0',
