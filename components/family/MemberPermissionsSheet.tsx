@@ -80,20 +80,19 @@ function MemberAvatarLarge({
   name: string;
   pictureUrl?: string | null;
 }) {
-  const initials = name
-    .split(' ')
-    .filter(Boolean)
-    .map((w) => w[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  const [imageError, setImageError] = useState(false);
+  const initial = (name.trim()[0] || 'U').toUpperCase();
 
   const resolved = resolveMediaUrl(pictureUrl ?? undefined);
 
-  if (resolved) {
+  if (resolved && !imageError) {
     return (
       <View style={styles.avatarWrap}>
-        <Image source={{ uri: resolved }} style={styles.avatarImage} />
+        <Image
+          source={{ uri: resolved }}
+          style={styles.avatarImage}
+          onError={() => setImageError(true)}
+        />
       </View>
     );
   }
@@ -101,7 +100,7 @@ function MemberAvatarLarge({
   return (
     <View style={styles.avatarWrap}>
       <LinearGradient colors={['#166534', '#114227']} style={styles.avatarGradient}>
-        <AppText style={styles.avatarInitials}>{initials || 'U'}</AppText>
+        <AppText style={styles.avatarInitials}>{initial}</AppText>
       </LinearGradient>
     </View>
   );
@@ -163,7 +162,15 @@ export function MemberPermissionsSheet({
     'Care Member';
 
   const memberEmail = member?.userId?.email || (member as any)?.email || '';
-  const memberPicture = member?.userId?.profileImage || (member as any)?.profileImage || null;
+  const memberPicture =
+    member?.userId?.profileImage ||
+    (member as any)?.profileImage ||
+    (member as any)?.profilePicture ||
+    (member as any)?.pictureUrl ||
+    (activeCachedMember?.userId as any)?.profileImage ||
+    (activeCachedMember as any)?.profileImage ||
+    (activeCachedMember as any)?.profilePicture ||
+    null;
 
   // ── Sync data on open ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -512,7 +519,7 @@ const styles = StyleSheet.create({
   },
   avatarInitials: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
   },
   badgeRow: {
