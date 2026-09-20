@@ -16,7 +16,7 @@ const GROOMING_TYPE_ICONS: Record<
   React.ComponentProps<typeof MaterialCommunityIcons>['name']
 > = {
   bath: 'shower-head',
-  brushing: 'comb',
+  brushing: 'hair-dryer',
   nail_trim: 'content-cut',
   ear_cleaning: 'ear-hearing',
   teeth_brushing: 'tooth-outline',
