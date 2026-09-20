@@ -22,7 +22,7 @@ export function getWalkTimeLabel(value: string): string {
 
 export function defaultWalkTimeDate(): Date {
   const d = new Date();
-  d.setHours(18, 0, 0, 0);
+  d.setSeconds(0, 0);
   return d;
 }
 

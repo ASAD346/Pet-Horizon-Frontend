@@ -119,7 +119,7 @@ export function getUnitLabel(value: string): string {
 
 export function defaultFeedingTimeDate(): Date {
   const d = new Date();
-  d.setHours(8, 30, 0, 0);
+  d.setSeconds(0, 0);
   return d;
 }
 

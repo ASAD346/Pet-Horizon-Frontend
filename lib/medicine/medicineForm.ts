@@ -31,7 +31,7 @@ export const DAYS_OF_WEEK_OPTIONS: { value: DayOfWeekCode; label: string }[] = [
 
 export function defaultMedicineTimeDate(): Date {
   const d = new Date();
-  d.setHours(10, 30, 0, 0);
+  d.setSeconds(0, 0);
   return d;
 }
 
