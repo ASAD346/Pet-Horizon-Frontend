@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import {
   Animated,
+  Modal,
   PanResponder,
   Platform,
   StyleSheet,
@@ -166,55 +167,63 @@ export function ToastHost() {
   }
 
   return (
-    <View style={styles.overlay} pointerEvents="box-none">
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.toastContainer,
-          {
-            opacity,
-            transform: [{ translateY }],
-            top: Math.max(insets.top, 12),
-          },
-        ]}
-      >
-        <View style={[styles.notificationCard, { backgroundColor: bgColor }]}>
-          {/* Header row */}
-          <View style={styles.headerRow}>
-            <View style={styles.appIdentity}>
-              <View style={styles.tagWrapper}>
-                <AppText variant="caption" weight="800" color={badgeColor} style={styles.tagText}>
-                  PH
+    <Modal
+      visible={Boolean(message)}
+      transparent
+      statusBarTranslucent
+      animationType="none"
+      onRequestClose={() => dismissToast()}
+    >
+      <View style={styles.overlay} pointerEvents="box-none">
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={[
+            styles.toastContainer,
+            {
+              opacity,
+              transform: [{ translateY }],
+              top: Math.max(insets.top, 12),
+            },
+          ]}
+        >
+          <View style={[styles.notificationCard, { backgroundColor: bgColor }]}>
+            {/* Header row */}
+            <View style={styles.headerRow}>
+              <View style={styles.appIdentity}>
+                <View style={styles.tagWrapper}>
+                  <AppText variant="caption" weight="800" color={badgeColor} style={styles.tagText}>
+                    PH
+                  </AppText>
+                  <View style={[styles.tagUnderline, { backgroundColor: badgeColor }]} />
+                </View>
+                <AppText variant="caption" weight="600" color={textColor} style={styles.appName}>
+                  Pet Horizon
                 </AppText>
-                <View style={[styles.tagUnderline, { backgroundColor: badgeColor }]} />
+                <Ionicons name="notifications" size={12} color={descColor} style={styles.bellIcon} />
               </View>
-              <AppText variant="caption" weight="600" color={textColor} style={styles.appName}>
-                Pet Horizon
-              </AppText>
-              <Ionicons name="notifications" size={12} color={descColor} style={styles.bellIcon} />
+              <View style={styles.chevronWrapper}>
+                <Ionicons name="chevron-up" size={14} color={descColor} />
+              </View>
             </View>
-            <View style={styles.chevronWrapper}>
-              <Ionicons name="chevron-up" size={14} color={descColor} />
-            </View>
-          </View>
 
-          {/* Content row */}
-          <View style={styles.contentRow}>
-            <View style={styles.textContainer}>
-              <AppText variant="bodySmall" weight="700" color={textColor} style={styles.titleText}>
-                {title}
-              </AppText>
-              <AppText variant="caption" weight="500" color={descColor} style={styles.bodyText}>
-                {message}
-              </AppText>
-            </View>
-            <View style={[styles.rightLogo, { borderColor: badgeColor, backgroundColor: 'rgba(255,255,255,0.4)' }]}>
-              <Ionicons name="paw" size={16} color={badgeColor} />
+            {/* Content row */}
+            <View style={styles.contentRow}>
+              <View style={styles.textContainer}>
+                <AppText variant="bodySmall" weight="700" color={textColor} style={styles.titleText}>
+                  {title}
+                </AppText>
+                <AppText variant="caption" weight="500" color={descColor} style={styles.bodyText}>
+                  {message}
+                </AppText>
+              </View>
+              <View style={[styles.rightLogo, { borderColor: badgeColor, backgroundColor: 'rgba(255,255,255,0.4)' }]}>
+                <Ionicons name="paw" size={16} color={badgeColor} />
+              </View>
             </View>
           </View>
-        </View>
-      </Animated.View>
-    </View>
+        </Animated.View>
+      </View>
+    </Modal>
   );
 }
 
