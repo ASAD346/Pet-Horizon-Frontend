@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, type Href } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -33,6 +33,8 @@ interface RecentTransactionsSectionProps {
   loading?: boolean;
   isPremium?: boolean;
   onAddExpensePress?: () => void;
+  refreshControl?: React.ReactElement;
+  contentPaddingBottom?: number;
 }
 
 function filterTransactions(
@@ -89,6 +91,8 @@ export function RecentTransactionsSection({
   loading,
   isPremium = false,
   onAddExpensePress,
+  refreshControl,
+  contentPaddingBottom = 100,
 }: RecentTransactionsSectionProps) {
   const router = useRouter();
   const { formatCurrency } = useLocalization();
@@ -142,7 +146,7 @@ export function RecentTransactionsSection({
 
   return (
     <View style={styles.section}>
-      {/* Section Header with Title, Count and Time Filter Slabs */}
+      {/* Pinned Section Header with Title, Count and Time Filter Slabs */}
       <View style={styles.headerContainer}>
         <View style={styles.sectionHeader}>
           <View style={styles.labelRow}>
@@ -191,92 +195,103 @@ export function RecentTransactionsSection({
         </View>
       </View>
 
-      {loading ? (
-        <SkeletonList count={3} cardStyle={homePillCard.card} />
-      ) : filtered.length === 0 ? (
-        <EmptyState
-          icon="receipt-outline"
-          title={emptyTitle}
-          description={emptyDescription}
-          buttonLabel="Log First Expense"
-          onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
-        />
-      ) : (
-        <>
-          {visibleItems.map((item, index) => (
-            <AnimatedStackItem
-              key={item.id}
-              index={index}
-              direction="up"
-              staggerMs={55}
-              distance={24}
-            >
-              <View style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
-                {/* Category Icon Badge */}
-                <ColorIconBadge
-                  color={item.color}
-                  backgroundColor={item.bg}
-                  materialIcon={item.materialIcon}
-                  size={38}
-                  iconSize={18}
-                  shape="circle"
-                />
+      {/* Scrollable Transaction Cards List */}
+      <ScrollView
+        style={styles.scrollList}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: contentPaddingBottom },
+        ]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={refreshControl}
+      >
+        {loading ? (
+          <SkeletonList count={3} cardStyle={homePillCard.card} />
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon="receipt-outline"
+            title={emptyTitle}
+            description={emptyDescription}
+            buttonLabel="Log First Expense"
+            onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
+          />
+        ) : (
+          <>
+            {visibleItems.map((item, index) => (
+              <AnimatedStackItem
+                key={item.id}
+                index={index}
+                direction="up"
+                staggerMs={55}
+                distance={24}
+              >
+                <View style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
+                  {/* Category Icon Badge */}
+                  <ColorIconBadge
+                    color={item.color}
+                    backgroundColor={item.bg}
+                    materialIcon={item.materialIcon}
+                    size={38}
+                    iconSize={18}
+                    shape="circle"
+                  />
 
-                {/* Info */}
-                <View style={styles.textBlock}>
-                  <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.title}>
-                    {item.title}
-                  </AppText>
-                  <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
-                    {item.subtitle}
+                  {/* Info */}
+                  <View style={styles.textBlock}>
+                    <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.title}>
+                      {item.title}
+                    </AppText>
+                    <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
+                      {item.subtitle}
+                    </AppText>
+                  </View>
+
+                  {/* Amount */}
+                  <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
+                    -{formatCurrency(item.amountVal)}
                   </AppText>
                 </View>
+              </AnimatedStackItem>
+            ))}
 
-                {/* Amount */}
-                <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
-                  -{formatCurrency(item.amountVal)}
-                </AppText>
-              </View>
-            </AnimatedStackItem>
-          ))}
-
-          {/* See More / Show Less Button */}
-          {filtered.length > INITIAL_LIMIT && (
-            <TouchableOpacity
-              onPress={handleToggleExpand}
-              style={[
-                styles.moreBtn,
-                isPremium && styles.moreBtnPremium,
-              ]}
-              activeOpacity={0.75}
-            >
-              <View style={styles.moreBtnContent}>
-                <AppText
-                  variant="caption"
-                  weight="700"
-                  color={brandColor}
-                >
-                  {expanded
-                    ? 'Show Less'
-                    : `+${overflowCount} more transaction${overflowCount !== 1 ? 's' : ''} · See More`}
-                </AppText>
-                <Ionicons
-                  name={expanded ? 'chevron-up' : 'chevron-down'}
-                  size={14}
-                  color={brandColor}
-                />
-              </View>
-            </TouchableOpacity>
-          )}
-        </>
-      )}
+            {/* See More / Show Less Button */}
+            {filtered.length > INITIAL_LIMIT && (
+              <TouchableOpacity
+                onPress={handleToggleExpand}
+                style={[
+                  styles.moreBtn,
+                  isPremium && styles.moreBtnPremium,
+                ]}
+                activeOpacity={0.75}
+              >
+                <View style={styles.moreBtnContent}>
+                  <AppText
+                    variant="caption"
+                    weight="700"
+                    color={brandColor}
+                  >
+                    {expanded
+                      ? 'Show Less'
+                      : `+${overflowCount} more transaction${overflowCount !== 1 ? 's' : ''} · See More`}
+                  </AppText>
+                  <Ionicons
+                    name={expanded ? 'chevron-up' : 'chevron-down'}
+                    size={14}
+                    color={brandColor}
+                  />
+                </View>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: Spacing.lg,
+    flex: 1,
   },
   headerContainer: {
     marginBottom: Spacing.sm,
@@ -340,6 +355,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
   },
+  scrollList: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 2,
+    paddingHorizontal: 2,
+  },
   transactionRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -382,6 +404,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 9,
     marginTop: 2,
+    marginBottom: 8,
     marginHorizontal: 2,
     borderRadius: Radius.md,
     backgroundColor: 'rgba(46, 125, 50, 0.05)',

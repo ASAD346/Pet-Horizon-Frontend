@@ -144,15 +144,7 @@ export function ExpenseTrackerView({
         onDatePress={() => setMonthPickerVisible(true)}
       />
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: fabClearance }]}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
-        }
-      >
-
+      <View style={styles.mainContainer}>
         {!petLoading && !pet ? (
           <AuthInfoBanner message="Add a pet from the Home tab to start tracking their expenses and budget." />
         ) : null}
@@ -167,35 +159,41 @@ export function ExpenseTrackerView({
 
         {canViewExpenses ? (
           <>
-            <WeeklySpendingCard
-              periodLabel={budget.periodLabel}
-              limitLabel={budget.hasBudget && budget.amountLimit !== undefined ? formatCurrency(budget.amountLimit) : 'No budget set'}
-              spentPercent={budget.spentPercent}
-              remainingLabel={budget.hasBudget && budget.remaining !== undefined ? `${formatCurrency(budget.remaining)} left` : 'Tap Edit Budget'}
-              status={budget.status}
-              hasBudget={budget.hasBudget}
-              loading={budgetLoading || (petLoading && !pet)}
-              isPremium={isPremium}
-              onEditPress={canEditExpenses ? (isNew) => {
-                setIsNewBudget(!!isNew);
-                setBudgetSheetVisible(true);
-              } : undefined}
-              periodStart={budget.periodStart}
-              periodEnd={budget.periodEnd}
-            />
+            <View style={styles.fixedTopSection}>
+              <WeeklySpendingCard
+                periodLabel={budget.periodLabel}
+                limitLabel={budget.hasBudget && budget.amountLimit !== undefined ? formatCurrency(budget.amountLimit) : 'No budget set'}
+                spentPercent={budget.spentPercent}
+                remainingLabel={budget.hasBudget && budget.remaining !== undefined ? `${formatCurrency(budget.remaining)} left` : 'Tap Edit Budget'}
+                status={budget.status}
+                hasBudget={budget.hasBudget}
+                loading={budgetLoading || (petLoading && !pet)}
+                isPremium={isPremium}
+                onEditPress={canEditExpenses ? (isNew) => {
+                  setIsNewBudget(!!isNew);
+                  setBudgetSheetVisible(true);
+                } : undefined}
+                periodStart={budget.periodStart}
+                periodEnd={budget.periodEnd}
+              />
 
-            <ExpenseCategoryTiles selected={category} onSelect={setCategory} />
+              <ExpenseCategoryTiles selected={category} onSelect={setCategory} />
+            </View>
+
             <RecentTransactionsSection
               categoryFilter={category}
               transactions={expenses}
               loading={expensesLoading || (petLoading && !pet)}
               isPremium={isPremium}
               onAddExpensePress={() => setAddExpenseVisible(true)}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
+              }
+              contentPaddingBottom={fabClearance}
             />
           </>
         ) : null}
-
-      </ScrollView>
+      </View>
 
       {pet && canEditExpenses ? (
         <TouchableOpacity
@@ -264,12 +262,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F1F7F1', // Matches ProfileTheme.background
   },
-  scroll: {
+  mainContainer: {
     flex: 1,
-  },
-  content: {
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.md,
+  },
+  fixedTopSection: {
+    marginBottom: 2,
   },
   monthSelectorRow: {
     flexDirection: 'row',

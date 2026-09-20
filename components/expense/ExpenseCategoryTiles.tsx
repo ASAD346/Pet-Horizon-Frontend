@@ -93,7 +93,7 @@ export function ExpenseCategoryTiles({ selected, onSelect }: ExpenseCategoryTile
 
 const styles = StyleSheet.create({
   section: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   labelRow: {
     flexDirection: 'row',
