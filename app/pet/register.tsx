@@ -75,7 +75,7 @@ export default function RegisterPetScreen() {
   const [species, setSpecies] = useState('');
   const [breed, setBreed] = useState('');
   const [birthday, setBirthday] = useState<Date | null>(null);
-  const [weight, setWeight] = useState('25');
+  const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<WeightUnit>('kg');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -676,7 +676,12 @@ export default function RegisterPetScreen() {
                       value={weight}
                       unit={weightUnit}
                       readOnly={!hasEditPermission}
-                      onValueChange={setWeight}
+                      onValueChange={(text) => {
+                        setWeight(text);
+                        if (fieldErrors.weight) {
+                          setFieldErrors((prev) => ({ ...prev, weight: undefined }));
+                        }
+                      }}
                       onUnitChange={setWeightUnit}
                     />
                     {fieldErrors.weight ? (

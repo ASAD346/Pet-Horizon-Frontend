@@ -33,6 +33,21 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
     );
   }
 
+  const handleUnitToggle = (targetUnit: WeightUnit) => {
+    if (targetUnit === unit) return;
+
+    const raw = value?.trim();
+    if (raw) {
+      const num = parseFloat(raw);
+      if (!Number.isNaN(num) && num > 0) {
+        const converted = targetUnit === 'lbs' ? num * 2.20462 : num / 2.20462;
+        const rounded = Number(converted.toFixed(1)).toString();
+        onValueChange(rounded);
+      }
+    }
+    onUnitChange(targetUnit);
+  };
+
   return (
     <View style={styles.wrapper}>
       <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
@@ -49,7 +64,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
             value={value}
             onChangeText={onValueChange}
             keyboardType="decimal-pad"
-            placeholder="0"
+            placeholder="0.0"
             placeholderTextColor={Palette.gray[400]}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
@@ -59,7 +74,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
         <View style={styles.unitToggle}>
           <TouchableOpacity
             style={[styles.unitBtn, unit === 'kg' && styles.unitBtnActive]}
-            onPress={() => onUnitChange('kg')}
+            onPress={() => handleUnitToggle('kg')}
             activeOpacity={0.85}
           >
             <AppText
@@ -72,7 +87,7 @@ export function WeightInput({ value, unit, onValueChange, onUnitChange, readOnly
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.unitBtn, unit === 'lbs' && styles.unitBtnActive]}
-            onPress={() => onUnitChange('lbs')}
+            onPress={() => handleUnitToggle('lbs')}
             activeOpacity={0.85}
           >
             <AppText
