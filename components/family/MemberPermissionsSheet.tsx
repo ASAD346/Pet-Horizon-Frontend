@@ -28,47 +28,27 @@ const MODULE_CONFIG = [
   {
     id: 'feeding',
     label: 'Feeding',
-    icon: 'restaurant-outline' as const,
-    iconLib: 'ionicon' as const,
-    color: '#EA580C',
-    bg: '#FFF7ED',
-    border: '#FED7AA',
+    icon: 'silverware-fork-knife' as const,
   },
   {
     id: 'walks',
     label: 'Walks',
-    icon: 'dog' as const,
-    iconLib: 'material' as const,
-    color: '#059669',
-    bg: '#ECFDF5',
-    border: '#A7F3D0',
+    icon: 'paw' as const,
   },
   {
     id: 'medicine',
     label: 'Medicine',
-    icon: 'medkit-outline' as const,
-    iconLib: 'ionicon' as const,
-    color: '#DC2626',
-    bg: '#FEF2F2',
-    border: '#FECACA',
+    icon: 'pill' as const,
   },
   {
     id: 'grooming',
     label: 'Grooming',
-    icon: 'cut-outline' as const,
-    iconLib: 'ionicon' as const,
-    color: '#7C3AED',
-    bg: '#F5F3FF',
-    border: '#DDD6FE',
+    icon: 'content-cut' as const,
   },
   {
     id: 'vaccination',
     label: 'Vaccination',
-    icon: 'shield-checkmark-outline' as const,
-    iconLib: 'ionicon' as const,
-    color: '#2563EB',
-    bg: '#EFF6FF',
-    border: '#BFDBFE',
+    icon: 'needle' as const,
   },
 ] as const;
 
@@ -399,25 +379,14 @@ export function MemberPermissionsSheet({
                   <View
                     style={[
                       styles.modIcon,
-                      {
-                        backgroundColor: enabled ? mod.bg : '#F8FAFC',
-                        borderColor: enabled ? mod.border : '#E2E8F0',
-                      },
+                      enabled ? styles.modIconActive : styles.modIconInactive,
                     ]}
                   >
-                    {mod.iconLib === 'material' ? (
-                      <MaterialCommunityIcons
-                        name={mod.icon as any}
-                        size={19}
-                        color={enabled ? mod.color : '#94A3B8'}
-                      />
-                    ) : (
-                      <Ionicons
-                        name={mod.icon as any}
-                        size={19}
-                        color={enabled ? mod.color : '#94A3B8'}
-                      />
-                    )}
+                    <MaterialCommunityIcons
+                      name={mod.icon}
+                      size={18}
+                      color={enabled ? '#166534' : '#94A3B8'}
+                    />
                   </View>
 
                   <View style={styles.modTextCol}>
@@ -432,7 +401,7 @@ export function MemberPermissionsSheet({
                     <AppText
                       variant="caption"
                       weight="600"
-                      style={{ color: enabled ? mod.color : '#94A3B8', fontSize: 11 }}
+                      style={{ color: enabled ? '#15803D' : '#94A3B8', fontSize: 11 }}
                     >
                       {enabled ? 'Allowed access' : 'Restricted access'}
                     </AppText>
@@ -441,8 +410,8 @@ export function MemberPermissionsSheet({
                   <Switch
                     value={enabled}
                     onValueChange={() => toggle(mod.id)}
-                    trackColor={{ false: '#E2E8F0', true: mod.color + '55' }}
-                    thumbColor={enabled ? mod.color : '#CBD5E1'}
+                    trackColor={{ false: '#E2E8F0', true: '#BBF7D0' }}
+                    thumbColor={enabled ? '#166534' : '#CBD5E1'}
                     ios_backgroundColor="#E2E8F0"
                     disabled={isReadOnly}
                   />
@@ -592,6 +561,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+  },
+  modIconActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#DCFCE7',
+  },
+  modIconInactive: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   modTextCol: {
     flex: 1,
