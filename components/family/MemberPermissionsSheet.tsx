@@ -13,7 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppDispatch } from '@/redux/store';
 import { AppText } from '@/components/ui/AppText';
-import { FormSheetShell, FormSection, FormSegmentedControl } from '@/components/sheets';
+import { FormSheetShell, FormSection } from '@/components/sheets';
 import { Radius, Spacing } from '@/constants/theme';
 import { FormSheetColors } from '@/components/sheets/formSheetStyles';
 import { getErrorMessage } from '@/lib/api/errors';
@@ -134,7 +134,6 @@ export function MemberPermissionsSheet({
   const dispatch = useAppDispatch();
   const { showSuccessToast, showErrorToast } = useToast();
 
-  const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
   const [localPermissions, setLocalPermissions] = useState<Record<string, boolean>>({
     feeding: false,
     walks: false,
@@ -170,7 +169,6 @@ export function MemberPermissionsSheet({
   useEffect(() => {
     const rec = activeCachedMember || member;
     if (visible && rec) {
-      setAccessLevel(rec.accessLevel === 'edit' ? 'edit' : 'readonly');
       const perms = rec.permissions || {};
       const allowed = rec.allowedModules ?? [];
       const check = (key: string) => {
@@ -214,7 +212,7 @@ export function MemberPermissionsSheet({
         'expenses',
       ];
       return await updatePetMemberPermissions(token, petId, targetUserId, {
-        accessLevel,
+        accessLevel: 'edit',
         allowedModules,
         permissions: { ...permsObj, journal: true, expenses: true },
       } as any);
@@ -237,7 +235,7 @@ export function MemberPermissionsSheet({
         if (!old || !Array.isArray(old)) return old;
         return old.map((m: any) =>
           String(m._id || m.id || m.userId?._id) === String(targetUserId)
-            ? { ...m, permissions: { ...permsObj, journal: true, expenses: true }, allowedModules, accessLevel }
+            ? { ...m, permissions: { ...permsObj, journal: true, expenses: true }, allowedModules, accessLevel: 'edit' }
             : m,
         );
       });
@@ -273,14 +271,14 @@ export function MemberPermissionsSheet({
         if (!old || !Array.isArray(old)) return old;
         return old.map((m: any) =>
           String(m._id || m.id || m.userId?._id) === String(targetUserId)
-            ? { ...m, permissions: sp, allowedModules, accessLevel }
+            ? { ...m, permissions: sp, allowedModules, accessLevel: 'edit' }
             : m,
         );
       });
       queryClient.invalidateQueries({ queryKey: ['petMembers', petId] });
       queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
       showSuccessToast('Permissions saved successfully.');
-      onUpdated({ ...member, accessLevel, allowedModules, permissions: sp } as any);
+      onUpdated({ ...member, accessLevel: 'edit', allowedModules, permissions: sp } as any);
       onClose();
     },
   });
@@ -330,7 +328,7 @@ export function MemberPermissionsSheet({
       visible={visible}
       onClose={onClose}
       title="Member Permissions"
-      subtitle="Manage access and module controls"
+      subtitle="Manage caregiver access modules"
       icon="shield-account-outline"
       saveLabel="Save Permissions"
       onSave={isReadOnly ? undefined : handleSave}
@@ -361,27 +359,6 @@ export function MemberPermissionsSheet({
                 <AppText style={styles.memberBadgeText}>MEMBER</AppText>
               </View>
 
-              <View
-                style={[
-                  styles.roleBadge,
-                  accessLevel === 'edit' ? styles.roleBadgeEdit : styles.roleBadgeView,
-                ]}
-              >
-                <Ionicons
-                  name={accessLevel === 'edit' ? 'create-outline' : 'eye-outline'}
-                  size={11}
-                  color={accessLevel === 'edit' ? '#047857' : '#475569'}
-                />
-                <AppText
-                  style={[
-                    styles.roleBadgeText,
-                    accessLevel === 'edit' ? { color: '#047857' } : { color: '#475569' },
-                  ]}
-                >
-                  {accessLevel === 'edit' ? 'Can Edit' : 'View Only'}
-                </AppText>
-              </View>
-
               {isPremium && (
                 <View style={styles.premiumBadge}>
                   <Ionicons name="sparkles" size={10} color="#D97706" />
@@ -408,19 +385,7 @@ export function MemberPermissionsSheet({
         </View>
       </View>
 
-      {/* ── 2. Permission Role ── */}
-      <FormSection title="Permission Role" icon="key-outline">
-        <FormSegmentedControl
-          selected={accessLevel}
-          onSelect={(val) => setAccessLevel(val as 'readonly' | 'edit')}
-          options={[
-            { value: 'readonly', label: 'View Only' },
-            { value: 'edit', label: 'Can Edit' },
-          ]}
-        />
-      </FormSection>
-
-      {/* ── 3. Module Permissions ── */}
+      {/* ── 2. Module Permissions (Pure On/Off Toggles) ── */}
       <FormSection title="Module Permissions" icon="view-grid-outline">
         <View style={styles.modulesCard}>
           {MODULE_CONFIG.map((mod, idx) => {
@@ -496,7 +461,7 @@ export function MemberPermissionsSheet({
         </View>
       </FormSection>
 
-      {/* ── 4. Danger Zone / Remove Member ── */}
+      {/* ── 3. Manage Access / Remove Member ── */}
       {!isReadOnly && (
         <FormSection title="Manage Access" icon="account-cancel-outline">
           <TouchableOpacity
@@ -609,28 +574,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 0.4,
-  },
-  roleBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2.5,
-    borderWidth: 1,
-  },
-  roleBadgeEdit: {
-    backgroundColor: '#ECFDF5',
-    borderColor: '#A7F3D0',
-  },
-  roleBadgeView: {
-    backgroundColor: '#F8FAFC',
-    borderColor: '#E2E8F0',
-  },
-  roleBadgeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.2,
   },
   premiumBadge: {
     flexDirection: 'row',
