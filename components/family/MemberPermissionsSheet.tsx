@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -31,7 +32,7 @@ const MODULE_CONFIG = [
     label: 'Feeding',
     icon: 'restaurant-outline' as const,
     iconLib: 'ionicon' as const,
-    color: '#F97316',
+    color: '#EA580C',
     bg: '#FFF7ED',
     border: '#FED7AA',
   },
@@ -40,7 +41,7 @@ const MODULE_CONFIG = [
     label: 'Walks',
     icon: 'dog' as const,
     iconLib: 'material' as const,
-    color: '#10B981',
+    color: '#059669',
     bg: '#ECFDF5',
     border: '#A7F3D0',
   },
@@ -49,7 +50,7 @@ const MODULE_CONFIG = [
     label: 'Medicine',
     icon: 'medkit-outline' as const,
     iconLib: 'ionicon' as const,
-    color: '#EF4444',
+    color: '#DC2626',
     bg: '#FEF2F2',
     border: '#FECACA',
   },
@@ -58,7 +59,7 @@ const MODULE_CONFIG = [
     label: 'Grooming',
     icon: 'cut-outline' as const,
     iconLib: 'ionicon' as const,
-    color: '#8B5CF6',
+    color: '#7C3AED',
     bg: '#F5F3FF',
     border: '#DDD6FE',
   },
@@ -67,7 +68,7 @@ const MODULE_CONFIG = [
     label: 'Vaccination',
     icon: 'shield-checkmark-outline' as const,
     iconLib: 'ionicon' as const,
-    color: '#3B82F6',
+    color: '#2563EB',
     bg: '#EFF6FF',
     border: '#BFDBFE',
   },
@@ -94,16 +95,16 @@ function MemberAvatarLarge({
 
   if (resolved) {
     return (
-      <View style={[av.outer, { borderColor: color }]}>
+      <View style={[av.outer, { borderColor: '#E2E8F0' }]}>
         <Image source={{ uri: resolved }} style={av.image} />
       </View>
     );
   }
 
   return (
-    <View style={[av.outer, { borderColor: color }]}>
-      <LinearGradient colors={[color, color + 'BB']} style={av.gradient}>
-        <AppText style={av.initials}>{initials}</AppText>
+    <View style={[av.outer, { borderColor: '#E2E8F0' }]}>
+      <LinearGradient colors={['#334155', '#1E293B']} style={av.gradient}>
+        <AppText style={av.initials}>{initials || 'U'}</AppText>
       </LinearGradient>
     </View>
   );
@@ -111,15 +112,25 @@ function MemberAvatarLarge({
 
 const av = StyleSheet.create({
   outer: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    borderWidth: 3,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    borderWidth: 2,
+    backgroundColor: '#F8FAFC',
     overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: { elevation: 3 },
+    }),
   },
   gradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   image: { width: '100%', height: '100%' },
-  initials: { color: '#FFFFFF', fontSize: 24, fontWeight: '800', letterSpacing: 1 },
+  initials: { color: '#F8FAFC', fontSize: 20, fontWeight: '800', letterSpacing: 0.5 },
 });
 
 // ─── Types ───────────────────────────────────────────────────────────────────────
@@ -172,10 +183,6 @@ export function MemberPermissionsSheet({
 
   const memberEmail = member?.userId?.email || (member as any)?.email || '';
   const memberPicture = member?.userId?.profileImage || (member as any)?.profileImage || null;
-
-  // Stable avatar color derived from name
-  const AVATAR_PALETTE = ['#3B82F6', '#8B5CF6', '#F97316', '#10B981', '#EF4444', '#EC4899'];
-  const avatarColor = AVATAR_PALETTE[(memberName.charCodeAt(0) || 0) % AVATAR_PALETTE.length];
 
   // ── Permission Query ────────────────────────────────────────────────────────
   const { data: memberPermissions } = useQuery({
@@ -255,17 +262,14 @@ export function MemberPermissionsSheet({
       } as any);
     },
     onMutate: async (permsObj) => {
-      // Cancel any in-flight queries for both caches we're about to touch
       await queryClient.cancelQueries({ queryKey: ['family-permissions', targetUserId] });
       await queryClient.cancelQueries({ queryKey: ['petMembers', petId] });
 
       const prev = queryClient.getQueryData(['family-permissions', targetUserId]);
       const prevMembers = queryClient.getQueryData(['petMembers', petId]);
 
-      // Optimistically update the per-user permissions cache
       queryClient.setQueryData(['family-permissions', targetUserId], permsObj);
 
-      // Optimistically update the pet-members list for instant toggle responsiveness
       const allowedModules = [...Object.keys(permsObj).filter((k) => permsObj[k]), 'journal', 'expenses'];
       queryClient.setQueryData(['petMembers', petId], (old: any) => {
         if (!old || !Array.isArray(old)) return old;
@@ -276,7 +280,6 @@ export function MemberPermissionsSheet({
         );
       });
 
-      // Update Redux state immediately
       dispatch({
         type: 'family/updateMemberPermissionsSuccess',
         payload: { memberId: targetUserId, permissions: { ...permsObj, journal: true, expenses: true } },
@@ -318,6 +321,33 @@ export function MemberPermissionsSheet({
     },
   });
 
+  const handleAccessLevelChange = (level: 'readonly' | 'edit') => {
+    if (accessLevel === level || isReadOnly) return;
+    setAccessLevel(level);
+    const perms: Record<string, boolean> = {
+      feeding: getVal('feeding'),
+      walks: getVal('walks'),
+      medicine: getVal('medicine'),
+      grooming: getVal('grooming'),
+      vaccination: getVal('vaccination'),
+      journal: true,
+      expenses: true,
+    };
+    mutation.mutate(perms);
+  };
+
+  const confirmRemove = () => {
+    Alert.alert(
+      'Remove Member',
+      `Are you sure you want to remove ${memberName} from this pet's Family Hub? They will lose access immediately.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: handleRemove },
+      ],
+      { cancelable: true },
+    );
+  };
+
   const handleRemove = async () => {
     if (!token || !petId || !member) return;
     setRemoving(true);
@@ -339,11 +369,8 @@ export function MemberPermissionsSheet({
     }
   };
 
-  const gradientColors: [string, string, string] = isPremium
-    ? ['#0B2A19', '#163D24', '#1F5232']
-    : ['#1B5E20', '#2E7D32', '#388E3C'];
-  const accentColor = isPremium ? '#D4A017' : '#2E7D32';
   const enabledCount = MODULE_CONFIG.filter((m) => getVal(m.id)).length;
+  const bottomInset = Math.max(insets.bottom, 16);
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -353,37 +380,34 @@ export function MemberPermissionsSheet({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <Pressable style={s.backdrop} onPress={onClose}>
-          <Pressable
-            style={[s.sheet, { paddingBottom: Math.max(insets.bottom + 8, 20) }]}
-            onPress={() => {}}
-          >
-            {/* ── Gradient Header ── */}
-            <LinearGradient
-              colors={gradientColors}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={s.header}
-            >
+          <Pressable style={s.sheet} onPress={(e) => e.stopPropagation()}>
+            {/* ── Modern Minimalist Header ── */}
+            <View style={s.header}>
               {/* Drag handle */}
               <View style={s.handle} />
 
               {/* Close button */}
-              <Pressable style={s.closeBtn} onPress={onClose} hitSlop={14}>
-                <Ionicons name="close" size={17} color="rgba(255,255,255,0.9)" />
-              </Pressable>
+              <TouchableOpacity
+                style={s.closeBtn}
+                onPress={onClose}
+                hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={18} color="#475569" />
+              </TouchableOpacity>
 
               {/* Member identity */}
               <View style={s.identity}>
                 <MemberAvatarLarge
                   name={memberName}
                   pictureUrl={memberPicture}
-                  color={avatarColor}
+                  color="#1E293B"
                 />
                 <View style={s.identityText}>
                   <AppText
                     variant="h3"
                     weight="800"
-                    color="#FFFFFF"
+                    color="#0F172A"
                     numberOfLines={1}
                     style={s.identityName}
                   >
@@ -392,55 +416,63 @@ export function MemberPermissionsSheet({
                   {memberEmail ? (
                     <AppText
                       variant="caption"
-                      color="rgba(255,255,255,0.6)"
+                      color="#64748B"
                       numberOfLines={1}
+                      style={s.identityEmail}
                     >
                       {memberEmail}
                     </AppText>
                   ) : null}
                   <View style={s.pillRow}>
                     <View style={s.memberPill}>
-                      <Ionicons name="person-outline" size={9} color="#93C5FD" />
+                      <Ionicons name="person-circle-outline" size={12} color="#0F172A" />
                       <AppText style={s.memberPillText}>MEMBER</AppText>
                     </View>
-                    <View style={s.accessPill}>
+                    <View
+                      style={[
+                        s.accessPill,
+                        accessLevel === 'edit' ? s.accessPillEdit : s.accessPillView,
+                      ]}
+                    >
                       <Ionicons
                         name={accessLevel === 'edit' ? 'create-outline' : 'eye-outline'}
-                        size={9}
-                        color="rgba(255,255,255,0.7)"
+                        size={11}
+                        color={accessLevel === 'edit' ? '#047857' : '#475569'}
                       />
-                      <AppText style={s.accessPillText}>
+                      <AppText
+                        style={[
+                          s.accessPillText,
+                          accessLevel === 'edit' ? { color: '#047857' } : { color: '#475569' },
+                        ]}
+                      >
                         {accessLevel === 'edit' ? 'Can Edit' : 'View Only'}
                       </AppText>
                     </View>
+                    {isPremium && (
+                      <View style={s.premiumPill}>
+                        <Ionicons name="sparkles" size={10} color="#D97706" />
+                        <AppText style={s.premiumPillText}>Premium</AppText>
+                      </View>
+                    )}
                   </View>
                 </View>
               </View>
 
-              {/* Stats row */}
-              <View style={s.statsRow}>
+              {/* Stats overview bar */}
+              <View style={s.statsBar}>
                 <View style={s.statItem}>
+                  <View style={[s.statDot, { backgroundColor: '#10B981' }]} />
                   <AppText style={s.statVal}>{enabledCount}</AppText>
-                  <AppText style={s.statLabel}>modules on</AppText>
+                  <AppText style={s.statLabel}>modules enabled</AppText>
                 </View>
-                <View style={s.statSep} />
+                <View style={s.statDivider} />
                 <View style={s.statItem}>
+                  <View style={[s.statDot, { backgroundColor: '#94A3B8' }]} />
                   <AppText style={s.statVal}>{MODULE_CONFIG.length - enabledCount}</AppText>
                   <AppText style={s.statLabel}>restricted</AppText>
                 </View>
-                <View style={s.statSep} />
-                <View style={s.statItem}>
-                  <Ionicons
-                    name={isPremium ? 'star' : 'star-outline'}
-                    size={13}
-                    color={isPremium ? '#D4A017' : 'rgba(255,255,255,0.4)'}
-                  />
-                  <AppText style={[s.statLabel, { marginLeft: 4 }]}>
-                    {isPremium ? 'Premium' : 'Free'}
-                  </AppText>
-                </View>
               </View>
-            </LinearGradient>
+            </View>
 
             {/* ── Scrollable Body ── */}
             <ScrollView
@@ -453,10 +485,10 @@ export function MemberPermissionsSheet({
                 <View style={s.card}>
                   <View style={s.cardHead}>
                     <View style={s.cardIconWrap}>
-                      <Ionicons name="key-outline" size={14} color="#2E7D32" />
+                      <Ionicons name="key" size={13} color="#0F172A" />
                     </View>
-                    <AppText variant="caption" weight="800" color="#5C6470" style={s.cardTitle}>
-                      ACCESS LEVEL
+                    <AppText variant="caption" weight="800" color="#334155" style={s.cardTitle}>
+                      PERMISSION ROLE
                     </AppText>
                   </View>
                   <View style={s.segRow}>
@@ -470,19 +502,19 @@ export function MemberPermissionsSheet({
                       return (
                         <TouchableOpacity
                           key={opt.id}
-                          style={[s.segBtn, active && [s.segBtnActive, { borderColor: accentColor }]]}
-                          onPress={() => setAccessLevel(opt.id)}
+                          style={[s.segBtn, active && s.segBtnActive]}
+                          onPress={() => handleAccessLevelChange(opt.id)}
                           activeOpacity={0.8}
                         >
                           <Ionicons
                             name={opt.icon}
-                            size={13}
-                            color={active ? accentColor : '#94A3B8'}
+                            size={14}
+                            color={active ? '#0F172A' : '#64748B'}
                           />
                           <AppText
                             variant="caption"
                             weight={active ? '800' : '600'}
-                            color={active ? accentColor : '#94A3B8'}
+                            color={active ? '#0F172A' : '#64748B'}
                             style={{ fontSize: 13 }}
                           >
                             {opt.label}
@@ -498,14 +530,14 @@ export function MemberPermissionsSheet({
               <View style={s.card}>
                 <View style={s.cardHead}>
                   <View style={s.cardIconWrap}>
-                    <Ionicons name="apps-outline" size={14} color="#2E7D32" />
+                    <Ionicons name="grid" size={13} color="#0F172A" />
                   </View>
-                  <AppText variant="caption" weight="800" color="#5C6470" style={s.cardTitle}>
-                    MODULE ACCESS
+                  <AppText variant="caption" weight="800" color="#334155" style={s.cardTitle}>
+                    MODULE PERMISSIONS
                   </AppText>
                   {isReadOnly && (
                     <View style={s.viewOnlyChip}>
-                      <Ionicons name="eye-outline" size={10} color="#64748B" />
+                      <Ionicons name="eye-outline" size={11} color="#64748B" />
                       <AppText style={s.viewOnlyText}>View only</AppText>
                     </View>
                   )}
@@ -522,7 +554,7 @@ export function MemberPermissionsSheet({
                           style={[
                             s.modIcon,
                             {
-                              backgroundColor: enabled ? mod.bg : '#F8FAFC',
+                              backgroundColor: enabled ? mod.bg : '#F1F5F9',
                               borderColor: enabled ? mod.border : '#E2E8F0',
                             },
                           ]}
@@ -530,30 +562,30 @@ export function MemberPermissionsSheet({
                           {mod.iconLib === 'material' ? (
                             <MaterialCommunityIcons
                               name={mod.icon as any}
-                              size={17}
-                              color={enabled ? mod.color : '#CBD5E1'}
+                              size={18}
+                              color={enabled ? mod.color : '#94A3B8'}
                             />
                           ) : (
                             <Ionicons
                               name={mod.icon as any}
-                              size={17}
-                              color={enabled ? mod.color : '#CBD5E1'}
+                              size={18}
+                              color={enabled ? mod.color : '#94A3B8'}
                             />
                           )}
                         </View>
                         {/* Text */}
-                        <View style={{ flex: 1, gap: 1 }}>
+                        <View style={{ flex: 1, gap: 2 }}>
                           <AppText
                             variant="bodySmall"
                             weight="700"
-                            color={enabled ? '#1C1F24' : '#94A3B8'}
+                            color={enabled ? '#0F172A' : '#64748B'}
                           >
                             {mod.label}
                           </AppText>
                           <AppText
                             style={[
                               s.modStatus,
-                              { color: enabled ? mod.color : '#CBD5E1' },
+                              { color: enabled ? mod.color : '#94A3B8' },
                             ]}
                           >
                             {enabled ? 'Allowed' : 'Restricted'}
@@ -563,9 +595,9 @@ export function MemberPermissionsSheet({
                         <Switch
                           value={enabled}
                           onValueChange={isReadOnly ? undefined : () => toggle(mod.id)}
-                          trackColor={{ false: '#E5E7EB', true: mod.color + '55' }}
-                          thumbColor={enabled ? mod.color : '#E2E8F0'}
-                          ios_backgroundColor="#E5E7EB"
+                          trackColor={{ false: '#E2E8F0', true: mod.color + '55' }}
+                          thumbColor={enabled ? mod.color : '#CBD5E1'}
+                          ios_backgroundColor="#E2E8F0"
                           disabled={isReadOnly}
                         />
                       </View>
@@ -578,62 +610,58 @@ export function MemberPermissionsSheet({
               {/* Always-on modules info */}
               <View style={s.infoCard}>
                 <View style={s.infoIconWrap}>
-                  <Ionicons name="information-circle-outline" size={16} color="#3B82F6" />
+                  <Ionicons name="information" size={14} color="#0284C7" />
                 </View>
                 <AppText style={s.infoText}>
-                  Journal and Expenses are always enabled for all members.
+                  Journal and Expenses are always enabled for all active members.
                 </AppText>
               </View>
 
               {/* Error */}
               {error ? (
                 <View style={s.errorCard}>
-                  <Ionicons name="alert-circle-outline" size={15} color="#DC2626" />
+                  <Ionicons name="alert-circle" size={16} color="#DC2626" />
                   <AppText style={s.errorText}>{error}</AppText>
                 </View>
               ) : null}
+            </ScrollView>
 
-              {/* Actions */}
+            {/* ── Sticky Bottom Floating Footer (Fixes Cutoff) ── */}
+            <View style={[s.footer, { paddingBottom: bottomInset }]}>
               {!isReadOnly ? (
-                <View style={s.actions}>
+                <View style={s.footerActions}>
                   <TouchableOpacity
                     style={[
-                      s.saveBtn,
-                      { backgroundColor: accentColor },
-                      removing && { opacity: 0.65 },
+                      s.removeIconBtn,
+                      (removing || mutation.isPending) && { opacity: 0.5 },
                     ]}
+                    onPress={confirmRemove}
+                    disabled={removing || mutation.isPending}
+                    activeOpacity={0.75}
+                    accessibilityLabel="Remove Member"
+                  >
+                    <Ionicons name="trash-outline" size={19} color="#DC2626" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[s.doneBtn, removing && { opacity: 0.65 }]}
                     onPress={onClose}
                     disabled={removing}
                     activeOpacity={0.85}
                   >
-                    <Ionicons name="checkmark-circle-outline" size={17} color="#FFFFFF" />
-                    <AppText style={s.saveBtnText}>Done</AppText>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[s.removeBtn, (removing || mutation.isPending) && { opacity: 0.6 }]}
-                    onPress={handleRemove}
-                    disabled={removing || mutation.isPending}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="person-remove-outline" size={15} color="#DC2626" />
-                    <AppText style={s.removeBtnText}>
-                      {removing ? 'Removing…' : 'Remove from Family'}
-                    </AppText>
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                    <AppText style={s.doneBtnText}>Done</AppText>
                   </TouchableOpacity>
                 </View>
               ) : (
                 <View style={s.readOnlyFooter}>
-                  <View style={s.readOnlyIcon}>
-                    <Ionicons name="shield-checkmark-outline" size={17} color="#64748B" />
-                  </View>
+                  <Ionicons name="shield-checkmark-outline" size={16} color="#64748B" />
                   <AppText style={s.readOnlyText}>
-                    These are the workspace permissions assigned to this caregiver. Only the pet
-                    owner can modify them.
+                    Only pet owners can modify member permissions.
                   </AppText>
                 </View>
               )}
-            </ScrollView>
+            </View>
           </Pressable>
         </Pressable>
       </KeyboardAvoidingView>
@@ -645,21 +673,23 @@ export function MemberPermissionsSheet({
 const s = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(10,15,30,0.58)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: '#F7F8FA',
+    backgroundColor: '#F8FAFC',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    maxHeight: '93%',
+    maxHeight: '88%',
+    display: 'flex',
+    flexDirection: 'column',
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: -12 },
-        shadowOpacity: 0.12,
-        shadowRadius: 20,
+        shadowOffset: { width: 0, height: -10 },
+        shadowOpacity: 0.15,
+        shadowRadius: 24,
       },
       android: { elevation: 28 },
     }),
@@ -667,28 +697,31 @@ const s = StyleSheet.create({
 
   // Header
   header: {
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     paddingHorizontal: 20,
+    paddingTop: 8,
     paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   handle: {
     alignSelf: 'center',
-    width: 44,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    marginTop: 10,
-    marginBottom: 14,
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+    marginBottom: 12,
   },
   closeBtn: {
     position: 'absolute',
-    top: 16,
-    right: 20,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    top: 14,
+    right: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
@@ -697,68 +730,96 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 16,
+    marginBottom: 14,
+    paddingRight: 32,
   },
-  identityText: { flex: 1, gap: 3 },
-  identityName: { fontSize: 19, lineHeight: 25 },
-  pillRow: { flexDirection: 'row', gap: 6, marginTop: 3 },
+  identityText: { flex: 1, gap: 2 },
+  identityName: { fontSize: 18, lineHeight: 24, letterSpacing: -0.2 },
+  identityEmail: { fontSize: 13, lineHeight: 17 },
+  pillRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' },
   memberPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(147,197,253,0.15)',
-    borderRadius: 20,
-    paddingHorizontal: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6,
+    paddingHorizontal: 7,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: 'rgba(147,197,253,0.22)',
+    borderColor: '#E2E8F0',
   },
-  memberPillText: { color: '#93C5FD', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
+  memberPillText: { color: '#334155', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
   accessPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 20,
-    paddingHorizontal: 8,
+    borderRadius: 6,
+    paddingHorizontal: 7,
     paddingVertical: 3,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
+  },
+  accessPillEdit: {
+    backgroundColor: '#ECFDF5',
+    borderColor: '#A7F3D0',
+  },
+  accessPillView: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
   accessPillText: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.4,
+    letterSpacing: 0.2,
   },
-  statsRow: {
+  premiumPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    gap: 3,
+    backgroundColor: '#FEF3C7',
+    borderColor: '#FDE68A',
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  premiumPillText: { color: '#B45309', fontSize: 10, fontWeight: '800' },
+
+  statsBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 10,
-    paddingHorizontal: 14,
+    borderColor: '#E2E8F0',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
   },
   statItem: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
+    gap: 6,
   },
-  statVal: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  statLabel: { color: 'rgba(255,255,255,0.58)', fontSize: 11, fontWeight: '600' },
-  statSep: { width: 1, height: 18, backgroundColor: 'rgba(255,255,255,0.14)' },
+  statDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statVal: { color: '#0F172A', fontSize: 13, fontWeight: '800' },
+  statLabel: { color: '#64748B', fontSize: 11, fontWeight: '600' },
+  statDivider: { width: 1, height: 14, backgroundColor: '#E2E8F0' },
 
   // Body
-  body: { padding: 14, gap: 10 },
+  body: {
+    padding: 16,
+    gap: 12,
+  },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#ECEEF2',
+    borderColor: '#E2E8F0',
     padding: 14,
     ...Platform.select({
       ios: {
@@ -777,22 +838,22 @@ const s = StyleSheet.create({
     marginBottom: 12,
   },
   cardIconWrap: {
-    width: 25,
-    height: 25,
-    borderRadius: 7,
-    backgroundColor: '#E8F5E9',
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardTitle: { letterSpacing: 0.7, flex: 1 },
+  cardTitle: { letterSpacing: 0.6, flex: 1, fontSize: 11 },
   viewOnlyChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
+    gap: 4,
     backgroundColor: '#F1F5F9',
-    borderRadius: 20,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
   },
   viewOnlyText: { color: '#64748B', fontSize: 10, fontWeight: '700' },
 
@@ -802,26 +863,27 @@ const s = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
     padding: 3,
-    gap: 3,
+    gap: 4,
   },
   segBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1.5,
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: 9,
+    borderWidth: 1,
     borderColor: 'transparent',
   },
   segBtnActive: {
     backgroundColor: '#FFFFFF',
+    borderColor: '#E2E8F0',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.07,
+        shadowOpacity: 0.08,
         shadowRadius: 4,
       },
       android: { elevation: 2 },
@@ -832,13 +894,13 @@ const s = StyleSheet.create({
   modRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 11,
-    paddingVertical: 11,
+    gap: 12,
+    paddingVertical: 10,
   },
   modIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 11,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -851,35 +913,26 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ECEEF2',
-    padding: 14,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-    }),
+    borderColor: '#BAE6FD',
+    padding: 12,
   },
   infoIconWrap: {
-    width: 25,
-    height: 25,
-    borderRadius: 7,
-    backgroundColor: '#EFF6FF',
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    backgroundColor: '#E0F2FE',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  infoText: { flex: 1, color: '#64748B', fontSize: 12, fontWeight: '600', lineHeight: 17 },
+  infoText: { flex: 1, color: '#0369A1', fontSize: 12, fontWeight: '600', lineHeight: 16 },
 
   // Error
   errorCard: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 8,
     backgroundColor: '#FEF2F2',
     borderRadius: 12,
@@ -887,67 +940,72 @@ const s = StyleSheet.create({
     borderColor: '#FECACA',
     padding: 12,
   },
-  errorText: { flex: 1, color: '#DC2626', fontSize: 13, fontWeight: '600', lineHeight: 18 },
+  errorText: { flex: 1, color: '#DC2626', fontSize: 12, fontWeight: '600', lineHeight: 16 },
 
-  // Actions
-  actions: { gap: 10, marginTop: 2 },
-  saveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    height: 52,
-    borderRadius: 14,
+  // Sticky Footer
+  footer: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingHorizontal: 16,
+    paddingTop: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#114227',
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.18,
-        shadowRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: -3 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
       },
-      android: { elevation: 4 },
+      android: { elevation: 8 },
     }),
   },
-  saveBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800' },
-  removeBtn: {
+  footerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  removeIconBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#FEE2E2',
+    backgroundColor: '#FEF2F2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doneBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    height: 46,
+    gap: 6,
+    height: 48,
     borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#FECACA',
-    backgroundColor: '#FEF2F2',
+    backgroundColor: '#0F172A',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.16,
+        shadowRadius: 6,
+      },
+      android: { elevation: 3 },
+    }),
   },
-  removeBtnText: { color: '#DC2626', fontSize: 14, fontWeight: '700' },
+  doneBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', letterSpacing: 0.2 },
 
   // Read-only footer
   readOnlyFooter: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    marginTop: 2,
-  },
-  readOnlyIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
     justifyContent: 'center',
-    marginTop: 2,
   },
   readOnlyText: {
-    flex: 1,
     color: '#64748B',
     fontSize: 12,
-    fontWeight: '500',
-    lineHeight: 18,
+    fontWeight: '600',
   },
 });
