@@ -89,14 +89,14 @@ export function RecentTransactionsSection({
                 color={item.color}
                 backgroundColor={item.bg}
                 materialIcon={item.materialIcon}
-                size={46}
-                iconSize={22}
+                size={38}
+                iconSize={18}
                 shape="circle"
               />
 
               {/* Info */}
               <View style={styles.textBlock}>
-                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                <AppText variant="bodySmall" weight="800" color={HomeTheme.text} style={styles.title}>
                   {item.title}
                 </AppText>
                 <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
@@ -162,46 +162,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.md + 4,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    marginBottom: 10,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 8.5,
+    marginBottom: 6,
     marginHorizontal: 2,
-    gap: Spacing.md,
+    gap: 10,
+    minHeight: 52,
     ...Platform.select({
       ios: {
         shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.07,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
       },
-      android: { elevation: 3 },
+      android: { elevation: 2 },
     }),
   },
   textBlock: {
     flex: 1,
-    gap: 3,
+    gap: 2,
+  },
+  title: {
+    fontSize: 13,
+    lineHeight: 17,
   },
   subtitle: {
-    lineHeight: 16,
+    fontSize: 10.5,
+    lineHeight: 14,
   },
   amountBlock: {
     alignItems: 'flex-end',
-    gap: 4,
+    gap: 2,
   },
   amount: {
-    fontSize: 15,
+    fontSize: 13.5,
+    lineHeight: 17,
   },
   categoryPill: {
     backgroundColor: 'rgba(0,0,0,0.04)',
-    paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
     borderRadius: 4,
   },
   categoryText: {
-    fontSize: 9,
+    fontSize: 8.5,
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.3,
   },
   emptyCard: {
     backgroundColor: '#FFFFFF',
