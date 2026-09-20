@@ -49,7 +49,7 @@ export function createWalkEntry(): WalkEntryState {
   return {
     id: newEntryId(),
     walkTime: WALK_TIME_OPTIONS[0].value,
-    duration: '45',
+    duration: '',
     walkClockTime: defaultWalkTimeDate(),
     scheduleDate: createDefaultScheduleDate('ongoing'),
     notificationsOn: true,
