@@ -337,7 +337,7 @@ export function MemberPermissionsSheet({
       blockIfReadOnly={false}
       compact
     >
-      {/* ── 1. Member Profile Hero Card ── */}
+      {/* ── 1. Member Profile Hero Card with Remove Action ── */}
       <View style={styles.memberCard}>
         <View style={styles.memberHeaderRow}>
           <MemberAvatarLarge name={memberName} pictureUrl={memberPicture} />
@@ -353,22 +353,38 @@ export function MemberPermissionsSheet({
 
             <View style={styles.badgeRow}>
               <View style={styles.memberBadge}>
-                <Ionicons name="person-circle-outline" size={12} color="#166534" />
+                <Ionicons name="person-circle-outline" size={13} color="#166534" />
                 <AppText style={styles.memberBadgeText}>MEMBER</AppText>
               </View>
 
               {isPremium && (
                 <View style={styles.premiumBadge}>
-                  <Ionicons name="sparkles" size={10} color="#D97706" />
+                  <Ionicons name="sparkles" size={11} color="#D97706" />
                   <AppText style={styles.premiumBadgeText}>Premium</AppText>
                 </View>
               )}
             </View>
           </View>
+
+          {/* Remove Member Header Action */}
+          {!isReadOnly && (
+            <TouchableOpacity
+              style={[
+                styles.headerRemoveBtn,
+                (removing || mutation.isPending) && { opacity: 0.5 },
+              ]}
+              onPress={confirmRemove}
+              disabled={removing || mutation.isPending}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Remove member"
+            >
+              <Ionicons name="trash-outline" size={19} color="#DC2626" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
-      {/* ── 2. Module Permissions (Pure On/Off Toggles) ── */}
+      {/* ── 2. Module Permissions ── */}
       <FormSection title="Module Permissions" icon="view-grid-outline">
         <View style={styles.modulesCard}>
           {MODULE_CONFIG.map((mod, idx) => {
@@ -390,13 +406,13 @@ export function MemberPermissionsSheet({
                     {mod.iconLib === 'material' ? (
                       <MaterialCommunityIcons
                         name={mod.icon as any}
-                        size={18}
+                        size={20}
                         color={enabled ? mod.color : '#94A3B8'}
                       />
                     ) : (
                       <Ionicons
                         name={mod.icon as any}
-                        size={18}
+                        size={20}
                         color={enabled ? mod.color : '#94A3B8'}
                       />
                     )}
@@ -407,6 +423,7 @@ export function MemberPermissionsSheet({
                       variant="bodySmall"
                       weight="700"
                       color={enabled ? '#0F172A' : '#64748B'}
+                      style={{ fontSize: 14 }}
                     >
                       {mod.label}
                     </AppText>
@@ -415,7 +432,7 @@ export function MemberPermissionsSheet({
                       weight="600"
                       style={{ color: enabled ? mod.color : '#94A3B8', fontSize: 11 }}
                     >
-                      {enabled ? 'Allowed' : 'Restricted'}
+                      {enabled ? 'Allowed access' : 'Restricted access'}
                     </AppText>
                   </View>
 
@@ -437,40 +454,12 @@ export function MemberPermissionsSheet({
 
         {/* Always-on info note */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle-outline" size={16} color="#0284C7" />
+          <Ionicons name="information-circle-outline" size={17} color="#0284C7" />
           <AppText style={styles.infoText}>
-            Journal and Expenses are always enabled for all family members.
+            Journal and Expenses modules are always enabled for all family members.
           </AppText>
         </View>
       </FormSection>
-
-      {/* ── 3. Manage Access / Remove Member ── */}
-      {!isReadOnly && (
-        <FormSection title="Manage Access" icon="account-cancel-outline">
-          <TouchableOpacity
-            style={[
-              styles.removeButton,
-              (removing || mutation.isPending) && { opacity: 0.6 },
-            ]}
-            onPress={confirmRemove}
-            disabled={removing || mutation.isPending}
-            activeOpacity={0.75}
-          >
-            <View style={styles.removeIconWrap}>
-              <Ionicons name="trash-outline" size={18} color="#DC2626" />
-            </View>
-            <View style={styles.removeTextCol}>
-              <AppText variant="bodySmall" weight="700" color="#DC2626">
-                Remove Member from Family
-              </AppText>
-              <AppText variant="caption" color="#991B1B" style={{ fontSize: 11 }}>
-                Revokes pet access immediately
-              </AppText>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#F87171" />
-          </TouchableOpacity>
-        </FormSection>
-      )}
     </FormSheetShell>
   );
 }
@@ -481,9 +470,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: FormSheetColors.sectionBorder,
+    borderColor: '#E2E8F0',
     padding: Spacing.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     ...Platform.select({
       ios: {
         shadowColor: '#0F172A',
@@ -491,7 +480,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.04,
         shadowRadius: 8,
       },
-      android: { elevation: 2 },
+      android: { elevation: 1.5 },
     }),
   },
   memberHeaderRow: {
@@ -577,21 +566,30 @@ const styles = StyleSheet.create({
   // Modules card
   modulesCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    borderColor: FormSheetColors.inputBorder,
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
   },
   moduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     gap: 12,
   },
   modIcon: {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -599,12 +597,12 @@ const styles = StyleSheet.create({
   },
   modTextCol: {
     flex: 1,
-    gap: 1,
+    gap: 2,
   },
   modDivider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginLeft: 58,
+    marginLeft: 64,
   },
   infoBox: {
     flexDirection: 'row',
@@ -616,7 +614,7 @@ const styles = StyleSheet.create({
     borderColor: '#BAE6FD',
     paddingHorizontal: 12,
     paddingVertical: 10,
-    marginTop: 10,
+    marginTop: 12,
   },
   infoText: {
     flex: 1,
@@ -626,28 +624,16 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
 
-  // Remove Button
-  removeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  // Header Remove Button
+  headerRemoveBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FECACA',
-    borderRadius: Radius.md,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  removeIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
-    backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  removeTextCol: {
-    flex: 1,
-    gap: 1,
+    alignSelf: 'center',
   },
 });

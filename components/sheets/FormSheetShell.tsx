@@ -135,12 +135,12 @@ export function FormSheetShell({
             </LinearGradient>
  
             <ScrollView
-              style={{ flexShrink: 1, width: '100%' }}
+              style={{ width: '100%' }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={[
                 formSheetStyles.scrollContent,
-                { paddingBottom: isReadOnly ? 24 : 120 }
+                { paddingBottom: isReadOnly ? 32 : Math.max(insets.bottom + 90, 110) }
               ]}
             >
               {!compact && subtitle ? (
