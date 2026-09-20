@@ -254,6 +254,7 @@ export default function EditProfileScreen() {
           <View style={styles.formSection}>
             <AppInput
               label="Full Name"
+              required
               value={fullName}
               onChangeText={setFullName}
               placeholder="Your full name"
@@ -262,6 +263,7 @@ export default function EditProfileScreen() {
             <View>
               <AppInput
                 label="Email Address"
+                required
                 value={email}
                 placeholder="you@example.com"
                 keyboardType="email-address"
@@ -305,6 +307,7 @@ export default function EditProfileScreen() {
 
                 <AppInput
                   label="Current Password"
+                  required
                   value={currentPassword}
                   onChangeText={setCurrentPassword}
                   placeholder="Enter current password"
@@ -313,6 +316,7 @@ export default function EditProfileScreen() {
 
                 <AppInput
                   label="New Password"
+                  required
                   value={newPassword}
                   onChangeText={setNewPassword}
                   placeholder="At least 8 characters"
@@ -329,6 +333,7 @@ export default function EditProfileScreen() {
 
                 <AppInput
                   label="Confirm New Password"
+                  required
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Repeat new password"

@@ -56,6 +56,7 @@ export function SignupFormSection({
       <AuthTextField
         placeholder="Full Name"
         icon="person-outline"
+        required
         value={fullName}
         onChangeText={onFullNameChange}
         autoCapitalize="words"
@@ -66,6 +67,7 @@ export function SignupFormSection({
       <AuthTextField
         placeholder="Email Address"
         icon="mail-outline"
+        required
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"
@@ -77,6 +79,7 @@ export function SignupFormSection({
       <AuthTextField
         placeholder="Password"
         icon="lock-closed-outline"
+        required
         value={password}
         onChangeText={onPasswordChange}
         secureTextEntry
@@ -88,6 +91,7 @@ export function SignupFormSection({
       <AuthTextField
         placeholder="Confirm Password"
         icon="lock-closed-outline"
+        required
         value={confirmPassword}
         onChangeText={onConfirmPasswordChange}
         secureTextEntry

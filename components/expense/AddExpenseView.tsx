@@ -202,7 +202,7 @@ export function AddExpenseView({
     >
       <View style={styles.formContainer}>
         {/* Category */}
-        <FormSection title="Category">
+        <FormSection title="Category" required>
           {(() => {
             const meta = category ? dropdownOptions.find((o) => o.value === category) : null;
             return (
@@ -243,7 +243,7 @@ export function AddExpenseView({
         </FormSection>
 
         {/* Amount */}
-        <FormSection title="Amount">
+        <FormSection title="Amount" required>
           <Pressable 
             onPress={() => amountRef.current?.focus()}
             style={[styles.amountField, activeField === 'amount' && { borderColor: accentColor, borderWidth: 1.5 }]}

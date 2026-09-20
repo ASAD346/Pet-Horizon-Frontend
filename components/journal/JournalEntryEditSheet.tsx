@@ -127,6 +127,7 @@ export function JournalEntryEditSheet({
     >
       <FormTextInput
         label="Activity Type"
+        required
         value={activityType}
         onChangeText={setActivityType}
         placeholder="feeding, walk, medicine..."
@@ -134,6 +135,7 @@ export function JournalEntryEditSheet({
 
       <FormTextInput
         label="Note"
+        required
         value={note}
         onChangeText={setNote}
         placeholder="What happened?"

@@ -56,6 +56,7 @@ export function ResetPasswordFormSection({
       <AuthTextField
         placeholder="Email Address"
         icon="mail-outline"
+        required
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"
@@ -66,7 +67,7 @@ export function ResetPasswordFormSection({
       />
 
       <AppText variant="bodySmall" color={Palette.gray[600]} weight="700" style={{ marginTop: Spacing.sm }}>
-        Reset Code
+        Reset Code <AppText variant="bodySmall" color="#EF4444" weight="700">*</AppText>
       </AppText>
       <OtpInput
         value={otp}
@@ -77,6 +78,7 @@ export function ResetPasswordFormSection({
       <AuthTextField
         placeholder="New Password"
         icon="lock-closed-outline"
+        required
         value={newPassword}
         onChangeText={onNewPasswordChange}
         secureTextEntry
@@ -88,6 +90,7 @@ export function ResetPasswordFormSection({
       <AuthTextField
         placeholder="Confirm New Password"
         icon="lock-closed-outline"
+        required
         value={confirmPassword}
         onChangeText={onConfirmPasswordChange}
         secureTextEntry

@@ -140,6 +140,7 @@ export default function ChangePasswordScreen() {
           <View style={styles.formSection}>
             <AppInput
               label="Current Password"
+              required
               value={currentPassword}
               onChangeText={setCurrentPassword}
               placeholder="Enter current password"
@@ -148,6 +149,7 @@ export default function ChangePasswordScreen() {
 
             <AppInput
               label="New Password"
+              required
               value={newPassword}
               onChangeText={setNewPassword}
               placeholder="At least 8 characters"
@@ -164,6 +166,7 @@ export default function ChangePasswordScreen() {
 
             <AppInput
               label="Confirm Password"
+              required
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               placeholder="Repeat new password"

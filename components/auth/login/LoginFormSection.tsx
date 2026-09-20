@@ -53,6 +53,7 @@ export function LoginFormSection({
       <AuthTextField
         placeholder="Email Address"
         icon="mail-outline"
+        required
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"
@@ -64,6 +65,7 @@ export function LoginFormSection({
       <AuthTextField
         placeholder="Password"
         icon="lock-closed-outline"
+        required
         value={password}
         onChangeText={onPasswordChange}
         secureTextEntry

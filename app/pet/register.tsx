@@ -614,6 +614,7 @@ export default function RegisterPetScreen() {
                     <PetLabeledInput
                       label="Pet Name"
                       placeholder="Pet Name"
+                      required
                       value={petName}
                       readOnly={!hasEditPermission}
                       onChangeText={(text) => {
@@ -631,6 +632,7 @@ export default function RegisterPetScreen() {
 
                     <GenderSelect
                       value={gender}
+                      required
                       onChange={setGender}
                       readOnly={!hasEditPermission}
                     />
@@ -638,6 +640,7 @@ export default function RegisterPetScreen() {
                     <SpeciesSelector
                       speciesList={speciesList}
                       value={species}
+                      required
                       onChange={handleSpeciesChange}
                       loading={speciesLoading}
                       disabled={isEditMode || !hasEditPermission}
@@ -648,6 +651,7 @@ export default function RegisterPetScreen() {
                     <BreedSelector
                       value={breed}
                       breeds={breeds}
+                      required
                       loading={breedsLoading}
                       disabled={isEditMode || !species || !hasEditPermission}
                       readOnly={!hasEditPermission}
@@ -662,6 +666,7 @@ export default function RegisterPetScreen() {
 
                     <BirthdayField
                       value={birthday}
+                      required
                       readOnly={!hasEditPermission}
                       onChange={(date) => {
                         setBirthday(date);

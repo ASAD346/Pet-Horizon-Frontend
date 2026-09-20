@@ -36,6 +36,7 @@ export function ForgotPasswordFormSection({
       <AuthTextField
         placeholder="Email Address"
         icon="mail-outline"
+        required
         value={email}
         onChangeText={onEmailChange}
         keyboardType="email-address"
