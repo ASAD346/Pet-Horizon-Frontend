@@ -4,6 +4,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   View,
 } from 'react-native';
 import { SafeModal } from '@/components/ui/SafeModal';
@@ -100,116 +101,120 @@ export function FormSheetShell({
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
         >
-        <Pressable style={formSheetStyles.overlay} onPress={onClose}>
-          <Pressable
-            style={[
-              formSheetStyles.sheet,
-              (!onSave || !saveLabel || isReadOnly)
-                ? { paddingBottom: Math.max(insets.bottom, Spacing.md) }
-                : null,
-            ]}
-            onPress={(e) => e.stopPropagation()}
-          >
-            {/* Curved linear gradient header */}
-            <LinearGradient
-              colors={activeGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={formSheetStyles.gradientHeader}
-            >
-              {/* Drag handle inside the header */}
-              <View style={formSheetStyles.handle} />
- 
-              <View style={formSheetStyles.headerContent}>
-                <View style={formSheetStyles.headerLeft}>
-                  <View style={formSheetStyles.headerIconBadge}>
-                    <MaterialCommunityIcons name={icon} size={20} color="#FFFFFF" />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <AppText variant="h3" weight="800" color="#FFFFFF" style={formSheetStyles.headerTitle}>
-                      {title}
-                    </AppText>
-                    {subtitle ? (
-                      <AppText variant="caption" color="rgba(255,255,255,0.75)" numberOfLines={1}>
-                        {subtitle}
-                      </AppText>
-                    ) : null}
-                  </View>
-                </View>
-                <Pressable style={formSheetStyles.closeButton} onPress={onClose} hitSlop={12}>
-                  <Ionicons name="close" size={20} color="rgba(255,255,255,0.9)" />
-                </Pressable>
-              </View>
-            </LinearGradient>
- 
-            <ScrollView
-              style={{ flexShrink: 1, width: '100%' }}
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={[
-                formSheetStyles.scrollContent,
-                { paddingBottom: isReadOnly ? Spacing.lg : Spacing.md }
+          <View style={formSheetStyles.overlay}>
+            <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+            <View
+              style={[
+                formSheetStyles.sheet,
+                (!onSave || !saveLabel || isReadOnly)
+                  ? { paddingBottom: Math.max(insets.bottom, Spacing.md) }
+                  : null,
               ]}
             >
-              {!compact && subtitle ? (
-                <FormSheetHero
-                  icon={icon}
+              {/* Curved linear gradient header */}
+              <LinearGradient
+                colors={activeGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={formSheetStyles.gradientHeader}
+              >
+                {/* Drag handle inside the header */}
+                <View style={formSheetStyles.handle} />
+
+                <View style={formSheetStyles.headerContent}>
+                  <View style={formSheetStyles.headerLeft}>
+                    <View style={formSheetStyles.headerIconBadge}>
+                      <MaterialCommunityIcons name={icon} size={20} color="#FFFFFF" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <AppText variant="h3" weight="800" color="#FFFFFF" style={formSheetStyles.headerTitle}>
+                        {title}
+                      </AppText>
+                      {subtitle ? (
+                        <AppText variant="caption" color="rgba(255,255,255,0.75)" numberOfLines={1}>
+                          {subtitle}
+                        </AppText>
+                      ) : null}
+                    </View>
+                  </View>
+                  <Pressable style={formSheetStyles.closeButton} onPress={onClose} hitSlop={12}>
+                    <Ionicons name="close" size={20} color="rgba(255,255,255,0.9)" />
+                  </Pressable>
+                </View>
+              </LinearGradient>
+
+              <ScrollView
+                style={{ flexShrink: 1, width: '100%' }}
+                nestedScrollEnabled={true}
+                scrollEventThrottle={16}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                bounces={true}
+                overScrollMode="always"
+                contentContainerStyle={[
+                  formSheetStyles.scrollContent,
+                  { paddingBottom: isReadOnly ? Spacing.lg : Spacing.md }
+                ]}
+              >
+                {!compact && subtitle ? (
+                  <FormSheetHero
+                    icon={icon}
+                    accentColor={accentColor}
+                    accentBg={accentBg}
+                    subtitle={subtitle}
+                  />
+                ) : null}
+
+                {isReadOnly && blockIfReadOnly && !isLoading ? (
+                  <View style={{ paddingVertical: 20, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
+                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                      <MaterialCommunityIcons name="lock" size={32} color="#DC2626" />
+                    </View>
+                    <AppText variant="h3" weight="800" color="#1E293B" style={{ marginBottom: 8, textAlign: 'center' }}>
+                      Access Restricted
+                    </AppText>
+                    <AppText variant="bodySmall" color="#64748B" style={{ textAlign: 'center', lineHeight: 18, marginBottom: 24 }}>
+                      {"You don't have permission to edit or create this schedule. Please request access from an admin."}
+                    </AppText>
+                    
+                    <View style={{ width: '100%', marginBottom: 10 }}>
+                      <CustomButton
+                        title="Close"
+                        onPress={onClose}
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <>
+                    <View pointerEvents="auto">
+                      {children}
+                    </View>
+
+                    {error ? (
+                      <View style={{ paddingHorizontal: 4, marginTop: 12 }}>
+                        <AppText variant="bodySmall" weight="700" color="#E53935">
+                          {error}
+                        </AppText>
+                      </View>
+                    ) : null}
+                  </>
+                )}
+              </ScrollView>
+
+              {onSave && saveLabel && !isReadOnly ? (
+                <StickyActionFooter
+                  onSave={onSave}
+                  saveLabel={saveLabel}
+                  saving={saving}
+                  saveDisabled={saveDisabled}
                   accentColor={accentColor}
-                  accentBg={accentBg}
-                  subtitle={subtitle}
                 />
               ) : null}
 
-              {isReadOnly && blockIfReadOnly && !isLoading ? (
-                <View style={{ paddingVertical: 20, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center' }}>
-                  <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-                    <MaterialCommunityIcons name="lock" size={32} color="#DC2626" />
-                  </View>
-                  <AppText variant="h3" weight="800" color="#1E293B" style={{ marginBottom: 8, textAlign: 'center' }}>
-                    Access Restricted
-                  </AppText>
-                  <AppText variant="bodySmall" color="#64748B" style={{ textAlign: 'center', lineHeight: 18, marginBottom: 24 }}>
-                    {"You don't have permission to edit or create this schedule. Please request access from an admin."}
-                  </AppText>
-                  
-                  <View style={{ width: '100%', marginBottom: 10 }}>
-                    <CustomButton
-                      title="Close"
-                      onPress={onClose}
-                    />
-                  </View>
-                </View>
-              ) : (
-                <>
-                  <View pointerEvents="auto">
-                    {children}
-                  </View>
-
-                  {error ? (
-                    <View style={{ paddingHorizontal: 4, marginTop: 12 }}>
-                      <AppText variant="bodySmall" weight="700" color="#E53935">
-                        {error}
-                      </AppText>
-                    </View>
-                  ) : null}
-                </>
-              )}
-            </ScrollView>
-
-            {onSave && saveLabel && !isReadOnly ? (
-              <StickyActionFooter
-                onSave={onSave}
-                saveLabel={saveLabel}
-                saving={saving}
-                saveDisabled={saveDisabled}
-                accentColor={accentColor}
-              />
-            ) : null}
-
-            {Object.values(overlays)}
-          </Pressable>
-        </Pressable>
-      </KeyboardAvoidingView>
+              {Object.values(overlays)}
+            </View>
+          </View>
+        </KeyboardAvoidingView>
       </SheetOverlayContext.Provider>
     </SafeModal>
   );
