@@ -99,7 +99,12 @@ export function FormSheetShell({
         >
         <Pressable style={formSheetStyles.overlay} onPress={onClose}>
           <Pressable
-            style={[formSheetStyles.sheet, { paddingBottom: Math.max(insets.bottom, Spacing.md) }]}
+            style={[
+              formSheetStyles.sheet,
+              (!onSave || !saveLabel || isReadOnly)
+                ? { paddingBottom: Math.max(insets.bottom, Spacing.md) }
+                : null,
+            ]}
             onPress={(e) => e.stopPropagation()}
           >
             {/* Curved linear gradient header */}
@@ -135,12 +140,12 @@ export function FormSheetShell({
             </LinearGradient>
  
             <ScrollView
-              style={{ width: '100%' }}
+              style={{ flexShrink: 1, width: '100%' }}
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={[
                 formSheetStyles.scrollContent,
-                { paddingBottom: isReadOnly ? 32 : Math.max(insets.bottom + 90, 110) }
+                { paddingBottom: isReadOnly ? Spacing.lg : Spacing.md }
               ]}
             >
               {!compact && subtitle ? (
