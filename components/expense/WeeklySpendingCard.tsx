@@ -105,7 +105,7 @@ export function WeeklySpendingCard({
           </View>
         </View>
 
-        {loading ? (
+        {loading && !hasBudget ? (
           <View style={styles.skeletonBody}>
             <Skeleton width="50%" height={32} tone="dark" />
             <View style={styles.bottomRow}>

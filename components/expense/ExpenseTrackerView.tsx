@@ -174,7 +174,7 @@ export function ExpenseTrackerView({
               remainingLabel={budget.hasBudget && budget.remaining !== undefined ? `${formatCurrency(budget.remaining)} left` : 'Tap Edit Budget'}
               status={budget.status}
               hasBudget={budget.hasBudget}
-              loading={budgetLoading || petLoading}
+              loading={budgetLoading || (petLoading && !pet)}
               isPremium={isPremium}
               onEditPress={canEditExpenses ? (isNew) => {
                 setIsNewBudget(!!isNew);
@@ -188,7 +188,7 @@ export function ExpenseTrackerView({
             <RecentTransactionsSection
               categoryFilter={category}
               transactions={expenses}
-              loading={expensesLoading || petLoading}
+              loading={expensesLoading || (petLoading && !pet)}
               isPremium={isPremium}
               onAddExpensePress={() => setAddExpenseVisible(true)}
             />

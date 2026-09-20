@@ -10,7 +10,7 @@ export function useBudget(token: string | null, petId: string | null | undefined
 
   const [periodType, setPeriodType] = useState<'weekly' | 'monthly'>('weekly');
 
-  const { data: budgets = [], isFetching, error, refetch } = useQuery({
+  const { data: budgets = [], isLoading, isFetching, error, refetch } = useQuery({
     queryKey,
     queryFn: async () => {
       if (!token || !petId) return [];
@@ -38,7 +38,7 @@ export function useBudget(token: string | null, petId: string | null | undefined
       return rows;
     },
     enabled: Boolean(token && petId),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 2, // 2 min cache
   });
 
   const display = useMemo(() => {
@@ -50,7 +50,8 @@ export function useBudget(token: string | null, petId: string | null | undefined
     budget: display,
     periodType,
     setPeriodType,
-    loading: isFetching,
+    loading: isLoading && budgets.length === 0,
+    isFetching,
     error: error ? getErrorMessage(error) : null,
     reload: () => refetch(),
   };
