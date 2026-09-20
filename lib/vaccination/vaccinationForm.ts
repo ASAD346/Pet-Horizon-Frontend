@@ -8,12 +8,9 @@ export const VACCINATION_REMINDER_FREQUENCY_OPTIONS: {
   value: VaccinationReminderFrequency;
   label: string;
 }[] = [
-  { value: '1_day', label: '1 day before' },
-  { value: '3_days', label: '3 days before' },
-  { value: '7_days', label: '7 days before' },
-  { value: '14_days', label: '14 days before' },
-  { value: '30_days', label: '30 days before' },
   { value: 'on_due', label: 'On due date' },
+  { value: '1_day', label: '1 day before' },
+  { value: '7_days', label: '1 week before' },
 ];
 
 export const VACCINATION_RECURRENCE_OPTIONS: {

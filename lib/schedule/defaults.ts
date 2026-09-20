@@ -80,7 +80,7 @@ export function createVaccinationEntry(): VaccinationEntryState {
     vaccineName: '',
     scheduleDate: createDefaultScheduleDate('single'),
     reminderOn: true,
-    frequency: '7_days',
+    frequency: '1_day',
     reminderTime: defaultReminderTimeDate(),
     isRecurring: false,
     recurrenceInterval: 'yearly',
