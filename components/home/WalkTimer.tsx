@@ -36,7 +36,7 @@ export function WalkTimer({
   isDone,
   isSkipped,
   isPremium,
-  targetDuration = 45,
+  targetDuration = 30,
   onComplete,
   onSkip,
   activeSession,

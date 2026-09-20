@@ -90,11 +90,12 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
 
 export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
   const meta = item.metadata ?? {};
+  const durationVal = meta.duration != null ? String(meta.duration) : (item.duration != null ? String(item.duration) : '');
   return {
     id: newEntryId(),
     scheduleId: item._id,
     walkTime: meta.walkTime ?? 'morning',
-    duration: meta.duration != null ? String(meta.duration) : '30',
+    duration: durationVal,
     walkClockTime: timeHHmmToDate(item.timeOfDay),
     scheduleDate: parseScheduleDateFromApi({
       date: (item as WalkScheduleItem & { date?: string }).date,
@@ -322,7 +323,8 @@ export function scheduleEntrySubtitle(key: ScheduleSectionKey, entry: ScheduleEn
     }
     case 'walk': {
       const e = entry as WalkEntryState;
-      return `${e.duration} min · ${formatTimeDisplay(e.walkClockTime)} · ${formatScheduleDateSummary(e.scheduleDate)}`;
+      const durText = e.duration ? `${e.duration} min · ` : '';
+      return `${durText}${formatTimeDisplay(e.walkClockTime)} · ${formatScheduleDateSummary(e.scheduleDate)}`;
     }
     case 'medicine': {
       const e = entry as MedicineEntryState;

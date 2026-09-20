@@ -318,7 +318,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
           isDone={isDone}
           isSkipped={isSkipped}
           isPremium={isPremium}
-          targetDuration={row.kind === 'walk' ? (row.item.metadata?.duration ?? 45) : undefined}
+          targetDuration={row.kind === 'walk' ? (row.item.metadata?.duration ?? row.item.duration ?? 30) : undefined}
           onComplete={onCompleteWalk!}
           onSkip={onSkipWalk!}
           activeSession={row.kind === 'walk' ? row.item.metadata?.activeSession : null}
