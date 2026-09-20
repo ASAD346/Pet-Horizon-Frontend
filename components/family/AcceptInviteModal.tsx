@@ -41,23 +41,39 @@ export function AcceptInviteModal({
   const [info, setInfo] = useState<InviteInfoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [accepting, setAccepting] = useState(false);
+  const acceptedRef = React.useRef(false);
+  const lastLoadedTokenRef = React.useRef<string | null>(null);
 
   useEffect(() => {
     if (!visible || !inviteToken) {
+      acceptedRef.current = false;
+      lastLoadedTokenRef.current = null;
       setInfo(null);
       return;
     }
+
+    if (acceptedRef.current || lastLoadedTokenRef.current === inviteToken) {
+      return;
+    }
+
+    lastLoadedTokenRef.current = inviteToken;
 
     const loadInfo = async () => {
       setLoading(true);
       try {
         const data = await fetchInviteInfo(inviteToken);
-        setInfo(data);
+        if (!acceptedRef.current) {
+          setInfo(data);
+        }
       } catch (err) {
-        showErrorToast(getErrorMessage(err));
-        onClose();
+        if (!acceptedRef.current) {
+          showErrorToast(getErrorMessage(err));
+          onClose();
+        }
       } finally {
-        setLoading(false);
+        if (!acceptedRef.current) {
+          setLoading(false);
+        }
       }
     };
 
@@ -65,7 +81,7 @@ export function AcceptInviteModal({
   }, [visible, inviteToken, showErrorToast, onClose]);
 
   const handleAccept = async () => {
-    if (!inviteToken || !authToken) return;
+    if (!inviteToken || !authToken || acceptedRef.current) return;
     
     if (info && !info.valid) {
       showErrorToast('This invitation is no longer valid.');
@@ -73,9 +89,12 @@ export function AcceptInviteModal({
     }
 
     setAccepting(true);
+    acceptedRef.current = true;
     try {
       const result = await acceptPetInvite(authToken, inviteToken);
       const joinedPetId = result.petId ?? info?.pet?.petId;
+
+      showSuccessToast(`🎉 Congratulations! You are now a family member of ${info?.pet?.name ?? 'this pet'}!`);
 
       if (joinedPetId && user?._id) {
         await rememberSharedPetId(user._id, joinedPetId);
@@ -86,8 +105,6 @@ export function AcceptInviteModal({
           setSession,
         });
       }
-
-      showSuccessToast(`🎉 Congratulations! You are now a family member of ${info?.pet?.name ?? 'this pet'}!`);
       
       // Invalidate queries to refresh the pets lists and current active workspaces
       queryClient.invalidateQueries({ queryKey: ['petsList'] });
@@ -101,6 +118,7 @@ export function AcceptInviteModal({
       }
       onClose();
     } catch (err) {
+      acceptedRef.current = false;
       showErrorToast(getErrorMessage(err));
     } finally {
       setAccepting(false);

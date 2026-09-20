@@ -38,6 +38,7 @@ export default function InviteAcceptScreen() {
   // Confirmation modal state
   const [confirmVisible, setConfirmVisible] = useState(false);
 
+  const acceptedRef = React.useRef(false);
   const { showErrorToast, showSuccessToast } = useToast();
 
   const currentUserId = user?._id;
@@ -47,28 +48,38 @@ export default function InviteAcceptScreen() {
   const petName = info?.pet?.name ?? 'the pet family';
 
   const loadInfo = useCallback(async () => {
-    if (!inviteToken) {
-      showErrorToast('Invalid invitation link.');
-      setLoading(false);
+    if (!inviteToken || acceptedRef.current) {
+      if (!inviteToken) {
+        showErrorToast('Invalid invitation link.');
+        setLoading(false);
+      }
       return;
     }
     setLoading(true);
     try {
       const data = await fetchInviteInfo(inviteToken);
-      setInfo(data);
+      if (!acceptedRef.current) {
+        setInfo(data);
+      }
     } catch (err) {
-      showErrorToast(getErrorMessage(err));
+      if (!acceptedRef.current) {
+        showErrorToast(getErrorMessage(err));
+      }
     } finally {
-      setLoading(false);
+      if (!acceptedRef.current) {
+        setLoading(false);
+      }
     }
   }, [inviteToken, showErrorToast]);
 
   useEffect(() => {
-    loadInfo();
+    if (!acceptedRef.current) {
+      loadInfo();
+    }
   }, [loadInfo]);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || acceptedRef.current) return;
 
     if (isOwnInvite) {
       showErrorToast("You cannot accept your own invitation.");
@@ -80,7 +91,7 @@ export default function InviteAcceptScreen() {
 
   // Called when "Accept Invitation" button is pressed — opens confirm modal
   const handleAcceptPress = () => {
-    if (!inviteToken) return;
+    if (!inviteToken || acceptedRef.current) return;
 
     if (!isAuthenticated) {
       router.replace({ pathname: '/auth/login', params: { redirect: `/invite/${inviteToken}` } });
@@ -97,12 +108,15 @@ export default function InviteAcceptScreen() {
 
   // Called when user confirms in the modal
   const handleConfirmAccept = async () => {
-    if (!authToken || !inviteToken) return;
+    if (!authToken || !inviteToken || acceptedRef.current) return;
     setAccepting(true);
+    acceptedRef.current = true;
     setConfirmVisible(false);
     try {
       const result = await acceptPetInvite(authToken, inviteToken);
       const joinedPetId = result.petId ?? info?.pet?.petId;
+
+      showSuccessToast(`🎉 Congratulations! You are now a family member of ${petName}!`);
 
       if (joinedPetId && user?._id) {
         await rememberSharedPetId(user._id, joinedPetId);
@@ -114,10 +128,9 @@ export default function InviteAcceptScreen() {
         });
       }
 
-      // 🎉 Success toast then navigate home
-      showSuccessToast(`🎉 Congratulations! You are now a family member of ${petName}!`);
-      setTimeout(() => router.replace('/(tabs)'), 600);
+      router.replace('/(tabs)');
     } catch (err) {
+      acceptedRef.current = false;
       showErrorToast(getErrorMessage(err));
     } finally {
       setAccepting(false);
