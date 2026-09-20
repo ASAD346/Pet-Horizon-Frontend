@@ -321,8 +321,6 @@ export function MemberPermissionsSheet({
     }
   };
 
-  const enabledCount = MODULE_CONFIG.filter((m) => getVal(m.id)).length;
-
   return (
     <FormSheetShell
       visible={visible}
@@ -366,21 +364,6 @@ export function MemberPermissionsSheet({
                 </View>
               )}
             </View>
-          </View>
-        </View>
-
-        {/* Stats counter */}
-        <View style={styles.statsBar}>
-          <View style={styles.statItem}>
-            <View style={[styles.statDot, { backgroundColor: '#10B981' }]} />
-            <AppText style={styles.statVal}>{enabledCount}</AppText>
-            <AppText style={styles.statLabel}>modules enabled</AppText>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <View style={[styles.statDot, { backgroundColor: '#94A3B8' }]} />
-            <AppText style={styles.statVal}>{MODULE_CONFIG.length - enabledCount}</AppText>
-            <AppText style={styles.statLabel}>restricted</AppText>
           </View>
         </View>
       </View>
@@ -515,7 +498,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 12,
   },
   memberInfoCol: {
     flex: 1,
@@ -590,43 +572,6 @@ const styles = StyleSheet.create({
     color: '#B45309',
     fontSize: 10,
     fontWeight: '800',
-  },
-  statsBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingVertical: 7,
-    paddingHorizontal: 12,
-  },
-  statItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  statDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  statVal: {
-    color: '#0F172A',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  statLabel: {
-    color: '#64748B',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  statDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: '#E2E8F0',
   },
 
   // Modules card
