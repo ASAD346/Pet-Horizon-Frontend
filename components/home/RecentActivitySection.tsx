@@ -165,7 +165,6 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
 const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing.md,
-    paddingBottom: Spacing.sm,
   },
   emptyCard: {
     justifyContent: 'center',

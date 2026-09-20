@@ -19,11 +19,11 @@ export const homePillCard = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 14,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
-    marginTop: 2,
+    paddingVertical: 8.5,
+    marginBottom: 6,
+    marginTop: 0,
     marginHorizontal: 4, // prevents clipping by adding horizontal room
-    minHeight: 56,
+    minHeight: 52,
     overflow: 'visible', // ensures borders render completely without clipping
     ...homeCardShadow,
   },
