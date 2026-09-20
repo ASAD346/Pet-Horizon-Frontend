@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Image,
-  KeyboardAvoidingView,
   Platform,
-  Pressable,
-  ScrollView,
   StyleSheet,
   Switch,
   TouchableOpacity,
@@ -13,11 +10,12 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppDispatch } from '@/redux/store';
-import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
-import { SafeModal } from '@/components/ui/SafeModal';
 import { AppText } from '@/components/ui/AppText';
+import { FormSheetShell, FormSection, FormSegmentedControl } from '@/components/sheets';
+import { Radius, Spacing } from '@/constants/theme';
+import { FormSheetColors } from '@/components/sheets/formSheetStyles';
 import { getErrorMessage } from '@/lib/api/errors';
 import { removePetMember, updatePetMemberPermissions } from '@/services/family/familyApi';
 import { useToast } from '@/hooks/useToast';
@@ -25,7 +23,7 @@ import { usePetMembers } from '@/hooks/usePetMembers';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import type { PetMemberRow } from '@/types/family';
 
-// ─── Module config with per-module color theming ────────────────────────────────
+// ─── Module Config ─────────────────────────────────────────────────────────────
 const MODULE_CONFIG = [
   {
     id: 'feeding',
@@ -74,18 +72,17 @@ const MODULE_CONFIG = [
   },
 ] as const;
 
-// ─── Avatar ─────────────────────────────────────────────────────────────────────
+// ─── Avatar Component ──────────────────────────────────────────────────────────
 function MemberAvatarLarge({
   name,
   pictureUrl,
-  color,
 }: {
   name: string;
   pictureUrl?: string | null;
-  color: string;
 }) {
   const initials = name
     .split(' ')
+    .filter(Boolean)
     .map((w) => w[0] ?? '')
     .join('')
     .slice(0, 2)
@@ -95,45 +92,22 @@ function MemberAvatarLarge({
 
   if (resolved) {
     return (
-      <View style={[av.outer, { borderColor: '#E2E8F0' }]}>
-        <Image source={{ uri: resolved }} style={av.image} />
+      <View style={styles.avatarWrap}>
+        <Image source={{ uri: resolved }} style={styles.avatarImage} />
       </View>
     );
   }
 
   return (
-    <View style={[av.outer, { borderColor: '#E2E8F0' }]}>
-      <LinearGradient colors={['#334155', '#1E293B']} style={av.gradient}>
-        <AppText style={av.initials}>{initials || 'U'}</AppText>
+    <View style={styles.avatarWrap}>
+      <LinearGradient colors={['#166534', '#114227']} style={styles.avatarGradient}>
+        <AppText style={styles.avatarInitials}>{initials || 'U'}</AppText>
       </LinearGradient>
     </View>
   );
 }
 
-const av = StyleSheet.create({
-  outer: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    borderWidth: 2,
-    backgroundColor: '#F8FAFC',
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-      },
-      android: { elevation: 3 },
-    }),
-  },
-  gradient: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  image: { width: '100%', height: '100%' },
-  initials: { color: '#F8FAFC', fontSize: 20, fontWeight: '800', letterSpacing: 0.5 },
-});
-
-// ─── Types ───────────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────────
 interface MemberPermissionsSheetProps {
   visible: boolean;
   member: PetMemberRow | null;
@@ -145,7 +119,7 @@ interface MemberPermissionsSheetProps {
   onUpdated: (updatedOrDeletedMember: string | PetMemberRow) => void;
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────────
+// ─── Main Component ────────────────────────────────────────────────────────────
 export function MemberPermissionsSheet({
   visible,
   member,
@@ -156,14 +130,22 @@ export function MemberPermissionsSheet({
   onClose,
   onUpdated,
 }: MemberPermissionsSheetProps) {
-  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const dispatch = useAppDispatch();
+  const { showSuccessToast, showErrorToast } = useToast();
 
   const [accessLevel, setAccessLevel] = useState<'readonly' | 'edit'>('readonly');
+  const [localPermissions, setLocalPermissions] = useState<Record<string, boolean>>({
+    feeding: false,
+    walks: false,
+    medicine: false,
+    grooming: false,
+    vaccination: false,
+    journal: true,
+    expenses: true,
+  });
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { showSuccessToast, showErrorToast } = useToast();
 
   const { members: membersList } = usePetMembers(token, petId, !isReadOnly);
 
@@ -184,32 +166,7 @@ export function MemberPermissionsSheet({
   const memberEmail = member?.userId?.email || (member as any)?.email || '';
   const memberPicture = member?.userId?.profileImage || (member as any)?.profileImage || null;
 
-  // ── Permission Query ────────────────────────────────────────────────────────
-  const { data: memberPermissions } = useQuery({
-    queryKey: ['family-permissions', targetUserId],
-    queryFn: async () => {
-      const rec = activeCachedMember || member;
-      if (!rec) return {};
-      const perms = rec.permissions || {};
-      const allowed = rec.allowedModules ?? [];
-      const check = (key: string) => {
-        if ((perms as any)[key] !== undefined) return !!(perms as any)[key];
-        if ((rec as any)[key] !== undefined) return !!(rec as any)[key];
-        return !!(allowed.includes(key) || allowed.includes(key[0].toUpperCase() + key.slice(1)));
-      };
-      return {
-        feeding: check('feeding'),
-        walks: check('walks'),
-        medicine: check('medicine'),
-        grooming: check('grooming'),
-        vaccination: check('vaccination'),
-        journal: true,
-        expenses: true,
-      };
-    },
-    enabled: Boolean(visible && targetUserId),
-  });
-
+  // ── Sync data on open ───────────────────────────────────────────────────────
   useEffect(() => {
     const rec = activeCachedMember || member;
     if (visible && rec) {
@@ -221,7 +178,8 @@ export function MemberPermissionsSheet({
         if ((rec as any)[key] !== undefined) return !!(rec as any)[key];
         return !!(allowed.includes(key) || allowed.includes(key[0].toUpperCase() + key.slice(1)));
       };
-      queryClient.setQueryData(['family-permissions', targetUserId], {
+
+      const initialPerms = {
         feeding: check('feeding'),
         walks: check('walks'),
         medicine: check('medicine'),
@@ -229,24 +187,24 @@ export function MemberPermissionsSheet({
         vaccination: check('vaccination'),
         journal: true,
         expenses: true,
-      });
+      };
+
+      setLocalPermissions(initialPerms);
       setError(null);
     }
-  }, [member, visible, activeCachedMember, targetUserId, queryClient]);
+  }, [member, visible, activeCachedMember]);
 
-  const getVal = (id: string) =>
-    !!memberPermissions?.[id as keyof typeof memberPermissions];
+  const getVal = (id: string) => !!localPermissions[id];
 
   const toggle = (id: string) => {
-    const nextVal = !getVal(id);
-    const updatedPerms = {
-      ...(memberPermissions || {}),
-      [id]: nextVal,
-    };
-    mutation.mutate(updatedPerms);
+    if (isReadOnly) return;
+    setLocalPermissions((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
-  // ── Mutation ────────────────────────────────────────────────────────────────
+  // ── Save Mutation ───────────────────────────────────────────────────────────
   const mutation = useMutation({
     mutationFn: async (permsObj: Record<string, boolean>) => {
       if (!token || !petId || !member) throw new Error('Required variables missing');
@@ -270,7 +228,11 @@ export function MemberPermissionsSheet({
 
       queryClient.setQueryData(['family-permissions', targetUserId], permsObj);
 
-      const allowedModules = [...Object.keys(permsObj).filter((k) => permsObj[k]), 'journal', 'expenses'];
+      const allowedModules = [
+        ...Object.keys(permsObj).filter((k) => permsObj[k]),
+        'journal',
+        'expenses',
+      ];
       queryClient.setQueryData(['petMembers', petId], (old: any) => {
         if (!old || !Array.isArray(old)) return old;
         return old.map((m: any) =>
@@ -298,12 +260,13 @@ export function MemberPermissionsSheet({
       if (ctx?.previousMembers !== undefined) {
         queryClient.setQueryData(['petMembers', petId], ctx.previousMembers);
       }
-      setError(getErrorMessage(err));
-      showErrorToast(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      showErrorToast(msg);
     },
     onSuccess: (data) => {
       const sp =
-        (data as any).member?.permissions || (data as any).permissions || memberPermissions;
+        (data as any).member?.permissions || (data as any).permissions || localPermissions;
       queryClient.setQueryData(['family-permissions', targetUserId], sp);
       const allowedModules = Object.keys(sp).filter((k) => sp[k]);
       queryClient.setQueryData(['petMembers', petId], (old: any) => {
@@ -318,24 +281,15 @@ export function MemberPermissionsSheet({
       queryClient.invalidateQueries({ queryKey: ['activePetWorkspace'] });
       showSuccessToast('Permissions saved successfully.');
       onUpdated({ ...member, accessLevel, allowedModules, permissions: sp } as any);
+      onClose();
     },
   });
 
-  const handleAccessLevelChange = (level: 'readonly' | 'edit') => {
-    if (accessLevel === level || isReadOnly) return;
-    setAccessLevel(level);
-    const perms: Record<string, boolean> = {
-      feeding: getVal('feeding'),
-      walks: getVal('walks'),
-      medicine: getVal('medicine'),
-      grooming: getVal('grooming'),
-      vaccination: getVal('vaccination'),
-      journal: true,
-      expenses: true,
-    };
-    mutation.mutate(perms);
+  const handleSave = () => {
+    mutation.mutate(localPermissions);
   };
 
+  // ── Remove Member ───────────────────────────────────────────────────────────
   const confirmRemove = () => {
     Alert.alert(
       'Remove Member',
@@ -370,408 +324,315 @@ export function MemberPermissionsSheet({
   };
 
   const enabledCount = MODULE_CONFIG.filter((m) => getVal(m.id)).length;
-  const bottomInset = Math.max(insets.bottom, 16);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <SafeModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <Pressable style={s.backdrop} onPress={onClose}>
-          <Pressable style={s.sheet} onPress={(e) => e.stopPropagation()}>
-            {/* ── Modern Minimalist Header ── */}
-            <View style={s.header}>
-              {/* Drag handle */}
-              <View style={s.handle} />
+    <FormSheetShell
+      visible={visible}
+      onClose={onClose}
+      title="Member Permissions"
+      subtitle="Manage access and module controls"
+      icon="shield-account-outline"
+      saveLabel="Save Permissions"
+      onSave={isReadOnly ? undefined : handleSave}
+      saving={mutation.isPending}
+      saveDisabled={mutation.isPending || removing}
+      error={error}
+      isReadOnly={isReadOnly}
+      blockIfReadOnly={false}
+      compact
+    >
+      {/* ── 1. Member Profile Hero Card ── */}
+      <View style={styles.memberCard}>
+        <View style={styles.memberHeaderRow}>
+          <MemberAvatarLarge name={memberName} pictureUrl={memberPicture} />
+          <View style={styles.memberInfoCol}>
+            <AppText variant="h3" weight="800" color="#0F172A" numberOfLines={1}>
+              {memberName}
+            </AppText>
+            {memberEmail ? (
+              <AppText variant="caption" color="#64748B" numberOfLines={1} style={styles.emailText}>
+                {memberEmail}
+              </AppText>
+            ) : null}
 
-              {/* Close button */}
-              <TouchableOpacity
-                style={s.closeBtn}
-                onPress={onClose}
-                hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
-                activeOpacity={0.7}
+            <View style={styles.badgeRow}>
+              <View style={styles.memberBadge}>
+                <Ionicons name="person-circle-outline" size={12} color="#166534" />
+                <AppText style={styles.memberBadgeText}>MEMBER</AppText>
+              </View>
+
+              <View
+                style={[
+                  styles.roleBadge,
+                  accessLevel === 'edit' ? styles.roleBadgeEdit : styles.roleBadgeView,
+                ]}
               >
-                <Ionicons name="close" size={18} color="#475569" />
-              </TouchableOpacity>
-
-              {/* Member identity */}
-              <View style={s.identity}>
-                <MemberAvatarLarge
-                  name={memberName}
-                  pictureUrl={memberPicture}
-                  color="#1E293B"
+                <Ionicons
+                  name={accessLevel === 'edit' ? 'create-outline' : 'eye-outline'}
+                  size={11}
+                  color={accessLevel === 'edit' ? '#047857' : '#475569'}
                 />
-                <View style={s.identityText}>
-                  <AppText
-                    variant="h3"
-                    weight="800"
-                    color="#0F172A"
-                    numberOfLines={1}
-                    style={s.identityName}
-                  >
-                    {memberName}
-                  </AppText>
-                  {memberEmail ? (
-                    <AppText
-                      variant="caption"
-                      color="#64748B"
-                      numberOfLines={1}
-                      style={s.identityEmail}
-                    >
-                      {memberEmail}
-                    </AppText>
-                  ) : null}
-                  <View style={s.pillRow}>
-                    <View style={s.memberPill}>
-                      <Ionicons name="person-circle-outline" size={12} color="#0F172A" />
-                      <AppText style={s.memberPillText}>MEMBER</AppText>
-                    </View>
-                    <View
-                      style={[
-                        s.accessPill,
-                        accessLevel === 'edit' ? s.accessPillEdit : s.accessPillView,
-                      ]}
-                    >
-                      <Ionicons
-                        name={accessLevel === 'edit' ? 'create-outline' : 'eye-outline'}
-                        size={11}
-                        color={accessLevel === 'edit' ? '#047857' : '#475569'}
-                      />
-                      <AppText
-                        style={[
-                          s.accessPillText,
-                          accessLevel === 'edit' ? { color: '#047857' } : { color: '#475569' },
-                        ]}
-                      >
-                        {accessLevel === 'edit' ? 'Can Edit' : 'View Only'}
-                      </AppText>
-                    </View>
-                    {isPremium && (
-                      <View style={s.premiumPill}>
-                        <Ionicons name="sparkles" size={10} color="#D97706" />
-                        <AppText style={s.premiumPillText}>Premium</AppText>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </View>
-
-              {/* Stats overview bar */}
-              <View style={s.statsBar}>
-                <View style={s.statItem}>
-                  <View style={[s.statDot, { backgroundColor: '#10B981' }]} />
-                  <AppText style={s.statVal}>{enabledCount}</AppText>
-                  <AppText style={s.statLabel}>modules enabled</AppText>
-                </View>
-                <View style={s.statDivider} />
-                <View style={s.statItem}>
-                  <View style={[s.statDot, { backgroundColor: '#94A3B8' }]} />
-                  <AppText style={s.statVal}>{MODULE_CONFIG.length - enabledCount}</AppText>
-                  <AppText style={s.statLabel}>restricted</AppText>
-                </View>
-              </View>
-            </View>
-
-            {/* ── Scrollable Body ── */}
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={s.body}
-              keyboardShouldPersistTaps="handled"
-            >
-              {/* Access Level Card */}
-              {!isReadOnly && (
-                <View style={s.card}>
-                  <View style={s.cardHead}>
-                    <View style={s.cardIconWrap}>
-                      <Ionicons name="key" size={13} color="#0F172A" />
-                    </View>
-                    <AppText variant="caption" weight="800" color="#334155" style={s.cardTitle}>
-                      PERMISSION ROLE
-                    </AppText>
-                  </View>
-                  <View style={s.segRow}>
-                    {(
-                      [
-                        { id: 'readonly', label: 'View Only', icon: 'eye-outline' },
-                        { id: 'edit', label: 'Can Edit', icon: 'create-outline' },
-                      ] as const
-                    ).map((opt) => {
-                      const active = accessLevel === opt.id;
-                      return (
-                        <TouchableOpacity
-                          key={opt.id}
-                          style={[s.segBtn, active && s.segBtnActive]}
-                          onPress={() => handleAccessLevelChange(opt.id)}
-                          activeOpacity={0.8}
-                        >
-                          <Ionicons
-                            name={opt.icon}
-                            size={14}
-                            color={active ? '#0F172A' : '#64748B'}
-                          />
-                          <AppText
-                            variant="caption"
-                            weight={active ? '800' : '600'}
-                            color={active ? '#0F172A' : '#64748B'}
-                            style={{ fontSize: 13 }}
-                          >
-                            {opt.label}
-                          </AppText>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
-
-              {/* Module Access Card */}
-              <View style={s.card}>
-                <View style={s.cardHead}>
-                  <View style={s.cardIconWrap}>
-                    <Ionicons name="grid" size={13} color="#0F172A" />
-                  </View>
-                  <AppText variant="caption" weight="800" color="#334155" style={s.cardTitle}>
-                    MODULE PERMISSIONS
-                  </AppText>
-                  {isReadOnly && (
-                    <View style={s.viewOnlyChip}>
-                      <Ionicons name="eye-outline" size={11} color="#64748B" />
-                      <AppText style={s.viewOnlyText}>View only</AppText>
-                    </View>
-                  )}
-                </View>
-
-                {MODULE_CONFIG.map((mod, idx) => {
-                  const enabled = getVal(mod.id);
-                  const isLast = idx === MODULE_CONFIG.length - 1;
-                  return (
-                    <View key={mod.id}>
-                      <View style={s.modRow}>
-                        {/* Icon */}
-                        <View
-                          style={[
-                            s.modIcon,
-                            {
-                              backgroundColor: enabled ? mod.bg : '#F1F5F9',
-                              borderColor: enabled ? mod.border : '#E2E8F0',
-                            },
-                          ]}
-                        >
-                          {mod.iconLib === 'material' ? (
-                            <MaterialCommunityIcons
-                              name={mod.icon as any}
-                              size={18}
-                              color={enabled ? mod.color : '#94A3B8'}
-                            />
-                          ) : (
-                            <Ionicons
-                              name={mod.icon as any}
-                              size={18}
-                              color={enabled ? mod.color : '#94A3B8'}
-                            />
-                          )}
-                        </View>
-                        {/* Text */}
-                        <View style={{ flex: 1, gap: 2 }}>
-                          <AppText
-                            variant="bodySmall"
-                            weight="700"
-                            color={enabled ? '#0F172A' : '#64748B'}
-                          >
-                            {mod.label}
-                          </AppText>
-                          <AppText
-                            style={[
-                              s.modStatus,
-                              { color: enabled ? mod.color : '#94A3B8' },
-                            ]}
-                          >
-                            {enabled ? 'Allowed' : 'Restricted'}
-                          </AppText>
-                        </View>
-                        {/* Switch */}
-                        <Switch
-                          value={enabled}
-                          onValueChange={isReadOnly ? undefined : () => toggle(mod.id)}
-                          trackColor={{ false: '#E2E8F0', true: mod.color + '55' }}
-                          thumbColor={enabled ? mod.color : '#CBD5E1'}
-                          ios_backgroundColor="#E2E8F0"
-                          disabled={isReadOnly}
-                        />
-                      </View>
-                      {!isLast && <View style={[s.modDivider, { marginLeft: 52 }]} />}
-                    </View>
-                  );
-                })}
-              </View>
-
-              {/* Always-on modules info */}
-              <View style={s.infoCard}>
-                <View style={s.infoIconWrap}>
-                  <Ionicons name="information" size={14} color="#0284C7" />
-                </View>
-                <AppText style={s.infoText}>
-                  Journal and Expenses are always enabled for all active members.
+                <AppText
+                  style={[
+                    styles.roleBadgeText,
+                    accessLevel === 'edit' ? { color: '#047857' } : { color: '#475569' },
+                  ]}
+                >
+                  {accessLevel === 'edit' ? 'Can Edit' : 'View Only'}
                 </AppText>
               </View>
 
-              {/* Error */}
-              {error ? (
-                <View style={s.errorCard}>
-                  <Ionicons name="alert-circle" size={16} color="#DC2626" />
-                  <AppText style={s.errorText}>{error}</AppText>
-                </View>
-              ) : null}
-            </ScrollView>
-
-            {/* ── Sticky Bottom Floating Footer (Fixes Cutoff) ── */}
-            <View style={[s.footer, { paddingBottom: bottomInset }]}>
-              {!isReadOnly ? (
-                <View style={s.footerActions}>
-                  <TouchableOpacity
-                    style={[
-                      s.removeIconBtn,
-                      (removing || mutation.isPending) && { opacity: 0.5 },
-                    ]}
-                    onPress={confirmRemove}
-                    disabled={removing || mutation.isPending}
-                    activeOpacity={0.75}
-                    accessibilityLabel="Remove Member"
-                  >
-                    <Ionicons name="trash-outline" size={19} color="#DC2626" />
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[s.doneBtn, removing && { opacity: 0.65 }]}
-                    onPress={onClose}
-                    disabled={removing}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-                    <AppText style={s.doneBtnText}>Done</AppText>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <View style={s.readOnlyFooter}>
-                  <Ionicons name="shield-checkmark-outline" size={16} color="#64748B" />
-                  <AppText style={s.readOnlyText}>
-                    Only pet owners can modify member permissions.
-                  </AppText>
+              {isPremium && (
+                <View style={styles.premiumBadge}>
+                  <Ionicons name="sparkles" size={10} color="#D97706" />
+                  <AppText style={styles.premiumBadgeText}>Premium</AppText>
                 </View>
               )}
             </View>
-          </Pressable>
-        </Pressable>
-      </KeyboardAvoidingView>
-    </SafeModal>
+          </View>
+        </View>
+
+        {/* Stats counter */}
+        <View style={styles.statsBar}>
+          <View style={styles.statItem}>
+            <View style={[styles.statDot, { backgroundColor: '#10B981' }]} />
+            <AppText style={styles.statVal}>{enabledCount}</AppText>
+            <AppText style={styles.statLabel}>modules enabled</AppText>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <View style={[styles.statDot, { backgroundColor: '#94A3B8' }]} />
+            <AppText style={styles.statVal}>{MODULE_CONFIG.length - enabledCount}</AppText>
+            <AppText style={styles.statLabel}>restricted</AppText>
+          </View>
+        </View>
+      </View>
+
+      {/* ── 2. Permission Role ── */}
+      <FormSection title="Permission Role" icon="key-outline">
+        <FormSegmentedControl
+          selected={accessLevel}
+          onSelect={(val) => setAccessLevel(val as 'readonly' | 'edit')}
+          options={[
+            { value: 'readonly', label: 'View Only' },
+            { value: 'edit', label: 'Can Edit' },
+          ]}
+        />
+      </FormSection>
+
+      {/* ── 3. Module Permissions ── */}
+      <FormSection title="Module Permissions" icon="view-grid-outline">
+        <View style={styles.modulesCard}>
+          {MODULE_CONFIG.map((mod, idx) => {
+            const enabled = getVal(mod.id);
+            const isLast = idx === MODULE_CONFIG.length - 1;
+
+            return (
+              <View key={mod.id}>
+                <View style={styles.moduleRow}>
+                  <View
+                    style={[
+                      styles.modIcon,
+                      {
+                        backgroundColor: enabled ? mod.bg : '#F8FAFC',
+                        borderColor: enabled ? mod.border : '#E2E8F0',
+                      },
+                    ]}
+                  >
+                    {mod.iconLib === 'material' ? (
+                      <MaterialCommunityIcons
+                        name={mod.icon as any}
+                        size={18}
+                        color={enabled ? mod.color : '#94A3B8'}
+                      />
+                    ) : (
+                      <Ionicons
+                        name={mod.icon as any}
+                        size={18}
+                        color={enabled ? mod.color : '#94A3B8'}
+                      />
+                    )}
+                  </View>
+
+                  <View style={styles.modTextCol}>
+                    <AppText
+                      variant="bodySmall"
+                      weight="700"
+                      color={enabled ? '#0F172A' : '#64748B'}
+                    >
+                      {mod.label}
+                    </AppText>
+                    <AppText
+                      variant="caption"
+                      weight="600"
+                      style={{ color: enabled ? mod.color : '#94A3B8', fontSize: 11 }}
+                    >
+                      {enabled ? 'Allowed' : 'Restricted'}
+                    </AppText>
+                  </View>
+
+                  <Switch
+                    value={enabled}
+                    onValueChange={() => toggle(mod.id)}
+                    trackColor={{ false: '#E2E8F0', true: mod.color + '55' }}
+                    thumbColor={enabled ? mod.color : '#CBD5E1'}
+                    ios_backgroundColor="#E2E8F0"
+                    disabled={isReadOnly}
+                  />
+                </View>
+
+                {!isLast && <View style={styles.modDivider} />}
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Always-on info note */}
+        <View style={styles.infoBox}>
+          <Ionicons name="information-circle-outline" size={16} color="#0284C7" />
+          <AppText style={styles.infoText}>
+            Journal and Expenses are always enabled for all family members.
+          </AppText>
+        </View>
+      </FormSection>
+
+      {/* ── 4. Danger Zone / Remove Member ── */}
+      {!isReadOnly && (
+        <FormSection title="Manage Access" icon="account-cancel-outline">
+          <TouchableOpacity
+            style={[
+              styles.removeButton,
+              (removing || mutation.isPending) && { opacity: 0.6 },
+            ]}
+            onPress={confirmRemove}
+            disabled={removing || mutation.isPending}
+            activeOpacity={0.75}
+          >
+            <View style={styles.removeIconWrap}>
+              <Ionicons name="trash-outline" size={18} color="#DC2626" />
+            </View>
+            <View style={styles.removeTextCol}>
+              <AppText variant="bodySmall" weight="700" color="#DC2626">
+                Remove Member from Family
+              </AppText>
+              <AppText variant="caption" color="#991B1B" style={{ fontSize: 11 }}>
+                Revokes pet access immediately
+              </AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="#F87171" />
+          </TouchableOpacity>
+        </FormSection>
+      )}
+    </FormSheetShell>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────────
-const s = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.6)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: '88%',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
+// ─── Styles ────────────────────────────────────────────────────────────────────
+const styles = StyleSheet.create({
+  memberCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    borderColor: FormSheetColors.sectionBorder,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -10 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
       },
-      android: { elevation: 28 },
+      android: { elevation: 2 },
     }),
   },
-
-  // Header
-  header: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  handle: {
-    alignSelf: 'center',
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#CBD5E1',
-    marginBottom: 12,
-  },
-  closeBtn: {
-    position: 'absolute',
-    top: 14,
-    right: 18,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  identity: {
+  memberHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
-    marginBottom: 14,
-    paddingRight: 32,
+    marginBottom: 12,
   },
-  identityText: { flex: 1, gap: 2 },
-  identityName: { fontSize: 18, lineHeight: 24, letterSpacing: -0.2 },
-  identityEmail: { fontSize: 13, lineHeight: 17 },
-  pillRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4, flexWrap: 'wrap' },
-  memberPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderWidth: 1,
+  memberInfoCol: {
+    flex: 1,
+    gap: 2,
+  },
+  emailText: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  avatarWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    borderWidth: 1.5,
     borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  memberPillText: { color: '#334155', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-  accessPill: {
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  avatarGradient: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginTop: 2,
+  },
+  memberBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2.5,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  memberBadgeText: {
+    color: '#166534',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.4,
+  },
+  roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     borderRadius: 6,
     paddingHorizontal: 7,
-    paddingVertical: 3,
+    paddingVertical: 2.5,
     borderWidth: 1,
   },
-  accessPillEdit: {
+  roleBadgeEdit: {
     backgroundColor: '#ECFDF5',
     borderColor: '#A7F3D0',
   },
-  accessPillView: {
+  roleBadgeView: {
     backgroundColor: '#F8FAFC',
     borderColor: '#E2E8F0',
   },
-  accessPillText: {
+  roleBadgeText: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.2,
   },
-  premiumPill: {
+  premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
@@ -780,18 +641,21 @@ const s = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 6,
-    paddingVertical: 3,
+    paddingVertical: 2.5,
   },
-  premiumPillText: { color: '#B45309', fontSize: 10, fontWeight: '800' },
-
+  premiumBadgeText: {
+    color: '#B45309',
+    fontSize: 10,
+    fontWeight: '800',
+  },
   statsBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderRadius: 12,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingVertical: 8,
+    paddingVertical: 7,
     paddingHorizontal: 12,
   },
   statItem: {
@@ -806,206 +670,96 @@ const s = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  statVal: { color: '#0F172A', fontSize: 13, fontWeight: '800' },
-  statLabel: { color: '#64748B', fontSize: 11, fontWeight: '600' },
-  statDivider: { width: 1, height: 14, backgroundColor: '#E2E8F0' },
-
-  // Body
-  body: {
-    padding: 16,
-    gap: 12,
+  statVal: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontWeight: '800',
   },
-  card: {
+  statLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  statDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: '#E2E8F0',
+  },
+
+  // Modules card
+  modulesCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: { elevation: 2 },
-    }),
+    borderColor: FormSheetColors.inputBorder,
+    overflow: 'hidden',
   },
-  cardHead: {
+  moduleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
-  },
-  cardIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardTitle: { letterSpacing: 0.6, flex: 1, fontSize: 11 },
-  viewOnlyChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 6,
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-  },
-  viewOnlyText: { color: '#64748B', fontSize: 10, fontWeight: '700' },
-
-  // Segmented
-  segRow: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 3,
-    gap: 4,
-  },
-  segBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: 9,
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  segBtnActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E2E8F0',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
-      },
-      android: { elevation: 2 },
-    }),
-  },
-
-  // Module rows
-  modRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+    paddingHorizontal: 12,
     paddingVertical: 10,
+    gap: 12,
   },
   modIcon: {
-    width: 38,
-    height: 38,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
-  modStatus: { fontSize: 11, fontWeight: '600' },
-  modDivider: { height: 1, backgroundColor: '#F1F5F9' },
-
-  // Info
-  infoCard: {
+  modTextCol: {
+    flex: 1,
+    gap: 1,
+  },
+  modDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginLeft: 58,
+  },
+  infoBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     backgroundColor: '#F0F9FF',
-    borderRadius: 12,
+    borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: '#BAE6FD',
-    padding: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 10,
   },
-  infoIconWrap: {
-    width: 22,
-    height: 22,
-    borderRadius: 6,
-    backgroundColor: '#E0F2FE',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  infoText: { flex: 1, color: '#0369A1', fontSize: 12, fontWeight: '600', lineHeight: 16 },
-
-  // Error
-  errorCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#FEF2F2',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    padding: 12,
-  },
-  errorText: { flex: 1, color: '#DC2626', fontSize: 12, fontWeight: '600', lineHeight: 16 },
-
-  // Sticky Footer
-  footer: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
-      },
-      android: { elevation: 8 },
-    }),
-  },
-  footerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  removeIconBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#FEE2E2',
-    backgroundColor: '#FEF2F2',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doneBtn: {
+  infoText: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#0F172A',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.16,
-        shadowRadius: 6,
-      },
-      android: { elevation: 3 },
-    }),
-  },
-  doneBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '800', letterSpacing: 0.2 },
-
-  // Read-only footer
-  readOnlyFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 6,
-    justifyContent: 'center',
-  },
-  readOnlyText: {
-    color: '#64748B',
+    color: '#0369A1',
     fontSize: 12,
     fontWeight: '600',
+    lineHeight: 16,
+  },
+
+  // Remove Button
+  removeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: Radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 12,
+  },
+  removeIconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeTextCol: {
+    flex: 1,
+    gap: 1,
   },
 });
