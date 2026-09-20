@@ -349,8 +349,8 @@ export function MemberPermissionsSheet({
 
             <View style={styles.badgeRow}>
               <View style={styles.memberBadge}>
-                <Ionicons name="person-circle-outline" size={13} color="#166534" />
-                <AppText style={styles.memberBadgeText}>MEMBER</AppText>
+                <View style={styles.memberDot} />
+                <AppText style={styles.memberBadgeText}>Member</AppText>
               </View>
             </View>
           </View>
@@ -367,7 +367,7 @@ export function MemberPermissionsSheet({
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               accessibilityLabel="Remove member"
             >
-              <Ionicons name="trash-outline" size={18} color="#DC2626" />
+              <Ionicons name="trash-outline" size={15} color="#EF4444" />
             </TouchableOpacity>
           )}
         </View>
@@ -524,19 +524,25 @@ const styles = StyleSheet.create({
   memberBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 6,
-    paddingHorizontal: 7,
+    gap: 5,
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: '#DCFCE7',
+    alignSelf: 'flex-start',
+  },
+  memberDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
   },
   memberBadgeText: {
-    color: '#166534',
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.4,
+    color: '#15803D',
+    fontSize: 11,
+    fontWeight: '700',
   },
 
   // Section Header
@@ -611,12 +617,12 @@ const styles = StyleSheet.create({
 
   // Header Remove Button
   headerRemoveBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: '#FECACA',
+    borderColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
