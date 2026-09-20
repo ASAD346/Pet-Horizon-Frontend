@@ -1,14 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Alert,
   Platform,
   Share,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import * as Linking from 'expo-linking';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { InviteQrCode } from '@/components/family/InviteQrCode';
@@ -27,7 +24,6 @@ import {
   buildInviteShareMessage,
   resolveInviteAppLink,
   resolveInviteWebLink,
-  maskInviteLink,
 } from '@/lib/family/inviteLinks';
 import { generatePetInvite } from '@/services/family/familyApi';
 import type { GenerateInviteResponse } from '@/types/family';
@@ -52,7 +48,6 @@ export function InviteFamilySheet({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invite, setInvite] = useState<GenerateInviteResponse | null>(null);
-  const [copied, setCopied] = useState(false);
   const [modules, setModules] = useState<string[]>(DEFAULT_INVITE_MODULES);
   const onInviteGeneratedRef = useRef(onInviteGenerated);
   const requestIdRef = useRef(0);
@@ -74,7 +69,6 @@ export function InviteFamilySheet({
 
     setLoading(true);
     setError(null);
-    setCopied(false);
 
     try {
       const data = await generatePetInvite(token, {
@@ -97,10 +91,7 @@ export function InviteFamilySheet({
   }, [petId, token, modules]);
 
   useEffect(() => {
-    if (!visible) {
-      setCopied(false);
-      return;
-    }
+    if (!visible) return;
 
     setModules(DEFAULT_INVITE_MODULES);
     setInvite(null);
@@ -142,21 +133,6 @@ export function InviteFamilySheet({
     () => (invite ? resolveInviteWebLink(invite) : null),
     [invite],
   );
-
-  const handleCopyLink = async () => {
-    if (!webLink) return;
-    await Clipboard.setStringAsync(webLink);
-    setCopied(true);
-  };
-
-  const handleOpenWebLink = async () => {
-    if (!webLink) return;
-    try {
-      await Linking.openURL(webLink);
-    } catch {
-      Alert.alert('Link', 'Could not open this invitation link.');
-    }
-  };
 
   const handleShare = async () => {
     if (!invite || !webLink) return;
@@ -273,59 +249,7 @@ export function InviteFamilySheet({
         </View>
       </FormSection>
 
-      <FormSection title="Invitation Link" icon="link-variant">
-        <AppText variant="caption" color={HomeTheme.textMuted} style={styles.linkHint}>
-          Tap the link to open it, or copy/share it directly.
-        </AppText>
-        <View
-          style={[
-            styles.linkRow,
-            {
-              borderColor: isPremium ? 'rgba(24, 79, 46, 0.15)' : 'rgba(92, 179, 93, 0.15)',
-              backgroundColor: isPremium ? '#F4F9F4' : '#F0FDF4',
-            },
-          ]}
-        >
-          <View style={styles.linkIconWrap}>
-            <Ionicons name="link-outline" size={16} color={activeGreen} />
-          </View>
-          <TouchableOpacity
-            style={styles.linkTapArea}
-            onPress={handleOpenWebLink}
-            disabled={loading || !webLink}
-            activeOpacity={0.85}
-          >
-            <AppText
-              variant="bodySmall"
-              weight="600"
-              color={activeGreen}
-              style={styles.linkText}
-              numberOfLines={1}
-            >
-              {loading ? 'Generating link…' : maskInviteLink(webLink)}
-            </AppText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.copyBtn,
-              { backgroundColor: isPremium ? '#E8F5E9' : '#E8F5E9' },
-            ]}
-            onPress={handleCopyLink}
-            disabled={loading || !webLink}
-            activeOpacity={0.85}
-          >
-            <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={15} color={activeGreen} />
-          </TouchableOpacity>
-        </View>
-
-        {copied ? (
-          <AppText variant="caption" color={activeGreen} style={styles.copiedHint}>
-            Link copied — paste in chat (it will be tappable)
-          </AppText>
-        ) : null}
-      </FormSection>
-
-      <FormSection title="Or Scan QR Code" icon="qrcode-scan">
+      <FormSection title="Scan QR Code" icon="qrcode-scan">
         <View style={styles.qrWrap}>
           {loading ? (
             <SkeletonQRBox />
@@ -438,43 +362,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     lineHeight: 15,
-  },
-  linkHint: {
-    marginBottom: Spacing.xs,
-  },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    paddingRight: Spacing.xs,
-    minHeight: 48,
-    marginBottom: Spacing.xs,
-  },
-  linkIconWrap: {
-    paddingLeft: Spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  linkTapArea: {
-    flex: 1,
-    paddingLeft: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    justifyContent: 'center',
-  },
-  linkText: {
-    textDecorationLine: 'underline',
-  },
-  copyBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.xs,
-  },
-  copiedHint: {
-    marginBottom: Spacing.sm,
   },
   qrWrap: {
     alignSelf: 'center',
