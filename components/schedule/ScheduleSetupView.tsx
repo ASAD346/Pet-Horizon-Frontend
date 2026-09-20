@@ -192,7 +192,7 @@ export function ScheduleSetupView({
   onNotificationsPress,
   onPetReload,
 }: ScheduleSetupViewProps) {
-  const { clearance: tabBarClearance } = useTabBarLayout();
+  const { clearance: tabBarClearance, fabBottom, fabClearance } = useTabBarLayout();
   const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
   const { unreadCount } = useNotifications(token);
@@ -688,7 +688,7 @@ export function ScheduleSetupView({
       >
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance + 80, flexGrow: 1 }]}
+          contentContainerStyle={[styles.content, { paddingBottom: fabClearance, flexGrow: 1 }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={
@@ -808,7 +808,7 @@ export function ScheduleSetupView({
       {/* Floating Action Button (FAB) */}
       {pet && canViewAnySchedule && visibleSections.some((s) => canEditSchedule(s.key)) && (
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: brandColor, bottom: tabBarClearance + 20 }]}
+          style={[styles.fab, { backgroundColor: brandColor, bottom: fabBottom }]}
           onPress={() => {
             if (selectedCategory !== 'all') {
               const meta = SCHEDULE_SECTIONS.find((s) => s.key === selectedCategory);

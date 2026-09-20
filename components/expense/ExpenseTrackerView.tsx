@@ -42,7 +42,7 @@ export function ExpenseTrackerView({
 }: ExpenseTrackerViewProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { clearance: tabBarClearance } = useTabBarLayout();
+  const { clearance: tabBarClearance, fabBottom, fabClearance } = useTabBarLayout();
   const { token, user } = useAuth();
   const { pet, loading: petLoading } = useActivePet(token);
   const {
@@ -146,7 +146,7 @@ export function ExpenseTrackerView({
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[styles.content, { paddingBottom: tabBarClearance }]}
+        contentContainerStyle={[styles.content, { paddingBottom: fabClearance }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={HomeTheme.cardGreen} />
@@ -199,7 +199,7 @@ export function ExpenseTrackerView({
 
       {pet && canEditExpenses ? (
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: brandColor, bottom: tabBarClearance + 20 }]}
+          style={[styles.fab, { backgroundColor: brandColor, bottom: fabBottom }]}
           activeOpacity={0.95}
           onPress={() => setAddExpenseVisible(true)}
         >

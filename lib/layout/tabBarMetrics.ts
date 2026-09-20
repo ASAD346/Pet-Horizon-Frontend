@@ -13,23 +13,28 @@ export interface TabBarLayoutMetrics {
   bottomOffset: number;
   clearance: number;
   height: number;
+  fabBottom: number;
+  fabClearance: number;
 }
 
 /**
- * Layout metrics for the floating bottom tab bar.
- * `clearance` is how much space scroll content needs at the bottom.
+ * Layout metrics for the bottom tab bar.
+ * `clearance` is how much space scroll content needs at the bottom (~20px above tab bar).
+ * `fabBottom` is the exact bottom offset to position a FAB neatly above the tab bar.
+ * `fabClearance` is scroll content padding for screens with a FAB.
  */
 export function getTabBarMetrics(insetsBottom: number): TabBarLayoutMetrics {
   const actualPaddingBottom = insetsBottom || 12;
   const height = 72 + actualPaddingBottom;
-  
-  // The central FAB button has a marginTop of -42, meaning it extends 42px above the tab bar.
-  // We add this 42px to the clearance to ensure list contents do not get hidden behind it.
-  const clearance = height + 42 + Spacing.md;
+  const clearance = height + 20;
+  const fabBottom = height + 16;
+  const fabClearance = height + 72;
   
   return {
     bottomOffset: 0,
     clearance,
     height,
+    fabBottom,
+    fabClearance,
   };
 }
