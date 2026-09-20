@@ -135,12 +135,14 @@ export function InviteFamilySheet({
   );
 
   const handleShare = async () => {
-    if (!invite || !webLink) return;
+    if (!invite) return;
+    const directLink = appLink || webLink;
+    if (!directLink) return;
     try {
-      const message = buildInviteShareMessage(invite, webLink, appLink ?? undefined);
+      const message = buildInviteShareMessage(invite, webLink ?? '', appLink ?? undefined);
       await Share.share({
         message,
-        url: Platform.OS === 'ios' ? webLink : undefined,
+        url: Platform.OS === 'ios' ? directLink : undefined,
       });
     } catch {
       // User dismissed share sheet.
