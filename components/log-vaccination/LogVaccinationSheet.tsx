@@ -154,6 +154,7 @@ export function LogVaccinationSheet({
         visible={visible}
         onClose={onClose}
         title={entry.scheduleId ? 'Edit Vaccination' : 'Log Vaccination'}
+        subtitle="Schedule immunizations & booster reminders"
         icon={VACCINATION_THEME.icon}
         accentColor={VACCINATION_THEME.color}
         accentBg={VACCINATION_THEME.bg}
@@ -180,6 +181,7 @@ export function LogVaccinationSheet({
       visible={visible}
       onClose={onClose}
       title={entry.scheduleId ? 'Edit Vaccination' : 'Log Vaccination'}
+      subtitle="Schedule immunizations & booster reminders"
       icon={VACCINATION_THEME.icon}
       accentColor={VACCINATION_THEME.color}
       accentBg={VACCINATION_THEME.bg}
