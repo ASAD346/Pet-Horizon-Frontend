@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { InviteQrCode } from '@/components/family/InviteQrCode';
 import {
@@ -158,8 +158,6 @@ export function InviteFamilySheet({
     }
   };
 
-
-
   const handleShare = async () => {
     if (!invite || !webLink) return;
     try {
@@ -189,59 +187,93 @@ export function InviteFamilySheet({
       error={error}
       compact
     >
-      <FormSection title="Permissions">
+      <FormSection title="Permissions" icon="shield-account-outline">
+        <View style={styles.permissionsHeaderRow}>
+          <AppText variant="caption" color={HomeTheme.textMuted} style={styles.permissionsCountText}>
+            {modules.length === INVITE_PERMISSION_OPTIONS.length
+              ? 'All permissions active'
+              : `${modules.length} of ${INVITE_PERMISSION_OPTIONS.length} active`}
+          </AppText>
+          <TouchableOpacity
+            onPress={() => {
+              if (modules.length === INVITE_PERMISSION_OPTIONS.length) {
+                setModules([]);
+              } else {
+                setModules(INVITE_PERMISSION_OPTIONS.map((o) => o.id));
+              }
+            }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <AppText variant="caption" weight="700" color={activeGreen}>
+              {modules.length === INVITE_PERMISSION_OPTIONS.length ? 'Clear All' : 'Select All'}
+            </AppText>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.gridContainer}>
           {INVITE_PERMISSION_OPTIONS.map((option) => {
             const enabled = modules.includes(option.id);
-            const activeColor = isPremium ? '#184F2E' : '#3A8F3B';
-            const activeBg = isPremium ? '#E8F5E9' : '#EEF8EE';
-            const borderColor = enabled ? activeColor : 'rgba(148, 163, 184, 0.15)';
-            const backgroundColor = enabled ? activeBg : '#F8FAFC';
-            const textColor = enabled ? activeColor : '#475569';
+            const activeColor = isPremium ? '#166534' : '#15803D';
+            const borderColor = enabled ? (isPremium ? '#166534' : '#22C55E') : '#E2E8F0';
+            const backgroundColor = enabled ? '#F0FDF4' : '#FFFFFF';
+            const textColor = enabled ? '#0F172A' : '#475569';
+            const iconBg = enabled ? '#DCFCE7' : '#F1F5F9';
             const iconColor = enabled ? activeColor : '#64748B';
 
             return (
               <TouchableOpacity
                 key={option.id}
                 style={[
-                  styles.permissionChip,
+                  styles.permissionCard,
                   {
                     borderColor,
                     backgroundColor,
                   },
+                  enabled && styles.permissionCardActive,
                 ]}
                 onPress={() => toggleModule(option.id)}
                 activeOpacity={0.7}
               >
-                <View style={styles.chipLeft}>
-                  <Ionicons name={option.icon} size={16} color={iconColor} />
+                <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
+                  <MaterialCommunityIcons name={option.icon} size={18} color={iconColor} />
+                </View>
+
+                <View style={styles.labelCol}>
                   <AppText
                     variant="caption"
                     weight="700"
                     color={textColor}
-                    style={styles.chipText}
-                    numberOfLines={1}
+                    style={styles.cardLabel}
+                    numberOfLines={2}
                   >
                     {option.label}
                   </AppText>
                 </View>
+
                 <View
                   style={[
-                    styles.checkmarkCircleInline,
+                    styles.checkCircle,
                     enabled
                       ? { backgroundColor: activeColor, borderColor: activeColor }
-                      : { borderColor: '#CBD5E1', backgroundColor: '#FFFFFF' }
+                      : { borderColor: '#CBD5E1', backgroundColor: '#FFFFFF' },
                   ]}
                 >
-                  {enabled && <Ionicons name="checkmark" size={10} color="#FFFFFF" />}
+                  {enabled && <Ionicons name="checkmark" size={11} color="#FFFFFF" />}
                 </View>
               </TouchableOpacity>
             );
           })}
         </View>
+
+        <View style={styles.infoBox}>
+          <Ionicons name="information-circle-outline" size={15} color="#0284C7" />
+          <AppText style={styles.infoText}>
+            Journal and Expenses access is included automatically.
+          </AppText>
+        </View>
       </FormSection>
 
-      <FormSection title="Invitation Link">
+      <FormSection title="Invitation Link" icon="link-variant">
         <AppText variant="caption" color={HomeTheme.textMuted} style={styles.linkHint}>
           Tap the link to open it, or copy/share it directly.
         </AppText>
@@ -291,10 +323,9 @@ export function InviteFamilySheet({
             Link copied — paste in chat (it will be tappable)
           </AppText>
         ) : null}
-
       </FormSection>
 
-      <FormSection title="Or Scan QR Code">
+      <FormSection title="Or Scan QR Code" icon="qrcode-scan">
         <View style={styles.qrWrap}>
           {loading ? (
             <SkeletonQRBox />
@@ -315,6 +346,99 @@ export function InviteFamilySheet({
 }
 
 const styles = StyleSheet.create({
+  permissionsHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 2,
+  },
+  permissionsCountText: {
+    fontSize: 12,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  permissionCard: {
+    width: '48.5%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: Radius.lg,
+    borderWidth: 1.5,
+    minHeight: 52,
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  permissionCardActive: {
+    ...Platform.select({
+      ios: {
+        shadowColor: '#16A34A',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
+  },
+  iconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  labelCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  cardLabel: {
+    fontSize: 12,
+    lineHeight: 15,
+  },
+  checkCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F0F9FF',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 10,
+  },
+  infoText: {
+    flex: 1,
+    color: '#0369A1',
+    fontSize: 11,
+    fontWeight: '600',
+    lineHeight: 15,
+  },
   linkHint: {
     marginBottom: Spacing.xs,
   },
@@ -375,42 +499,5 @@ const styles = StyleSheet.create({
   qrCaption: {
     textAlign: 'center',
     marginBottom: Spacing.lg,
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginTop: Spacing.xs,
-  },
-  permissionChip: {
-    width: '48%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 12,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
-    minHeight: 48,
-  },
-  chipLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    flex: 1,
-    marginRight: 4,
-  },
-  chipText: {
-    flex: 1,
-    fontSize: 11,
-  },
-  checkmarkCircleInline: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
