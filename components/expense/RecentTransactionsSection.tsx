@@ -9,6 +9,7 @@ import { SkeletonList } from '@/components/ui/skeletons';
 import { homePillCard } from '../home/homeStyles';
 import { useLocalization } from '@/hooks/useLocalization';
 import { EmptyState } from '../ui/EmptyState';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import type { ExpenseTrackerCategory, ExpenseTransaction } from './expenseTrackerData';
 
 const BRAND_GREEN = '#2E7D32';
@@ -74,40 +75,48 @@ export function RecentTransactionsSection({
           onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
         />
       ) : (
-        filtered.map((item) => (
-          <View key={item.id} style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
-            {/* Category Icon Badge */}
-            <ColorIconBadge
-              color={item.color}
-              backgroundColor={item.bg}
-              materialIcon={item.materialIcon}
-              size={46}
-              iconSize={22}
-              shape="circle"
-            />
+        filtered.map((item, index) => (
+          <AnimatedStackItem
+            key={item.id}
+            index={index}
+            direction="up"
+            staggerMs={55}
+            distance={24}
+          >
+            <View style={[styles.transactionRow, { borderWidth: 1, borderColor: cardBorderColor }]}>
+              {/* Category Icon Badge */}
+              <ColorIconBadge
+                color={item.color}
+                backgroundColor={item.bg}
+                materialIcon={item.materialIcon}
+                size={46}
+                iconSize={22}
+                shape="circle"
+              />
 
-            {/* Info */}
-            <View style={styles.textBlock}>
-              <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                {item.title}
-              </AppText>
-              <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
-                {item.subtitle}
-              </AppText>
-            </View>
-
-            {/* Amount + badge */}
-            <View style={styles.amountBlock}>
-              <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
-                -{formatCurrency(item.amountVal)}
-              </AppText>
-              <View style={styles.categoryPill}>
-                <AppText variant="caption" weight="700" color={item.color} style={styles.categoryText}>
-                  {item.category}
+              {/* Info */}
+              <View style={styles.textBlock}>
+                <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                  {item.title}
+                </AppText>
+                <AppText variant="caption" color={HomeTheme.textMuted} style={styles.subtitle}>
+                  {item.subtitle}
                 </AppText>
               </View>
+
+              {/* Amount + badge */}
+              <View style={styles.amountBlock}>
+                <AppText variant="bodySmall" weight="800" color="#C62828" style={styles.amount}>
+                  -{formatCurrency(item.amountVal)}
+                </AppText>
+                <View style={styles.categoryPill}>
+                  <AppText variant="caption" weight="700" color={item.color} style={styles.categoryText}>
+                    {item.category}
+                  </AppText>
+                </View>
+              </View>
             </View>
-          </View>
+          </AnimatedStackItem>
         ))
       )}
     </View>

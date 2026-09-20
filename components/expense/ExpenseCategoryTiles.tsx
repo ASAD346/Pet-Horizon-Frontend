@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View, Platform } from 'react-
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import { EXPENSE_TRACKER_CATEGORIES, type ExpenseTrackerCategory } from './expenseTrackerData';
 
 interface ExpenseCategoryTilesProps {
@@ -35,47 +36,54 @@ export function ExpenseCategoryTiles({ selected, onSelect }: ExpenseCategoryTile
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {EXPENSE_TRACKER_CATEGORIES.map((item) => {
+        {EXPENSE_TRACKER_CATEGORIES.map((item, index) => {
           const active = item.id === selected;
 
           return (
-            <TouchableOpacity
+            <AnimatedStackItem
               key={item.id}
-              activeOpacity={0.85}
-              onPress={() => onSelect(item.id)}
-              style={[
-                styles.tile,
-                { backgroundColor: active ? item.color : item.bg },
-                active
-                  ? {
-                      shadowColor: item.color,
-                      shadowOffset: { width: 0, height: 4 },
-                      shadowOpacity: 0.3,
-                      shadowRadius: 8,
-                      elevation: 4,
-                    }
-                  : styles.tileInactive,
-              ]}
+              index={index}
+              direction="right"
+              staggerMs={50}
+              distance={30}
             >
-              {/* Small active indicator ring */}
-              {active && <View style={styles.activeRing} />}
-
-              <MaterialCommunityIcons
-                name={item.materialIcon}
-                size={18}
-                color={active ? '#FFFFFF' : item.color}
-              />
-              <AppText
-                variant="caption"
-                weight="700"
-                color={active ? '#FFFFFF' : HomeTheme.text}
-                style={styles.label}
-                numberOfLines={1}
-                ellipsizeMode="tail"
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={() => onSelect(item.id)}
+                style={[
+                  styles.tile,
+                  { backgroundColor: active ? item.color : item.bg },
+                  active
+                    ? {
+                        shadowColor: item.color,
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        elevation: 4,
+                      }
+                    : styles.tileInactive,
+                ]}
               >
-                {item.label}
-              </AppText>
-            </TouchableOpacity>
+                {/* Small active indicator ring */}
+                {active && <View style={styles.activeRing} />}
+
+                <MaterialCommunityIcons
+                  name={item.materialIcon}
+                  size={18}
+                  color={active ? '#FFFFFF' : item.color}
+                />
+                <AppText
+                  variant="caption"
+                  weight="700"
+                  color={active ? '#FFFFFF' : HomeTheme.text}
+                  style={styles.label}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {item.label}
+                </AppText>
+              </TouchableOpacity>
+            </AnimatedStackItem>
           );
         })}
       </ScrollView>
