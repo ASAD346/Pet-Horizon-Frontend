@@ -92,17 +92,18 @@ export function mapExpenseToTransaction(expense: ApiExpense, timezone = 'UTC', c
   const style = CATEGORY_STYLE[category];
   const note = expense.note?.trim();
   const title = note || category.charAt(0).toUpperCase() + category.slice(1);
+  const dateIso = expense.expenseDate || expense.createdAt || new Date().toISOString();
   return {
     id: expense._id,
     title,
-    subtitle: `${formatExpenseDateLabel(expense.expenseDate, timezone)} • ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+    subtitle: `${formatExpenseDateLabel(dateIso, timezone)} • ${category.charAt(0).toUpperCase() + category.slice(1)}`,
     amount: `-${formatCurrency(expense.amount, currency)}`,
     amountVal: expense.amount,
     category,
     materialIcon: style.icon,
     color: style.color,
     bg: style.bg,
-    expenseDate: expense.expenseDate,
+    expenseDate: dateIso,
   };
 }
 

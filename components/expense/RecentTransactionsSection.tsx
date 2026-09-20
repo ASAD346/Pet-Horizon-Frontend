@@ -10,7 +10,7 @@ import { SkeletonList } from '@/components/ui/skeletons';
 import { homePillCard } from '../home/homeStyles';
 import { useLocalization } from '@/hooks/useLocalization';
 import { useTimezone } from '@/hooks/useTimezone';
-import { formatInTimeZone } from '@/lib/timezone';
+import { formatInTimeZone, parseSafeDate } from '@/lib/timezone';
 import { EmptyState } from '../ui/EmptyState';
 import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 import type { ExpenseTrackerCategory, ExpenseTransaction } from './expenseTrackerData';
@@ -67,10 +67,15 @@ function filterTransactions(
     monday.setDate(now.getDate() - diffToMonday);
     const mondayStr = formatInTimeZone(monday, timezone, 'yyyy-MM-dd');
 
+    // End of week (Sunday) in timezone
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const sundayStr = formatInTimeZone(sunday, timezone, 'yyyy-MM-dd');
+
     return result.filter((item) => {
-      if (!item.expenseDate) return false;
+      if (!item.expenseDate) return true;
       const itemDateStr = formatInTimeZone(item.expenseDate, timezone, 'yyyy-MM-dd');
-      return itemDateStr >= mondayStr && itemDateStr <= todayStr;
+      return itemDateStr >= mondayStr && itemDateStr <= sundayStr;
     });
   }
 
@@ -91,10 +96,14 @@ export function RecentTransactionsSection({
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('month');
   const [expanded, setExpanded] = useState(false);
 
-  const filtered = useMemo(
-    () => filterTransactions(transactions, categoryFilter, timeFilter, timezone),
-    [transactions, categoryFilter, timeFilter, timezone],
-  );
+  const filtered = useMemo(() => {
+    const list = filterTransactions(transactions, categoryFilter, timeFilter, timezone);
+    return [...list].sort((a, b) => {
+      const timeA = a.expenseDate ? parseSafeDate(a.expenseDate).getTime() : 0;
+      const timeB = b.expenseDate ? parseSafeDate(b.expenseDate).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [transactions, categoryFilter, timeFilter, timezone]);
 
   const visibleItems = expanded ? filtered : filtered.slice(0, INITIAL_LIMIT);
   const overflowCount = filtered.length - INITIAL_LIMIT;
@@ -119,6 +128,12 @@ export function RecentTransactionsSection({
     }
     setExpanded((prev) => !prev);
   };
+
+  const emptyTitle = useMemo(() => {
+    if (timeFilter === 'today') return 'No expenses today';
+    if (timeFilter === 'week') return 'No expenses this week';
+    return 'No expenses this month';
+  }, [timeFilter]);
 
   const emptyDescription = useMemo(() => {
     const timeLabel = timeFilter === 'today' ? 'today' : timeFilter === 'week' ? 'this week' : 'this month';
@@ -165,7 +180,11 @@ export function RecentTransactionsSection({
                   variant="caption"
                   weight={active ? '800' : '600'}
                   color={active ? '#FFFFFF' : HomeTheme.textMuted}
-                  style={styles.timePillText}
+                  numberOfLines={1}
+                  style={[
+                    styles.timePillText,
+                    active && { color: '#FFFFFF' },
+                  ]}
                 >
                   {tab.label}
                 </AppText>
@@ -180,7 +199,7 @@ export function RecentTransactionsSection({
       ) : filtered.length === 0 ? (
         <EmptyState
           icon="receipt-outline"
-          title="No expenses found"
+          title={emptyTitle}
           description={emptyDescription}
           buttonLabel="Log First Expense"
           onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
@@ -300,12 +319,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   timePill: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 13,
+    paddingVertical: 5.5,
     borderRadius: Radius.full,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: 'rgba(0, 0, 0, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   timePillActive: {
     backgroundColor: BRAND_GREEN,
@@ -317,6 +339,9 @@ const styles = StyleSheet.create({
   },
   timePillText: {
     fontSize: 11.5,
+    lineHeight: 15,
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   transactionRow: {
     flexDirection: 'row',
