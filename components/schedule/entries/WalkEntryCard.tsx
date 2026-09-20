@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
-  FormSection,
-  FormSegmentedControl,
   FormTimeInput,
   FormNumberInput,
   FormSelectInput,
@@ -23,6 +21,16 @@ import {
 import type { WalkEntryState } from '@/lib/schedule/types';
 import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { WALK_TIME_OPTIONS } from '@/lib/walk/walkForm';
+
+const WALK_TIME_ICONS: Record<
+  string,
+  React.ComponentProps<typeof MaterialCommunityIcons>['name']
+> = {
+  morning: 'weather-sunset-up',
+  afternoon: 'white-balance-sunny',
+  evening: 'weather-sunset-down',
+  night: 'weather-night',
+};
 
 const REMINDER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((o) => ({
   value: String(o.value),
@@ -43,8 +51,8 @@ interface WalkEntryCardProps {
 export function WalkEntryCard({
   entry,
   index,
-  accentColor,
-  accentBg = '#E8F5E9',
+  accentColor = '#2563EB',
+  accentBg = '#DBEAFE',
   canRemove,
   embeddedInSheet = false,
   onChange,
@@ -77,74 +85,121 @@ export function WalkEntryCard({
   );
 
   const cardContent = (
-    <>
-      <FormSegmentedControl
-        label="Which walk?"
-        required
-        options={WALK_TIME_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
-        selected={entry.walkTime}
-        onSelect={(walkTime) => onChange({ ...entry, walkTime })}
-      />
+    <View style={styles.formContainer}>
+      {/* Walk Details Card */}
+      <View style={styles.sectionCard}>
+        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+          WALK DETAILS
+        </AppText>
 
-      <View style={styles.twoColRow}>
-        <View style={styles.halfCol}>
-          <FormTimeInput
-            label="Time"
-            required
-            value={entry.walkClockTime}
-            onPress={() => setTimePickerVisible(true)}
-          />
+        <View style={styles.fieldGroup}>
+          <AppText variant="caption" weight="700" color="#5C6470" style={styles.fieldLabel}>
+            TIME SLOT <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
+          </AppText>
+          <View style={styles.formGrid}>
+            {WALK_TIME_OPTIONS.map((item) => {
+              const isSelected = entry.walkTime === item.value;
+              const iconName = WALK_TIME_ICONS[item.value] || 'paw';
+              return (
+                <TouchableOpacity
+                  key={item.value}
+                  style={[
+                    styles.chipCard,
+                    isSelected && {
+                      borderColor: accentColor,
+                      backgroundColor: accentBg,
+                    },
+                  ]}
+                  onPress={() => onChange({ ...entry, walkTime: item.value })}
+                  activeOpacity={0.7}
+                >
+                  <MaterialCommunityIcons
+                    name={iconName}
+                    size={20}
+                    color={isSelected ? accentColor : '#64748B'}
+                  />
+                  <AppText
+                    variant="caption"
+                    weight={isSelected ? '700' : '600'}
+                    color={isSelected ? accentColor : '#334155'}
+                    style={styles.chipText}
+                  >
+                    {item.label}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
-        <View style={styles.halfCol}>
-          <FormNumberInput
-            label="Duration"
-            required
-            value={entry.duration}
-            onChangeText={(duration) => onChange({ ...entry, duration })}
-            placeholder="30"
-            unit="min"
-          />
+
+        <View style={styles.twoColRow}>
+          <View style={styles.halfCol}>
+            <FormTimeInput
+              label="Time"
+              required
+              value={entry.walkClockTime}
+              onPress={() => setTimePickerVisible(true)}
+            />
+          </View>
+          <View style={styles.halfCol}>
+            <FormNumberInput
+              label="Target Duration"
+              required
+              value={entry.duration}
+              onChangeText={(duration) => onChange({ ...entry, duration })}
+              placeholder="30"
+              unit="mins"
+            />
+          </View>
         </View>
       </View>
 
-      <ScheduleDateFields
-        value={entry.scheduleDate}
-        onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
-        accentColor={accentColor}
-      />
+      {/* Schedule & Timing Card */}
+      <View style={styles.sectionCard}>
+        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
+          SCHEDULE & TIMING
+        </AppText>
 
-      <FormToggleRow
-        label="Remind me before walk"
-        value={entry.notificationsOn}
-        onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
-        icon="notifications-outline"
-      />
-
-      {entry.notificationsOn ? (
-        <FormSelectInput
-          label="Reminder Timing"
-          valueLabel={getReminderMinutesLabel(entry.reminderMinutes)}
-          icon="chevron-down"
-          onPress={() => setReminderPickerVisible(true)}
+        <ScheduleDateFields
+          value={entry.scheduleDate}
+          onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+          accentColor={accentColor}
         />
-      ) : null}
 
-      <FormTextInput
-        label="Notes"
-        value={entry.notes}
-        onChangeText={(notes) => onChange({ ...entry, notes })}
-        placeholder="Optional details (route, leash)..."
-        multiline
-      />
-    </>
+        <FormToggleRow
+          label="Remind me before walk"
+          value={entry.notificationsOn}
+          onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+          icon="notifications-outline"
+        />
+
+        {entry.notificationsOn ? (
+          <FormSelectInput
+            label="Reminder Timing"
+            valueLabel={getReminderMinutesLabel(entry.reminderMinutes)}
+            icon="notifications-outline"
+            onPress={() => setReminderPickerVisible(true)}
+          />
+        ) : null}
+      </View>
+
+      {/* Notes Card */}
+      <View style={styles.sectionCard}>
+        <FormTextInput
+          label="Instructions & Notes"
+          value={entry.notes}
+          onChangeText={(notes) => onChange({ ...entry, notes })}
+          placeholder="Optional details (route, leash, dog park)..."
+          multiline
+        />
+      </View>
+    </View>
   );
 
   if (embeddedInSheet) {
     return (
       <>
-        <FormSection title="Walk details" icon="paw">
-          {cardContent}
-        </FormSection>
+        {cardContent}
         {pickers}
       </>
     );
@@ -169,12 +224,55 @@ export function WalkEntryCard({
 }
 
 const styles = StyleSheet.create({
+  formContainer: {
+    gap: 14,
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    gap: 12,
+  },
+  sectionHeader: {
+    letterSpacing: 0.6,
+    marginBottom: -2,
+  },
+  fieldGroup: {
+    gap: 6,
+  },
+  fieldLabel: {
+    letterSpacing: 0.4,
+  },
+  formGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chipCard: {
+    flexBasis: '47%',
+    flexGrow: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+  },
+  chipText: {
+    fontSize: 12,
+  },
   entryCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E6E8EB',
-    padding: 16,
+    borderColor: '#E2E8F0',
+    padding: 14,
     marginBottom: 16,
     gap: 12,
   },
@@ -188,6 +286,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 12,
     width: '100%',
+    alignItems: 'flex-end',
   },
   halfCol: {
     flex: 1,

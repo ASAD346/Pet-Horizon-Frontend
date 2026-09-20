@@ -51,9 +51,9 @@ export function LogWalkSheet({
   const [entry, setEntry] = useState<WalkEntryState>(() => ({
     id: 'draft',
     walkTime: WALK_TIME_OPTIONS[0].value,
-    duration: '',
+    duration: '30',
     walkClockTime: defaultWalkTimeDate(),
-    scheduleDate: createDefaultScheduleDate('ongoing'),
+    scheduleDate: createDefaultScheduleDate('single'),
     reminderMinutes: DEFAULT_REMINDER_MINUTES,
     notificationsOn: true,
     notes: '',
@@ -66,9 +66,9 @@ export function LogWalkSheet({
       setEntry({
         id: 'draft',
         walkTime: WALK_TIME_OPTIONS[0].value,
-        duration: '',
+        duration: '30',
         walkClockTime: defaultWalkTimeDate(),
-        scheduleDate: createDefaultScheduleDate('ongoing'),
+        scheduleDate: createDefaultScheduleDate('single'),
         reminderMinutes: DEFAULT_REMINDER_MINUTES,
         notificationsOn: true,
         notes: '',
@@ -129,6 +129,7 @@ export function LogWalkSheet({
         visible={visible}
         onClose={onClose}
         title={entry.scheduleId ? 'Edit Walk' : 'Log Walk'}
+        subtitle="Schedule outdoor walks & exercise reminders"
         icon={WALK_THEME.icon}
         accentColor={WALK_THEME.color}
         accentBg={WALK_THEME.bg}
@@ -155,6 +156,7 @@ export function LogWalkSheet({
       visible={visible}
       onClose={onClose}
       title={entry.scheduleId ? 'Edit Walk' : 'Log Walk'}
+      subtitle="Schedule outdoor walks & exercise reminders"
       icon={WALK_THEME.icon}
       accentColor={WALK_THEME.color}
       accentBg={WALK_THEME.bg}
