@@ -3,6 +3,7 @@ import { fetchUnifiedDashboard } from '@/services/dashboard/dashboardApi';
 import { loadExistingSchedules } from '@/lib/schedule/loadSchedules';
 import { Image } from 'expo-image';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { fetchJournalEntries } from '@/services/journal/journalApi';
 import type { ApiPet } from '@/types/pet';
 
 /** Prefetches unified dashboard queries and preloads images to make transitions feel instant */
@@ -32,7 +33,7 @@ export async function prefetchDashboardData(
   }
 }
 
-/** Prefetches all tab data (Dashboard, Schedules, etc.) for a pet */
+/** Prefetches all tab data (Dashboard, Schedules, Journal, etc.) for a pet */
 export async function prefetchAllPetTabData(
   queryClient: QueryClient,
   token: string | null,
@@ -54,6 +55,17 @@ export async function prefetchAllPetTabData(
           disabledCategories: pet.disabledCategories ?? [],
         }),
       staleTime: 1000 * 60 * 2,
+    });
+  } catch {
+    // Ignore prefetch failure
+  }
+
+  // 3. Journal prefetch
+  try {
+    void queryClient.prefetchQuery({
+      queryKey: ['journalEntries', petId],
+      queryFn: () => fetchJournalEntries(token, petId, 1, 100),
+      staleTime: 1000 * 60 * 5,
     });
   } catch {
     // Ignore prefetch failure

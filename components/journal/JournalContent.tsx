@@ -70,7 +70,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
       return fetchJournalEntries(token, pet._id, 1, 100);
     },
     enabled: active && Boolean(token) && Boolean(pet?._id),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 5, // 5 min cache for instant loading without skeleton on every open
   });
   
   const entries = journalData?.items ?? [];
