@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import { getCategoryStyle } from './journalData';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 
 export type JournalDateItem = {
   id: string;
@@ -32,52 +33,59 @@ export function JournalDateStrip({
       contentContainerStyle={styles.scrollContent}
       style={styles.scroll}
     >
-      {dates.map((item) => {
+      {dates.map((item, index) => {
         const selected = item.id === selectedId;
         const activeCategories = dateCategories?.[item.id] ?? [];
 
         return (
-          <TouchableOpacity
-            key={item.id}
-            activeOpacity={0.85}
-            onPress={() => onSelect(item.id)}
-            style={[
-              styles.card,
-              selected && { backgroundColor: '#E8F5E9', borderColor: '#4CAF50', borderWidth: 1.5 }
-            ]}
+          <AnimatedStackItem
+            key={`${item.id}-${dates.length}`}
+            index={index}
+            direction="right"
+            staggerMs={40}
+            distance={28}
           >
-            <AppText
-              variant="caption"
-              weight="700"
-              color={selected ? '#2E7D32' : JournalTheme.textLight}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => onSelect(item.id)}
+              style={[
+                styles.card,
+                selected && { backgroundColor: '#E8F5E9', borderColor: '#4CAF50', borderWidth: 1.5 }
+              ]}
             >
-              {item.day}
-            </AppText>
-            <AppText
-              variant="body"
-              weight="800"
-              color={selected ? '#1B5E20' : JournalTheme.text}
-              style={styles.dateNum}
-            >
-              {item.date}
-            </AppText>
-            
-            {/* Dots Row representing activity categories */}
-            <View style={styles.dotsRow}>
-              {activeCategories.slice(0, 4).map((cat) => {
-                const catStyle = getCategoryStyle(cat as any);
-                return (
-                  <View
-                    key={cat}
-                    style={[
-                      styles.dot,
-                      { backgroundColor: catStyle.color },
-                    ]}
-                  />
-                );
-              })}
-            </View>
-          </TouchableOpacity>
+              <AppText
+                variant="caption"
+                weight="700"
+                color={selected ? '#2E7D32' : JournalTheme.textLight}
+              >
+                {item.day}
+              </AppText>
+              <AppText
+                variant="body"
+                weight="800"
+                color={selected ? '#1B5E20' : JournalTheme.text}
+                style={styles.dateNum}
+              >
+                {item.date}
+              </AppText>
+
+              {/* Dots Row representing activity categories */}
+              <View style={styles.dotsRow}>
+                {activeCategories.slice(0, 4).map((cat) => {
+                  const catStyle = getCategoryStyle(cat as any);
+                  return (
+                    <View
+                      key={cat}
+                      style={[
+                        styles.dot,
+                        { backgroundColor: catStyle.color },
+                      ]}
+                    />
+                  );
+                })}
+              </View>
+            </TouchableOpacity>
+          </AnimatedStackItem>
         );
       })}
       <View style={styles.trailingSpacer} />

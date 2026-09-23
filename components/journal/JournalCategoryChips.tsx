@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import type { JournalCategory } from './journalData';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 
 type Chip = { id: JournalCategory; label: string };
 
@@ -21,26 +22,33 @@ export function JournalCategoryChips({ chips, selected, onSelect, themeColor }: 
       contentContainerStyle={styles.scrollContent}
       style={styles.scroll}
     >
-      {chips.map((chip) => {
+      {chips.map((chip, index) => {
         const active = chip.id === selected;
         return (
-          <TouchableOpacity
-            key={chip.id}
-            activeOpacity={0.85}
-            onPress={() => onSelect(chip.id)}
-            style={[
-              styles.chip,
-              active && { backgroundColor: themeColor || JournalTheme.navy }
-            ]}
+          <AnimatedStackItem
+            key={`${chip.id}-${chips.length}`}
+            index={index}
+            direction="right"
+            staggerMs={45}
+            distance={24}
           >
-            <AppText
-              variant="bodySmall"
-              weight="600"
-              color={active ? JournalTheme.surface : JournalTheme.textMuted}
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => onSelect(chip.id)}
+              style={[
+                styles.chip,
+                active && { backgroundColor: themeColor || JournalTheme.navy }
+              ]}
             >
-              {chip.label}
-            </AppText>
-          </TouchableOpacity>
+              <AppText
+                variant="bodySmall"
+                weight="600"
+                color={active ? JournalTheme.surface : JournalTheme.textMuted}
+              >
+                {chip.label}
+              </AppText>
+            </TouchableOpacity>
+          </AnimatedStackItem>
         );
       })}
     </ScrollView>
