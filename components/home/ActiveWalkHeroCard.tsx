@@ -2,8 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, Pressable, ActivityIndicator, Platform, Animated } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
-import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAuth } from '@/hooks/useAuth';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
@@ -13,11 +14,10 @@ import { useToast } from '@/hooks/useToast';
 import { useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
 import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
-import { homePillCard } from './homeStyles';
 
 // Radial progress ring constants
-const RING_SIZE = 40;
-const STROKE_WIDTH = 3.5;
+const RING_SIZE = 46;
+const STROKE_WIDTH = 4;
 const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -31,7 +31,7 @@ export function ActiveWalkHeroCard() {
   const [forceHidden, setForceHidden] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Subtle pulsing red/accent dot for live indicator
+  // Subtle pulsing glow for live indicator
   const pulseOpacity = useRef(new Animated.Value(1)).current;
   const activePetId = useAppSelector(selectActivePetId);
 
@@ -109,9 +109,13 @@ export function ActiveWalkHeroCard() {
   const percentDone = Math.min(100, Math.round(progressRatio * 100));
 
   const formatTimer = (totalSeconds: number) => {
-    const mins = Math.floor(totalSeconds / 60);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
     const pad = (num: number) => String(num).padStart(2, '0');
+    if (hrs > 0) {
+      return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    }
     return `${pad(mins)}:${pad(secs)}`;
   };
 
@@ -184,224 +188,300 @@ export function ActiveWalkHeroCard() {
   };
   handleCompleteRef.current = handleComplete;
 
-  const cardBorderColor = isPremium
-    ? 'rgba(212, 160, 23, 0.45)'
-    : 'rgba(37, 99, 235, 0.25)';
-
-  const ringFillColor = isPremium ? '#D4A017' : '#2563EB';
-  const ringTrackColor = isPremium ? 'rgba(212, 160, 23, 0.15)' : 'rgba(37, 99, 235, 0.12)';
-  const doneBtnColor = isPremium ? '#D4A017' : '#3A8F3B';
+  // Premium & Free Theme Tokens
+  const theme = isPremium
+    ? {
+        cardBg: ['#FFFFFF', '#FFFDF7'] as const,
+        borderColor: 'rgba(212, 160, 23, 0.4)',
+        ringTrack: 'rgba(212, 160, 23, 0.15)',
+        ringFill: '#D4A017',
+        badgeBg: '#FFF9E6',
+        iconColor: '#B8860B',
+        accentBadgeBg: '#FEF3C7',
+        accentBadgeText: '#92400E',
+        timerColor: '#92400E',
+        trackBg: '#FEF9EE',
+        btnBg: ['#D4A017', '#B8860B'] as const,
+        btnTextColor: '#FFFFFF',
+      }
+    : {
+        cardBg: ['#FFFFFF', '#F6FBF7'] as const,
+        borderColor: 'rgba(46, 125, 50, 0.25)',
+        ringTrack: 'rgba(46, 125, 50, 0.12)',
+        ringFill: '#2E7D32',
+        badgeBg: '#E8F5E9',
+        iconColor: '#2E7D32',
+        accentBadgeBg: '#E8F5E9',
+        accentBadgeText: '#1B5E20',
+        timerColor: '#1B5E20',
+        trackBg: '#F0FDF4',
+        btnBg: ['#2E7D32', '#1B5E20'] as const,
+        btnTextColor: '#FFFFFF',
+      };
 
   return (
-    <View style={[homePillCard.card, styles.heroCard, { borderColor: cardBorderColor }]}>
-      {/* Top progress accent bar */}
-      <View style={styles.topBarTrack}>
-        <View
-          style={[
-            styles.topBarFill,
-            {
-              width: `${percentDone}%`,
-              backgroundColor: ringFillColor,
-            },
-          ]}
-        />
-      </View>
-
-      <View style={styles.cardContent}>
-        {/* Left: Circular Progress Ring with Paw Badge */}
-        <View style={styles.ringWrapper}>
-          <Svg width={RING_SIZE} height={RING_SIZE} style={styles.svg}>
-            <Circle
-              cx={RING_SIZE / 2}
-              cy={RING_SIZE / 2}
-              r={RADIUS}
-              stroke={ringTrackColor}
-              strokeWidth={STROKE_WIDTH}
-              fill="none"
-            />
-            <Circle
-              cx={RING_SIZE / 2}
-              cy={RING_SIZE / 2}
-              r={RADIUS}
-              stroke={ringFillColor}
-              strokeWidth={STROKE_WIDTH}
-              strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              fill="none"
-              transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-            />
-          </Svg>
-
-          <View style={[styles.innerBadge, { backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.1)' : '#DBEAFE' }]}>
-            <Ionicons name="paw" size={17} color={ringFillColor} />
-          </View>
+    <View style={styles.cardContainer}>
+      <LinearGradient
+        colors={theme.cardBg}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.card, { borderColor: theme.borderColor }]}
+      >
+        {/* Top Progress Accent Bar */}
+        <View style={[styles.topProgressTrack, { backgroundColor: theme.trackBg }]}>
+          <View
+            style={[
+              styles.topProgressFill,
+              {
+                width: `${percentDone}%`,
+                backgroundColor: theme.ringFill,
+              },
+            ]}
+          />
         </View>
 
-        {/* Middle: Title, Live Status & Timer Progress */}
-        <View style={styles.textBlock}>
-          <View style={styles.titleRow}>
-            <Animated.View style={[styles.liveDot, { opacity: pulseOpacity }]} />
-            <AppText
-              style={styles.cardTitle}
-              weight="800"
-              color={HomeTheme.text}
-              numberOfLines={1}
-            >
-              {activeWalk.title || 'Pet Walk'}
-            </AppText>
+        <View style={styles.mainRow}>
+          {/* Left: SVG Circular Radial Progress Ring + Paw Badge */}
+          <View style={styles.ringWrapper}>
+            <Svg width={RING_SIZE} height={RING_SIZE} style={styles.svg}>
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RADIUS}
+                stroke={theme.ringTrack}
+                strokeWidth={STROKE_WIDTH}
+                fill="none"
+              />
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RADIUS}
+                stroke={theme.ringFill}
+                strokeWidth={STROKE_WIDTH}
+                strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="none"
+                transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+              />
+            </Svg>
+
+            <View style={[styles.innerPawCircle, { backgroundColor: theme.badgeBg }]}>
+              <Ionicons name="paw" size={20} color={theme.iconColor} />
+            </View>
           </View>
 
-          <View style={styles.timerSubtitleRow}>
-            <AppText
-              style={styles.timerHighlight}
-              weight="800"
-              color={isPremium ? '#B8860B' : '#2563EB'}
-            >
-              {formatTimer(elapsedSeconds)}
-            </AppText>
-            <AppText
-              style={styles.cardSubtitle}
-              weight="600"
-              color={HomeTheme.textMuted}
-            >
-              / {targetMinutes} min · {percentDone}%
-            </AppText>
+          {/* Middle: Title, Live Tag & Timer Progress Stats */}
+          <View style={styles.infoCol}>
+            <View style={styles.titleHeaderRow}>
+              <AppText
+                variant="body"
+                weight="800"
+                color="#0F172A"
+                numberOfLines={1}
+                style={styles.walkTitle}
+              >
+                {activeWalk.title || 'Ongoing Walk'}
+              </AppText>
+              
+              <View style={[styles.liveTag, { backgroundColor: theme.accentBadgeBg }]}>
+                <Animated.View style={[styles.liveDot, { opacity: pulseOpacity }]} />
+                <AppText variant="caption" weight="800" color={theme.accentBadgeText} style={styles.liveTagText}>
+                  LIVE
+                </AppText>
+              </View>
+            </View>
+
+            {/* Timer Counter & Goal percentage pill */}
+            <View style={styles.metaRow}>
+              <View style={styles.timerPill}>
+                <Ionicons name="time-outline" size={13} color={theme.timerColor} style={{ marginRight: 3 }} />
+                <AppText variant="body" weight="800" color={theme.timerColor} style={styles.timerDigits}>
+                  {formatTimer(elapsedSeconds)}
+                </AppText>
+              </View>
+              <AppText variant="caption" weight="600" color="#64748B" style={styles.goalText}>
+                Goal: {targetMinutes} min ({percentDone}%)
+              </AppText>
+            </View>
           </View>
+
+          {/* Right: Done CTA Button */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.finishBtn,
+              pressed && styles.finishBtnPressed,
+              busy && styles.btnDisabled,
+            ]}
+            disabled={busy}
+            onPress={handleComplete}
+          >
+            <LinearGradient
+              colors={theme.btnBg}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.finishBtnGradient}
+            >
+              {busy ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <View style={styles.finishBtnContent}>
+                  <Ionicons name="checkmark-circle" size={15} color="#FFFFFF" />
+                  <AppText variant="caption" weight="800" color="#FFFFFF">
+                    Done
+                  </AppText>
+                </View>
+              )}
+            </LinearGradient>
+          </Pressable>
         </View>
-
-        {/* Right: Done / Finish CTA Button matching schedule pill styles */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.doneBtn,
-            {
-              backgroundColor: doneBtnColor,
-              borderColor: doneBtnColor,
-            },
-            pressed && styles.pressedBtn,
-            busy && styles.btnDisabled,
-          ]}
-          disabled={busy}
-          onPress={handleComplete}
-        >
-          {busy ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <AppText variant="caption" weight="800" color="#FFFFFF">
-              Done
-            </AppText>
-          )}
-        </Pressable>
-      </View>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  heroCard: {
-    paddingHorizontal: 0,
-    paddingVertical: 0,
+  cardContainer: {
+    width: '100%',
+    marginBottom: Spacing.sm,
+    marginHorizontal: 0,
+  },
+  card: {
+    width: '100%',
+    borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1.2,
-    flexDirection: 'column',
-    alignItems: 'stretch',
     backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
-  topBarTrack: {
+  topProgressTrack: {
     width: '100%',
-    height: 3,
-    backgroundColor: '#F3F4F6',
+    height: 3.5,
   },
-  topBarFill: {
+  topProgressFill: {
     height: '100%',
-    borderRadius: 1.5,
+    borderRadius: 2,
   },
-  cardContent: {
+  mainRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
   ringWrapper: {
     width: RING_SIZE,
     height: RING_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
   svg: {
     position: 'absolute',
     top: 0,
     left: 0,
   },
-  innerBadge: {
+  innerPawCircle: {
     width: RING_SIZE - STROKE_WIDTH * 2 - 4,
     height: RING_SIZE - STROKE_WIDTH * 2 - 4,
     borderRadius: (RING_SIZE - STROKE_WIDTH * 2 - 4) / 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  textBlock: {
+  infoCol: {
     flex: 1,
-    marginLeft: 10,
-    marginRight: 8,
     justifyContent: 'center',
-    gap: 2,
+    marginRight: 10,
+    gap: 3,
   },
-  titleRow: {
+  titleHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
   },
-  liveDot: {
-    width: 6.5,
-    height: 6.5,
-    borderRadius: 3.5,
-    backgroundColor: '#EF4444', // Active live recording red
-  },
-  cardTitle: {
+  walkTitle: {
     fontSize: 14.5,
     lineHeight: 19,
     letterSpacing: -0.2,
     flexShrink: 1,
   },
-  timerSubtitleRow: {
+  liveTag: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'center',
     gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 6,
   },
-  timerHighlight: {
-    fontSize: 13,
-    lineHeight: 17,
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#EF4444',
+  },
+  liveTagText: {
+    fontSize: 9.5,
+    lineHeight: 12,
+    letterSpacing: 0.5,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timerDigits: {
+    fontSize: 14,
+    lineHeight: 18,
+    letterSpacing: 0.4,
     fontVariant: ['tabular-nums'],
   },
-  cardSubtitle: {
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0,
+  goalText: {
+    fontSize: 11.5,
+    lineHeight: 15,
   },
-  doneBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 7.5,
+  finishBtn: {
     borderRadius: 100,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: 64,
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#1A2B4E',
         shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.12,
-        shadowRadius: 4,
+        shadowOpacity: 0.14,
+        shadowRadius: 5,
       },
       android: {
         elevation: 3,
       },
     }),
   },
-  pressedBtn: {
-    transform: [{ scale: 0.96 }, { translateY: 1 }],
-    opacity: 0.92,
+  finishBtnGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 70,
+  },
+  finishBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  finishBtnPressed: {
+    transform: [{ scale: 0.95 }, { translateY: 1 }],
+    opacity: 0.9,
   },
   btnDisabled: {
     opacity: 0.6,
