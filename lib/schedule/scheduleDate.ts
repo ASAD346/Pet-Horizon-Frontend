@@ -27,7 +27,7 @@ export interface ScheduleDateApiInput {
 export const SCHEDULE_DATE_MODE_OPTIONS: { value: ScheduleDateMode; label: string }[] = [
   { value: 'single', label: 'Single day' },
   { value: 'range', label: 'Date range' },
-  { value: 'ongoing', label: 'Ongoing' },
+  { value: 'ongoing', label: 'Recurring' },
 ];
 
 function startOfToday(): Date {
