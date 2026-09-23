@@ -12,7 +12,7 @@ import { completeWalkSchedule } from '@/services/schedules/walkApi';
 import { queryClient } from '@/app/_layout';
 import { useToast } from '@/hooks/useToast';
 import { useAppSelector } from '@/redux/store';
-import { selectActivePetId, selectActivePet } from '@/redux/reducer';
+import { selectActivePetId } from '@/redux/reducer';
 import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
 // Radial progress ring constants
@@ -34,14 +34,6 @@ export function ActiveWalkHeroCard() {
   // Subtle pulsing glow for live indicator
   const pulseOpacity = useRef(new Animated.Value(1)).current;
   const activePetId = useAppSelector(selectActivePetId);
-  const activePet = useAppSelector(selectActivePet);
-
-  const petName = activePet?.name?.trim();
-  const displayTitle = activeWalk?.title
-    ? activeWalk.title
-    : petName
-    ? `${petName}'s Walk`
-    : 'Ongoing Walk';
 
   const busyRef = useRef(false);
   const handleCompleteRef = useRef<() => void>(() => {});
@@ -289,7 +281,7 @@ export function ActiveWalkHeroCard() {
                 numberOfLines={1}
                 style={styles.walkTitle}
               >
-                {displayTitle}
+                {activeWalk.title || 'Ongoing Walk'}
               </AppText>
               
               <View style={[styles.liveTag, { backgroundColor: theme.accentBadgeBg }]}>
