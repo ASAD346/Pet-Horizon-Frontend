@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -26,6 +26,9 @@ import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 import type { WalkScheduleItem } from '@/types/walk';
+import { useActiveWalk } from '@/context/ActiveWalkContext';
+import { useAppSelector } from '@/redux/store';
+import { selectActivePetId } from '@/redux/reducer';
 
 export type ScheduleDetailRow =
   | { kind: 'feeding'; item: FeedingScheduleItem }
@@ -41,6 +44,10 @@ interface ScheduleDetailSheetProps {
   onComplete?: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip?: (id: string) => void | Promise<void>;
   isPremium?: boolean;
+  /** Current logged-in user's id — forwarded to WalkTimer for multi-user sessions */
+  currentUserId?: string;
+  /** Auth token — forwarded to WalkTimer so it can persist walk sessions */
+  token?: string;
 }
 
 const KIND_METADATA: Record<
@@ -106,10 +113,48 @@ export function ScheduleDetailSheet({
   onComplete,
   onSkip,
   isPremium = false,
+  currentUserId,
+  token,
 }: ScheduleDetailSheetProps) {
+  const activePetId = useAppSelector(selectActivePetId);
+  const { activeWalk, startWalk, stopWalk } = useActiveWalk();
   const insets = useSafeAreaInsets();
   const [completeBusy, setCompleteBusy] = useState(false);
   const [skipBusy, setSkipBusy] = useState(false);
+
+  // ── Walk-specific timer state ────────────────────────────────────────────────
+  const [walkElapsedSeconds, setWalkElapsedSeconds] = useState(0);
+  const [walkBusy, setWalkBusy] = useState(false);
+  const walkBusyRef = useRef(false);
+  const walkTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const walkHandleCompleteRef = useRef<() => Promise<void>>(async () => {});
+
+  const walkItem = row?.kind === 'walk' ? row.item : null;
+  const walkTargetDuration: number = walkItem
+    ? ((walkItem as any).duration ?? walkItem.metadata?.duration ?? 30)
+    : 30;
+  const walkStartedAt =
+    activeWalk && walkItem && activeWalk.scheduleId === walkItem._id
+      ? activeWalk.startedAt
+      : null;
+
+  useEffect(() => {
+    if (walkStartedAt !== null) {
+      walkTimerRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - walkStartedAt) / 1000);
+        setWalkElapsedSeconds(elapsed);
+        if (elapsed >= walkTargetDuration * 60 && !walkBusyRef.current) {
+          clearInterval(walkTimerRef.current!);
+          walkTimerRef.current = null;
+          void walkHandleCompleteRef.current();
+        }
+      }, 1000);
+    } else {
+      if (walkTimerRef.current) clearInterval(walkTimerRef.current);
+      setWalkElapsedSeconds(0);
+    }
+    return () => { if (walkTimerRef.current) clearInterval(walkTimerRef.current); };
+  }, [walkStartedAt, walkTargetDuration]);
 
   if (!row) return null;
 
@@ -158,6 +203,51 @@ export function ScheduleDetailSheet({
     } finally {
       setSkipBusy(false);
     }
+  };
+
+  // ── Walk handlers ────────────────────────────────────────────────────────────
+  const handleWalkStart = async () => {
+    if (!walkItem) return;
+    await startWalk(walkItem._id, activePetId || '', walkTargetDuration, 'Walk', token);
+  };
+
+  const handleWalkComplete = async () => {
+    if (walkBusyRef.current || !walkItem) return;
+    walkBusyRef.current = true;
+    setWalkBusy(true);
+    const finalSeconds = walkElapsedSeconds;
+    await stopWalk();
+    if (walkTimerRef.current) { clearInterval(walkTimerRef.current); walkTimerRef.current = null; }
+    try {
+      const minutes = Math.max(1, Math.round(finalSeconds / 60));
+      if (onComplete) await onComplete(walkItem._id, minutes);
+      onClose();
+    } catch (_) {
+    } finally {
+      walkBusyRef.current = false;
+      setWalkBusy(false);
+    }
+  };
+  walkHandleCompleteRef.current = handleWalkComplete;
+
+  const handleWalkSkip = async () => {
+    if (walkBusyRef.current || !walkItem) return;
+    walkBusyRef.current = true;
+    setWalkBusy(true);
+    try {
+      if (onSkip) await onSkip(walkItem._id);
+      onClose();
+    } catch (_) {
+    } finally {
+      walkBusyRef.current = false;
+      setWalkBusy(false);
+    }
+  };
+
+  const formatWalkTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
   const renderDetailFields = () => {
@@ -408,7 +498,74 @@ export function ScheduleDetailSheet({
           </ScrollView>
 
           {/* Actions */}
-          {(canComplete || canSkip) && (
+          {row.kind === 'walk' && !isDone && !isSkipped ? (
+            // Walk: sheet-styled Start / live-timer / Done
+            <View style={styles.footer}>
+              {walkStartedAt === null ? (
+                // Not started — show Skip + Start Walk
+                <>
+                  {onSkip ? (
+                    <Pressable
+                      style={({ pressed }) => [styles.skipBtn, pressed && styles.btnPressed]}
+                      disabled={walkBusy}
+                      onPress={handleWalkSkip}
+                    >
+                      <AppText style={styles.skipBtnText} weight="700" color="#4B5563">Skip</AppText>
+                    </Pressable>
+                  ) : null}
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.completeBtn,
+                      { backgroundColor: '#2563EB' },
+                      pressed && styles.btnPressed,
+                    ]}
+                    disabled={walkBusy}
+                    onPress={handleWalkStart}
+                  >
+                    <View style={styles.completeBtnContent}>
+                      <Ionicons name="play-circle-outline" size={18} color="#FFFFFF" />
+                      <AppText style={styles.completeBtnText} weight="800" color="#FFFFFF">Start Walk</AppText>
+                    </View>
+                  </Pressable>
+                </>
+              ) : (
+                // Running — show live timer + Done
+                <>
+                  <View style={styles.walkTimerDisplay}>
+                    <View style={[
+                      styles.walkTimerDot,
+                      walkElapsedSeconds >= walkTargetDuration * 60 && { backgroundColor: '#16A34A' },
+                    ]} />
+                    <AppText
+                      style={styles.walkTimerText}
+                      weight="800"
+                      color={walkElapsedSeconds >= walkTargetDuration * 60 ? '#16A34A' : '#2563EB'}
+                    >
+                      {formatWalkTime(walkElapsedSeconds)}
+                    </AppText>
+                  </View>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.completeBtn,
+                      { backgroundColor: isPremium ? '#D4A017' : '#2E7D32' },
+                      pressed && styles.btnPressed,
+                    ]}
+                    disabled={walkBusy}
+                    onPress={handleWalkComplete}
+                  >
+                    {walkBusy ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <View style={styles.completeBtnContent}>
+                        <Ionicons name="checkmark-circle-outline" size={18} color="#FFFFFF" />
+                        <AppText style={styles.completeBtnText} weight="800" color="#FFFFFF">Done</AppText>
+                      </View>
+                    )}
+                  </Pressable>
+                </>
+              )}
+            </View>
+          ) : (canComplete || canSkip) ? (
             <View style={styles.footer}>
               {canSkip ? (
                 <Pressable
@@ -454,7 +611,7 @@ export function ScheduleDetailSheet({
                 </Pressable>
               ) : null}
             </View>
-          )}
+          ) : null}
         </View>
       </View>
     </Modal>
@@ -688,5 +845,27 @@ const styles = StyleSheet.create({
   btnPressed: {
     opacity: 0.88,
     transform: [{ scale: 0.98 }],
+  },
+  walkTimerDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    paddingHorizontal: 14,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  walkTimerDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+  walkTimerText: {
+    fontSize: 15,
+    fontVariant: ['tabular-nums'],
+    letterSpacing: 0.5,
   },
 });

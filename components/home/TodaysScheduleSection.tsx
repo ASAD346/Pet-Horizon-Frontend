@@ -769,6 +769,8 @@ export function TodaysScheduleSection({
         onComplete={handleDetailComplete}
         onSkip={handleDetailSkip}
         isPremium={isPremium}
+        currentUserId={currentUserId}
+        token={token}
       />
     </View>
   );
