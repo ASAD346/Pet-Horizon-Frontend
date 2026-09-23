@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Platform, Animated } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Radius } from '@/constants/theme';
@@ -15,6 +16,12 @@ import { useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
 import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 
+// SVG Circular Progress Ring constants
+const RING_SIZE = 44;
+const STROKE_WIDTH = 3.5;
+const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
 export function ActiveWalkOverlay() {
   const { activeWalk, stopWalk } = useActiveWalk();
   const { token } = useAuth();
@@ -26,11 +33,11 @@ export function ActiveWalkOverlay() {
   const [forceHidden, setForceHidden] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Animation values for pulsing ring & entrance slide
-  const pulseScale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.6)).current;
+  // Entrance slide and fade animations
   const slideAnim = useRef(new Animated.Value(60)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  // Subtle glowing pulse for live active indicator
+  const glowOpacity = useRef(new Animated.Value(0.4)).current;
 
   const activePetId = useAppSelector(selectActivePetId);
 
@@ -61,19 +68,17 @@ export function ActiveWalkOverlay() {
         setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
       }, 1000);
 
-      // Start looping pulse animation
-      pulseScale.setValue(1);
-      pulseOpacity.setValue(0.6);
+      // Smooth pulsing glow
       Animated.loop(
-        Animated.parallel([
-          Animated.timing(pulseScale, {
-            toValue: 1.6,
-            duration: 1800,
+        Animated.sequence([
+          Animated.timing(glowOpacity, {
+            toValue: 0.9,
+            duration: 1000,
             useNativeDriver: true,
           }),
-          Animated.timing(pulseOpacity, {
-            toValue: 0,
-            duration: 1800,
+          Animated.timing(glowOpacity, {
+            toValue: 0.3,
+            duration: 1000,
             useNativeDriver: true,
           }),
         ])
@@ -92,7 +97,7 @@ export function ActiveWalkOverlay() {
         timerRef.current = null;
       }
     };
-  }, [activeWalk, pulseScale, pulseOpacity]);
+  }, [activeWalk, glowOpacity]);
 
   if (!activeWalk || forceHidden) return null;
 
@@ -100,6 +105,12 @@ export function ActiveWalkOverlay() {
   if (activeWalk.petId && activePetId && activeWalk.petId !== activePetId) {
     return null;
   }
+
+  const targetMinutes = activeWalk.targetDuration || 30;
+  const targetTotalSeconds = targetMinutes * 60;
+  const progressRatio = Math.min(1, elapsedSeconds / targetTotalSeconds);
+  const strokeDashoffset = CIRCUMFERENCE * (1 - progressRatio);
+  const percentDone = Math.min(100, Math.round(progressRatio * 100));
 
   const formatTimer = (totalSeconds: number) => {
     const hrs = Math.floor(totalSeconds / 3600);
@@ -181,38 +192,44 @@ export function ActiveWalkOverlay() {
   };
 
   // Tier Colors Theme Configuration:
-  // - Free tier: Deep Navy gradient card, brand green live pulse & accent, green finish CTA
-  // - Premium tier: Rich Dark Emerald & Forest gradient card with Gold border & Gold CTA
+  // - Free tier: Deep Navy gradient card, vivid green progress ring, green finish CTA
+  // - Premium tier: Rich Dark Emerald & Forest gradient card with Gold progress ring & Gold CTA
   const theme = isPremium
     ? {
         cardBg: ['#0A2419', '#103923'] as const,
         borderColor: 'rgba(212, 160, 23, 0.45)',
-        pulseBorder: 'rgba(212, 160, 23, 0.55)',
-        iconCircleBg: 'rgba(212, 160, 23, 0.18)',
+        ringTrack: 'rgba(212, 160, 23, 0.2)',
+        ringFill: '#F5C842',
+        ringCenterBg: 'rgba(212, 160, 23, 0.12)',
         iconColor: '#F5C842',
         titleColor: '#FFFFFF',
         timerColor: '#F5C842',
+        subtextColor: 'rgba(255, 255, 255, 0.65)',
+        progressFillBg: '#D4A017',
         badgeBg: 'rgba(212, 160, 23, 0.25)',
         badgeText: '#FDE68A',
         badgeLabel: 'PREMIUM WALK',
         btnBg: ['#D4A017', '#B8860B'] as const,
         btnTextColor: '#FFFFFF',
-        btnShadow: '#D4A017',
+        liveDotColor: '#F5C842',
       }
     : {
         cardBg: ['#1A2B4E', '#14223E'] as const,
         borderColor: 'rgba(255, 255, 255, 0.12)',
-        pulseBorder: 'rgba(92, 179, 93, 0.5)',
-        iconCircleBg: 'rgba(92, 179, 93, 0.18)',
+        ringTrack: 'rgba(255, 255, 255, 0.15)',
+        ringFill: '#5CB35D',
+        ringCenterBg: 'rgba(92, 179, 93, 0.15)',
         iconColor: '#5CB35D',
         titleColor: '#FFFFFF',
         timerColor: '#FFFFFF',
+        subtextColor: 'rgba(255, 255, 255, 0.65)',
+        progressFillBg: '#2E7D32',
         badgeBg: 'rgba(92, 179, 93, 0.2)',
         badgeText: '#A7F3D0',
         badgeLabel: 'IN PROGRESS',
         btnBg: ['#2E7D32', '#1B5E20'] as const,
         btnTextColor: '#FFFFFF',
-        btnShadow: '#1B5E20',
+        liveDotColor: '#5CB35D',
       };
 
   return (
@@ -233,26 +250,67 @@ export function ActiveWalkOverlay() {
         end={{ x: 1, y: 1 }}
         style={[styles.card, { borderColor: theme.borderColor }]}
       >
-        {/* Left Section: Pulsing Icon & Live Status */}
-        <View style={styles.leftCol}>
-          <View style={styles.iconWrapper}>
-            <Animated.View
-              style={[
-                styles.pulseRing,
-                {
-                  borderColor: theme.pulseBorder,
-                  transform: [{ scale: pulseScale }],
-                  opacity: pulseOpacity,
-                },
-              ]}
-            />
-            <View style={[styles.iconCircle, { backgroundColor: theme.iconCircleBg }]}>
-              <Ionicons name="paw" size={18} color={theme.iconColor} />
+        {/* Top Slim Progress Goal Bar */}
+        <View style={styles.topProgressTrack}>
+          <View
+            style={[
+              styles.topProgressFill,
+              {
+                width: `${percentDone}%`,
+                backgroundColor: theme.progressFillBg,
+              },
+            ]}
+          />
+        </View>
+
+        <View style={styles.contentRow}>
+          {/* Left: SVG Circular Radial Progress Ring */}
+          <View style={styles.ringContainer}>
+            <Svg width={RING_SIZE} height={RING_SIZE} style={styles.svgRing}>
+              {/* Background circle track */}
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RADIUS}
+                stroke={theme.ringTrack}
+                strokeWidth={STROKE_WIDTH}
+                fill="none"
+              />
+              {/* Progress stroke */}
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RADIUS}
+                stroke={theme.ringFill}
+                strokeWidth={STROKE_WIDTH}
+                strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="none"
+                transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+              />
+            </Svg>
+
+            {/* Inner Center Icon with live pulsing glow */}
+            <View style={[styles.innerCircle, { backgroundColor: theme.ringCenterBg }]}>
+              <Animated.View style={{ opacity: glowOpacity }}>
+                <Ionicons name="paw" size={17} color={theme.iconColor} />
+              </Animated.View>
             </View>
           </View>
 
+          {/* Middle: Title, Live Timer and Goal info */}
           <View style={styles.infoCol}>
             <View style={styles.titleRow}>
+              <Animated.View
+                style={[
+                  styles.liveDot,
+                  {
+                    backgroundColor: theme.liveDotColor,
+                    opacity: glowOpacity,
+                  },
+                ]}
+              />
               <AppText
                 variant="body"
                 weight="700"
@@ -269,41 +327,43 @@ export function ActiveWalkOverlay() {
               </View>
             </View>
 
-            {/* Live Timer Counter */}
+            {/* Live Timer Counter & Target Goal */}
             <View style={styles.timerRow}>
-              <Ionicons name="time-outline" size={13} color={theme.timerColor} style={styles.timerIcon} />
               <AppText variant="body" weight="800" color={theme.timerColor} style={styles.timerText}>
                 {formatTimer(elapsedSeconds)}
               </AppText>
+              <AppText variant="caption" weight="600" color={theme.subtextColor} style={styles.goalText}>
+                / {targetMinutes} min ({percentDone}%)
+              </AppText>
             </View>
           </View>
-        </View>
 
-        {/* Right Section: Complete CTA Button */}
-        <TouchableOpacity
-          style={[styles.completeBtn, busy && styles.btnDisabled]}
-          activeOpacity={0.85}
-          onPress={handleComplete}
-          disabled={busy}
-        >
-          <LinearGradient
-            colors={theme.btnBg}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.btnGradient}
+          {/* Right: Complete CTA Button */}
+          <TouchableOpacity
+            style={[styles.completeBtn, busy && styles.btnDisabled]}
+            activeOpacity={0.85}
+            onPress={handleComplete}
+            disabled={busy}
           >
-            {busy ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <View style={styles.btnContent}>
-                <Ionicons name="checkmark-circle" size={16} color={theme.btnTextColor} />
-                <AppText variant="caption" weight="800" color={theme.btnTextColor} style={styles.btnText}>
-                  Finish
-                </AppText>
-              </View>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+            <LinearGradient
+              colors={theme.btnBg}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.btnGradient}
+            >
+              {busy ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <View style={styles.btnContent}>
+                  <Ionicons name="checkmark-circle" size={16} color={theme.btnTextColor} />
+                  <AppText variant="caption" weight="800" color={theme.btnTextColor} style={styles.btnText}>
+                    Finish
+                  </AppText>
+                </View>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </LinearGradient>
     </Animated.View>
   );
@@ -320,11 +380,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     borderRadius: Radius.lg,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    overflow: 'hidden',
     borderWidth: 1.2,
     ...Platform.select({
       ios: {
@@ -338,36 +394,45 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  leftCol: {
-    flex: 1,
+  topProgressTrack: {
+    width: '100%',
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  topProgressFill: {
+    height: '100%',
+    borderRadius: 1.5,
+  },
+  contentRow: {
+    paddingHorizontal: 14,
+    paddingVertical: 11,
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 10,
-    gap: 12,
+    justifyContent: 'space-between',
   },
-  iconWrapper: {
-    width: 40,
-    height: 40,
+  ringContainer: {
+    width: RING_SIZE,
+    height: RING_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
-  pulseRing: {
+  svgRing: {
     position: 'absolute',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1.5,
+    top: 0,
+    left: 0,
   },
-  iconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  innerCircle: {
+    width: RING_SIZE - STROKE_WIDTH * 2 - 4,
+    height: RING_SIZE - STROKE_WIDTH * 2 - 4,
+    borderRadius: (RING_SIZE - STROKE_WIDTH * 2 - 4) / 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
   infoCol: {
     flex: 1,
     justifyContent: 'center',
+    marginRight: 10,
   },
   titleRow: {
     flexDirection: 'row',
@@ -375,9 +440,14 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 2,
   },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
   walkTitle: {
-    fontSize: 14,
-    lineHeight: 18,
+    fontSize: 13,
+    lineHeight: 17,
     flexShrink: 1,
   },
   badgePill: {
@@ -392,17 +462,18 @@ const styles = StyleSheet.create({
   },
   timerRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  timerIcon: {
-    opacity: 0.85,
+    alignItems: 'baseline',
+    gap: 5,
   },
   timerText: {
     fontSize: 16,
     lineHeight: 20,
     letterSpacing: 0.8,
     fontVariant: ['tabular-nums'],
+  },
+  goalText: {
+    fontSize: 11,
+    lineHeight: 15,
   },
   completeBtn: {
     borderRadius: 12,
