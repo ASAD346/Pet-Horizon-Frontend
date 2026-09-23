@@ -178,5 +178,5 @@ export function formatScheduleDateSummary(state: ScheduleDateState): string {
     }
     return 'Date range';
   }
-  return state.startDate ? `From ${formatDateLabel(state.startDate)}` : 'Ongoing';
+  return state.startDate ? `From ${formatDateLabel(state.startDate)}` : 'Recurring';
 }

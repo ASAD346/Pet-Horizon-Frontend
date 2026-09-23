@@ -281,7 +281,7 @@ export function ActiveWalkHeroCard() {
                 numberOfLines={1}
                 style={styles.walkTitle}
               >
-                {activeWalk.title || 'Ongoing Walk'}
+                {activeWalk.title || 'Current Walk'}
               </AppText>
               
               <View style={[styles.liveTag, { backgroundColor: theme.accentBadgeBg }]}>
