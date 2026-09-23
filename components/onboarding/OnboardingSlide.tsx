@@ -25,25 +25,57 @@ interface OnboardingSlideProps {
 }
 
 export function OnboardingSlide({ slide, index, scrollX }: OnboardingSlideProps) {
-  // Animated transitions for the slide content and text
-  const animatedTextStyle = useAnimatedStyle(() => {
+  // Parallax background image interpolation (moves at 0.5x speed + zooms for deep cinematic feel)
+  const animatedImageStyle = useAnimatedStyle(() => {
     const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
     
-    const scale = interpolate(scrollX.value, inputRange, [0.94, 1, 0.94], 'clamp');
-    const opacity = interpolate(scrollX.value, inputRange, [0.2, 1, 0.2], 'clamp');
-    const translateY = interpolate(scrollX.value, inputRange, [24, 0, 24], 'clamp');
+    const translateX = interpolate(
+      scrollX.value,
+      inputRange,
+      [-width * 0.45, 0, width * 0.45],
+      'clamp'
+    );
+    const scale = interpolate(scrollX.value, inputRange, [1.18, 1, 1.18], 'clamp');
 
     return {
-      opacity,
-      transform: [{ scale }, { translateY }],
+      transform: [{ translateX }, { scale }],
     };
   });
 
-  const animatedImageStyle = useAnimatedStyle(() => {
+  // Staggered text & badge animations
+  const animatedBadgeStyle = useAnimatedStyle(() => {
     const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
-    const scale = interpolate(scrollX.value, inputRange, [1.08, 1, 1.08], 'clamp');
+    const opacity = interpolate(scrollX.value, inputRange, [0, 1, 0], 'clamp');
+    const translateX = interpolate(scrollX.value, inputRange, [-60, 0, 60], 'clamp');
+    const scale = interpolate(scrollX.value, inputRange, [0.8, 1, 0.8], 'clamp');
+
     return {
-      transform: [{ scale }],
+      opacity,
+      transform: [{ translateX }, { scale }],
+    };
+  });
+
+  const animatedTitleStyle = useAnimatedStyle(() => {
+    const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+    const opacity = interpolate(scrollX.value, inputRange, [0, 1, 0], 'clamp');
+    const translateX = interpolate(scrollX.value, inputRange, [-80, 0, 80], 'clamp');
+    const translateY = interpolate(scrollX.value, inputRange, [20, 0, -20], 'clamp');
+
+    return {
+      opacity,
+      transform: [{ translateX }, { translateY }],
+    };
+  });
+
+  const animatedDescStyle = useAnimatedStyle(() => {
+    const inputRange = [(index - 1) * width, index * width, (index + 1) * width];
+    const opacity = interpolate(scrollX.value, inputRange, [0, 1, 0], 'clamp');
+    const translateX = interpolate(scrollX.value, inputRange, [-50, 0, 50], 'clamp');
+    const translateY = interpolate(scrollX.value, inputRange, [30, 0, -30], 'clamp');
+
+    return {
+      opacity,
+      transform: [{ translateX }, { translateY }],
     };
   });
 
@@ -75,25 +107,29 @@ export function OnboardingSlide({ slide, index, scrollX }: OnboardingSlideProps)
       </View>
 
       {/* Seamless Minimalist Typography Section */}
-      <Animated.View style={[styles.textWrapper, animatedTextStyle]}>
+      <View style={styles.textWrapper}>
         {/* Subtle Category Pill */}
-        <View style={[styles.badge, { backgroundColor: `${slide.accentColor}33`, borderColor: `${slide.accentColor}77` }]}>
+        <Animated.View style={[styles.badge, { backgroundColor: `${slide.accentColor}33`, borderColor: `${slide.accentColor}77` }, animatedBadgeStyle]}>
           <View style={[styles.badgeDot, { backgroundColor: slide.accentColor }]} />
           <AppText variant="caption" weight="800" color={Palette.white} style={styles.badgeText}>
             {slide.badgeText.toUpperCase()}
           </AppText>
-        </View>
+        </Animated.View>
 
         {/* Clean Hero Title */}
-        <AppText variant="h1" align="left" style={styles.title} weight="800">
-          {slide.title}
-        </AppText>
+        <Animated.View style={animatedTitleStyle}>
+          <AppText variant="h1" align="left" style={styles.title} weight="800">
+            {slide.title}
+          </AppText>
+        </Animated.View>
 
         {/* Subtitle / Description */}
-        <AppText variant="body" align="left" style={styles.description} color="rgba(255, 255, 255, 0.78)">
-          {slide.description}
-        </AppText>
-      </Animated.View>
+        <Animated.View style={animatedDescStyle}>
+          <AppText variant="body" align="left" style={styles.description} color="rgba(255, 255, 255, 0.78)">
+            {slide.description}
+          </AppText>
+        </Animated.View>
+      </View>
     </View>
   );
 }
