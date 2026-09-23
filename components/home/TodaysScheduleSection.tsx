@@ -48,6 +48,7 @@ import { WalkTimer } from './WalkTimer';
 import { SectionHeader } from './SectionHeader';
 import { ScheduleDetailSheet } from './ScheduleDetailSheet';
 import { ActiveWalkHeroCard } from './ActiveWalkHeroCard';
+import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { homePillCard } from './homeStyles';
 
 type ScheduleRow =
@@ -671,6 +672,8 @@ export function TodaysScheduleSection({
     }
   };
 
+  const { activeWalk } = useActiveWalk();
+
   const items = useMemo(
     () => {
       const merged = mergeScheduleRows(
@@ -684,19 +687,20 @@ export function TodaysScheduleSection({
         const item = row.item as any;
         const status = item.status || 'pending';
         const isComplete = rowIsDone(row) || item.isComplete === true;
-        
-        console.log(`[TodaysSchedule] Rendering task: item=${item.title || row.kind}, status=${status}, isComplete=${isComplete}`);
-        
+
+        // Hide walk item from list if it's currently active (tracked by ActiveWalkHeroCard)
+        if (row.kind === 'walk' && activeWalk && (activeWalk.scheduleId === item._id || activeWalk.scheduleId === item.id)) {
+          return false;
+        }
+
         return status === 'pending' && !isComplete;
       });
 
       // Sort by rowSortKey
       filtered.sort((a, b) => rowSortKey(a) - rowSortKey(b));
-
-      console.log('Filtered & Sorted Schedules:', filtered);
       return filtered;
     },
-    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules],
+    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules, activeWalk],
   );
 
   const cardBorderColor = isPremium

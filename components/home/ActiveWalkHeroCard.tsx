@@ -35,10 +35,14 @@ export function ActiveWalkHeroCard() {
   const glowOpacity = useRef(new Animated.Value(0.4)).current;
   const activePetId = useAppSelector(selectActivePetId);
 
+  const busyRef = useRef(false);
+  const handleCompleteRef = useRef<() => void>(() => {});
+
   // Reset forceHidden when a new active walk is loaded
   useEffect(() => {
     if (activeWalk) {
       setForceHidden(false);
+      busyRef.current = false;
     }
   }, [activeWalk]);
 
@@ -46,7 +50,19 @@ export function ActiveWalkHeroCard() {
     if (activeWalk) {
       setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
       timerRef.current = setInterval(() => {
-        setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
+        const elapsed = Math.floor((Date.now() - activeWalk.startedAt) / 1000);
+        setElapsedSeconds(elapsed);
+
+        // Automatically complete when target duration is reached
+        const targetSecs = (activeWalk.targetDuration || 30) * 60;
+        if (elapsed >= targetSecs && !busyRef.current) {
+          busyRef.current = true;
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          void handleCompleteRef.current();
+        }
       }, 1000);
 
       Animated.loop(
@@ -158,17 +174,21 @@ export function ActiveWalkHeroCard() {
           showToast('Walk completed successfully! 🐾');
           queryClient.invalidateQueries({ queryKey: ['dashboard'] });
           queryClient.invalidateQueries({ queryKey: ['schedules'] });
+          queryClient.invalidateQueries({ queryKey: ['activities'] });
         })
         .catch((err: any) => {
           showToast(err.message || 'Failed to complete walk.');
         })
         .finally(() => {
           setBusy(false);
+          busyRef.current = false;
         });
     } else {
       setBusy(false);
+      busyRef.current = false;
     }
   };
+  handleCompleteRef.current = handleComplete;
 
   // Tier Colors Theme Configuration:
   // - Free: Deep Navy gradient card with emerald progress ring & CTA
