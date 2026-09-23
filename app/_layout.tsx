@@ -77,7 +77,6 @@ function InnerLayout() {
         <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal', headerShown: true }} />
       </Stack>
       <AppStatusBar />
-      <ActiveWalkOverlay />
     </ThemeProvider>
   );
 }

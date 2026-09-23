@@ -47,6 +47,7 @@ import { ColorIconBadge } from './ColorIconBadge';
 import { WalkTimer } from './WalkTimer';
 import { SectionHeader } from './SectionHeader';
 import { ScheduleDetailSheet } from './ScheduleDetailSheet';
+import { ActiveWalkHeroCard } from './ActiveWalkHeroCard';
 import { homePillCard } from './homeStyles';
 
 type ScheduleRow =
@@ -709,6 +710,8 @@ export function TodaysScheduleSection({
   return (
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="VIEW ALL" onActionPress={onViewAll} />
+
+      <ActiveWalkHeroCard />
 
       {loading ? (
         <SkeletonScheduleSections count={2} />
