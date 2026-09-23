@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Dimensions, StyleSheet, View, TouchableOpacity } from 'react-native';
+import { Dimensions, StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { useAuthEntryRedirect } from '@/components/auth/AuthEntryRedirect';
 import { useAuth } from '@/hooks/useAuth';
 import { AppText } from '../components/ui/AppText';
@@ -15,7 +16,6 @@ import Animated, {
   useSharedValue, 
   useAnimatedScrollHandler, 
   useAnimatedStyle, 
-  interpolateColor,
   runOnJS,
   withSpring
 } from 'react-native-reanimated';
@@ -25,30 +25,30 @@ const { width } = Dimensions.get('window');
 const SLIDES: SlideData[] = [
   {
     id: '1',
-    title: 'Track Every Moment',
-    description: 'Log daily activities like meals, walks, medicines, vaccine logs, and grooming events in a neat timeline.',
-    image: require('../assets/images/onboarding_tracking.png'),
-    accentColor: '#5CB35D', // Green
-    bgColor: '#F0F8F0',
-    badgeText: 'Care Tracking',
+    title: 'Smart Feeding & Nutrition',
+    description: 'Track daily meals, monitor feeding portions, and set timely reminders so your pet always stays nourished and healthy.',
+    image: require('../assets/images/onboarding_slide1.jpg'),
+    accentColor: '#5CB35D', // Emerald Green
+    bgColor: '#111A13',
+    badgeText: 'Daily Meals & Nutrition',
   },
   {
     id: '2',
-    title: 'Share with Family',
-    description: 'Invite sitters and family to co-manage pets together. Stay perfectly in sync and never miss a task.',
-    image: require('../assets/images/onboarding_family.png'),
-    accentColor: '#1A2B4E', // Navy
-    bgColor: '#E6EBF5',
-    badgeText: 'Co-Parenting',
+    title: 'Active Play & Daily Routine',
+    description: 'Log daily playtime, walks, training moments, and vet activities to nurture a joyful and energetic companion.',
+    image: require('../assets/images/onboarding_slide2.jpg'),
+    accentColor: '#4C84FF', // Electric Blue
+    bgColor: '#101625',
+    badgeText: 'Play & Activity Tracking',
   },
   {
     id: '3',
-    title: 'Health & Reminders',
-    description: 'Keep track of clinical records, schedule auto-reminders, and ensure your pet gets the care they need.',
-    image: require('../assets/images/onboarding_health.png'),
-    accentColor: '#F48024', // Warm orange
-    bgColor: '#FFF4EB',
-    badgeText: 'Medical Log',
+    title: 'Co-Parent with Family',
+    description: 'Invite family members, partners, or sitters to care for your pets together in real-time without missing a heartbeat.',
+    image: require('../assets/images/onboarding_slide3.png'),
+    accentColor: '#FF9233', // Vibrant Warm Orange
+    bgColor: '#20150F',
+    badgeText: 'Family & Co-Parenting',
   },
 ];
 
@@ -59,37 +59,13 @@ export default function GetStartedScreen() {
   const { isAuthenticated, isBootstrapping } = useAuth();
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<any>(null);
-  
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
   // Reanimated values
   const scrollX = useSharedValue(0);
   const buttonScale = useSharedValue(1);
 
-  useAuthEntryRedirect();
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    AsyncStorage.getItem('HAS_SEEN_ONBOARDING')
-      .then((val) => {
-        if (val === 'true') {
-          setHasSeenOnboarding(true);
-          if (!isAuthenticated && !isBootstrapping) {
-            timer = setTimeout(() => {
-              router.replace('/auth/login');
-            }, 10);
-          }
-        } else {
-          setHasSeenOnboarding(false);
-        }
-      })
-      .catch(() => {
-        setHasSeenOnboarding(false);
-      });
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [isAuthenticated, isBootstrapping, router]);
+  // Temporarily bypassed redirects so you can work directly on the onboarding screen
+  // useAuthEntryRedirect();
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -121,7 +97,7 @@ export default function GetStartedScreen() {
 
   // Button micro-interactions
   const handlePressIn = () => {
-    buttonScale.value = withSpring(0.96);
+    buttonScale.value = withSpring(0.92);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
@@ -129,182 +105,173 @@ export default function GetStartedScreen() {
     buttonScale.value = withSpring(1);
   };
 
-  // Dynamically interpolate the overall screen background color
-  const animatedContainerStyle = useAnimatedStyle(() => {
-    const bgColor = interpolateColor(
-      scrollX.value,
-      [0, width, width * 2],
-      ['#F0F8F0', '#E6EBF5', '#FFF4EB']
-    );
-    return {
-      backgroundColor: bgColor,
-    };
-  });
-
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: buttonScale.value }],
   }));
 
   const activeColors = SLIDES.map((slide) => slide.accentColor);
   const currentSlide = SLIDES[activeIndex] || SLIDES[0];
-
-  if (isBootstrapping || hasSeenOnboarding === null || (hasSeenOnboarding === true && !isAuthenticated)) {
-    return null;
-  }
-
-  if (isAuthenticated) {
-    return null;
-  }
+  const isLastSlide = activeIndex === SLIDES.length - 1;
 
   return (
-    <Animated.View style={[styles.outerContainer, animatedContainerStyle]}>
-      <SafeAreaView style={styles.safeArea}>
-        {/* Top Header Section with Skip Option */}
-        <View style={styles.header}>
-          {activeIndex < SLIDES.length - 1 ? (
-            <TouchableOpacity onPress={handleGetStarted} style={styles.skipButton} activeOpacity={0.7}>
-              <AppText variant="bodySmall" weight="700" color={Palette.gray[700]}>
-                Skip
-              </AppText>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.skipPlaceholder} />
-          )}
-        </View>
+    <View style={styles.outerContainer}>
+      {/* Reanimated Full-Screen Slider */}
+      <Animated.FlatList
+        ref={flatListRef}
+        data={SLIDES}
+        renderItem={({ item, index }) => (
+          <OnboardingSlide slide={item} index={index} scrollX={scrollX} />
+        )}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={scrollHandler}
+        scrollEventThrottle={16}
+        bounces={false}
+        style={styles.slider}
+      />
 
-        {/* Reanimated FlatList */}
-        <Animated.FlatList
-          ref={flatListRef}
-          data={SLIDES}
-          renderItem={({ item, index }) => (
-            <OnboardingSlide slide={item} index={index} scrollX={scrollX} />
-          )}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={scrollHandler}
-          scrollEventThrottle={16}
-          bounces={false}
-          style={styles.slider}
-        />
+      {/* Floating Bottom Navigation Bar */}
+      <SafeAreaView style={styles.floatingBottomBar} pointerEvents="box-none">
+        <View style={styles.navRow}>
+          {/* Left: Skip Button */}
+          <View style={styles.sideItem}>
+            {!isLastSlide ? (
+              <TouchableOpacity
+                onPress={handleGetStarted}
+                activeOpacity={0.7}
+                style={styles.skipButton}
+              >
+                <AppText variant="body" weight="700" color="rgba(255, 255, 255, 0.72)">
+                  Skip
+                </AppText>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.sideSpacer} />
+            )}
+          </View>
 
-        {/* Footer controls and indicators */}
-        <View style={styles.footer}>
-          <OnboardingProgress
-            total={SLIDES.length}
-            scrollX={scrollX}
-            activeColors={activeColors}
-          />
+          {/* Center: Pagination Dots */}
+          <View style={styles.centerItem}>
+            <OnboardingProgress
+              total={SLIDES.length}
+              scrollX={scrollX}
+              activeColors={activeColors}
+            />
+          </View>
 
-          <View style={styles.buttonWrapper}>
+          {/* Right: Next / Get Started Action Button */}
+          <View style={styles.sideItemRight}>
             <AnimatedTouchableOpacity
-              activeOpacity={0.9}
+              activeOpacity={0.85}
               onPressIn={handlePressIn}
               onPressOut={handlePressOut}
-              onPress={activeIndex === SLIDES.length - 1 ? handleGetStarted : handleNext}
+              onPress={handleNext}
               style={[
-                styles.actionButton,
-                { 
+                isLastSlide ? styles.getStartedButton : styles.circularNextButton,
+                {
                   backgroundColor: currentSlide.accentColor,
                   shadowColor: currentSlide.accentColor,
                 },
-                animatedButtonStyle
+                animatedButtonStyle,
               ]}
             >
-              {/* Spacer on the left to perfectly center the text label */}
-              <View style={styles.sideSpacer} />
-              
-              <AppText variant="body" weight="700" color={Palette.white} style={styles.actionButtonText}>
-                {activeIndex === SLIDES.length - 1 ? "Get Started" : "Next"}
-              </AppText>
-              
-              {/* Circular Icon Bubble on the right */}
-              <View style={styles.iconBubble}>
-                <Ionicons 
-                  name={activeIndex === SLIDES.length - 1 ? "checkmark-circle-outline" : "chevron-forward"} 
-                  size={20} 
-                  color={Palette.white} 
-                />
-              </View>
+              {isLastSlide ? (
+                <View style={styles.getStartedContent}>
+                  <AppText variant="body" weight="800" color={Palette.white} style={styles.getStartedText}>
+                    Start
+                  </AppText>
+                  <Ionicons name="arrow-forward" size={18} color={Palette.white} />
+                </View>
+              ) : (
+                <Ionicons name="arrow-forward" size={22} color={Palette.white} />
+              )}
             </AnimatedTouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   outerContainer: {
     flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-  },
-  skipButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: Radius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.03)',
-  },
-  skipPlaceholder: {
-    width: 40,
-    height: 20,
+    backgroundColor: '#070A12',
   },
   slider: {
     flex: 1,
   },
-  footer: {
-    paddingHorizontal: Spacing.xl,
-    paddingBottom: Spacing.xl,
-    alignItems: 'center',
-    gap: Spacing.lg,
+  floatingBottomBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
-  buttonWrapper: {
-    width: '100%',
-    alignItems: 'center',
-    minHeight: 56,
-    justifyContent: 'center',
-  },
-  actionButton: {
-    width: '100%',
-    borderRadius: 28, // Premium pill design
-    height: 56,
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 10,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35, // Rich soft drop shadow matching slide color
-    shadowRadius: 16,
-    elevation: 6,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.sm,
+  },
+  sideItem: {
+    minWidth: 60,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  sideItemRight: {
+    minWidth: 60,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  centerItem: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skipButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
   },
   sideSpacer: {
-    width: 36,
-    height: 36,
+    width: 60,
+    height: 52,
   },
-  iconBubble: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+  circularNextButton: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  actionButtonText: {
-    fontSize: 17,
-    fontWeight: '800',
+  getStartedButton: {
+    height: 52,
+    paddingHorizontal: 20,
+    borderRadius: 26,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  getStartedContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  getStartedText: {
+    fontSize: 16,
     letterSpacing: 0.5,
-    color: Palette.white,
   },
 });
+
+

@@ -25,7 +25,7 @@ function OnboardingDot({ index, scrollX, activeColor }: OnboardingDotProps) {
     const dotWidth = interpolate(
       scrollX.value,
       inputRange,
-      [8, 24, 8],
+      [8, 28, 8],
       'clamp'
     );
 
@@ -33,7 +33,7 @@ function OnboardingDot({ index, scrollX, activeColor }: OnboardingDotProps) {
     const dotColor = interpolateColor(
       scrollX.value,
       inputRange,
-      [Palette.gray[300], activeColor, Palette.gray[300]]
+      ['rgba(255, 255, 255, 0.35)', activeColor, 'rgba(255, 255, 255, 0.35)']
     );
 
     return {
@@ -71,9 +71,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     height: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   dot: {
     height: 8,
     borderRadius: 4,
   },
 });
+
