@@ -206,9 +206,6 @@ export function ActiveWalkOverlay() {
         timerColor: '#F5C842',
         subtextColor: 'rgba(255, 255, 255, 0.65)',
         progressFillBg: '#D4A017',
-        badgeBg: 'rgba(212, 160, 23, 0.25)',
-        badgeText: '#FDE68A',
-        badgeLabel: 'PREMIUM WALK',
         btnBg: ['#D4A017', '#B8860B'] as const,
         btnTextColor: '#FFFFFF',
         liveDotColor: '#F5C842',
@@ -224,9 +221,6 @@ export function ActiveWalkOverlay() {
         timerColor: '#FFFFFF',
         subtextColor: 'rgba(255, 255, 255, 0.65)',
         progressFillBg: '#2E7D32',
-        badgeBg: 'rgba(92, 179, 93, 0.2)',
-        badgeText: '#A7F3D0',
-        badgeLabel: 'IN PROGRESS',
         btnBg: ['#2E7D32', '#1B5E20'] as const,
         btnTextColor: '#FFFFFF',
         liveDotColor: '#5CB35D',
@@ -320,11 +314,6 @@ export function ActiveWalkOverlay() {
               >
                 {activeWalk.title || 'Pet Walk'}
               </AppText>
-              <View style={[styles.badgePill, { backgroundColor: theme.badgeBg }]}>
-                <AppText variant="caption" weight="800" color={theme.badgeText} style={styles.badgeText}>
-                  {theme.badgeLabel}
-                </AppText>
-              </View>
             </View>
 
             {/* Live Timer Counter & Target Goal */}
@@ -449,16 +438,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 17,
     flexShrink: 1,
-  },
-  badgePill: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 6,
-  },
-  badgeText: {
-    fontSize: 9,
-    lineHeight: 12,
-    letterSpacing: 0.3,
   },
   timerRow: {
     flexDirection: 'row',
