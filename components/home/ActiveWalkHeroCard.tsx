@@ -1,23 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Platform, Animated } from 'react-native';
+import { StyleSheet, View, Pressable, ActivityIndicator, Platform, Animated } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { Radius, Spacing, Palette } from '@/constants/theme';
+import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAuth } from '@/hooks/useAuth';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { completeWalkSchedule } from '@/services/schedules/walkApi';
 import { queryClient } from '@/app/_layout';
 import { useToast } from '@/hooks/useToast';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
 import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
+import { homePillCard } from './homeStyles';
 
-// Circular Radial Progress Ring metrics
-const RING_SIZE = 48;
-const STROKE_WIDTH = 4;
+// Radial progress ring constants
+const RING_SIZE = 40;
+const STROKE_WIDTH = 3.5;
 const RADIUS = (RING_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
@@ -31,8 +31,8 @@ export function ActiveWalkHeroCard() {
   const [forceHidden, setForceHidden] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Subtle glowing pulse for the live active indicator
-  const glowOpacity = useRef(new Animated.Value(0.4)).current;
+  // Subtle pulsing red/accent dot for live indicator
+  const pulseOpacity = useRef(new Animated.Value(1)).current;
   const activePetId = useAppSelector(selectActivePetId);
 
   const busyRef = useRef(false);
@@ -67,14 +67,14 @@ export function ActiveWalkHeroCard() {
 
       Animated.loop(
         Animated.sequence([
-          Animated.timing(glowOpacity, {
-            toValue: 1,
-            duration: 900,
+          Animated.timing(pulseOpacity, {
+            toValue: 0.35,
+            duration: 800,
             useNativeDriver: true,
           }),
-          Animated.timing(glowOpacity, {
-            toValue: 0.35,
-            duration: 900,
+          Animated.timing(pulseOpacity, {
+            toValue: 1,
+            duration: 800,
             useNativeDriver: true,
           }),
         ])
@@ -93,7 +93,7 @@ export function ActiveWalkHeroCard() {
         timerRef.current = null;
       }
     };
-  }, [activeWalk, glowOpacity]);
+  }, [activeWalk, pulseOpacity]);
 
   if (!activeWalk || forceHidden) return null;
 
@@ -109,15 +109,9 @@ export function ActiveWalkHeroCard() {
   const percentDone = Math.min(100, Math.round(progressRatio * 100));
 
   const formatTimer = (totalSeconds: number) => {
-    const hrs = Math.floor(totalSeconds / 3600);
-    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const mins = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
-
     const pad = (num: number) => String(num).padStart(2, '0');
-
-    if (hrs > 0) {
-      return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
-    }
     return `${pad(mins)}:${pad(secs)}`;
   };
 
@@ -190,261 +184,214 @@ export function ActiveWalkHeroCard() {
   };
   handleCompleteRef.current = handleComplete;
 
-  // Tier Colors Theme Configuration:
-  // - Free: Deep Navy gradient card with emerald progress ring & CTA
-  // - Premium: Dark Forest/Emerald gradient with gold progress ring & CTA
-  const theme = isPremium
-    ? {
-        cardBg: ['#0A2419', '#103923'] as const,
-        borderColor: 'rgba(212, 160, 23, 0.45)',
-        ringTrack: 'rgba(212, 160, 23, 0.2)',
-        ringFill: '#F5C842',
-        ringCenterBg: 'rgba(212, 160, 23, 0.12)',
-        iconColor: '#F5C842',
-        titleColor: '#FFFFFF',
-        timerColor: '#F5C842',
-        subtextColor: 'rgba(255, 255, 255, 0.65)',
-        progressFillBg: '#D4A017',
-        btnBg: ['#D4A017', '#B8860B'] as const,
-        btnTextColor: '#FFFFFF',
-        liveDotColor: '#F5C842',
-      }
-    : {
-        cardBg: ['#1A2B4E', '#14223E'] as const,
-        borderColor: 'rgba(255, 255, 255, 0.12)',
-        ringTrack: 'rgba(255, 255, 255, 0.15)',
-        ringFill: '#5CB35D',
-        ringCenterBg: 'rgba(92, 179, 93, 0.15)',
-        iconColor: '#5CB35D',
-        titleColor: '#FFFFFF',
-        timerColor: '#FFFFFF',
-        subtextColor: 'rgba(255, 255, 255, 0.65)',
-        progressFillBg: '#2E7D32',
-        btnBg: ['#2E7D32', '#1B5E20'] as const,
-        btnTextColor: '#FFFFFF',
-        liveDotColor: '#5CB35D',
-      };
+  const cardBorderColor = isPremium
+    ? 'rgba(212, 160, 23, 0.45)'
+    : 'rgba(37, 99, 235, 0.25)';
+
+  const ringFillColor = isPremium ? '#D4A017' : '#2563EB';
+  const ringTrackColor = isPremium ? 'rgba(212, 160, 23, 0.15)' : 'rgba(37, 99, 235, 0.12)';
+  const doneBtnColor = isPremium ? '#D4A017' : '#3A8F3B';
 
   return (
-    <View style={styles.cardWrapper}>
-      <LinearGradient
-        colors={theme.cardBg}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.card, { borderColor: theme.borderColor }]}
-      >
-        {/* Top Progress Track Bar */}
-        <View style={styles.topProgressTrack}>
-          <View
-            style={[
-              styles.topProgressFill,
-              {
-                width: `${percentDone}%`,
-                backgroundColor: theme.progressFillBg,
-              },
-            ]}
-          />
+    <View style={[homePillCard.card, styles.heroCard, { borderColor: cardBorderColor }]}>
+      {/* Top progress accent bar */}
+      <View style={styles.topBarTrack}>
+        <View
+          style={[
+            styles.topBarFill,
+            {
+              width: `${percentDone}%`,
+              backgroundColor: ringFillColor,
+            },
+          ]}
+        />
+      </View>
+
+      <View style={styles.cardContent}>
+        {/* Left: Circular Progress Ring with Paw Badge */}
+        <View style={styles.ringWrapper}>
+          <Svg width={RING_SIZE} height={RING_SIZE} style={styles.svg}>
+            <Circle
+              cx={RING_SIZE / 2}
+              cy={RING_SIZE / 2}
+              r={RADIUS}
+              stroke={ringTrackColor}
+              strokeWidth={STROKE_WIDTH}
+              fill="none"
+            />
+            <Circle
+              cx={RING_SIZE / 2}
+              cy={RING_SIZE / 2}
+              r={RADIUS}
+              stroke={ringFillColor}
+              strokeWidth={STROKE_WIDTH}
+              strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              fill="none"
+              transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+            />
+          </Svg>
+
+          <View style={[styles.innerBadge, { backgroundColor: isPremium ? 'rgba(212, 160, 23, 0.1)' : '#DBEAFE' }]}>
+            <Ionicons name="paw" size={17} color={ringFillColor} />
+          </View>
         </View>
 
-        <View style={styles.contentRow}>
-          {/* Left: SVG Circular Radial Progress Ring */}
-          <View style={styles.ringContainer}>
-            <Svg width={RING_SIZE} height={RING_SIZE} style={styles.svgRing}>
-              <Circle
-                cx={RING_SIZE / 2}
-                cy={RING_SIZE / 2}
-                r={RADIUS}
-                stroke={theme.ringTrack}
-                strokeWidth={STROKE_WIDTH}
-                fill="none"
-              />
-              <Circle
-                cx={RING_SIZE / 2}
-                cy={RING_SIZE / 2}
-                r={RADIUS}
-                stroke={theme.ringFill}
-                strokeWidth={STROKE_WIDTH}
-                strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                fill="none"
-                transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
-              />
-            </Svg>
-
-            <View style={[styles.innerCircle, { backgroundColor: theme.ringCenterBg }]}>
-              <Animated.View style={{ opacity: glowOpacity }}>
-                <Ionicons name="paw" size={19} color={theme.iconColor} />
-              </Animated.View>
-            </View>
-          </View>
-
-          {/* Middle: Title, Live Timer and Goal info */}
-          <View style={styles.infoCol}>
-            <View style={styles.titleRow}>
-              <Animated.View
-                style={[
-                  styles.liveDot,
-                  {
-                    backgroundColor: theme.liveDotColor,
-                    opacity: glowOpacity,
-                  },
-                ]}
-              />
-              <AppText
-                variant="body"
-                weight="800"
-                color={theme.titleColor}
-                numberOfLines={1}
-                style={styles.walkTitle}
-              >
-                {activeWalk.title || 'Pet Walk'}
-              </AppText>
-            </View>
-
-            {/* Live Timer Counter & Goal */}
-            <View style={styles.timerRow}>
-              <AppText variant="body" weight="800" color={theme.timerColor} style={styles.timerText}>
-                {formatTimer(elapsedSeconds)}
-              </AppText>
-              <AppText variant="caption" weight="600" color={theme.subtextColor} style={styles.goalText}>
-                / {targetMinutes} min ({percentDone}%)
-              </AppText>
-            </View>
-          </View>
-
-          {/* Right: Complete CTA Button */}
-          <TouchableOpacity
-            style={[styles.completeBtn, busy && styles.btnDisabled]}
-            activeOpacity={0.85}
-            onPress={handleComplete}
-            disabled={busy}
-          >
-            <LinearGradient
-              colors={theme.btnBg}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.btnGradient}
+        {/* Middle: Title, Live Status & Timer Progress */}
+        <View style={styles.textBlock}>
+          <View style={styles.titleRow}>
+            <Animated.View style={[styles.liveDot, { opacity: pulseOpacity }]} />
+            <AppText
+              style={styles.cardTitle}
+              weight="800"
+              color={HomeTheme.text}
+              numberOfLines={1}
             >
-              {busy ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <View style={styles.btnContent}>
-                  <Ionicons name="checkmark-circle" size={16} color={theme.btnTextColor} />
-                  <AppText variant="caption" weight="800" color={theme.btnTextColor} style={styles.btnText}>
-                    Finish
-                  </AppText>
-                </View>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
+              {activeWalk.title || 'Pet Walk'}
+            </AppText>
+          </View>
+
+          <View style={styles.timerSubtitleRow}>
+            <AppText
+              style={styles.timerHighlight}
+              weight="800"
+              color={isPremium ? '#B8860B' : '#2563EB'}
+            >
+              {formatTimer(elapsedSeconds)}
+            </AppText>
+            <AppText
+              style={styles.cardSubtitle}
+              weight="600"
+              color={HomeTheme.textMuted}
+            >
+              / {targetMinutes} min · {percentDone}%
+            </AppText>
+          </View>
         </View>
-      </LinearGradient>
+
+        {/* Right: Done / Finish CTA Button matching schedule pill styles */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.doneBtn,
+            {
+              backgroundColor: doneBtnColor,
+              borderColor: doneBtnColor,
+            },
+            pressed && styles.pressedBtn,
+            busy && styles.btnDisabled,
+          ]}
+          disabled={busy}
+          onPress={handleComplete}
+        >
+          {busy ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <AppText variant="caption" weight="800" color="#FFFFFF">
+              Done
+            </AppText>
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cardWrapper: {
-    width: '100%',
-    marginBottom: Spacing.sm,
-  },
-  card: {
-    width: '100%',
-    borderRadius: Radius.lg,
+  heroCard: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
     overflow: 'hidden',
     borderWidth: 1.2,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    flexDirection: 'column',
+    alignItems: 'stretch',
+    backgroundColor: '#FFFFFF',
   },
-  topProgressTrack: {
+  topBarTrack: {
     width: '100%',
-    height: 3.5,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    height: 3,
+    backgroundColor: '#F3F4F6',
   },
-  topProgressFill: {
+  topBarFill: {
     height: '100%',
     borderRadius: 1.5,
   },
-  contentRow: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+  cardContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
-  ringContainer: {
+  ringWrapper: {
     width: RING_SIZE,
     height: RING_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
   },
-  svgRing: {
+  svg: {
     position: 'absolute',
     top: 0,
     left: 0,
   },
-  innerCircle: {
+  innerBadge: {
     width: RING_SIZE - STROKE_WIDTH * 2 - 4,
     height: RING_SIZE - STROKE_WIDTH * 2 - 4,
     borderRadius: (RING_SIZE - STROKE_WIDTH * 2 - 4) / 2,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  infoCol: {
+  textBlock: {
     flex: 1,
+    marginLeft: 10,
+    marginRight: 8,
     justifyContent: 'center',
-    marginRight: 10,
+    gap: 2,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 3,
   },
   liveDot: {
     width: 6.5,
     height: 6.5,
     borderRadius: 3.5,
+    backgroundColor: '#EF4444', // Active live recording red
   },
-  walkTitle: {
-    fontSize: 14,
-    lineHeight: 18,
+  cardTitle: {
+    fontSize: 14.5,
+    lineHeight: 19,
+    letterSpacing: -0.2,
     flexShrink: 1,
   },
-  timerRow: {
+  timerSubtitleRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 5,
+    gap: 4,
   },
-  timerText: {
-    fontSize: 17,
-    lineHeight: 21,
-    letterSpacing: 0.8,
+  timerHighlight: {
+    fontSize: 13,
+    lineHeight: 17,
     fontVariant: ['tabular-nums'],
   },
-  goalText: {
-    fontSize: 11,
-    lineHeight: 15,
+  cardSubtitle: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0,
   },
-  completeBtn: {
-    borderRadius: 12,
-    overflow: 'hidden',
+  doneBtn: {
+    paddingHorizontal: 18,
+    paddingVertical: 7.5,
+    borderRadius: 100,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 64,
     ...Platform.select({
       ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
+        shadowColor: '#1A2B4E',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
         shadowRadius: 4,
       },
       android: {
@@ -452,22 +399,11 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  pressedBtn: {
+    transform: [{ scale: 0.96 }, { translateY: 1 }],
+    opacity: 0.92,
+  },
   btnDisabled: {
     opacity: 0.6,
-  },
-  btnGradient: {
-    paddingHorizontal: 14,
-    paddingVertical: 9.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  btnText: {
-    fontSize: 12,
-    lineHeight: 16,
   },
 });
