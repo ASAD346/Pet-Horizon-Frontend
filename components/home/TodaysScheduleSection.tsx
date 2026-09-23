@@ -49,6 +49,8 @@ import { SectionHeader } from './SectionHeader';
 import { ScheduleDetailSheet } from './ScheduleDetailSheet';
 import { ActiveWalkHeroCard } from './ActiveWalkHeroCard';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
+import { useAppSelector } from '@/redux/store';
+import { selectActivePetId } from '@/redux/reducer';
 import { homePillCard } from './homeStyles';
 
 type ScheduleRow =
@@ -673,6 +675,10 @@ export function TodaysScheduleSection({
   };
 
   const { activeWalk } = useActiveWalk();
+  const activePetId = useAppSelector(selectActivePetId);
+  const hasActiveWalkToday = Boolean(
+    activeWalk && (!activeWalk.petId || !activePetId || activeWalk.petId === activePetId)
+  );
 
   const items = useMemo(
     () => {
@@ -720,13 +726,15 @@ export function TodaysScheduleSection({
       {loading ? (
         <SkeletonScheduleSections count={2} />
       ) : items.length === 0 ? (
-        <View style={{ marginVertical: Spacing.xs }}>
-          <EmptyState
-            icon="calendar-check-outline"
-            title="No tasks scheduled today"
-            description="Your pet's care schedule is clear for today."
-          />
-        </View>
+        hasActiveWalkToday ? null : (
+          <View style={{ marginVertical: Spacing.xs }}>
+            <EmptyState
+              icon="calendar-check-outline"
+              title="No tasks scheduled today"
+              description="Your pet's care schedule is clear for today."
+            />
+          </View>
+        )
       ) : (
         <>
           {visibleItems.map((row, index) => (
