@@ -49,6 +49,9 @@ export function WalkTimer({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Refs so interval callback always sees latest values without stale closures
+  const busyRef = useRef(false);
+  const handleCompleteRef = useRef<() => Promise<void>>(async () => {});
 
   // Pulsing animation for the "in-progress by other" pill
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -97,6 +100,12 @@ export function WalkTimer({
       timerRef.current = setInterval(() => {
         const curElapsed = Math.floor((Date.now() - startedAt) / 1000);
         setElapsedSeconds(curElapsed);
+        // Auto-complete when elapsed time reaches the target duration
+        if (curElapsed >= targetDuration * 60 && !busyRef.current) {
+          clearInterval(timerRef.current!);
+          timerRef.current = null;
+          void handleCompleteRef.current();
+        }
       }, 1000);
 
       const scheduleWalkCompleteNotification = async () => {
@@ -144,7 +153,8 @@ export function WalkTimer({
   };
 
   const handleComplete = async () => {
-    if (busy) return;
+    if (busyRef.current) return;
+    busyRef.current = true;
     setBusy(true);
     const finalSeconds = elapsedSeconds;
     await cleanUpNotificationAndStorage();
@@ -157,9 +167,12 @@ export function WalkTimer({
       await onComplete(scheduleId, minutes);
     } catch (_) {
     } finally {
+      busyRef.current = false;
       setBusy(false);
     }
   };
+  // Keep the ref pointing to the latest handleComplete
+  handleCompleteRef.current = handleComplete;
 
   const handleSkip = async () => {
     if (busy) return;
