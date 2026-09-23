@@ -3,20 +3,7 @@ import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
 import type { ApiUser } from '@/types/auth';
-
-function guessMimeType(uri: string): string {
-  const lower = uri.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.heic')) return 'image/heic';
-  return 'image/jpeg';
-}
-
-function fileNameFromUri(uri: string): string {
-  const segment = uri.split('/').pop();
-  if (segment && segment.includes('.')) return segment;
-  return `avatar-${Date.now()}.jpg`;
-}
+import { prepareImageForUpload } from '@/lib/uploadUtils';
 
 export async function uploadUserAvatar(token: string, localUri: string): Promise<ApiUser> {
   const url = `${API_BASE_URL}${API_ENDPOINTS.users.avatar}`;
@@ -26,12 +13,15 @@ export async function uploadUserAvatar(token: string, localUri: string): Promise
   if (Platform.OS === 'web') {
     const response = await fetch(localUri);
     const blob = await response.blob();
-    formData.append('file', blob, fileNameFromUri(localUri));
+    const seg = localUri.split('/').pop() ?? `avatar-${Date.now()}.jpg`;
+    formData.append('file', blob, seg);
   } else {
+    const file = await prepareImageForUpload(localUri, 'avatar');
+    log.info('UserAPI', 'Avatar prepared', { name: file.name, type: file.type, uri: file.uri.slice(0, 60) });
     formData.append('file', {
-      uri: localUri,
-      name: fileNameFromUri(localUri),
-      type: guessMimeType(localUri),
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
     } as unknown as Blob);
   }
 
@@ -60,3 +50,4 @@ export async function uploadUserAvatar(token: string, localUri: string): Promise
   log.ok('UserAPI', 'Avatar uploaded');
   return user;
 }
+
