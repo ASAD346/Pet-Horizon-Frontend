@@ -22,14 +22,16 @@ import Animated, {
 
 const { width } = Dimensions.get('window');
 
+const BRAND_ACCENT = '#2E7D32'; // Pet Horizon Signature Deep Brand Green
+
 const SLIDES: SlideData[] = [
   {
     id: '1',
     title: 'Smart Feeding & Nutrition',
     description: 'Track daily meals, monitor feeding portions, and set timely reminders so your pet always stays nourished and healthy.',
     image: require('../assets/images/onboarding_slide1.jpg'),
-    accentColor: '#5CB35D', // Emerald Green
-    bgColor: '#111A13',
+    accentColor: BRAND_ACCENT,
+    bgColor: '#0F1812',
     badgeText: 'Daily Meals & Nutrition',
   },
   {
@@ -37,8 +39,8 @@ const SLIDES: SlideData[] = [
     title: 'Active Play & Daily Routine',
     description: 'Log daily playtime, walks, training moments, and vet activities to nurture a joyful and energetic companion.',
     image: require('../assets/images/onboarding_slide2.jpg'),
-    accentColor: '#4C84FF', // Electric Blue
-    bgColor: '#101625',
+    accentColor: BRAND_ACCENT,
+    bgColor: '#0F1812',
     badgeText: 'Play & Activity Tracking',
   },
   {
@@ -46,8 +48,8 @@ const SLIDES: SlideData[] = [
     title: 'Co-Parent with Family',
     description: 'Invite family members, partners, or sitters to care for your pets together in real-time without missing a heartbeat.',
     image: require('../assets/images/onboarding_slide3.png'),
-    accentColor: '#FF9233', // Vibrant Warm Orange
-    bgColor: '#20150F',
+    accentColor: BRAND_ACCENT,
+    bgColor: '#0F1812',
     badgeText: 'Family & Co-Parenting',
   },
 ];
