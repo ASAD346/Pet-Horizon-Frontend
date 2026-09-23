@@ -92,20 +92,20 @@ function TimelineRow({
         onPress={() => onPress?.(event.id)}
       >
         <View style={styles.cardText}>
-          <AppText variant="bodySmall" weight="700" color="#1F2937">
+          <AppText variant="caption" weight="700" color="#1F2937" style={{ fontSize: 13, lineHeight: 17 }}>
             {event.title.replace(/\s*\(\d+\s*min\)/gi, '')}
           </AppText>
           {event.category === 'walk' && event.durationLabel ? (
-            <AppText variant="caption" weight="600" color="#2E7D32" style={{ marginTop: 2 }}>
+            <AppText variant="caption" weight="600" color="#2E7D32" style={{ marginTop: 1, fontSize: 11 }}>
               Walk Duration: {event.durationLabel}
             </AppText>
           ) : null}
           {event.notes && event.notes.trim() !== '' && event.notes.toLowerCase() !== event.title.toLowerCase() ? (
-            <AppText variant="caption" color="#4B5563" style={{ marginTop: 2 }}>
+            <AppText variant="caption" color="#4B5563" style={{ marginTop: 1, fontSize: 11, lineHeight: 15 }}>
               {event.notes.replace(/\s*\(\d+\s*min\)/gi, '')}
             </AppText>
           ) : null}
-          <AppText variant="caption" color={dotColor} style={{ marginTop: 4, textTransform: 'uppercase', fontSize: 9, letterSpacing: 0.3, fontWeight: '800' }}>
+          <AppText variant="caption" color={dotColor} style={{ marginTop: 2, textTransform: 'uppercase', fontSize: 8.5, letterSpacing: 0.3, fontWeight: '800' }}>
             {event.category}
           </AppText>
         </View>
@@ -206,35 +206,35 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   time: {
-    width: 60,
-    paddingTop: 11,
-    fontSize: 11,
+    width: 54,
+    paddingTop: 8,
+    fontSize: 10.5,
     textAlign: 'right',
-    paddingRight: 10,
+    paddingRight: 8,
   },
   timelineCol: {
-    width: 32,
+    width: 28,
     alignItems: 'center',
-    marginRight: Spacing.xs,
+    marginRight: 6,
     alignSelf: 'stretch',
   },
   timelineNode: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 4,
     zIndex: 2,
   },
   line: {
     position: 'absolute',
-    top: 20,
-    bottom: -30,
+    top: 16,
+    bottom: -24,
     width: 2,
     backgroundColor: '#E2E8F0',
-    left: 15,
+    left: 13,
     zIndex: 1,
   },
   card: {
@@ -242,15 +242,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    marginBottom: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    marginBottom: 4,
     shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
     elevation: 1,
   },
   cardText: {
@@ -258,16 +258,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: Spacing.xs,
+    marginLeft: 6,
   },
   statusText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });
