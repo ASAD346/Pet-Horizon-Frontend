@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Modal, Platform, Animated } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ActivityIndicator, Platform, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
-import { Radius, Spacing, Palette } from '@/constants/theme';
+import { Radius } from '@/constants/theme';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAuth } from '@/hooks/useAuth';
+import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { completeWalkSchedule } from '@/services/schedules/walkApi';
 import { queryClient } from '@/app/_layout';
 import { useToast } from '@/hooks/useToast';
@@ -16,15 +18,19 @@ import { cancelTaskNotifications } from '@/lib/push/notificationSetup';
 export function ActiveWalkOverlay() {
   const { activeWalk, stopWalk } = useActiveWalk();
   const { token } = useAuth();
+  const { isPremium } = usePremiumStatus();
+  const { fabBottom } = useTabBarLayout();
   const { showToast } = useToast();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
   const [forceHidden, setForceHidden] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Animation values for the pulsing ring
+  // Animation values for pulsing ring & entrance slide
   const pulseScale = useRef(new Animated.Value(1)).current;
   const pulseOpacity = useRef(new Animated.Value(0.6)).current;
+  const slideAnim = useRef(new Animated.Value(60)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const activePetId = useAppSelector(selectActivePetId);
 
@@ -32,8 +38,21 @@ export function ActiveWalkOverlay() {
   useEffect(() => {
     if (activeWalk) {
       setForceHidden(false);
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          useNativeDriver: true,
+          tension: 65,
+          friction: 9,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]).start();
     }
-  }, [activeWalk]);
+  }, [activeWalk, slideAnim, fadeAnim]);
 
   useEffect(() => {
     if (activeWalk) {
@@ -42,19 +61,19 @@ export function ActiveWalkOverlay() {
         setElapsedSeconds(Math.floor((Date.now() - activeWalk.startedAt) / 1000));
       }, 1000);
 
-      // Start the looping pulse animation
+      // Start looping pulse animation
       pulseScale.setValue(1);
       pulseOpacity.setValue(0.6);
       Animated.loop(
         Animated.parallel([
           Animated.timing(pulseScale, {
-            toValue: 1.5,
-            duration: 2000,
+            toValue: 1.6,
+            duration: 1800,
             useNativeDriver: true,
           }),
           Animated.timing(pulseOpacity, {
             toValue: 0,
-            duration: 2000,
+            duration: 1800,
             useNativeDriver: true,
           }),
         ])
@@ -73,7 +92,7 @@ export function ActiveWalkOverlay() {
         timerRef.current = null;
       }
     };
-  }, [activeWalk]);
+  }, [activeWalk, pulseScale, pulseOpacity]);
 
   if (!activeWalk || forceHidden) return null;
 
@@ -103,7 +122,7 @@ export function ActiveWalkOverlay() {
     const scheduleId = activeWalk.scheduleId;
     const minutes = Math.max(1, Math.round(finalSeconds / 60));
 
-    // 1. Instantly hide the modal synchronously
+    // 1. Instantly hide the banner synchronously
     setForceHidden(true);
 
     // 2. Instantly clear local interval timers
@@ -161,200 +180,242 @@ export function ActiveWalkOverlay() {
     }
   };
 
-  return (
-    <Modal
-      visible={true}
-      transparent={true}
-      animationType="fade"
-      statusBarTranslucent={true}
-    >
-      <View style={styles.backdrop}>
-        <View style={styles.cardContainer}>
-          {/* Subtle top decoration line */}
-          <View style={styles.topAccent} />
+  // Tier Colors Theme Configuration:
+  // - Free tier: Deep Navy gradient card, brand green live pulse & accent, green finish CTA
+  // - Premium tier: Rich Dark Emerald & Forest gradient card with Gold border & Gold CTA
+  const theme = isPremium
+    ? {
+        cardBg: ['#0A2419', '#103923'] as const,
+        borderColor: 'rgba(212, 160, 23, 0.45)',
+        pulseBorder: 'rgba(212, 160, 23, 0.55)',
+        iconCircleBg: 'rgba(212, 160, 23, 0.18)',
+        iconColor: '#F5C842',
+        titleColor: '#FFFFFF',
+        timerColor: '#F5C842',
+        badgeBg: 'rgba(212, 160, 23, 0.25)',
+        badgeText: '#FDE68A',
+        badgeLabel: 'PREMIUM WALK',
+        btnBg: ['#D4A017', '#B8860B'] as const,
+        btnTextColor: '#FFFFFF',
+        btnShadow: '#D4A017',
+      }
+    : {
+        cardBg: ['#1A2B4E', '#14223E'] as const,
+        borderColor: 'rgba(255, 255, 255, 0.12)',
+        pulseBorder: 'rgba(92, 179, 93, 0.5)',
+        iconCircleBg: 'rgba(92, 179, 93, 0.18)',
+        iconColor: '#5CB35D',
+        titleColor: '#FFFFFF',
+        timerColor: '#FFFFFF',
+        badgeBg: 'rgba(92, 179, 93, 0.2)',
+        badgeText: '#A7F3D0',
+        badgeLabel: 'IN PROGRESS',
+        btnBg: ['#2E7D32', '#1B5E20'] as const,
+        btnTextColor: '#FFFFFF',
+        btnShadow: '#1B5E20',
+      };
 
-          {/* Pulsing Walk Indicator */}
-          <View style={styles.indicatorWrapper}>
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[
+        styles.floatingContainer,
+        {
+          bottom: fabBottom + 4,
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={theme.cardBg}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.card, { borderColor: theme.borderColor }]}
+      >
+        {/* Left Section: Pulsing Icon & Live Status */}
+        <View style={styles.leftCol}>
+          <View style={styles.iconWrapper}>
             <Animated.View
               style={[
                 styles.pulseRing,
                 {
+                  borderColor: theme.pulseBorder,
                   transform: [{ scale: pulseScale }],
                   opacity: pulseOpacity,
                 },
               ]}
             />
-            <LinearGradient
-              colors={['#E8F5E9', '#C8E6C9']}
-              style={styles.iconCircle}
-            >
-              <Ionicons name="paw" size={32} color="#2E7D32" />
-            </LinearGradient>
+            <View style={[styles.iconCircle, { backgroundColor: theme.iconCircleBg }]}>
+              <Ionicons name="paw" size={18} color={theme.iconColor} />
+            </View>
           </View>
 
-          {/* Heading */}
-          <AppText variant="h2" weight="800" color="#0F172A" style={styles.title}>
-            Walk in Progress
-          </AppText>
+          <View style={styles.infoCol}>
+            <View style={styles.titleRow}>
+              <AppText
+                variant="body"
+                weight="700"
+                color={theme.titleColor}
+                numberOfLines={1}
+                style={styles.walkTitle}
+              >
+                {activeWalk.title || 'Pet Walk'}
+              </AppText>
+              <View style={[styles.badgePill, { backgroundColor: theme.badgeBg }]}>
+                <AppText variant="caption" weight="800" color={theme.badgeText} style={styles.badgeText}>
+                  {theme.badgeLabel}
+                </AppText>
+              </View>
+            </View>
 
-          <AppText variant="body" weight="600" color="#64748B" style={styles.subtitle}>
-            {activeWalk.title || 'Ongoing Walk'}
-          </AppText>
-
-          {/* Timer Display */}
-          <View style={styles.timerWrapper}>
-            <AppText variant="h1" weight="800" color="#1E4620" style={styles.timerText}>
-              {formatTimer(elapsedSeconds)}
-            </AppText>
+            {/* Live Timer Counter */}
+            <View style={styles.timerRow}>
+              <Ionicons name="time-outline" size={13} color={theme.timerColor} style={styles.timerIcon} />
+              <AppText variant="body" weight="800" color={theme.timerColor} style={styles.timerText}>
+                {formatTimer(elapsedSeconds)}
+              </AppText>
+            </View>
           </View>
-
-          {/* Subtle helper text */}
-          <AppText variant="caption" weight="500" color="#94A3B8" style={styles.helperText}>
-            Timer runs in background if you leave the app
-          </AppText>
-
-          {/* Action CTA Button */}
-          <TouchableOpacity
-            style={[styles.btn, busy && styles.btnDisabled]}
-            activeOpacity={0.85}
-            onPress={handleComplete}
-            disabled={busy}
-          >
-            <LinearGradient
-              colors={['#2E7D32', '#1B5E20']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.btnGradient}
-            >
-              {busy ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <View style={styles.btnContent}>
-                  <Ionicons name="checkmark-circle" size={22} color="#FFFFFF" style={styles.btnIcon} />
-                  <AppText variant="body" weight="700" color="#FFFFFF">
-                    Complete Walk
-                  </AppText>
-                </View>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
+
+        {/* Right Section: Complete CTA Button */}
+        <TouchableOpacity
+          style={[styles.completeBtn, busy && styles.btnDisabled]}
+          activeOpacity={0.85}
+          onPress={handleComplete}
+          disabled={busy}
+        >
+          <LinearGradient
+            colors={theme.btnBg}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.btnGradient}
+          >
+            {busy ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <View style={styles.btnContent}>
+                <Ionicons name="checkmark-circle" size={16} color={theme.btnTextColor} />
+                <AppText variant="caption" weight="800" color={theme.btnTextColor} style={styles.btnText}>
+                  Finish
+                </AppText>
+              </View>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+      </LinearGradient>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)', // Deep premium slate backdrop overlay
-    justifyContent: 'center',
+  floatingContainer: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    zIndex: 999,
     alignItems: 'center',
-    padding: Spacing.xl,
   },
-  cardContainer: {
-    width: '90%',
-    maxWidth: 340,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.xl + 4,
+  card: {
+    width: '100%',
+    borderRadius: Radius.lg,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.05)',
+    justifyContent: 'space-between',
+    borderWidth: 1.2,
     ...Platform.select({
       ios: {
-        shadowColor: '#0F172A',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
-      },
-      android: {
-        elevation: 12,
-      },
-    }),
-  },
-  topAccent: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#E2E8F0',
-    position: 'absolute',
-    top: 12,
-  },
-  indicatorWrapper: {
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-  },
-  pulseRing: {
-    position: 'absolute',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    borderWidth: 2,
-    borderColor: '#C8E6C9',
-  },
-  iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.15)',
-  },
-  title: {
-    fontSize: 22,
-    lineHeight: 28,
-    marginBottom: 4,
-    textAlign: 'center',
-    letterSpacing: 0.2,
-  },
-  subtitle: {
-    fontSize: 14,
-    lineHeight: 18,
-    marginBottom: Spacing.lg,
-    textAlign: 'center',
-  },
-  timerWrapper: {
-    backgroundColor: '#F1F8F3', // Soft pastel mint green
-    width: '100%',
-    paddingVertical: Spacing.md + 2,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(46, 125, 50, 0.08)',
-    marginBottom: Spacing.sm,
-  },
-  timerText: {
-    fontSize: 48,
-    lineHeight: 54,
-    fontVariant: ['tabular-nums'],
-    letterSpacing: 1.5,
-  },
-  helperText: {
-    fontSize: 11,
-    color: '#94A3B8',
-    marginBottom: Spacing.xl,
-    textAlign: 'center',
-  },
-  btn: {
-    width: '100%',
-    borderRadius: 16,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#2E7D32',
+        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.22,
+        shadowOpacity: 0.28,
         shadowRadius: 10,
       },
       android: {
-        elevation: 4,
+        elevation: 8,
+      },
+    }),
+  },
+  leftCol: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+    gap: 12,
+  },
+  iconWrapper: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pulseRing: {
+    position: 'absolute',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 1.5,
+  },
+  iconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoCol: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 2,
+  },
+  walkTitle: {
+    fontSize: 14,
+    lineHeight: 18,
+    flexShrink: 1,
+  },
+  badgePill: {
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    borderRadius: 6,
+  },
+  badgeText: {
+    fontSize: 9,
+    lineHeight: 12,
+    letterSpacing: 0.3,
+  },
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  timerIcon: {
+    opacity: 0.85,
+  },
+  timerText: {
+    fontSize: 16,
+    lineHeight: 20,
+    letterSpacing: 0.8,
+    fontVariant: ['tabular-nums'],
+  },
+  completeBtn: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 3,
       },
     }),
   },
@@ -362,17 +423,18 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   btnGradient: {
-    width: '100%',
-    paddingVertical: 15,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
     alignItems: 'center',
     justifyContent: 'center',
   },
   btnContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 5,
   },
-  btnIcon: {
-    marginRight: 6,
+  btnText: {
+    fontSize: 12,
+    lineHeight: 16,
   },
 });

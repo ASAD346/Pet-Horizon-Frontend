@@ -645,8 +645,6 @@ export default function HomeScreen() {
       >
         {!petCardLoading && accessBannerMessage ? <AuthInfoBanner message={accessBannerMessage} /> : null}
 
-        <ActiveWalkOverlay />
-
         {!effectivePet && !petCardLoading ? (
           <EmptyPetStateCard
             onAddPetPress={handleAddPet}
