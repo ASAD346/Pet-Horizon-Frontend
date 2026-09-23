@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Dimensions, StyleSheet, View, TouchableOpacity, Platform } from 'react-native';
@@ -62,12 +62,36 @@ export default function GetStartedScreen() {
   const [activeIndex, setActiveIndex] = useState(0);
   const flatListRef = useRef<any>(null);
 
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
+
   // Reanimated values
   const scrollX = useSharedValue(0);
   const buttonScale = useSharedValue(1);
 
-  // Temporarily bypassed redirects so you can work directly on the onboarding screen
-  // useAuthEntryRedirect();
+  useAuthEntryRedirect();
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    AsyncStorage.getItem('HAS_SEEN_ONBOARDING')
+      .then((val) => {
+        if (val === 'true') {
+          setHasSeenOnboarding(true);
+          if (!isAuthenticated && !isBootstrapping) {
+            timer = setTimeout(() => {
+              router.replace('/auth/login');
+            }, 10);
+          }
+        } else {
+          setHasSeenOnboarding(false);
+        }
+      })
+      .catch(() => {
+        setHasSeenOnboarding(false);
+      });
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isAuthenticated, isBootstrapping, router]);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -114,6 +138,14 @@ export default function GetStartedScreen() {
   const activeColors = SLIDES.map((slide) => slide.accentColor);
   const currentSlide = SLIDES[activeIndex] || SLIDES[0];
   const isLastSlide = activeIndex === SLIDES.length - 1;
+
+  if (isBootstrapping || hasSeenOnboarding === null || (hasSeenOnboarding === true && !isAuthenticated)) {
+    return null;
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   return (
     <View style={styles.outerContainer}>
