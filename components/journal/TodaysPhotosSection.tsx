@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import type { ApiJournalEntry } from '@/types/journal';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 
 export interface JournalPhoto {
   uri: string;
@@ -60,25 +61,33 @@ export function TodaysPhotosSection({
 
       {hasPhotos ? (
         <View style={styles.photoRow}>
-          {photos.map((photo) => (
-            <View key={photo.entryId} style={styles.photoContainer}>
-              <TouchableOpacity
-                activeOpacity={0.9}
-                onPress={() => onPhotoPress?.(photo)}
-                style={styles.photoClickable}
-              >
-                <Image source={{ uri: photo.uri }} style={styles.photo} contentFit="cover" />
-              </TouchableOpacity>
-              {canAddPhoto ? (
+          {photos.map((photo, index) => (
+            <AnimatedStackItem
+              key={`${photo.entryId}-${photos.length}`}
+              index={index}
+              direction="up"
+              staggerMs={55}
+              distance={22}
+            >
+              <View style={styles.photoContainer}>
                 <TouchableOpacity
-                  style={styles.deleteBadge}
-                  activeOpacity={0.7}
-                  onPress={() => onDeletePhoto?.(photo)}
+                  activeOpacity={0.9}
+                  onPress={() => onPhotoPress?.(photo)}
+                  style={styles.photoClickable}
                 >
-                  <Ionicons name="trash-outline" size={14} color="#FFFFFF" />
+                  <Image source={{ uri: photo.uri }} style={styles.photo} contentFit="cover" />
                 </TouchableOpacity>
-              ) : null}
-            </View>
+                {canAddPhoto ? (
+                  <TouchableOpacity
+                    style={styles.deleteBadge}
+                    activeOpacity={0.7}
+                    onPress={() => onDeletePhoto?.(photo)}
+                  >
+                    <Ionicons name="trash-outline" size={14} color="#FFFFFF" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </AnimatedStackItem>
           ))}
         </View>
       ) : (

@@ -8,6 +8,7 @@ import { JournalTheme, Radius, Spacing } from '../../constants/theme';
 import type { JournalCategory, TimelineEvent } from './journalData';
 import { getCategoryStyle } from './journalData';
 import { useAuth } from '@/hooks/useAuth';
+import { AnimatedStackItem } from '../ui/AnimatedStackItem';
 
 interface ActivityTimelineSectionProps {
   events: TimelineEvent[];
@@ -156,12 +157,19 @@ export function ActivityTimelineSection({
           </View>
         ) : (
           filtered.map((event, index) => (
-            <TimelineRow
-              key={event.id}
-              event={event}
-              isLast={index === filtered.length - 1}
-              onPress={onEventPress}
-            />
+            <AnimatedStackItem
+              key={`${event.id}-${filtered.length}`}
+              index={index}
+              direction="up"
+              staggerMs={55}
+              distance={24}
+            >
+              <TimelineRow
+                event={event}
+                isLast={index === filtered.length - 1}
+                onPress={onEventPress}
+              />
+            </AnimatedStackItem>
           ))
         )}
       </View>
