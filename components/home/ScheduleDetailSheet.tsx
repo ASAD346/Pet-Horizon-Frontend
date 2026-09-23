@@ -522,9 +522,9 @@ export function ScheduleDetailSheet({
                     disabled={walkBusy}
                     onPress={handleWalkStart}
                   >
-                    <View style={styles.completeBtnContent}>
+                    <View style={[styles.completeBtnContent, { justifyContent: 'center' }]}>
                       <Ionicons name="play-circle-outline" size={18} color="#FFFFFF" />
-                      <AppText style={styles.completeBtnText} weight="800" color="#FFFFFF">Start Walk</AppText>
+                      <AppText style={[styles.completeBtnText, { flexShrink: 1 }]} weight="800" color="#FFFFFF" numberOfLines={1}>Start Walk</AppText>
                     </View>
                   </Pressable>
                 </>
@@ -837,6 +837,8 @@ const styles = StyleSheet.create({
   completeBtnContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
     gap: 6,
   },
   completeBtnText: {
