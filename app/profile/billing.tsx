@@ -13,6 +13,7 @@ import * as Application from 'expo-application';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useIsFocused } from '@react-navigation/native';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { AppText } from '@/components/ui/AppText';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme, formatPlanPrice } from '@/components/profile/profileTheme';
@@ -220,6 +221,7 @@ export default function BillingScreen() {
   const [invoices, setInvoices] = useState<PaymentInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
   const isFocusedRef = React.useRef(isFocused);
@@ -527,29 +529,22 @@ export default function BillingScreen() {
 
   const handleCancel = () => {
     if (!token) return;
-    Alert.alert(
-      'Cancel subscription',
-      'Auto-renew will be turned off. You keep premium until the current period ends.',
-      [
-        { text: 'Keep Premium', style: 'cancel' },
-        {
-          text: 'Cancel Renewal',
-          style: 'destructive',
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              const result = await cancelPremium(token);
-              showToast(result.message);
-              await reload();
-            } catch (err) {
-              showErrorToast(getErrorMessage(err));
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ],
-    );
+    setShowCancelModal(true);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (!token) return;
+    setCancelling(true);
+    setShowCancelModal(false);
+    try {
+      const result = await cancelPremium(token);
+      showToast(result.message);
+      await reload();
+    } catch (err) {
+      showErrorToast(getErrorMessage(err));
+    } finally {
+      setCancelling(false);
+    }
   };
 
   const planKey = status?.plan ?? '';
@@ -733,6 +728,17 @@ export default function BillingScreen() {
         </View>
       </ScrollView>
 
+      <AppConfirmModal
+        visible={showCancelModal}
+        title="Cancel Auto-Renewal?"
+        message="Auto-renew will be turned off. You keep Premium access until the end of your current billing period."
+        confirmLabel="Cancel Renewal"
+        cancelLabel="Keep Premium"
+        variant="warning"
+        loading={cancelling}
+        onConfirm={handleCancelConfirm}
+        onCancel={() => setShowCancelModal(false)}
+      />
 
     </SafeAreaView>
   );
