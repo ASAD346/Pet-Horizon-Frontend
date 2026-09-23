@@ -8,7 +8,7 @@ import 'react-native-reanimated';
 import { AuthBootstrap } from '@/components/auth/AuthBootstrap';
 import { PushNotificationRegistrar } from '@/components/PushNotificationRegistrar';
 import { ToastHost } from '@/components/ui/ToastHost';
-import { ensureNotificationHandler, registerBackgroundFetchAsync } from '@/lib/push/notificationSetup';
+import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
 import { store } from '@/redux/store';
 import { useColorScheme } from '../hooks/use-color-scheme';
 import { AppState } from 'react-native';
@@ -46,7 +46,6 @@ function InnerLayout() {
     // Initial sync
     if (token) {
       syncWithServer(token).catch(() => {});
-      registerBackgroundFetchAsync().catch(() => {});
     }
   }, [token, syncWithServer]);
 
