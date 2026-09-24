@@ -105,12 +105,32 @@ export function WeeklySpendingCard({
           </View>
         </View>
 
-        {loading && !hasBudget ? (
-          <View style={styles.skeletonBody}>
-            <Skeleton width="50%" height={32} tone="dark" />
+        {loading ? (
+          <View style={styles.skeletonContainer}>
+            <View style={styles.balanceContainer}>
+              <Skeleton width={110} height={10} tone="dark" style={{ marginBottom: 6 }} />
+              <Skeleton width="55%" height={30} tone="dark" borderRadius={Radius.sm} style={{ marginBottom: 4 }} />
+            </View>
+
+            <View style={styles.progressContainer}>
+              <Skeleton width="100%" height={4} tone="dark" borderRadius={2} />
+            </View>
+
             <View style={styles.bottomRow}>
-              <Skeleton width="30%" height={12} tone="dark" />
-              <Skeleton width="20%" height={12} tone="dark" />
+              <View style={styles.metaCol}>
+                <Skeleton width={55} height={8} tone="dark" style={{ marginBottom: 4 }} />
+                <Skeleton width={45} height={12} tone="dark" />
+              </View>
+
+              <View style={styles.metaCol}>
+                <Skeleton width={70} height={8} tone="dark" style={{ marginBottom: 4 }} />
+                <Skeleton width={55} height={12} tone="dark" />
+              </View>
+
+              <View style={[styles.metaCol, { alignItems: 'flex-end' }]}>
+                <Skeleton width={40} height={8} tone="dark" style={{ marginBottom: 4 }} />
+                <Skeleton width={35} height={12} tone="dark" />
+              </View>
             </View>
           </View>
         ) : hasBudget ? (
@@ -216,6 +236,8 @@ const styles = StyleSheet.create({
   card: {
     padding: 16,
     borderRadius: 16,
+    minHeight: 172,
+    justifyContent: 'space-between',
   },
   ambientGlow: {
     position: 'absolute',
@@ -337,8 +359,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(212, 160, 23, 0.08)',
     borderColor: 'rgba(212, 160, 23, 0.15)',
   },
-  skeletonBody: {
-    marginVertical: 4,
+  skeletonContainer: {
+    width: '100%',
   },
   emptyContainer: {
     paddingVertical: 4,

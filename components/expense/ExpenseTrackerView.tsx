@@ -111,25 +111,8 @@ export function ExpenseTrackerView({
     setRefreshing(false);
   };
 
-  const awaitingPet = petLoading && !pet;
-
-  if (awaitingPet) {
-    return (
-      <View style={styles.safeArea}>
-        <ExpenseTrackerHeader
-          notificationCount={unreadCount}
-          onJournalPress={canViewJournal ? onJournalPress : undefined}
-          onNotificationsPress={onNotificationsPress}
-          showJournal={canViewJournal}
-          isPremium={isPremium}
-          topInset={insets.top}
-          selectedMonthLabel={selectedMonthLabel}
-          onDatePress={() => setMonthPickerVisible(true)}
-        />
-        <SkeletonExpenseTracker />
-      </View>
-    );
-  }
+  const isInitialLoading = petLoading && !pet;
+  const showExpenseContent = canViewExpenses || isInitialLoading;
 
   return (
     <View style={styles.safeArea}>
@@ -149,7 +132,7 @@ export function ExpenseTrackerView({
           <AuthInfoBanner message="Add a pet from the Home tab to start tracking their expenses and budget." />
         ) : null}
 
-        {pet && !canViewExpenses ? (
+        {pet && !canViewExpenses && !isInitialLoading ? (
           <AuthInfoBanner message="You don't have access to this pet's expenses. Ask the owner to update your permissions." />
         ) : null}
 
@@ -157,7 +140,7 @@ export function ExpenseTrackerView({
           <AuthInfoBanner message={accessBannerMessage} />
         ) : null}
 
-        {canViewExpenses ? (
+        {showExpenseContent ? (
           <>
             <View style={styles.fixedTopSection}>
               <WeeklySpendingCard
@@ -167,7 +150,7 @@ export function ExpenseTrackerView({
                 remainingLabel={budget.hasBudget && budget.remaining !== undefined ? `${formatCurrency(budget.remaining)} left` : 'Tap Edit Budget'}
                 status={budget.status}
                 hasBudget={budget.hasBudget}
-                loading={budgetLoading || (petLoading && !pet)}
+                loading={budgetLoading || isInitialLoading}
                 isPremium={isPremium}
                 onEditPress={canEditExpenses ? (isNew) => {
                   setIsNewBudget(!!isNew);
@@ -183,7 +166,7 @@ export function ExpenseTrackerView({
             <RecentTransactionsSection
               categoryFilter={category}
               transactions={expenses}
-              loading={expensesLoading || (petLoading && !pet)}
+              loading={expensesLoading || isInitialLoading}
               isPremium={isPremium}
               onAddExpensePress={() => setAddExpenseVisible(true)}
               refreshControl={

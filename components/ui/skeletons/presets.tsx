@@ -58,12 +58,29 @@ export function SkeletonPetProfileCard() {
 export function SkeletonWeeklySpendingCard() {
   return (
     <View style={styles.spendingCard}>
-      <Skeleton width="40%" height={12} tone="dark" />
-      <Skeleton width="55%" height={28} tone="dark" style={styles.gapMd} />
-      <Skeleton width="100%" height={8} borderRadius={Radius.full} tone="dark" style={styles.gapMd} />
+      <View style={styles.spendingHeader}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <SkeletonCircle size={18} tone="dark" />
+          <Skeleton width={70} height={10} tone="dark" />
+        </View>
+        <Skeleton width={60} height={18} borderRadius={Radius.sm} tone="dark" />
+      </View>
+      <Skeleton width={110} height={10} tone="dark" style={{ marginTop: 10, marginBottom: 6 }} />
+      <Skeleton width="55%" height={30} tone="dark" borderRadius={Radius.sm} style={{ marginBottom: 12 }} />
+      <Skeleton width="100%" height={4} borderRadius={2} tone="dark" style={{ marginBottom: 14 }} />
       <View style={styles.spendingFooter}>
-        <Skeleton width="45%" height={12} tone="dark" />
-        <Skeleton width="30%" height={12} tone="dark" />
+        <View>
+          <Skeleton width={55} height={8} tone="dark" style={{ marginBottom: 4 }} />
+          <Skeleton width={45} height={12} tone="dark" />
+        </View>
+        <View>
+          <Skeleton width={70} height={8} tone="dark" style={{ marginBottom: 4 }} />
+          <Skeleton width={55} height={12} tone="dark" />
+        </View>
+        <View style={{ alignItems: 'flex-end' }}>
+          <Skeleton width={40} height={8} tone="dark" style={{ marginBottom: 4 }} />
+          <Skeleton width={35} height={12} tone="dark" />
+        </View>
       </View>
     </View>
   );
@@ -290,13 +307,13 @@ export function SkeletonFamilyHub() {
 export function SkeletonExpenseTracker() {
   return (
     <View style={styles.screen}>
-      <View style={styles.screenHeader}>
-        <SkeletonCircle size={40} />
-        <Skeleton width="40%" height={18} />
-        <SkeletonCircle size={40} />
-      </View>
       <SkeletonWeeklySpendingCard />
-      <View style={styles.gapMd} />
+      <View style={[styles.chipRow, { marginBottom: Spacing.md }]}>
+        <Skeleton width={70} height={32} borderRadius={Radius.full} />
+        <Skeleton width={70} height={32} borderRadius={Radius.full} />
+        <Skeleton width={70} height={32} borderRadius={Radius.full} />
+        <Skeleton width={70} height={32} borderRadius={Radius.full} />
+      </View>
       <Skeleton width="45%" height={14} style={styles.gapSm} />
       <View style={styles.gapSm} />
       <SkeletonList count={3} />
@@ -389,12 +406,23 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   spendingCard: {
-    backgroundColor: HomeTheme.cardGreen,
-    borderRadius: Radius.xl,
-    padding: Spacing.lg,
+    backgroundColor: '#1E1E21',
+    borderRadius: 16,
+    padding: 16,
+    minHeight: 172,
+    marginBottom: Spacing.md,
+    borderWidth: 0.5,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  spendingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   spendingFooter: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
   scheduleCard: {
