@@ -39,6 +39,7 @@ import { HelpSupportSheet } from './HelpSupportSheet';
 import { FeedbackSheet } from './FeedbackSheet';
 import { LocalizationSheet } from './LocalizationSheet';
 import { calculatePetAge, formatDate } from '@/lib/pet/birthdayUtils';
+import { fetchAccessiblePets } from '@/lib/pet/fetchAccessiblePets';
 
 export function ProfileHubView() {
   const router = useDebouncedRouter();
@@ -56,6 +57,7 @@ export function ProfileHubView() {
   
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [petsCount, setPetsCount] = useState<number | null>(null);
   const { premiumStatus, isPremium, refetch: refetchPremium } = usePremiumStatus();
   
   const [termsVisible, setTermsVisible] = useState(false);
@@ -81,10 +83,14 @@ export function ProfileHubView() {
     if (block) setLoading(true);
 
     try {
-      const [profile] = await Promise.all([
+      const [profile, , accessiblePets] = await Promise.all([
         fetchUserProfile(token, user._id),
         refetchPremium(),
+        fetchAccessiblePets(token, user._id).catch(() => null),
       ]);
+      if (accessiblePets) {
+        setPetsCount(accessiblePets.length);
+      }
       // Preserve activePetId — the /users/:id endpoint doesn't return it,
       // so naively overwriting the session would clear it and trigger
       // the ContextGuard reconciliation screen on every profile visit.
@@ -97,7 +103,7 @@ export function ProfileHubView() {
     } finally {
       setLoading(false);
     }
-  }, [token, user?._id, setSession, shouldBlockUI, markLoaded, reset, refetchPremium]);
+  }, [token, user?._id, user?.activePetId, setSession, shouldBlockUI, markLoaded, reset, refetchPremium]);
 
   useFocusReload(reload, Boolean(token && user?._id));
 
@@ -355,15 +361,13 @@ export function ProfileHubView() {
           />
           <ProfileMenuRow
             icon="paw-outline"
-            title="Add New Pet"
-            subtitle="Register another pet companion"
-            onPress={() => {
-              if (!isPremium && user?.activePetId) {
-                showToast('Upgrade to Premium to add another pet.', 'info');
-              } else {
-                router.navigate({ pathname: '/pet/register', params: { mode: 'add' } } as any);
-              }
-            }}
+            title="Manage Pets"
+            subtitle={
+              petsCount !== null
+                ? `${petsCount} ${petsCount === 1 ? 'pet' : 'pets'} registered • Switch, edit & add`
+                : 'Switch, edit, and add companion profiles'
+            }
+            onPress={() => router.navigate('/profile/pets' as Href)}
           />
           <ProfileMenuRow
             icon="globe-outline"
