@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Platform,
   RefreshControl,
   ScrollView,
@@ -12,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useQueryClient } from '@tanstack/react-query';
 import { type Href } from 'expo-router';
 
@@ -42,7 +42,7 @@ export default function ManagePetsScreen() {
   const router = useDebouncedRouter();
   const { token, user, setSession } = useAuth();
   const { isPremium } = usePremiumStatus();
-  const { showSuccessToast, showErrorToast, showToast } = useToast();
+  const { showSuccessToast, showErrorToast } = useToast();
   const queryClient = useQueryClient();
 
   const [pets, setPets] = useState<ApiPet[]>([]);
@@ -134,7 +134,6 @@ export default function ManagePetsScreen() {
 
       const remainingPets = pets.filter((p) => p._id !== deleteTargetPet._id);
       setPets(remainingPets);
-
       clearPetListCache();
 
       // If active pet was deleted, switch to the first remaining pet if available
@@ -167,11 +166,10 @@ export default function ManagePetsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
+      {/* Header without duplicate Add button */}
       <ProfileScreenHeader
         title="Manage Pets"
         onBack={() => router.back()}
-        rightLabel="+ Add"
-        onRightPress={handleAddPet}
       />
 
       <ScrollView
@@ -185,44 +183,62 @@ export default function ManagePetsScreen() {
           />
         }
       >
-        {/* Top Banner / Add Pet Quick Action */}
-        <View style={styles.actionCard}>
-          <View style={styles.actionCardLeft}>
-            <View style={styles.actionIconCircle}>
-              <Ionicons name="paw" size={22} color="#2E7D32" />
-            </View>
-            <View style={styles.actionTextCol}>
-              <AppText variant="body" weight="800" color="#0E3821">
-                Add Another Pet
-              </AppText>
-              <AppText variant="caption" color="#556B5D" style={styles.actionSubtitle}>
-                {isPremium
-                  ? 'Unlimited pet profiles with Premium'
-                  : pets.length > 0
-                    ? 'Upgrade to Premium for multiple pets'
-                    : 'Track meals, health, expenses & schedules'}
-              </AppText>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.addBtn}
-            onPress={handleAddPet}
-            activeOpacity={0.8}
-          >
-            <Ionicons name="add" size={18} color="#FFFFFF" />
-            <AppText variant="bodySmall" weight="800" color="#FFFFFF">
-              Add
-            </AppText>
-          </TouchableOpacity>
-        </View>
+        {/* Hero Banner: Register New Companion */}
+        <LinearGradient
+          colors={['#1B5E20', '#2E7D32', '#388E3C']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.heroCard}
+        >
+          {/* Subtle Background Rings */}
+          <View style={styles.heroRing1} />
+          <View style={styles.heroRing2} />
+          <MaterialCommunityIcons
+            name="paw"
+            size={76}
+            color="rgba(255, 255, 255, 0.08)"
+            style={styles.heroWatermark}
+          />
 
-        {/* Pet List Section */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="caption" weight="800" color="#64748B" style={styles.sectionTitle}>
-            REGISTERED PETS ({pets.length})
+          <View style={styles.heroContent}>
+            <View style={styles.heroTextContainer}>
+              <View style={styles.heroTag}>
+                <AppText variant="caption" weight="800" color="#E8F5E9" style={styles.heroTagText}>
+                  {isPremium ? 'PREMIUM UNLIMITED' : `${pets.length} OF 1 PET REGISTERED`}
+                </AppText>
+              </View>
+              <AppText variant="h3" weight="800" color="#FFFFFF" style={styles.heroTitle}>
+                Register New Pet
+              </AppText>
+              <AppText variant="caption" color="rgba(255, 255, 255, 0.82)" style={styles.heroSubtitle}>
+                Add companions to track health logs, schedules & expenses.
+              </AppText>
+            </View>
+
+            <TouchableOpacity
+              style={styles.heroAddBtn}
+              onPress={handleAddPet}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="add-circle" size={20} color="#1B5E20" />
+              <AppText variant="bodySmall" weight="800" color="#1B5E20">
+                Add Pet
+              </AppText>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+
+        {/* Section Header */}
+        <View style={styles.sectionHeaderRow}>
+          <AppText variant="caption" weight="800" color="#475569" style={styles.sectionTitle}>
+            YOUR PETS ({pets.length})
+          </AppText>
+          <AppText variant="caption" color="#64748B">
+            Tap a pet to switch profile
           </AppText>
         </View>
 
+        {/* Pet List */}
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={ProfileTheme.green} />
@@ -233,16 +249,16 @@ export default function ManagePetsScreen() {
         ) : pets.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="paw-outline" size={42} color="#94A3B8" />
+              <Ionicons name="paw-outline" size={40} color="#94A3B8" />
             </View>
-            <AppText variant="h3" weight="800" color="#1A2B4E" style={styles.emptyTitle}>
-              No Pets Found
+            <AppText variant="h3" weight="800" color="#0E3821" style={styles.emptyTitle}>
+              No Pets Registered
             </AppText>
             <AppText variant="bodySmall" color="#64748B" style={styles.emptyText}>
-              You haven’t registered any pets yet. Add your companion to get started with full health, schedule, and expense tracking!
+              Add your first pet companion to unlock health records, meal schedules, and smart tracking.
             </AppText>
             <CustomButton
-              title="Add Your First Pet"
+              title="Register Your First Pet"
               onPress={handleAddPet}
               style={styles.emptyBtn}
             />
@@ -255,43 +271,61 @@ export default function ManagePetsScreen() {
               const isOwner = isPetOwner(pet.ownerUserId, user?._id);
               const age = calculatePetAge(pet.birthday);
               const speciesIcon = getSpeciesIcon(pet.species ?? 'other');
+              const rawImg = pet.image || (pet as any).photoUrl || (pet as any).imageUrl;
+              const resolvedUri = resolveMediaUrl(rawImg);
 
               return (
                 <View
                   key={pet._id}
                   style={[styles.petCard, isActive && styles.petCardActive]}
                 >
-                  {/* Active Indicator Top-Right */}
+                  {/* Single Active Badge: positioned on top right of the card */}
                   {isActive && (
-                    <View style={styles.activePill}>
-                      <Ionicons name="checkmark-circle" size={13} color="#2E7D32" />
-                      <AppText variant="caption" weight="800" color="#2E7D32" style={styles.activePillText}>
-                        ACTIVE PET
+                    <View style={styles.activePillBadge}>
+                      <View style={styles.activeDot} />
+                      <AppText variant="caption" weight="800" color="#1B5E20" style={styles.activePillText}>
+                        ACTIVE
                       </AppText>
                     </View>
                   )}
 
-                  <View style={styles.petCardMain}>
-                    {/* Pet Avatar */}
-                    {pet.image ? (
-                      <Image
-                        source={{ uri: resolveMediaUrl(pet.image) }}
-                        style={styles.petAvatar}
-                        contentFit="cover"
-                        cachePolicy="disk"
-                      />
-                    ) : (
-                      <View style={styles.petAvatarFallback}>
-                        <MaterialCommunityIcons name={speciesIcon} size={28} color="#2E7D32" />
-                      </View>
-                    )}
+                  {/* Main Card Content */}
+                  <TouchableOpacity
+                    style={styles.cardHeaderArea}
+                    onPress={() => handleSelectActive(pet)}
+                    disabled={isActive || isBusy}
+                    activeOpacity={0.8}
+                  >
+                    {/* Pet Image or Aesthetic Fallback */}
+                    <View style={styles.avatarWrapper}>
+                      {resolvedUri ? (
+                        <Image
+                          source={{ uri: resolvedUri }}
+                          style={styles.petAvatar}
+                          contentFit="cover"
+                          cachePolicy="disk"
+                          transition={200}
+                        />
+                      ) : (
+                        <View style={styles.petAvatarPlaceholder}>
+                          <MaterialCommunityIcons name={speciesIcon} size={30} color="#2E7D32" />
+                        </View>
+                      )}
+                    </View>
 
-                    {/* Pet Info */}
-                    <View style={styles.petDetails}>
-                      <View style={styles.petNameRow}>
-                        <AppText variant="body" weight="800" color="#0E3821" numberOfLines={1} style={styles.petName}>
+                    {/* Pet Details */}
+                    <View style={styles.petDetailsCol}>
+                      <View style={styles.nameHeaderRow}>
+                        <AppText
+                          variant="h3"
+                          weight="800"
+                          color="#0E3821"
+                          numberOfLines={1}
+                          style={styles.petNameText}
+                        >
                           {pet.name}
                         </AppText>
+
                         {!isOwner && (
                           <View style={styles.sharedBadge}>
                             <Ionicons name="people" size={10} color="#0284C7" />
@@ -302,85 +336,106 @@ export default function ManagePetsScreen() {
                         )}
                       </View>
 
-                      <AppText variant="bodySmall" color="#475569" numberOfLines={1} style={styles.breedText}>
-                        {pet.breed || pet.species || 'Pet'}
-                        {pet.gender ? ` • ${pet.gender}` : ''}
+                      <AppText variant="bodySmall" color="#475569" numberOfLines={1} style={styles.speciesBreedText}>
+                        {pet.species ? pet.species.charAt(0).toUpperCase() + pet.species.slice(1).toLowerCase() : 'Pet'}
+                        {pet.breed ? ` • ${pet.breed}` : ''}
                       </AppText>
 
-                      {/* Badges / Chips */}
-                      <View style={styles.chipsRow}>
+                      {/* Info Chips */}
+                      <View style={styles.chipsContainer}>
+                        {pet.gender && (
+                          <View style={styles.chip}>
+                            <MaterialCommunityIcons
+                              name={
+                                pet.gender.toLowerCase() === 'female'
+                                  ? 'gender-female'
+                                  : pet.gender.toLowerCase() === 'male'
+                                  ? 'gender-male'
+                                  : 'gender-male-female'
+                              }
+                              size={12}
+                              color="#475569"
+                            />
+                            <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                              {pet.gender}
+                            </AppText>
+                          </View>
+                        )}
+
                         {age !== 'Not set' && (
                           <View style={styles.chip}>
-                            <Ionicons name="calendar-outline" size={11} color="#64748B" />
-                            <AppText variant="caption" weight="600" color="#64748B" style={styles.chipText}>
+                            <Ionicons name="calendar-outline" size={11} color="#475569" />
+                            <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
                               {age}
                             </AppText>
                           </View>
                         )}
+
                         {pet.weight != null && (
                           <View style={styles.chip}>
-                            <MaterialCommunityIcons name="scale-bathroom" size={11} color="#64748B" />
-                            <AppText variant="caption" weight="600" color="#64748B" style={styles.chipText}>
+                            <MaterialCommunityIcons name="scale-bathroom" size={11} color="#475569" />
+                            <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
                               {pet.weight} {pet.weightUnit || 'kg'}
                             </AppText>
                           </View>
                         )}
                       </View>
                     </View>
-                  </View>
+                  </TouchableOpacity>
 
-                  {/* Card Actions Footer */}
-                  <View style={styles.cardActionsRow}>
-                    {/* Switch / Active Status Button */}
-                    <TouchableOpacity
-                      style={[
-                        styles.actionPillBtn,
-                        isActive ? styles.actionPillBtnActive : styles.actionPillBtnInactive,
-                      ]}
-                      onPress={() => handleSelectActive(pet)}
-                      disabled={isActive || isBusy}
-                      activeOpacity={0.7}
-                    >
-                      {isBusy ? (
-                        <ActivityIndicator size="small" color="#2E7D32" />
-                      ) : isActive ? (
-                        <>
-                          <Ionicons name="shield-checkmark" size={14} color="#2E7D32" />
-                          <AppText variant="caption" weight="800" color="#2E7D32">
-                            Current Active
-                          </AppText>
-                        </>
+                  {/* Actions Footer */}
+                  <View style={styles.cardFooter}>
+                    {/* Left: Switch action (only when inactive) */}
+                    <View style={styles.footerLeft}>
+                      {!isActive ? (
+                        <TouchableOpacity
+                          style={styles.setActiveBtn}
+                          onPress={() => handleSelectActive(pet)}
+                          disabled={isBusy}
+                          activeOpacity={0.7}
+                        >
+                          {isBusy ? (
+                            <ActivityIndicator size="small" color="#2E7D32" />
+                          ) : (
+                            <>
+                              <Ionicons name="swap-horizontal" size={15} color="#2E7D32" />
+                              <AppText variant="caption" weight="800" color="#2E7D32">
+                                Set as Active
+                              </AppText>
+                            </>
+                          )}
+                        </TouchableOpacity>
                       ) : (
-                        <>
-                          <Ionicons name="swap-horizontal" size={14} color="#475569" />
-                          <AppText variant="caption" weight="700" color="#334155">
-                            Set as Active
+                        <View style={styles.activeStatusHint}>
+                          <Ionicons name="checkmark-circle-outline" size={15} color="#2E7D32" />
+                          <AppText variant="caption" weight="700" color="#2E7D32">
+                            Currently Selected
                           </AppText>
-                        </>
+                        </View>
                       )}
-                    </TouchableOpacity>
+                    </View>
 
-                    {/* Secondary Actions: Edit & Delete */}
-                    <View style={styles.rightActionsGroup}>
+                    {/* Right: Edit & Delete buttons */}
+                    <View style={styles.footerRight}>
                       <TouchableOpacity
-                        style={styles.iconActionBtn}
+                        style={styles.editBtn}
                         onPress={() => handleEditPet(pet)}
-                        hitSlop={8}
-                        accessibilityLabel="Edit Pet"
+                        hitSlop={6}
+                        activeOpacity={0.7}
                       >
-                        <Ionicons name="create-outline" size={18} color="#2E7D32" />
-                        <AppText variant="caption" weight="700" color="#2E7D32" style={{ marginLeft: 4 }}>
+                        <Ionicons name="create-outline" size={15} color="#1E293B" />
+                        <AppText variant="caption" weight="700" color="#1E293B" style={{ marginLeft: 4 }}>
                           Edit
                         </AppText>
                       </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={[styles.iconActionBtn, styles.deleteActionBtn]}
+                        style={styles.deleteBtn}
                         onPress={() => handleDeletePress(pet)}
-                        hitSlop={8}
-                        accessibilityLabel="Delete Pet"
+                        hitSlop={6}
+                        activeOpacity={0.7}
                       >
-                        <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                        <Ionicons name="trash-outline" size={15} color="#DC2626" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -395,7 +450,7 @@ export default function ManagePetsScreen() {
       <AppConfirmModal
         visible={Boolean(deleteTargetPet)}
         title={`Delete ${deleteTargetPet?.name || 'Pet'}?`}
-        message={`Are you sure you want to delete ${deleteTargetPet?.name || 'this pet'}? All schedules, expenses, health logs, and journals associated with this pet will be permanently removed.`}
+        message={`Are you sure you want to delete ${deleteTargetPet?.name || 'this pet'}? All schedules, expenses, and health logs associated with this pet will be permanently removed.`}
         confirmLabel="Delete Pet"
         cancelLabel="Keep Pet"
         variant="danger"
@@ -408,7 +463,7 @@ export default function ManagePetsScreen() {
       <AppConfirmModal
         visible={premiumPromptVisible}
         title="Upgrade to Premium"
-        message="Free accounts can register 1 pet profile. Upgrade to PetHorizon Premium for unlimited pets, advanced insights, and family collaboration!"
+        message="Free accounts can register 1 pet profile. Upgrade to PetHorizon Premium for unlimited pet profiles, advanced insights, and family collaboration!"
         confirmLabel="View Plans"
         cancelLabel="Maybe Later"
         variant="warning"
@@ -430,51 +485,102 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.xxl * 2,
-    paddingTop: Spacing.xs,
+    paddingTop: Spacing.sm,
   },
-  actionCard: {
+  heroCard: {
+    borderRadius: Radius.xl,
+    padding: Spacing.lg,
+    position: 'relative',
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1B5E20',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  heroRing1: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  heroRing2: {
+    position: 'absolute',
+    bottom: -50,
+    left: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  heroWatermark: {
+    position: 'absolute',
+    right: 12,
+    bottom: -4,
+  },
+  heroContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#E8F5E9',
-    borderRadius: Radius.lg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#C8E6C9',
-    marginBottom: Spacing.lg,
+    zIndex: 1,
   },
-  actionCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  heroTextContainer: {
     flex: 1,
-    marginRight: Spacing.sm,
+    paddingRight: Spacing.md,
   },
-  actionIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
-  },
-  actionTextCol: {
-    flex: 1,
-  },
-  actionSubtitle: {
-    marginTop: 2,
-  },
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#2E7D32',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+  heroTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
     borderRadius: Radius.full,
-    gap: 4,
+    marginBottom: 6,
   },
-  sectionHeader: {
+  heroTagText: {
+    fontSize: 9.5,
+    letterSpacing: 0.5,
+  },
+  heroTitle: {
+    fontSize: 20,
+    marginBottom: 2,
+  },
+  heroSubtitle: {
+    lineHeight: 16,
+  },
+  heroAddBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 10,
+    borderRadius: Radius.full,
+    gap: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.xs,
   },
@@ -491,14 +597,14 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     padding: Spacing.xl,
     alignItems: 'center',
-    marginTop: Spacing.md,
+    marginTop: Spacing.sm,
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
   emptyIconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
@@ -523,13 +629,13 @@ const styles = StyleSheet.create({
     borderRadius: Radius.xl,
     padding: Spacing.md,
     borderWidth: 1,
-    borderColor: '#E2EBE2',
+    borderColor: '#E2E8F0',
     position: 'relative',
     ...Platform.select({
       ios: {
         shadowColor: '#0E3821',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
         shadowRadius: 6,
       },
       android: {
@@ -538,63 +644,72 @@ const styles = StyleSheet.create({
     }),
   },
   petCardActive: {
-    borderColor: '#5CB35D',
+    borderColor: '#2E7D32',
     borderWidth: 1.5,
-    backgroundColor: '#FAFCFA',
+    backgroundColor: '#FFFFFF',
   },
-  activePill: {
+  activePillBadge: {
     position: 'absolute',
-    top: Spacing.sm,
-    right: Spacing.sm,
+    top: Spacing.sm + 2,
+    right: Spacing.sm + 2,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     backgroundColor: '#E8F5E9',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: Radius.full,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: '#A5D6A7',
+    zIndex: 2,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2E7D32',
   },
   activePillText: {
     fontSize: 10,
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
   },
-  petCardMain: {
+  cardHeaderArea: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: Spacing.xs,
+    alignItems: 'flex-start',
+  },
+  avatarWrapper: {
+    marginRight: Spacing.md,
+    marginTop: 2,
   },
   petAvatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#F1F5F9',
     borderWidth: 1.5,
-    borderColor: '#E2EBE2',
+    borderColor: '#E2E8F0',
   },
-  petAvatarFallback: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+  petAvatarPlaceholder: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#C8E6C9',
   },
-  petDetails: {
+  petDetailsCol: {
     flex: 1,
-    marginLeft: Spacing.md,
+    paddingRight: 64, // room for active pill
   },
-  petNameRow: {
+  nameHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    paddingRight: 60, // Avoid overlapping the active pill
   },
-  petName: {
-    fontSize: 17,
+  petNameText: {
+    fontSize: 18,
   },
   sharedBadge: {
     flexDirection: 'row',
@@ -608,29 +723,31 @@ const styles = StyleSheet.create({
   sharedText: {
     fontSize: 9,
   },
-  breedText: {
+  speciesBreedText: {
     marginTop: 2,
+    marginBottom: Spacing.xs,
   },
-  chipsRow: {
+  chipsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
-    marginTop: Spacing.xs,
+    gap: 6,
     flexWrap: 'wrap',
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F1F5F9',
+    gap: 3.5,
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   chipText: {
     fontSize: 11,
   },
-  cardActionsRow: {
+  cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -639,40 +756,48 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
   },
-  actionPillBtn: {
+  footerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+  },
+  setActiveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: Radius.full,
-  },
-  actionPillBtnActive: {
-    backgroundColor: '#E8F5E9',
-  },
-  actionPillBtnInactive: {
-    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#C8E6C9',
   },
-  rightActionsGroup: {
+  activeStatusHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 4,
+  },
+  footerRight: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
   },
-  iconActionBtn: {
+  editBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.sm,
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: Radius.md,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: '#DCFCE7',
+    borderColor: '#E2E8F0',
   },
-  deleteActionBtn: {
+  deleteBtn: {
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: Radius.md,
     backgroundColor: '#FEF2F2',
+    borderWidth: 1,
     borderColor: '#FEE2E2',
-    paddingHorizontal: 8,
   },
 });
