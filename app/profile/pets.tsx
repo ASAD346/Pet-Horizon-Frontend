@@ -34,9 +34,10 @@ import { fetchAccessiblePets } from '@/lib/pet/fetchAccessiblePets';
 import { clearPetListCache } from '@/lib/pet/petListCache';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { deletePet } from '@/services/pets/petApi';
-import { getSpeciesIcon } from '@/services/pets/speciesIcons';
 import type { ApiPet } from '@/types/pet';
 import { isPetOwner } from '@/lib/family/formatters';
+
+const DEFAULT_PET_PLACEHOLDER = require('@/assets/images/dog_qr_icon.png');
 
 export default function ManagePetsScreen() {
   const router = useDebouncedRouter();
@@ -49,6 +50,7 @@ export default function ManagePetsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   // Modals state
   const [deleteTargetPet, setDeleteTargetPet] = useState<ApiPet | null>(null);
@@ -166,7 +168,6 @@ export default function ManagePetsScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-      {/* Header without duplicate Add button */}
       <ProfileScreenHeader
         title="Manage Pets"
         onBack={() => router.back()}
@@ -215,12 +216,13 @@ export default function ManagePetsScreen() {
               </AppText>
             </View>
 
+            {/* Add Pet Button with tighter radius */}
             <TouchableOpacity
               style={styles.heroAddBtn}
               onPress={handleAddPet}
               activeOpacity={0.85}
             >
-              <Ionicons name="add-circle" size={20} color="#1B5E20" />
+              <Ionicons name="add" size={18} color="#1B5E20" />
               <AppText variant="bodySmall" weight="800" color="#1B5E20">
                 Add Pet
               </AppText>
@@ -249,7 +251,7 @@ export default function ManagePetsScreen() {
         ) : pets.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={styles.emptyIconCircle}>
-              <Ionicons name="paw-outline" size={40} color="#94A3B8" />
+              <Image source={DEFAULT_PET_PLACEHOLDER} style={styles.emptyPlaceholderImg} contentFit="contain" />
             </View>
             <AppText variant="h3" weight="800" color="#0E3821" style={styles.emptyTitle}>
               No Pets Registered
@@ -270,9 +272,11 @@ export default function ManagePetsScreen() {
               const isBusy = switchingId === pet._id;
               const isOwner = isPetOwner(pet.ownerUserId, user?._id);
               const age = calculatePetAge(pet.birthday);
-              const speciesIcon = getSpeciesIcon(pet.species ?? 'other');
-              const rawImg = pet.image || (pet as any).photoUrl || (pet as any).imageUrl;
+              
+              const rawImg = pet.image || (pet as any).photoUrl || (pet as any).imageUrl || (pet as any).avatar;
               const resolvedUri = resolveMediaUrl(rawImg);
+              const hasFailedImage = imageErrors[pet._id];
+              const showRealImage = Boolean(resolvedUri && !hasFailedImage);
 
               return (
                 <View
@@ -296,19 +300,26 @@ export default function ManagePetsScreen() {
                     disabled={isActive || isBusy}
                     activeOpacity={0.8}
                   >
-                    {/* Pet Image or Aesthetic Fallback */}
+                    {/* Pet Image or Illustrated Pet Placeholder (not a vector icon) */}
                     <View style={styles.avatarWrapper}>
-                      {resolvedUri ? (
+                      {showRealImage ? (
                         <Image
                           source={{ uri: resolvedUri }}
                           style={styles.petAvatar}
                           contentFit="cover"
                           cachePolicy="disk"
                           transition={200}
+                          onError={() => {
+                            setImageErrors((prev) => ({ ...prev, [pet._id]: true }));
+                          }}
                         />
                       ) : (
-                        <View style={styles.petAvatarPlaceholder}>
-                          <MaterialCommunityIcons name={speciesIcon} size={30} color="#2E7D32" />
+                        <View style={styles.petAvatarPlaceholderContainer}>
+                          <Image
+                            source={DEFAULT_PET_PLACEHOLDER}
+                            style={styles.petAvatarPlaceholderImage}
+                            contentFit="contain"
+                          />
                         </View>
                       )}
                     </View>
@@ -415,7 +426,7 @@ export default function ManagePetsScreen() {
                       )}
                     </View>
 
-                    {/* Right: Edit & Delete buttons */}
+                    {/* Right: Edit & Delete buttons with tighter modern radius */}
                     <View style={styles.footerRight}>
                       <TouchableOpacity
                         style={styles.editBtn}
@@ -488,7 +499,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.sm,
   },
   heroCard: {
-    borderRadius: Radius.xl,
+    borderRadius: Radius.lg,
     padding: Spacing.lg,
     position: 'relative',
     overflow: 'hidden',
@@ -543,7 +554,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.18)',
     paddingHorizontal: 8,
     paddingVertical: 2.5,
-    borderRadius: Radius.full,
+    borderRadius: 6,
     marginBottom: 6,
   },
   heroTagText: {
@@ -561,10 +572,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
-    borderRadius: Radius.full,
-    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 8, // Tighter radius as requested
+    gap: 4,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -594,7 +605,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.xl,
+    borderRadius: Radius.lg,
     padding: Spacing.xl,
     alignItems: 'center',
     marginTop: Spacing.sm,
@@ -602,13 +613,17 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
   },
   emptyIconCircle: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 72,
+    height: 72,
+    borderRadius: 16,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
+  },
+  emptyPlaceholderImg: {
+    width: 48,
+    height: 48,
   },
   emptyTitle: {
     marginBottom: Spacing.xs,
@@ -620,13 +635,14 @@ const styles = StyleSheet.create({
   },
   emptyBtn: {
     width: '100%',
+    borderRadius: 8,
   },
   petsList: {
     gap: Spacing.md,
   },
   petCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.xl,
+    borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -658,7 +674,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F5E9',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: Radius.full,
+    borderRadius: 6, // Tighter radius
     borderWidth: 1,
     borderColor: '#A5D6A7',
     zIndex: 2,
@@ -682,22 +698,26 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   petAvatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 62,
+    height: 62,
+    borderRadius: 12, // Modern rounded square
     backgroundColor: '#F1F5F9',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
   },
-  petAvatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+  petAvatarPlaceholderContainer: {
+    width: 62,
+    height: 62,
+    borderRadius: 12,
     backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#C8E6C9',
+  },
+  petAvatarPlaceholderImage: {
+    width: 42,
+    height: 42,
   },
   petDetailsCol: {
     flex: 1,
@@ -718,7 +738,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E0F2FE',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: Radius.full,
+    borderRadius: 4,
   },
   sharedText: {
     fontSize: 9,
@@ -740,7 +760,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
     paddingHorizontal: 7,
     paddingVertical: 3,
-    borderRadius: Radius.sm,
+    borderRadius: 6, // Tighter radius
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
@@ -765,9 +785,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     backgroundColor: '#E8F5E9',
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radius.full,
+    borderRadius: 8, // Tighter radius (not a pill)
     borderWidth: 1,
     borderColor: '#C8E6C9',
   },
@@ -787,7 +807,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: Radius.md,
+    borderRadius: 8, // Tighter radius
     backgroundColor: '#F1F5F9',
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -795,7 +815,7 @@ const styles = StyleSheet.create({
   deleteBtn: {
     paddingHorizontal: 9,
     paddingVertical: 6,
-    borderRadius: Radius.md,
+    borderRadius: 8, // Tighter radius
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FEE2E2',
