@@ -5,6 +5,7 @@ import { AppText } from '@/components/ui/AppText';
 import { homePillCard } from '@/components/home/homeStyles';
 import { HomeTheme, Spacing } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface ProfileMenuRowProps {
   icon: React.ComponentProps<typeof Ionicons>['name'];
@@ -23,8 +24,10 @@ export function ProfileMenuRow({
   iconColor = '#2E7D32',
   iconBg = 'rgba(46, 125, 50, 0.08)',
 }: ProfileMenuRowProps) {
+  const debouncedPress = useDebouncedCallback(onPress, 600);
+
   return (
-    <TouchableOpacity style={[homePillCard.card, styles.row]} onPress={onPress} activeOpacity={0.85}>
+    <TouchableOpacity style={[homePillCard.card, styles.row]} onPress={debouncedPress} activeOpacity={0.85}>
       <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
         <Ionicons name={icon} size={20} color={iconColor} />
       </View>

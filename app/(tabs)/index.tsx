@@ -3,7 +3,8 @@ import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl, Activity
 import { AppText } from '@/components/ui/AppText';
 import { useAppSelector } from '@/redux/store';
 import { selectAuthUser } from '@/redux/reducer';
-import { useRouter, type Href, useFocusEffect } from 'expo-router';
+import { type Href, useFocusEffect } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { useNotificationStore } from '@/context/NotificationContext';
 
 import { StatusBar } from 'expo-status-bar';
@@ -101,7 +102,7 @@ export default function HomeScreen() {
   const { clearance: tabBarClearance } = useTabBarLayout();
   const insets = useSafeAreaInsets();
 
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { activeWalk } = useActiveWalk();
 
   const { token, user, setSession } = useAuth();
@@ -602,7 +603,7 @@ export default function HomeScreen() {
           dateLabel={formatDateLabel(new Date(), timezone)}
           notificationCount={unreadCount}
           onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
-          onNotificationsPress={() => router.push('/notifications' as Href)}
+          onNotificationsPress={() => router.navigate('/notifications' as Href)}
           showJournal={canViewJournal}
           topInset={insets.top}
           isPremium={isPremium}
@@ -624,7 +625,7 @@ export default function HomeScreen() {
         dateLabel={formatDateLabel(new Date(), timezone)}
         notificationCount={unreadCount}
         onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
-        onNotificationsPress={() => router.push('/notifications' as Href)}
+        onNotificationsPress={() => router.navigate('/notifications' as Href)}
         showJournal={canViewJournal}
         topInset={insets.top}
         isPremium={isPremium}

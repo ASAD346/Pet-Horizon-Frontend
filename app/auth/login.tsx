@@ -7,7 +7,8 @@ import {
   Keyboard,
   ScrollView,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   LoginBranding,
@@ -29,7 +30,7 @@ import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
 
 export default function LoginScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const params = useLocalSearchParams<{ verified?: string; message?: string; redirect?: string }>();
   const { login, isAuthenticated, isBootstrapping } = useAuth();
   const { showToast } = useToast();

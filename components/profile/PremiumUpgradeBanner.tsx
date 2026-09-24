@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface PremiumUpgradeBannerProps {
   onUpgradePress: () => void;
 }
 
 export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerProps) {
+  const debouncedUpgradePress = useDebouncedCallback(onUpgradePress, 600);
   return (
     <View style={styles.wrapper}>
       <LinearGradient
@@ -37,7 +39,7 @@ export function PremiumUpgradeBanner({ onUpgradePress }: PremiumUpgradeBannerPro
 
         <TouchableOpacity
           style={styles.ctaBtn}
-          onPress={onUpgradePress}
+          onPress={debouncedUpgradePress}
           activeOpacity={0.85}
         >
           <AppText variant="caption" weight="800" color="#0E3B21" style={styles.ctaText}>

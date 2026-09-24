@@ -6,7 +6,8 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
@@ -25,7 +26,7 @@ import { acceptPetInvite, fetchInviteInfo } from '@/services/family/familyApi';
 import type { InviteInfoResponse } from '@/types/family';
 
 export default function InviteAcceptScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const params = useLocalSearchParams<{ token?: string | string[] }>();
   const { token: authToken, user, setSession, isAuthenticated } = useAuth();
   const inviteToken = Array.isArray(params.token) ? params.token[0] : params.token;

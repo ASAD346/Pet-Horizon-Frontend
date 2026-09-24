@@ -36,7 +36,8 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { getSpeciesIcon } from '@/services/pets/speciesIcons';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -56,7 +57,7 @@ import { LoginHeaderDecor } from '@/components/auth/login';
 const DEFAULT_BIRTHDAY = new Date(2021, 4, 15);
 
 export default function RegisterPetScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const params = useLocalSearchParams<{ mode?: string; petId?: string }>();
   const isAddMode = params.mode === 'add';
   const isEditMode = params.mode === 'edit' && Boolean(params.petId);

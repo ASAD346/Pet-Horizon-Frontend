@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { AddExpenseView } from '@/components/expense';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/useToast';
 import { useQueryClient } from '@tanstack/react-query';
 
 export default function AddExpenseScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const queryClient = useQueryClient();
   const { token, user } = useAuth();
   const { pet } = useActivePet(token);

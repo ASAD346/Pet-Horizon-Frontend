@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { VerifyEmailFormSection } from '@/components/auth/signup/VerifyEmailFormSection';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +12,7 @@ import { Spacing } from '@/constants/theme';
 import { LoginHeaderDecor, LoginFooterBar } from '@/components/auth/login';
 
 export default function VerifyEmailScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { email = '', devOtp = '' } = useLocalSearchParams<{ email: string; devOtp?: string }>();
   const { token, user, setSession } = useAuth();
   const { showToast, showErrorToast } = useToast();

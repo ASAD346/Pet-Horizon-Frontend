@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from './AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface HeaderActionButtonsProps {
   notificationCount?: number;
@@ -26,13 +27,28 @@ export function HeaderActionButtons({
   const btnStyle = dark ? styles.iconBtnDark : styles.iconBtnLight;
   const iconColor = dark ? '#FFFFFF' : HomeTheme.text;
 
+  const [isLocked, setIsLocked] = useState(false);
+
+  const handlePress = (cb?: () => void) => {
+    if (!cb || isLocked) return;
+    setIsLocked(true);
+    try {
+      cb();
+    } finally {
+      setTimeout(() => {
+        setIsLocked(false);
+      }, 1000);
+    }
+  };
+
   return (
-    <View style={styles.actions}>
+    <View style={styles.actions} pointerEvents={isLocked ? 'none' : 'auto'}>
       {onQrScanPress ? (
         <TouchableOpacity
           style={[styles.iconBtn, btnStyle]}
           activeOpacity={0.75}
-          onPress={onQrScanPress}
+          onPress={() => handlePress(onQrScanPress)}
+          disabled={isLocked}
           accessibilityLabel="Scan invite QR code"
         >
           <Ionicons name="qr-code-outline" size={18} color={iconColor} />
@@ -43,7 +59,8 @@ export function HeaderActionButtons({
         <TouchableOpacity
           style={[styles.iconBtn, btnStyle]}
           activeOpacity={0.75}
-          onPress={onJournalPress}
+          onPress={() => handlePress(onJournalPress)}
+          disabled={isLocked}
           accessibilityLabel="Open pet journal"
         >
           <MaterialCommunityIcons name="notebook-outline" size={20} color={iconColor} />
@@ -53,9 +70,9 @@ export function HeaderActionButtons({
       <TouchableOpacity
         style={[styles.iconBtn, btnStyle]}
         activeOpacity={0.75}
-        onPress={onNotificationsPress}
+        onPress={() => handlePress(onNotificationsPress)}
         accessibilityLabel="Open notifications"
-        disabled={!onNotificationsPress}
+        disabled={!onNotificationsPress || isLocked}
       >
         <Ionicons name="notifications-outline" size={20} color={iconColor} />
         {notificationCount > 0 ? (

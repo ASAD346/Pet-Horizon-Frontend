@@ -106,11 +106,15 @@ export const QuickActionsSection = React.memo(function QuickActionsSection({
     return true;
   });
 
-  if (visibleActions.length === 0) {
-    return null;
-  }
+  const lastPressRef = React.useRef<number>(0);
 
   const handlePress = (onPress?: () => void) => {
+    const now = Date.now();
+    if (now - lastPressRef.current < 500) {
+      return;
+    }
+    lastPressRef.current = now;
+
     if (Platform.OS !== 'web') {
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }

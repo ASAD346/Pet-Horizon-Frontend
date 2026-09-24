@@ -6,6 +6,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { SkeletonPetProfileCard } from '@/components/ui/skeletons';
 import { HomeTheme, Spacing } from '../../constants/theme';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface PetProfileCardProps {
   name?: string;
@@ -44,9 +45,11 @@ export function PetProfileCard({
   onEditPress,
   isPremium = false,
 }: PetProfileCardProps) {
+  const debouncedPress = useDebouncedCallback(onPress, 500);
+  const debouncedEditPress = useDebouncedCallback(onEditPress, 600);
   const displayImage = imageUrl ? { uri: imageUrl } : (imageSource ? imageSource : null);
   const CardWrapper = onPress ? TouchableOpacity : View;
-  const cardProps = onPress ? { onPress, activeOpacity: 0.92 } : {};
+  const cardProps = onPress ? { onPress: debouncedPress, activeOpacity: 0.92 } : {};
 
   if (loading) {
     return <SkeletonPetProfileCard />;
@@ -113,7 +116,7 @@ export function PetProfileCard({
             <TouchableOpacity
               onPress={(e) => {
                 e.stopPropagation();
-                onEditPress();
+                debouncedEditPress();
               }}
               style={styles.editCardButton}
               activeOpacity={0.7}

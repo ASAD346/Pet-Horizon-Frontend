@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { CustomButton } from '@/components/ui/AppButton';
@@ -102,7 +102,7 @@ const strengthStyles = StyleSheet.create({
 
 // ─── Edit Profile Screen ─────────────────────────────────────────────────────
 export default function EditProfileScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { token, user, setSession, logout } = useAuth();
 
   const [fullName, setFullName] = useState('');

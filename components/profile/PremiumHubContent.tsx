@@ -14,7 +14,7 @@ import {
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import * as Application from 'expo-application';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -186,7 +186,7 @@ function ConfettiParticle({ delay, color, startX }: { delay: number; color: stri
 
 // ── Main Component ────────────────────────────────────────────────────────
 export function PremiumHubContent() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
   const isFocused = useIsFocused();

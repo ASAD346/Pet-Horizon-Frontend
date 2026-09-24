@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { StatusBar } from 'expo-status-bar';
 import { ExpenseTrackerView } from '@/components/expense';
 import { LogJournalSheet } from '@/components/journal';
 
 export default function ExpenseTrackerScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const [journalVisible, setJournalVisible] = useState(false);
 
   return (
@@ -13,7 +14,7 @@ export default function ExpenseTrackerScreen() {
       <StatusBar style="dark" />
       <ExpenseTrackerView
         onJournalPress={() => setJournalVisible(true)}
-        onNotificationsPress={() => router.push('/notifications' as Href)}
+        onNotificationsPress={() => router.navigate('/notifications' as Href)}
       />
       <LogJournalSheet visible={journalVisible} onClose={() => setJournalVisible(false)} />
     </>

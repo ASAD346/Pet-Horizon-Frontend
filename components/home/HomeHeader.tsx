@@ -7,7 +7,7 @@ import { AppText } from '../ui/AppText';
 import { HeaderActionButtons } from '../ui/HeaderActionButtons';
 import { Spacing } from '../../constants/theme';
 import { Image, Pressable } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { useAuth } from '@/hooks/useAuth';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 
@@ -43,7 +43,7 @@ export function HomeHeader({
   isPremium = false,
 }: HomeHeaderProps) {
   const { user } = useAuth();
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const rawImage = user?.profileImage;
   const userImage = rawImage ? resolveMediaUrl(rawImage) : null;
 
@@ -87,7 +87,7 @@ export function HomeHeader({
             <View style={styles.leftContainer}>
               {/* User Avatar Action */}
               <Pressable
-                onPress={() => router.push('/profile')}
+                onPress={() => router.navigate('/profile')}
                 style={[styles.avatarOuterRing, isPremium ? { borderColor: '#D4A017' } : { borderColor: 'rgba(255,255,255,0.45)' }]}
               >
                 <View style={[styles.avatarInnerContainer, isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.18)' } : { backgroundColor: 'rgba(255,255,255,0.22)' }, userImage ? { backgroundColor: 'transparent' } : {}]}>

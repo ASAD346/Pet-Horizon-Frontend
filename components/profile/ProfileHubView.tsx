@@ -8,7 +8,8 @@ import {
   Animated,
   Platform,
 } from 'react-native';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -40,7 +41,7 @@ import { LocalizationSheet } from './LocalizationSheet';
 import { calculatePetAge, formatDate } from '@/lib/pet/birthdayUtils';
 
 export function ProfileHubView() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const insets = useSafeAreaInsets();
   
   // Custom Header Heights
@@ -342,7 +343,7 @@ export function ProfileHubView() {
             autoRenew={premiumStatus?.autoRenew}
           />
         ) : (
-          <PremiumUpgradeBanner onUpgradePress={() => router.push('/profile/premium' as Href)} />
+          <PremiumUpgradeBanner onUpgradePress={() => router.navigate('/profile/premium' as Href)} />
         )}
 
         <ProfileMenuSection title="ACCOUNT & SECURITY">
@@ -350,7 +351,7 @@ export function ProfileHubView() {
             icon="person-outline"
             title="Profile Information"
             subtitle="Name, email, password, and photo"
-            onPress={() => router.push('/profile/edit' as Href)}
+            onPress={() => router.navigate('/profile/edit' as Href)}
           />
           <ProfileMenuRow
             icon="paw-outline"
@@ -360,7 +361,7 @@ export function ProfileHubView() {
               if (!isPremium && user?.activePetId) {
                 showToast('Upgrade to Premium to add another pet.', 'info');
               } else {
-                router.push({ pathname: '/pet/register', params: { mode: 'add' } } as any);
+                router.navigate({ pathname: '/pet/register', params: { mode: 'add' } } as any);
               }
             }}
           />
@@ -374,7 +375,7 @@ export function ProfileHubView() {
             icon="card-outline"
             title="Billing & Subscription"
             subtitle="Invoices, payment method, cancel"
-            onPress={() => router.push('/profile/billing' as Href)}
+            onPress={() => router.navigate('/profile/billing' as Href)}
           />
         </ProfileMenuSection>
 

@@ -8,6 +8,7 @@ import { HeaderActionButtons } from './HeaderActionButtons';
 import { Colors } from '@/constants/colors';
 import { Spacing } from '@/constants/spacing';
 import { Radius } from '@/constants/radius';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface ScreenHeaderProps {
   title: string;
@@ -37,11 +38,14 @@ export function ScreenHeader({
   const insets = useSafeAreaInsets();
   const isBranded = variant === 'branded';
 
+  const debouncedBack = useDebouncedCallback(onBack, 450);
+  const debouncedRightPress = useDebouncedCallback(onRightPress, 600);
+
   const renderContent = () => (
     <View style={styles.row}>
       {onBack ? (
         <TouchableOpacity
-          onPress={onBack}
+          onPress={debouncedBack}
           style={styles.backButton}
           accessibilityLabel="Go back"
         >
@@ -65,7 +69,7 @@ export function ScreenHeader({
 
       {rightLabel && onRightPress ? (
         <TouchableOpacity
-          onPress={onRightPress}
+          onPress={debouncedRightPress}
           disabled={rightDisabled}
           style={styles.rightButton}
         >

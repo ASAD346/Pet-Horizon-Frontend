@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   LoginBranding,
@@ -46,7 +47,7 @@ function parseEmailParam(value: string | string[] | undefined): string {
 
 
 export default function SignupScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const params = useLocalSearchParams<{ email?: string; verify?: string }>();
   const { handleGoogleSignIn, googleLoading } = useGoogleAuth();
   const { showToast } = useToast();

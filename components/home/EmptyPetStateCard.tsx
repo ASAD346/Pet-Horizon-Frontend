@@ -3,6 +3,7 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Palette, Spacing, Radius } from '@/constants/theme';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface EmptyPetStateCardProps {
   onAddPetPress: () => void;
@@ -16,6 +17,8 @@ export function EmptyPetStateCard({
   isPremium = false,
 }: EmptyPetStateCardProps) {
   const brandColor = isPremium ? '#184F2E' : '#2E7D32';
+  const debouncedAddPet = useDebouncedCallback(onAddPetPress, 600);
+  const debouncedScanQr = useDebouncedCallback(onScanQrPress, 600);
 
   return (
     <View style={styles.card}>
@@ -34,7 +37,7 @@ export function EmptyPetStateCard({
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.primaryButton, { backgroundColor: brandColor }]}
-          onPress={onAddPetPress}
+          onPress={debouncedAddPet}
           activeOpacity={0.88}
         >
           <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" style={styles.btnIcon} />
@@ -46,7 +49,7 @@ export function EmptyPetStateCard({
         {onScanQrPress ? (
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={onScanQrPress}
+            onPress={debouncedScanQr}
             activeOpacity={0.88}
           >
             <Ionicons name="qr-code-outline" size={19} color={brandColor} style={styles.btnIcon} />

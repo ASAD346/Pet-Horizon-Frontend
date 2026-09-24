@@ -5,6 +5,7 @@ import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useDebouncedCallback } from '@/hooks/useDebounce';
 
 interface ProfileScreenHeaderProps {
   title: string;
@@ -25,10 +26,12 @@ export function ProfileScreenHeader({
   rightDisabled,
 }: ProfileScreenHeaderProps) {
   const insets = useSafeAreaInsets();
+  const debouncedBack = useDebouncedCallback(onBack, 450);
+  const debouncedRightPress = useDebouncedCallback(onRightPress, 600);
 
   return (
     <View style={styles.container}>
-      <Pressable onPress={onBack} hitSlop={12} style={styles.backBtn}>
+      <Pressable onPress={debouncedBack} hitSlop={12} style={styles.backBtn}>
         <Ionicons name="chevron-back" size={16} color="#0E3821" />
       </Pressable>
 
@@ -38,7 +41,7 @@ export function ProfileScreenHeader({
 
       {rightLabel ? (
         <Pressable
-          onPress={onRightPress}
+          onPress={debouncedRightPress}
           disabled={rightDisabled}
           style={[styles.rightBtn, rightDisabled && styles.rightBtnDisabled]}
         >

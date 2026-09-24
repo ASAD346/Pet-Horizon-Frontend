@@ -8,7 +8,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import * as Application from 'expo-application';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -214,7 +214,7 @@ function InvoiceRow({ invoice, isLast }: { invoice: PaymentInvoice; isLast?: boo
 }
 
 export default function BillingScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { token, user } = useAuth();
   const isFocused = useIsFocused();
   const { premiumStatus: status, isPremium, refetch: refetchPremium } = usePremiumStatus();

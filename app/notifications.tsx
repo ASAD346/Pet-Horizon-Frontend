@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter, useDebouncedCallback } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -217,11 +217,13 @@ function groupNotifications(items: any[]): GroupedNotifications[] {
 }
 
 export default function NotificationsScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { token } = useAuth();
   const { items, loading, hasLoaded, error, reload, markRead, markAllRead, remove } = useNotifications(token);
   const [refreshing, setRefreshing] = React.useState(false);
   const { showErrorToast } = useToast();
+
+  const debouncedMarkAllRead = useDebouncedCallback(markAllRead, 800);
 
   React.useEffect(() => {
     if (error) {
@@ -302,7 +304,7 @@ export default function NotificationsScreen() {
                 )}
               </View>
               
-              <TouchableOpacity onPress={markAllRead} hitSlop={12} style={styles.markAllReadBtn}>
+              <TouchableOpacity onPress={debouncedMarkAllRead} hitSlop={12} style={styles.markAllReadBtn}>
                 <AppText variant="bodySmall" weight="800" color="#FFFFFF">
                   Mark all read
                 </AppText>

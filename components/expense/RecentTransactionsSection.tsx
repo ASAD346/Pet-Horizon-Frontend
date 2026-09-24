@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, type Href } from 'expo-router';
+import { type Href } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import * as Haptics from 'expo-haptics';
 import { AppText } from '../ui/AppText';
 import { ColorIconBadge } from '../home/ColorIconBadge';
@@ -94,7 +95,7 @@ export function RecentTransactionsSection({
   refreshControl,
   contentPaddingBottom = 100,
 }: RecentTransactionsSectionProps) {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { formatCurrency } = useLocalization();
   const { timezone } = useTimezone();
 
@@ -213,7 +214,7 @@ export function RecentTransactionsSection({
             title={emptyTitle}
             description={emptyDescription}
             buttonLabel="Log First Expense"
-            onButtonPress={onAddExpensePress || (() => router.push('/expense/add' as Href))}
+            onButtonPress={onAddExpensePress || (() => router.navigate('/expense/add' as Href))}
           />
         ) : (
           <>

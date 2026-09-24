@@ -6,7 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CustomButton } from '@/components/ui/AppButton';
 import { AppText } from '@/components/ui/AppText';
@@ -88,7 +88,7 @@ const strengthStyles = StyleSheet.create({
 });
 
 export default function ChangePasswordScreen() {
-  const router = useRouter();
+  const router = useDebouncedRouter();
   const { token } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState('');
