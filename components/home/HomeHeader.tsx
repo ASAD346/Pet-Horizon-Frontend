@@ -58,8 +58,14 @@ export function HomeHeader({
   const safeLeft = Math.max(insets.left, Spacing.lg);
   const safeRight = Math.max(insets.right, Spacing.lg);
 
-  // Extract initial for avatar badge
   const userInitial = userName.trim().charAt(0).toUpperCase();
+  const lastAvatarPressRef = React.useRef<number>(0);
+  const handleAvatarPress = () => {
+    const now = Date.now();
+    if (now - lastAvatarPressRef.current < 1500) return;
+    lastAvatarPressRef.current = now;
+    router.navigate('/profile');
+  };
 
   return (
     <View style={[styles.wrapper, { shadowColor }]}>
@@ -87,7 +93,7 @@ export function HomeHeader({
             <View style={styles.leftContainer}>
               {/* User Avatar Action */}
               <Pressable
-                onPress={() => router.navigate('/profile')}
+                onPress={handleAvatarPress}
                 style={[styles.avatarOuterRing, isPremium ? { borderColor: '#D4A017' } : { borderColor: 'rgba(255,255,255,0.45)' }]}
               >
                 <View style={[styles.avatarInnerContainer, isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.18)' } : { backgroundColor: 'rgba(255,255,255,0.22)' }, userImage ? { backgroundColor: 'transparent' } : {}]}>

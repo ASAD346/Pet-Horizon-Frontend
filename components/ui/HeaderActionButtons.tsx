@@ -27,17 +27,24 @@ export function HeaderActionButtons({
   const btnStyle = dark ? styles.iconBtnDark : styles.iconBtnLight;
   const iconColor = dark ? '#FFFFFF' : HomeTheme.text;
 
+  const lastPressTimeRef = React.useRef<number>(0);
   const [isLocked, setIsLocked] = useState(false);
 
   const handlePress = (cb?: () => void) => {
-    if (!cb || isLocked) return;
+    if (!cb) return;
+    const now = Date.now();
+    // Synchronously block rapid taps (under 1500ms)
+    if (now - lastPressTimeRef.current < 1500) {
+      return;
+    }
+    lastPressTimeRef.current = now;
     setIsLocked(true);
     try {
       cb();
     } finally {
       setTimeout(() => {
         setIsLocked(false);
-      }, 1000);
+      }, 1500);
     }
   };
 
