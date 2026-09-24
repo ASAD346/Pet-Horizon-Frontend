@@ -37,6 +37,9 @@ export function ContextGuard({ children }: ContextGuardProps) {
     void queryClient.invalidateQueries({ queryKey: ['petMembers'] });
     void queryClient.invalidateQueries({ queryKey: ['schedules'] });
     void queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    void queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    void queryClient.invalidateQueries({ queryKey: ['budget'] });
+    void queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
   }, [activePetId, queryClient]);
 
   return <View style={{ flex: 1 }}>{children}</View>;

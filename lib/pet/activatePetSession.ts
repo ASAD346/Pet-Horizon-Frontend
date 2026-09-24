@@ -31,7 +31,7 @@ export async function activatePetSession({
   // 2. Persist active pet ID to backend
   await setActivePet(token, petId);
 
-  // 3. Fetch latest full pet record from backend
+  // 3. Fetch latest full pet record from backend if not already provided
   const pet = nextPet && nextPet._id === petId ? nextPet : await fetchPetById(token, petId);
   setActivePetCache(token, pet);
   store.dispatch(setActivePetAction(pet));

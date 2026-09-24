@@ -280,8 +280,10 @@ export function ScheduleSetupView({
         }
       });
       void cleanupPendingNotifications(activeIds);
+    } else {
+      setSections(createInitialScheduleState());
     }
-  }, [querySections]);
+  }, [querySections, pet?._id]);
 
   const reloadSchedules = useCallback(
     async (petId: string) => {

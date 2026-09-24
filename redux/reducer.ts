@@ -29,9 +29,9 @@ const authSlice = createSlice({
     setSession: (state, action: PayloadAction<AuthSession>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
-      // If user activePetId changed and activePet._id doesn't match, clear activePet unless specified
-      if (state.activePet && action.payload.user?.activePetId !== state.activePet._id) {
-        state.activePet = null;
+      // Synchronize activePet if user activePetId is specified and activePet._id matches
+      if (state.activePet && action.payload.user?.activePetId && state.activePet._id !== action.payload.user.activePetId) {
+        // Do not immediately nullify if activePet exists; keep activePet unless explicit logout/clear
       }
     },
     setActivePet: (state, action: PayloadAction<ApiPet | null>) => {

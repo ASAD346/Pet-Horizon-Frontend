@@ -18,92 +18,84 @@ export function useActivePet(token: string | null) {
   const dispatch = useAppDispatch();
   const reduxPet = useAppSelector(selectActivePet);
   const { user, setSession } = useAuth();
-  const activePetId = reduxPet?._id || user?.activePetId || null;
+  const currentPetId = reduxPet?._id || user?.activePetId || null;
 
-  const [localPet, setLocalPet] = useState<ApiPet | null>(() => reduxPet || getActivePetCache(token) || null);
-  const currentPet = reduxPet || localPet;
-  const [loading, setLoading] = useState(() => Boolean(token && !currentPet && !activePetCacheLoaded(token)));
+  const [loading, setLoading] = useState(() => Boolean(token && !reduxPet && !activePetCacheLoaded(token)));
 
-  const reload = useCallback(async (force = false) => {
-    if (!token) {
-      setLocalPet(null);
-      dispatch(setActivePetAction(null));
-      clearActivePetCache();
-      setLoading(false);
-      return;
-    }
-
-    const cacheLoaded = activePetCacheLoaded(token);
-    const cached = getActivePetCache(token);
-
-    if (cached && !reduxPet) {
-      setLocalPet(cached);
-      dispatch(setActivePetAction(cached));
-    }
-
-    if (cacheLoaded && !force && (reduxPet || cached)) {
-      return;
-    }
-
-    const block = !reduxPet && !cached;
-    if (block) setLoading(true);
-
-    try {
-      const { activePetId: serverActivePetId } = await fetchActivePetId(token);
-      
-      const targetId = activePetId || serverActivePetId;
-      if (!targetId) {
-        setLocalPet(null);
+  const reload = useCallback(
+    async (force = false) => {
+      if (!token) {
         dispatch(setActivePetAction(null));
         clearActivePetCache();
-        log.info('Home', 'No active pet');
+        setLoading(false);
         return;
       }
 
-      const active = await fetchPetById(token, targetId);
-      setLocalPet(active);
-      dispatch(setActivePetAction(active));
-      setActivePetCache(token, active);
+      const cached = getActivePetCache(token);
+      if (cached && !reduxPet) {
+        dispatch(setActivePetAction(cached));
+      }
 
-      if (user && user.activePetId !== targetId) {
-        await setSession({
-          token,
-          user: { ...user, activePetId: targetId },
-        });
+      const cacheLoaded = activePetCacheLoaded(token);
+      if (cacheLoaded && !force && (reduxPet || cached)) {
+        return;
       }
-    } catch (error) {
-      if (!currentPet && !cached) {
-        setLocalPet(null);
-        dispatch(setActivePetAction(null));
-        clearActivePetCache();
+
+      if (!reduxPet && !cached) setLoading(true);
+
+      try {
+        // If we already have an active pet ID (from Redux or user), prioritize it to avoid resetting
+        let targetId = currentPetId;
+
+        if (!targetId) {
+          const { activePetId: serverActivePetId } = await fetchActivePetId(token);
+          targetId = serverActivePetId;
+        }
+
+        if (!targetId) {
+          dispatch(setActivePetAction(null));
+          clearActivePetCache();
+          log.info('Home', 'No active pet');
+          return;
+        }
+
+        const active = await fetchPetById(token, targetId);
+        dispatch(setActivePetAction(active));
+        setActivePetCache(token, active);
+
+        if (user && user.activePetId !== targetId) {
+          await setSession({
+            token,
+            user: { ...user, activePetId: targetId },
+          });
+        }
+      } catch (error) {
+        if (!reduxPet && !cached) {
+          dispatch(setActivePetAction(null));
+          clearActivePetCache();
+        }
+        log.fail('Home', 'Load active pet failed', getErrorMessage(error));
+      } finally {
+        setLoading(false);
       }
-      log.fail('Home', 'Load active pet failed', getErrorMessage(error));
-    } finally {
-      setLoading(false);
-    }
-  }, [token, activePetId, user, setSession, dispatch, reduxPet, currentPet]);
+    },
+    [token, currentPetId, reduxPet, user, setSession, dispatch],
+  );
 
   useFocusReload(reload, Boolean(token));
 
+  // Sync initial cache if Redux is empty on mount
   useEffect(() => {
-    if (reduxPet) {
-      setLocalPet(reduxPet);
-      setLoading(false);
-    } else {
+    if (!reduxPet && token) {
       const cached = getActivePetCache(token);
       if (cached) {
-        setLocalPet(cached);
         dispatch(setActivePetAction(cached));
+      } else {
+        void reload(false);
       }
     }
-  }, [reduxPet, token, dispatch]);
+  }, [reduxPet, token, dispatch, reload]);
 
-  useEffect(() => {
-    if (token && !reduxPet) {
-      void reload(false);
-    }
-  }, [token, activePetId, reload, reduxPet]);
-
-  return { pet: currentPet, loading, reload };
+  return { pet: reduxPet, loading: loading && !reduxPet, reload };
 }
 
