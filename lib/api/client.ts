@@ -115,6 +115,14 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 
     if (!response.ok) {
       const message = await parseErrorMessage(response);
+      if (response.status === 401 && token && !path.startsWith('/auth/')) {
+        try {
+          const { logout } = await import('@/redux/action');
+          store.dispatch(logout() as any);
+        } catch {
+          // Fail silently
+        }
+      }
       throw new ApiError(message, response.status);
     }
 
