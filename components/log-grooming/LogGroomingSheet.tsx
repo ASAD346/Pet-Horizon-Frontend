@@ -55,7 +55,7 @@ export function LogGroomingSheet({
   const [typeOptions, setTypeOptions] = useState<GroomingTypeOption[]>([]);
   const [groomingVisible, setGroomingVisible] = useState(true);
   const [loadingTypes, setLoadingTypes] = useState(false);
-  const [entry, setEntry] = useState<GroomingEntryState>(() => initialEntry ?? {
+  const [entry, setEntry] = useState<GroomingEntryState>(() => (initialEntry ? { ...initialEntry } : {
     id: 'draft',
     groomingType: '',
     scheduleDate: {
@@ -64,7 +64,7 @@ export function LogGroomingSheet({
     },
     reminderOn: true,
     notes: '',
-  });
+  }));
   const [saving, setSaving] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
@@ -74,7 +74,7 @@ export function LogGroomingSheet({
       setGroomingVisible(propsGroomingVisible);
       setEntry((prev) => ({
         ...prev,
-        groomingType: prev.groomingType || (propsTypeOptions[0]?.value ?? ''),
+        groomingType: prev.groomingType || initialEntry?.groomingType || (propsTypeOptions[0]?.value ?? ''),
       }));
       setLoadingTypes(false);
       return;
@@ -94,7 +94,7 @@ export function LogGroomingSheet({
       setTypeOptions(data.types ?? []);
       setEntry((prev) => ({
         ...prev,
-        groomingType: prev.groomingType || (data.types?.[0]?.value ?? ''),
+        groomingType: prev.groomingType || initialEntry?.groomingType || (data.types?.[0]?.value ?? ''),
       }));
       setLoadingTypes(false);
       return;
@@ -107,7 +107,7 @@ export function LogGroomingSheet({
       setTypeOptions(data.types ?? []);
       setEntry((prev) => ({
         ...prev,
-        groomingType: prev.groomingType || (data.types?.[0]?.value ?? ''),
+        groomingType: prev.groomingType || initialEntry?.groomingType || (data.types?.[0]?.value ?? ''),
       }));
     } catch (e) {
       setTypeOptions([]);
@@ -115,7 +115,7 @@ export function LogGroomingSheet({
     } finally {
       setLoadingTypes(false);
     }
-  }, [petId, token, propsTypeOptions, propsGroomingVisible, showErrorToast]);
+  }, [petId, token, propsTypeOptions, propsGroomingVisible, initialEntry, showErrorToast]);
 
   const resetForm = useCallback(() => {
     if (initialEntry) {
