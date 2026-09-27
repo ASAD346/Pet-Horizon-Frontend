@@ -156,7 +156,7 @@ function PetCardItem({
       ]}
     >
       <View style={[styles.petCard, isActive ? styles.petCardActive : styles.petCardInactive]}>
-        {/* Top Right Badges: Role (Owner / Member) & Active Status */}
+        {/* Top Right Badges: Role (Owner / Member) */}
         <View style={styles.topRightBadges}>
           {isOwner ? (
             <View style={styles.ownerRoleBadge}>
@@ -170,15 +170,6 @@ function PetCardItem({
               <Ionicons name="people" size={10} color="#0369A1" />
               <AppText variant="caption" weight="800" color="#0369A1" style={styles.roleBadgeText}>
                 MEMBER
-              </AppText>
-            </View>
-          )}
-
-          {isActive && (
-            <View style={styles.activePillBadge}>
-              <View style={styles.activeDot} />
-              <AppText variant="caption" weight="800" color="#1B5E20" style={styles.activePillText}>
-                ACTIVE
               </AppText>
             </View>
           )}
@@ -853,27 +844,6 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.5,
   },
-  activePillBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4.5,
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#A5D6A7',
-  },
-  activeDot: {
-    width: 5.5,
-    height: 5.5,
-    borderRadius: 2.75,
-    backgroundColor: '#2E7D32',
-  },
-  activePillText: {
-    fontSize: 9,
-    letterSpacing: 0.5,
-  },
   cardHeaderArea: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -895,7 +865,7 @@ const styles = StyleSheet.create({
   },
   petDetailsCol: {
     flex: 1,
-    paddingRight: 116, // room for top right badges
+    paddingRight: 74, // room for top right role badge
   },
   nameHeaderRow: {
     flexDirection: 'row',
