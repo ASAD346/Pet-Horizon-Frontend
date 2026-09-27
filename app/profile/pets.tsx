@@ -119,15 +119,33 @@ function PetCardItem({
       ]}
     >
       <View style={[styles.petCard, isActive ? styles.petCardActive : styles.petCardInactive]}>
-        {/* Active Pill Badge on Top Right */}
-        {isActive && (
-          <View style={styles.activePillBadge}>
-            <View style={styles.activeDot} />
-            <AppText variant="caption" weight="800" color="#1B5E20" style={styles.activePillText}>
-              ACTIVE
-            </AppText>
-          </View>
-        )}
+        {/* Top Right Badges: Role (Owner / Shared) & Active Status */}
+        <View style={styles.topRightBadges}>
+          {isOwner ? (
+            <View style={styles.ownerRoleBadge}>
+              <Ionicons name="shield-checkmark" size={10} color="#166534" />
+              <AppText variant="caption" weight="800" color="#166534" style={styles.roleBadgeText}>
+                OWNER
+              </AppText>
+            </View>
+          ) : (
+            <View style={styles.sharedRoleBadge}>
+              <Ionicons name="people" size={10} color="#0369A1" />
+              <AppText variant="caption" weight="800" color="#0369A1" style={styles.roleBadgeText}>
+                SHARED
+              </AppText>
+            </View>
+          )}
+
+          {isActive && (
+            <View style={styles.activePillBadge}>
+              <View style={styles.activeDot} />
+              <AppText variant="caption" weight="800" color="#1B5E20" style={styles.activePillText}>
+                ACTIVE
+              </AppText>
+            </View>
+          )}
+        </View>
 
         {/* Card Header & Content */}
         <TouchableOpacity
@@ -177,15 +195,6 @@ function PetCardItem({
               >
                 {pet.name}
               </AppText>
-
-              {!isOwner && (
-                <View style={styles.sharedBadge}>
-                  <Ionicons name="people" size={10} color="#0284C7" />
-                  <AppText variant="caption" weight="700" color="#0284C7" style={styles.sharedText}>
-                    Shared
-                  </AppText>
-                </View>
-              )}
             </View>
 
             <AppText variant="bodySmall" color="#64748B" numberOfLines={1} style={styles.speciesBreedText}>
@@ -766,30 +775,61 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
   },
-  activePillBadge: {
+  topRightBadges: {
     position: 'absolute',
     top: Spacing.sm + 2,
     right: Spacing.sm + 2,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    zIndex: 2,
+  },
+  ownerRoleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3.5,
+    backgroundColor: '#F0FDF4',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+  },
+  sharedRoleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3.5,
+    backgroundColor: '#F0F9FF',
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  roleBadgeText: {
+    fontSize: 9,
+    letterSpacing: 0.5,
+  },
+  activePillBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4.5,
     backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#A5D6A7',
-    zIndex: 2,
   },
   activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 5.5,
+    height: 5.5,
+    borderRadius: 2.75,
     backgroundColor: '#2E7D32',
   },
   activePillText: {
-    fontSize: 9.5,
-    letterSpacing: 0.6,
+    fontSize: 9,
+    letterSpacing: 0.5,
   },
   cardHeaderArea: {
     flexDirection: 'row',
@@ -812,7 +852,7 @@ const styles = StyleSheet.create({
   },
   petDetailsCol: {
     flex: 1,
-    paddingRight: 64, // room for active pill badge
+    paddingRight: 116, // room for top right badges
   },
   nameHeaderRow: {
     flexDirection: 'row',
@@ -822,20 +862,6 @@ const styles = StyleSheet.create({
   petNameText: {
     fontSize: 18,
     letterSpacing: -0.2,
-  },
-  sharedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-    backgroundColor: '#E0F2FE',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 0.8,
-    borderColor: '#BAE6FD',
-  },
-  sharedText: {
-    fontSize: 9,
   },
   speciesBreedText: {
     marginTop: 2,
