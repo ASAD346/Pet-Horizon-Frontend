@@ -31,6 +31,7 @@ import { usePets } from '@/hooks/usePets';
 import { useDashboardQuery } from '@/hooks/useDashboardQuery';
 import { useTimezone } from '@/hooks/useTimezone';
 import { formatInTimeZone } from '@/lib/timezone';
+import { isScheduleActiveOnDate } from '@/lib/schedule/scheduleRecurrence';
 import { useToast } from '@/hooks/useToast';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
 import { useQueryClient } from '@tanstack/react-query';
@@ -206,34 +207,12 @@ export default function HomeScreen() {
     });
   };
 
-  const isDateWithinRange = (s: any) => {
-    const mode = s.scheduleDate?.mode || s.metadata?.scheduleDate?.mode || (s.date ? 'single' : 'ongoing');
-    const startStr = s.startDate || s.date || s.metadata?.startDate || s.metadata?.date;
-    let endStr = s.endDate || s.metadata?.endDate;
-
-    if (mode === 'single') {
-      endStr = endStr || startStr;
-    } else {
-      endStr = endStr || s.date || s.metadata?.date;
-    }
-    
-    // Timezone-aware today boundary normalization
-    const todayStr = formatInTimeZone(new Date(), timezone, 'yyyy-MM-dd');
-    const today = new Date(todayStr);
-    today.setHours(0, 0, 0, 0);
-
-    if (startStr) {
-      const start = new Date(startStr);
-      start.setHours(0, 0, 0, 0);
-      if (today < start) return false;
-    }
-    if (endStr) {
-      const end = new Date(endStr);
-      end.setHours(0, 0, 0, 0);
-      if (today > end) return false;
-    }
-    return true;
-  };
+  const isDateWithinRange = useCallback(
+    (s: any) => {
+      return isScheduleActiveOnDate(s, new Date(), timezone);
+    },
+    [timezone],
+  );
 
   const effectiveDashboardData = dashboardData;
 

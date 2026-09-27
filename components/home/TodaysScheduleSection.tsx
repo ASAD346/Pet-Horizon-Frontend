@@ -31,6 +31,13 @@ import {
   walkScheduleSubtitle,
   walkScheduleTitle,
 } from '@/lib/walk/walkDisplay';
+import {
+  isScheduleActiveOnDate,
+  isScheduleDoneForDate,
+  isScheduleSkippedForDate,
+  resolveScheduleMode,
+  parseDateToMidnight,
+} from '@/lib/schedule/scheduleRecurrence';
 import type { FeedingScheduleItem } from '@/types/feeding';
 import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
@@ -153,14 +160,11 @@ function rowIcon(
 }
 
 function rowIsDone(row: ScheduleRow) {
-  if (row.kind === 'grooming') return !!row.item.performedAt;
-  if (row.kind === 'vaccination') return row.item.isActive === false || !!row.item.metadata?.administeredDate;
-  return row.item.status === 'done' || row.item.isComplete === true || !!row.item.completedAt;
+  return isScheduleDoneForDate(row.item, new Date(), row.kind);
 }
 
 function rowIsSkipped(row: ScheduleRow) {
-  if (row.kind === 'grooming' || row.kind === 'vaccination') return false;
-  return row.item.status === 'skipped';
+  return isScheduleSkippedForDate(row.item, new Date(), row.kind);
 }
 
 function rowId(row: ScheduleRow) {
@@ -527,94 +531,31 @@ function parseDateString(val: string | Date | number | undefined | null): Date |
 }
 
 function isScheduleActiveToday(row: ScheduleRow): boolean {
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-
-  const item = row.item as any;
-
-  // 1. Explicit single date check
-  const scheduleType = item.scheduleType;
-  if (scheduleType === 'single' || !scheduleType) {
-    const explicitDateStr = item.date || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
-    if (explicitDateStr) {
-      let itemDate = typeof explicitDateStr === 'string' ? new Date(explicitDateStr) : explicitDateStr;
-      
-      // Normalize date string with local timezone to prevent UTC offset shifting
-      if (typeof explicitDateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(explicitDateStr.trim())) {
-        const localParsed = parseDateString(explicitDateStr);
-        if (localParsed) {
-          itemDate = localParsed;
-        }
-      }
-      
-      if (itemDate instanceof Date && !isNaN(itemDate.getTime())) {
-        return isSameDay(itemDate, now);
-      }
-      
-      const explicitDate = parseDateString(explicitDateStr);
-      if (explicitDate) {
-        return isSameDay(explicitDate, now);
-      }
-    }
-  }
-
-  // 2. Date Range check
-  const startDate = parseDateString(item.startDate);
-  const endDate = parseDateString(item.endDate);
-
-  if (startDate && startOfToday.getTime() < startDate.getTime()) {
-    return false;
-  }
-
-  if (endDate && startOfToday.getTime() > endDate.getTime()) {
-    return false;
-  }
-
-  // 3. Days of Week check (for Medicine, or if other items have it)
-  const meta = item.metadata;
-  if (meta && 'daysOfWeek' in meta && Array.isArray(meta.daysOfWeek) && meta.daysOfWeek.length > 0) {
-    const DAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-    const todayDayCode = DAY_CODES[now.getDay()];
-    if (!meta.daysOfWeek.includes(todayDayCode)) {
-      return false;
-    }
-  }
-
-  return true;
+  return isScheduleActiveOnDate(row.item, new Date());
 }
 
 function isPastPendingRow(row: ScheduleRow): boolean {
-  const item = row.item as any;
-  const status = item.status || 'pending';
-  if (status === 'done' || status === 'skipped' || status === 'missed') {
+  if (rowIsDone(row) || rowIsSkipped(row)) return false;
+  // If it's active today (e.g. daily recurring or scheduled for today), it is NOT past pending
+  if (isScheduleActiveOnDate(row.item, new Date())) {
     return false;
   }
-  
-  const explicitDateStr = item.date || item.dateTime || item.scheduleDate || item.metadata?.dueDate || item.metadata?.scheduledDate || item.scheduledDate;
-  const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-
-  if (explicitDateStr) {
-    let taskDate = typeof explicitDateStr === 'string' ? new Date(explicitDateStr) : explicitDateStr;
-    if (typeof explicitDateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(explicitDateStr.trim())) {
-      const localParsed = parseDateString(explicitDateStr);
-      if (localParsed) {
-        taskDate = localParsed;
-      }
-    }
-    if (taskDate instanceof Date && !isNaN(taskDate.getTime()) && taskDate.getTime() < startOfToday.getTime()) {
+  // If it was a single day task scheduled for before today and not completed
+  const item = row.item as any;
+  const mode = resolveScheduleMode(item);
+  if (mode === 'single') {
+    const singleStr =
+      item.date ||
+      item.dateTime ||
+      item.scheduleDate ||
+      item.metadata?.dueDate ||
+      item.scheduledDate;
+    const itemDate = parseDateToMidnight(singleStr);
+    const today = parseDateToMidnight(new Date());
+    if (itemDate && today && itemDate.getTime() < today.getTime()) {
       return true;
     }
   }
-
-  const isRecurring = item.recurrenceRule && item.recurrenceRule !== '' && item.recurrenceRule !== 'none';
-  if (!isRecurring && item.startDate) {
-    const startDate = parseDateString(item.startDate) || new Date(item.startDate);
-    if (!isNaN(startDate.getTime()) && startDate.getTime() < startOfToday.getTime()) {
-      return true;
-    }
-  }
-
   return false;
 }
 

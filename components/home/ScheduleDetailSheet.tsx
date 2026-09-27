@@ -21,6 +21,10 @@ import { groomingRecordTitle } from '@/lib/grooming/groomingDisplay';
 import { vaccinationScheduleTitle } from '@/lib/vaccination/vaccinationDisplay';
 import { formatDateLabel } from '@/lib/grooming/groomingForm';
 import { parseSafeDate } from '@/lib/timezone';
+import {
+  isScheduleDoneForDate,
+  isScheduleSkippedForDate,
+} from '@/lib/schedule/scheduleRecurrence';
 import type { FeedingScheduleItem } from '@/types/feeding';
 import type { GroomingRecord } from '@/types/grooming';
 import type { MedicineScheduleItem } from '@/types/medicine';
@@ -167,15 +171,8 @@ export function ScheduleDetailSheet({
   };
 
   const item = row.item as any;
-  const isDone =
-    row.kind === 'grooming'
-      ? !!item.performedAt
-      : row.kind === 'vaccination'
-      ? item.isActive === false || !!item.metadata?.administeredDate
-      : item.status === 'done' || item.isComplete === true || !!item.completedAt;
-
-  const isSkipped =
-    row.kind !== 'grooming' && row.kind !== 'vaccination' && item.status === 'skipped';
+  const isDone = isScheduleDoneForDate(item, new Date(), row.kind);
+  const isSkipped = isScheduleSkippedForDate(item, new Date(), row.kind);
 
   const title = getRowTitle(row);
 
