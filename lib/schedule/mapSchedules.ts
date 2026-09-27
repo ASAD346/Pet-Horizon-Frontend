@@ -67,14 +67,14 @@ function normalizeVaccinationFrequency(value: unknown): VaccinationReminderFrequ
 }
 
 export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
-  const meta = item.metadata ?? {};
+  const meta: any = item.metadata ?? {};
   let mealType = meta.mealType ?? (item as any).mealType ?? '';
   if (!mealType && item.title) {
     mealType = item.title.toLowerCase().replace(/\s+feeding$/i, '').trim();
   }
   const amount = meta.amount != null ? String(meta.amount) : ((item as any).amount != null ? String((item as any).amount) : '');
   const unit = meta.unit ?? (item as any).unit ?? '';
-  const timeStr = item.timeOfDay || (item as any).time || (meta as any).time || '08:00';
+  const timeStr = item.timeOfDay || (item as any).time || meta.time || '08:00';
 
   return {
     id: newEntryId(),
@@ -97,9 +97,9 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
 }
 
 export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
-  const meta = item.metadata ?? {};
+  const meta: any = item.metadata ?? {};
   const durationVal = meta.duration != null ? String(meta.duration) : ((item as any).duration != null ? String((item as any).duration) : '');
-  const timeStr = item.timeOfDay || (item as any).time || (meta as any).time || '08:00';
+  const timeStr = item.timeOfDay || (item as any).time || meta.time || '08:00';
 
   return {
     id: newEntryId(),
@@ -121,10 +121,10 @@ export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
 }
 
 export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState {
-  const meta = item.metadata ?? {};
+  const meta: any = item.metadata ?? {};
   const rawDose = meta.dose ?? (item as any).dose ?? '';
   const parsed = parseDoseString(rawDose);
-  const timeStr = item.timeOfDay || (item as any).time || (meta as any).time || '08:00';
+  const timeStr = item.timeOfDay || (item as any).time || meta.time || '08:00';
 
   return {
     id: newEntryId(),
@@ -159,7 +159,7 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
 }
 
 export function mapVaccinationItem(item: VaccinationScheduleItem): VaccinationEntryState {
-  const meta = item.metadata ?? {};
+  const meta: any = item.metadata ?? {};
   const dueRaw = meta.dueDate ?? (item as any).dueDate ?? item.startDate ?? (item as any).date;
   const timeStr = meta.reminderTime ?? (item as any).reminderTime ?? item.reminderTime ?? '09:00';
 
