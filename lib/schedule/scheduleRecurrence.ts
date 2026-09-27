@@ -98,26 +98,8 @@ export function resolveScheduleMode(s: any): ScheduleRecurrenceMode {
     return 'ongoing';
   }
 
-  const frequency = (s.frequency || s.metadata?.frequency || '').toLowerCase();
-  if (frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly' || frequency === 'custom') {
-    return s.endDate || s.scheduleDate?.endDate || s.metadata?.endDate ? 'range' : 'ongoing';
-  }
-
   const daysOfWeek = s.daysOfWeek || s.metadata?.daysOfWeek || s.scheduleDate?.daysOfWeek;
-  if (Array.isArray(daysOfWeek) && daysOfWeek.length > 0) {
-    return s.endDate || s.scheduleDate?.endDate || s.metadata?.endDate ? 'range' : 'ongoing';
-  }
-
-  const hasStart = Boolean(s.startDate || s.scheduleDate?.startDate || s.metadata?.startDate);
-  const hasEnd = Boolean(s.endDate || s.scheduleDate?.endDate || s.metadata?.endDate);
-
-  if (hasStart && hasEnd) {
-    return 'range';
-  }
-
-  if (hasStart && !hasEnd) {
-    return 'ongoing';
-  }
+  const hasDaysOfWeek = Array.isArray(daysOfWeek) && daysOfWeek.length > 0;
 
   const hasExplicitSingle = Boolean(
     s.scheduleDate?.singleDate ||
@@ -130,6 +112,30 @@ export function resolveScheduleMode(s: any): ScheduleRecurrenceMode {
     s.metadata?.dueDate ||
     s.metadata?.scheduledDate,
   );
+
+  const startStr = s.startDate || s.scheduleDate?.startDate || s.metadata?.startDate;
+  const endStr = s.endDate || s.scheduleDate?.endDate || s.metadata?.endDate;
+  const hasStart = Boolean(startStr);
+  const hasEnd = Boolean(endStr);
+
+  if (hasExplicitSingle && !hasEnd && !hasDaysOfWeek) {
+    if (!hasStart || isSameCalendarDay(startStr, s.date || s.scheduleDate || s.singleDate)) {
+      return 'single';
+    }
+  }
+
+  const frequency = (s.frequency || s.metadata?.frequency || '').toLowerCase();
+  if (frequency === 'daily' || frequency === 'weekly' || frequency === 'monthly' || frequency === 'custom' || hasDaysOfWeek) {
+    return hasEnd ? 'range' : 'ongoing';
+  }
+
+  if (hasStart && hasEnd) {
+    return 'range';
+  }
+
+  if (hasStart && !hasEnd) {
+    return 'ongoing';
+  }
 
   if (hasExplicitSingle) {
     return 'single';
