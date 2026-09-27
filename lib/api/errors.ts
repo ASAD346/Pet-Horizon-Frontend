@@ -30,7 +30,10 @@ export function apiErrorHandler(error: unknown): string {
       return "Connection lost. Please check your internet.";
     }
     if (error.isUnauthorized || error.status === 401) {
-      return "Incorrect password or email. Please try again.";
+      if (error.message && error.message.toLowerCase() !== 'unauthorized' && !error.message.includes('401')) {
+        return error.message;
+      }
+      return "Session expired. Please log in again.";
     }
     if (error.isForbidden || error.status === 403) {
       return "You do not have permission to perform this action.";
