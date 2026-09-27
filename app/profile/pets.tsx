@@ -75,8 +75,8 @@ function PetCardItem({
   useEffect(() => {
     Animated.timing(animValue, {
       toValue: 1,
-      duration: 320,
-      delay: Math.min(index * 60, 300),
+      duration: 300,
+      delay: Math.min(index * 50, 250),
       useNativeDriver: true,
     }).start();
   }, [animValue, index]);
@@ -98,7 +98,7 @@ function PetCardItem({
 
   const translateY = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [18, 0],
+    outputRange: [16, 0],
   });
 
   const genderIcon =
@@ -107,11 +107,6 @@ function PetCardItem({
       : pet.gender?.toLowerCase() === 'male'
       ? 'gender-male'
       : 'gender-male-female';
-
-  // Active pet gets a rich Deep Emerald gradient; Inactive gets a refined forest green gradient
-  const gradientColors = isActive
-    ? (['#0E3821', '#184F2E', '#226D3F'] as const)
-    : (['#1E3A2F', '#274B3C', '#2F5949'] as const);
 
   return (
     <Animated.View
@@ -123,27 +118,12 @@ function PetCardItem({
         },
       ]}
     >
-      <LinearGradient
-        colors={gradientColors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.petCard, isActive ? styles.petCardActive : styles.petCardInactive]}
-      >
-        {/* Decorative Background Accents */}
-        <View style={styles.cardRing1} />
-        <View style={styles.cardRing2} />
-        <MaterialCommunityIcons
-          name="paw"
-          size={78}
-          color="rgba(255, 255, 255, 0.05)"
-          style={styles.cardWatermark}
-        />
-
+      <View style={[styles.petCard, isActive ? styles.petCardActive : styles.petCardInactive]}>
         {/* Active Pill Badge on Top Right */}
         {isActive && (
           <View style={styles.activePillBadge}>
             <View style={styles.activeDot} />
-            <AppText variant="caption" weight="800" color="#FFFFFF" style={styles.activePillText}>
+            <AppText variant="caption" weight="800" color="#1B5E20" style={styles.activePillText}>
               ACTIVE
             </AppText>
           </View>
@@ -156,7 +136,7 @@ function PetCardItem({
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           disabled={isActive || isBusy}
-          activeOpacity={0.92}
+          activeOpacity={0.88}
         >
           {/* Circular Pet Avatar */}
           <View style={styles.avatarContainer}>
@@ -165,7 +145,7 @@ function PetCardItem({
                 source={{ uri: resolvedUri }}
                 style={[
                   styles.avatar,
-                  { borderColor: isActive ? '#4ADE80' : 'rgba(255, 255, 255, 0.35)' },
+                  { borderColor: isActive ? '#2E7D32' : '#E2E8F0' },
                 ]}
                 contentFit="cover"
                 cachePolicy="disk"
@@ -177,10 +157,10 @@ function PetCardItem({
                 style={[
                   styles.avatar,
                   styles.placeholderAvatar,
-                  { borderColor: isActive ? '#4ADE80' : 'rgba(255, 255, 255, 0.35)' },
+                  { borderColor: isActive ? '#2E7D32' : '#E2E8F0' },
                 ]}
               >
-                <MaterialCommunityIcons name="paw" size={28} color="#FFFFFF" />
+                <MaterialCommunityIcons name="paw" size={28} color="#2E7D32" />
               </View>
             )}
           </View>
@@ -191,7 +171,7 @@ function PetCardItem({
               <AppText
                 variant="h3"
                 weight="800"
-                color="#FFFFFF"
+                color="#0F172A"
                 numberOfLines={1}
                 style={styles.petNameText}
               >
@@ -200,15 +180,15 @@ function PetCardItem({
 
               {!isOwner && (
                 <View style={styles.sharedBadge}>
-                  <Ionicons name="people" size={11} color="#38BDF8" />
-                  <AppText variant="caption" weight="700" color="#38BDF8" style={styles.sharedText}>
+                  <Ionicons name="people" size={10} color="#0284C7" />
+                  <AppText variant="caption" weight="700" color="#0284C7" style={styles.sharedText}>
                     Shared
                   </AppText>
                 </View>
               )}
             </View>
 
-            <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.85)" numberOfLines={1} style={styles.speciesBreedText}>
+            <AppText variant="bodySmall" color="#64748B" numberOfLines={1} style={styles.speciesBreedText}>
               {pet.species ? pet.species.charAt(0).toUpperCase() + pet.species.slice(1).toLowerCase() : 'Pet'}
               {pet.breed ? ` • ${pet.breed}` : ''}
             </AppText>
@@ -217,8 +197,8 @@ function PetCardItem({
             <View style={styles.chipsContainer}>
               {pet.gender && (
                 <View style={styles.chip}>
-                  <MaterialCommunityIcons name={genderIcon as any} size={12} color="#FFFFFF" />
-                  <AppText variant="caption" weight="600" color="#FFFFFF" style={styles.chipText}>
+                  <MaterialCommunityIcons name={genderIcon as any} size={12} color="#475569" />
+                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
                     {pet.gender}
                   </AppText>
                 </View>
@@ -226,8 +206,8 @@ function PetCardItem({
 
               {age !== 'Not set' && (
                 <View style={styles.chip}>
-                  <Ionicons name="calendar-outline" size={11} color="#FFFFFF" />
-                  <AppText variant="caption" weight="600" color="#FFFFFF" style={styles.chipText}>
+                  <Ionicons name="calendar-outline" size={11} color="#475569" />
+                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
                     {age}
                   </AppText>
                 </View>
@@ -235,8 +215,8 @@ function PetCardItem({
 
               {pet.weight != null && (
                 <View style={styles.chip}>
-                  <MaterialCommunityIcons name="scale-bathroom" size={11} color="#FFFFFF" />
-                  <AppText variant="caption" weight="600" color="#FFFFFF" style={styles.chipText}>
+                  <MaterialCommunityIcons name="scale-bathroom" size={11} color="#475569" />
+                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
                     {pet.weight} {pet.weightUnit || 'kg'}
                   </AppText>
                 </View>
@@ -257,11 +237,11 @@ function PetCardItem({
                 activeOpacity={0.75}
               >
                 {isBusy ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color="#2E7D32" />
                 ) : (
                   <>
-                    <Ionicons name="swap-horizontal" size={14} color="#FFFFFF" />
-                    <AppText variant="caption" weight="800" color="#FFFFFF">
+                    <Ionicons name="swap-horizontal" size={14} color="#2E7D32" />
+                    <AppText variant="caption" weight="800" color="#2E7D32">
                       Set as Active
                     </AppText>
                   </>
@@ -269,8 +249,8 @@ function PetCardItem({
               </TouchableOpacity>
             ) : (
               <View style={styles.activeStatusHint}>
-                <Ionicons name="checkmark-circle" size={16} color="#4ADE80" />
-                <AppText variant="caption" weight="700" color="#E8F5E9">
+                <Ionicons name="checkmark-circle" size={16} color="#2E7D32" />
+                <AppText variant="caption" weight="700" color="#2E7D32">
                   Currently Selected
                 </AppText>
               </View>
@@ -285,8 +265,8 @@ function PetCardItem({
               hitSlop={6}
               activeOpacity={0.75}
             >
-              <Ionicons name="create-outline" size={14} color="#FFFFFF" />
-              <AppText variant="caption" weight="700" color="#FFFFFF" style={{ marginLeft: 4 }}>
+              <Ionicons name="create-outline" size={14} color="#334155" />
+              <AppText variant="caption" weight="700" color="#334155" style={{ marginLeft: 4 }}>
                 Edit
               </AppText>
             </TouchableOpacity>
@@ -297,11 +277,11 @@ function PetCardItem({
               hitSlop={6}
               activeOpacity={0.75}
             >
-              <Ionicons name="trash-outline" size={14} color="#FCA5A5" />
+              <Ionicons name="trash-outline" size={14} color="#EF4444" />
             </TouchableOpacity>
           </View>
         </View>
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 }
@@ -758,55 +738,33 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: Radius.lg,
     backgroundColor: 'transparent',
-    overflow: 'hidden',
   },
   petCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg,
     padding: Spacing.md,
     position: 'relative',
-    overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#0E3821',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
         shadowRadius: 8,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
   },
   petCardActive: {
     borderWidth: 1.5,
-    borderColor: '#4ADE80',
+    borderColor: '#2E7D32',
+    backgroundColor: '#FFFFFF',
   },
   petCardInactive: {
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-  },
-  cardRing1: {
-    position: 'absolute',
-    top: -30,
-    right: -20,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  cardRing2: {
-    position: 'absolute',
-    bottom: -40,
-    left: -20,
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-  },
-  cardWatermark: {
-    position: 'absolute',
-    right: 8,
-    bottom: -6,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   activePillBadge: {
     position: 'absolute',
@@ -815,19 +773,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(74, 222, 128, 0.22)',
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: 8,
-    paddingVertical: 3.5,
+    paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#4ADE80',
+    borderColor: '#A5D6A7',
     zIndex: 2,
   },
   activeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4ADE80',
+    backgroundColor: '#2E7D32',
   },
   activePillText: {
     fontSize: 9.5,
@@ -836,7 +794,6 @@ const styles = StyleSheet.create({
   cardHeaderArea: {
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 1,
   },
   avatarContainer: {
     marginRight: Spacing.md,
@@ -845,11 +802,11 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F8FAFC',
     borderWidth: 2,
   },
   placeholderAvatar: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -864,18 +821,18 @@ const styles = StyleSheet.create({
   },
   petNameText: {
     fontSize: 18,
-    letterSpacing: 0.2,
+    letterSpacing: -0.2,
   },
   sharedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: 'rgba(56, 189, 248, 0.2)',
+    backgroundColor: '#E0F2FE',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
     borderWidth: 0.8,
-    borderColor: 'rgba(56, 189, 248, 0.4)',
+    borderColor: '#BAE6FD',
   },
   sharedText: {
     fontSize: 9,
@@ -894,12 +851,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
     paddingVertical: 3.5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.18)',
+    borderColor: '#E2E8F0',
   },
   chipText: {
     fontSize: 11,
@@ -911,8 +868,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.12)',
-    zIndex: 1,
+    borderTopColor: '#F1F5F9',
   },
   footerLeft: {
     flexDirection: 'row',
@@ -922,12 +878,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: '#C8E6C9',
   },
   activeStatusHint: {
     flexDirection: 'row',
@@ -946,17 +902,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
+    borderColor: '#E2E8F0',
   },
   deleteBtn: {
     paddingHorizontal: 9,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(239, 68, 68, 0.22)',
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.35)',
+    borderColor: '#FEE2E2',
   },
 });
+
 
