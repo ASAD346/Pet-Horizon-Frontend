@@ -30,7 +30,7 @@ import { usePetPermissions } from '@/hooks/usePetPermissions';
 import { usePets } from '@/hooks/usePets';
 import { useDashboardQuery } from '@/hooks/useDashboardQuery';
 import { useTimezone } from '@/hooks/useTimezone';
-import { formatInTimeZone } from '@/lib/timezone';
+import { formatInTimeZone, parseSafeDate } from '@/lib/timezone';
 import { isScheduleActiveOnDate } from '@/lib/schedule/scheduleRecurrence';
 import { useToast } from '@/hooks/useToast';
 import { PetSwitcherSheet } from '@/components/pet/PetSwitcherSheet';
@@ -68,6 +68,7 @@ import {
   mapActivityTypeToCategory,
   formatEntryTitle,
   categoryToMaterialIcon,
+  isJournalEntryValidForTargetDate,
 } from '@/lib/journal/journalMappers';
 
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
@@ -343,9 +344,13 @@ export default function HomeScreen() {
   const petCardLoading = effectiveLoading && !effectivePet;
 
   const recentActivities = useMemo(() => {
-    const list = (effectiveDashboardData?.recentActivities ?? []).filter(
-      (entry) => entry.status !== 'missed' && !entry.note?.startsWith('Missed:')
-    );
+    const list = (effectiveDashboardData?.recentActivities ?? []).filter((entry) => {
+      if (entry.status === 'missed') return false;
+      const lowerNote = (entry.note || '').toLowerCase();
+      if (lowerNote.startsWith('missed') || lowerNote.startsWith('not performed')) return false;
+      const entryDate = parseSafeDate(entry.createdAt);
+      return isJournalEntryValidForTargetDate(entry, entryDate);
+    });
     return list.slice(0, 5).map((entry) => {
       const category = mapActivityTypeToCategory(entry.activityType);
       const colors = ACTIVITY_COLORS[category] || ACTIVITY_COLORS.general;
