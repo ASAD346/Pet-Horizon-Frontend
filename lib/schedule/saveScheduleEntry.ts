@@ -194,11 +194,17 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
 
   const notificationIds = await scheduleLocalNotificationsForEntry(entry, 'medicine', petId);
 
+  const isSingle = entry.scheduleDate?.mode === 'single';
+  const frequency = isSingle ? undefined : entry.frequency;
+  const daysOfWeek = (!isSingle && entry.frequency === 'weekly') ? entry.daysOfWeek : undefined;
+
   if (entry.scheduleId) {
     await updateMedicineSchedule(token, entry.scheduleId, {
       dose,
       time: timeHHmm,
       doseForm: entry.doseForm,
+      frequency,
+      daysOfWeek,
       ...datePayload,
       notes: noteText || undefined,
       reminder: entry.reminderOn,
@@ -217,8 +223,8 @@ async function saveMedicineEntry(token: string, petId: string, entry: MedicineEn
     dose,
     time: timeHHmm,
     doseForm: entry.doseForm,
-    frequency: entry.frequency,
-    daysOfWeek: entry.frequency === 'weekly' ? entry.daysOfWeek : undefined,
+    frequency,
+    daysOfWeek,
     notes: noteText || undefined,
     ...datePayload,
     reminder: entry.reminderOn,

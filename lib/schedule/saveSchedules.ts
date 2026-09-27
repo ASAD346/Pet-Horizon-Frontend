@@ -145,6 +145,9 @@ export async function saveAllSchedules(
       }
       const timeHHmm = dateToTimeHHmm(entry.medicineTime);
       const noteText = entry.notes.trim();
+      const isSingle = entry.scheduleDate?.mode === 'single';
+      const frequency = isSingle ? undefined : entry.frequency;
+      const daysOfWeek = (!isSingle && entry.frequency === 'weekly') ? entry.daysOfWeek : undefined;
       try {
         await createMedicineSchedule(token, {
           petId,
@@ -152,8 +155,8 @@ export async function saveAllSchedules(
           dose,
           time: timeHHmm,
           doseForm: entry.doseForm,
-          frequency: entry.frequency,
-          daysOfWeek: entry.frequency === 'weekly' ? entry.daysOfWeek : undefined,
+          frequency,
+          daysOfWeek,
           notes: noteText || undefined,
           ...buildScheduleDatePayload(entry.scheduleDate),
           reminder: entry.reminderOn,
