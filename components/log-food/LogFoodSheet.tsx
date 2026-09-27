@@ -62,7 +62,7 @@ export function LogFoodSheet({
   const [saving, setSaving] = useState(false);
   const { showToast, showErrorToast } = useToast();
 
-  const [entry, setEntry] = useState<FeedingEntryState>(() => ({
+  const [entry, setEntry] = useState<FeedingEntryState>(() => (initialEntry ? { ...initialEntry } : {
     id: 'draft',
     mealType: '',
     amount: '2',
@@ -97,11 +97,10 @@ export function LogFoodSheet({
       setMealTypeOptions(propsMealTypeOptions);
       setUnitOptions(propsUnitOptions);
       setEntry((prev) => {
-        const mealVal = initialEntry?.mealType || prev.mealType || (propsMealTypeOptions[0]?.value ?? '');
-        const unitVal = initialEntry?.unit || prev.unit || propsUnitOptions[0]?.value || '';
+        const mealVal = prev.mealType || initialEntry?.mealType || (propsMealTypeOptions[0]?.value ?? '');
+        const unitVal = prev.unit || initialEntry?.unit || propsUnitOptions[0]?.value || '';
         return {
           ...prev,
-          ...initialEntry,
           mealType: mealVal,
           unit: unitVal,
         };
@@ -130,11 +129,10 @@ export function LogFoodSheet({
       setMealTypeOptions(mealOptions);
       setUnitOptions(unitOpts);
       setEntry((prev) => {
-        const mealVal = initialEntry?.mealType || prev.mealType || (mealOptions[0]?.value ?? '');
-        const unitVal = initialEntry?.unit || prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []);
+        const mealVal = prev.mealType || initialEntry?.mealType || (mealOptions[0]?.value ?? '');
+        const unitVal = prev.unit || initialEntry?.unit || pickDefaultUnit(features?.inventoryUnits ?? []);
         return {
           ...prev,
-          ...initialEntry,
           mealType: mealVal,
           unit: unitVal,
         };
@@ -152,11 +150,10 @@ export function LogFoodSheet({
       setMealTypeOptions(mealOptions);
       setUnitOptions(unitOpts);
       setEntry((prev) => {
-        const mealVal = initialEntry?.mealType || prev.mealType || (mealOptions[0]?.value ?? '');
-        const unitVal = initialEntry?.unit || prev.unit || pickDefaultUnit(features?.inventoryUnits ?? []);
+        const mealVal = prev.mealType || initialEntry?.mealType || (mealOptions[0]?.value ?? '');
+        const unitVal = prev.unit || initialEntry?.unit || pickDefaultUnit(features?.inventoryUnits ?? []);
         return {
           ...prev,
-          ...initialEntry,
           mealType: mealVal,
           unit: unitVal,
         };
@@ -169,7 +166,7 @@ export function LogFoodSheet({
     } finally {
       setFeaturesLoading(false);
     }
-  }, [petId, token, propsMealTypeOptions, propsUnitOptions, showErrorToast]);
+  }, [petId, token, propsMealTypeOptions, propsUnitOptions, initialEntry, showErrorToast]);
 
   useEffect(() => {
     if (visible) {

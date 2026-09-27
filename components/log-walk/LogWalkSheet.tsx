@@ -48,7 +48,7 @@ export function LogWalkSheet({
   const { canEdit, loading: permissionsLoading } = usePermissionGuard(petId, 'walks');
   const resolvedReadOnly = isReadOnly || !canEdit;
 
-  const [entry, setEntry] = useState<WalkEntryState>(() => ({
+  const [entry, setEntry] = useState<WalkEntryState>(() => (initialEntry ? { ...initialEntry } : {
     id: 'draft',
     walkTime: WALK_TIME_OPTIONS[0].value,
     duration: '',

@@ -68,21 +68,29 @@ function normalizeVaccinationFrequency(value: unknown): VaccinationReminderFrequ
 
 export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
   const meta = item.metadata ?? {};
+  let mealType = meta.mealType ?? (item as any).mealType ?? '';
+  if (!mealType && item.title) {
+    mealType = item.title.toLowerCase().replace(/\s+feeding$/i, '').trim();
+  }
+  const amount = meta.amount != null ? String(meta.amount) : ((item as any).amount != null ? String((item as any).amount) : '');
+  const unit = meta.unit ?? (item as any).unit ?? '';
+  const timeStr = item.timeOfDay || (item as any).time || (meta as any).time || '08:00';
+
   return {
     id: newEntryId(),
     scheduleId: item._id,
-    mealType: meta.mealType ?? '',
-    amount: meta.amount ?? '',
-    unit: meta.unit ?? '',
-    feedingTime: timeHHmmToDate(item.timeOfDay),
+    mealType,
+    amount,
+    unit,
+    feedingTime: timeHHmmToDate(timeStr),
     scheduleDate: parseScheduleDateFromApi({
-      date: (item as FeedingScheduleItem & { date?: string }).date,
-      startDate: (item as FeedingScheduleItem & { startDate?: string }).startDate,
-      endDate: (item as FeedingScheduleItem & { endDate?: string }).endDate,
+      date: (item as any).date ?? meta.date,
+      startDate: (item as any).startDate ?? meta.startDate,
+      endDate: (item as any).endDate ?? meta.endDate,
     }),
-    notificationsOn: meta.reminder === true,
-    reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
-    notes: meta.notes ?? item.notes ?? item.description ?? '',
+    notificationsOn: meta.reminder === true || (item as any).reminder === true,
+    reminderMinutes: meta.reminderMinutes ?? (item as any).reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
+    notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
   };
@@ -90,21 +98,23 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
 
 export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
   const meta = item.metadata ?? {};
-  const durationVal = meta.duration != null ? String(meta.duration) : (item.duration != null ? String(item.duration) : '');
+  const durationVal = meta.duration != null ? String(meta.duration) : ((item as any).duration != null ? String((item as any).duration) : '');
+  const timeStr = item.timeOfDay || (item as any).time || (meta as any).time || '08:00';
+
   return {
     id: newEntryId(),
     scheduleId: item._id,
-    walkTime: meta.walkTime ?? 'morning',
+    walkTime: meta.walkTime ?? (item as any).walkTime ?? 'morning',
     duration: durationVal,
-    walkClockTime: timeHHmmToDate(item.timeOfDay),
+    walkClockTime: timeHHmmToDate(timeStr),
     scheduleDate: parseScheduleDateFromApi({
-      date: (item as WalkScheduleItem & { date?: string }).date,
-      startDate: (item as WalkScheduleItem & { startDate?: string }).startDate,
-      endDate: (item as WalkScheduleItem & { endDate?: string }).endDate,
+      date: (item as any).date ?? meta.date,
+      startDate: (item as any).startDate ?? meta.startDate,
+      endDate: (item as any).endDate ?? meta.endDate,
     }),
-    notificationsOn: meta.reminder === true,
-    reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
-    notes: meta.notes ?? item.notes ?? item.description ?? '',
+    notificationsOn: meta.reminder === true || (item as any).reminder === true,
+    reminderMinutes: meta.reminderMinutes ?? (item as any).reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
+    notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
   };
@@ -112,30 +122,37 @@ export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
 
 export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState {
   const meta = item.metadata ?? {};
-  const parsed = parseDoseString(meta.dose ?? '');
+  const rawDose = meta.dose ?? (item as any).dose ?? '';
+  const parsed = parseDoseString(rawDose);
+  const timeStr = item.timeOfDay || (item as any).time || (meta as any).time || '08:00';
+
   return {
     id: newEntryId(),
     scheduleId: item._id,
-    medicineName: meta.medicineName ?? item.title.split(' - ')[0] ?? '',
-    doseAmount: parsed.amount,
-    doseForm: meta.doseForm ?? parsed.doseForm,
-    frequency: meta.frequency ?? 'daily',
-    daysOfWeek: meta.daysOfWeek ?? [],
-    medicineTime: timeHHmmToDate(item.timeOfDay),
+    medicineName: meta.medicineName ?? (item as any).medicineName ?? (item.title ? item.title.split(' - ')[0] : '') ?? '',
+    doseAmount: meta.doseAmount != null ? String(meta.doseAmount) : ((item as any).doseAmount != null ? String((item as any).doseAmount) : (parsed.amount || '')),
+    doseForm: meta.doseForm ?? (item as any).doseForm ?? parsed.doseForm ?? 'tablet',
+    frequency: meta.frequency ?? (item as any).frequency ?? 'daily',
+    daysOfWeek: meta.daysOfWeek ?? (item as any).daysOfWeek ?? [],
+    medicineTime: timeHHmmToDate(timeStr),
     scheduleDate: parseScheduleDateFromApi({
-      date: (item as MedicineScheduleItem & { date?: string }).date,
-      startDate: item.startDate,
-      endDate: item.endDate,
+      date: (item as any).date ?? meta.date,
+      startDate: item.startDate ?? meta.startDate,
+      endDate: item.endDate ?? meta.endDate,
     }),
     totalPills:
       meta.totalPills != null
         ? String(meta.totalPills)
-        : meta.remainingPills != null
-          ? String(meta.remainingPills)
-          : undefined,
-    reminderOn: meta.reminder === true,
-    reminderMinutes: meta.reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
-    notes: meta.notes ?? item.notes ?? item.description ?? '',
+        : (item as any).totalPills != null
+          ? String((item as any).totalPills)
+          : meta.remainingPills != null
+            ? String(meta.remainingPills)
+            : (item as any).remainingPills != null
+              ? String((item as any).remainingPills)
+              : undefined,
+    reminderOn: meta.reminder === true || (item as any).reminder === true,
+    reminderMinutes: meta.reminderMinutes ?? (item as any).reminderMinutes ?? DEFAULT_REMINDER_MINUTES,
+    notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
   };
@@ -143,22 +160,24 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
 
 export function mapVaccinationItem(item: VaccinationScheduleItem): VaccinationEntryState {
   const meta = item.metadata ?? {};
-  const dueRaw = meta.dueDate ?? item.startDate;
+  const dueRaw = meta.dueDate ?? (item as any).dueDate ?? item.startDate ?? (item as any).date;
+  const timeStr = meta.reminderTime ?? (item as any).reminderTime ?? item.reminderTime ?? '09:00';
+
   return {
     id: newEntryId(),
     scheduleId: item._id,
-    vaccineName: meta.vaccineName ?? item.title ?? '',
+    vaccineName: meta.vaccineName ?? (item as any).vaccineName ?? (item as any).name ?? item.title ?? '',
     scheduleDate: parseScheduleDateFromApi({
       date: dueRaw ?? undefined,
-      startDate: item.startDate,
-      endDate: item.endDate,
+      startDate: item.startDate ?? meta.startDate,
+      endDate: item.endDate ?? meta.endDate,
     }),
-    reminderOn: meta.reminder === true,
-    frequency: normalizeVaccinationFrequency(meta.frequency),
-    reminderTime: timeHHmmToDate(meta.reminderTime ?? '09:00'),
-    isRecurring: meta.isRecurring ?? false,
-    recurrenceInterval: meta.recurrenceInterval ?? 'yearly',
-    notes: meta.notes ?? item.notes ?? item.description ?? '',
+    reminderOn: meta.reminder === true || (item as any).reminder === true,
+    frequency: normalizeVaccinationFrequency(meta.frequency ?? (item as any).frequency),
+    reminderTime: timeHHmmToDate(timeStr),
+    isRecurring: meta.isRecurring === true || (item as any).isRecurring === true,
+    recurrenceInterval: meta.recurrenceInterval ?? (item as any).recurrenceInterval ?? 'yearly',
+    notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
   };
@@ -168,13 +187,13 @@ export function mapGroomingItem(item: GroomingRecord): GroomingEntryState {
   return {
     id: newEntryId(),
     recordId: item._id,
-    groomingType: item.groomingType,
+    groomingType: item.groomingType ?? (item as any).type ?? '',
     scheduleDate: parseScheduleDateFromApi({
       date: item.scheduledDate ?? item.date ?? undefined,
       startDate: item.startDate ?? undefined,
       endDate: item.endDate ?? undefined,
     }),
-    reminderOn: item.reminderEnabled === true,
+    reminderOn: item.reminderEnabled === true || (item as any).reminder === true,
     notes: item.notes ?? '',
     performedAt: item.performedAt ?? undefined,
   };
