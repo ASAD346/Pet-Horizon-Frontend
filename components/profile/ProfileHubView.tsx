@@ -372,7 +372,7 @@ export function ProfileHubView() {
           <ProfileMenuRow
             icon="globe-outline"
             title="Localization Settings"
-            subtitle="Currency and measurement units"
+            subtitle="Timezone, currency & regional settings"
             onPress={() => setLocalizationVisible(true)}
           />
           <ProfileMenuRow
