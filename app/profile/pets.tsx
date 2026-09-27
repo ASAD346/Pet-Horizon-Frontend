@@ -230,30 +230,42 @@ function PetCardItem({
               {pet.breed ? ` • ${pet.breed}` : ''}
             </AppText>
 
-            {/* Info Chips */}
-            <View style={styles.chipsContainer}>
+            {/* Info Text Meta Row */}
+            <View style={styles.metaRow}>
               {pet.gender && (
-                <View style={styles.chip}>
-                  <MaterialCommunityIcons name={genderIcon as any} size={12} color="#475569" />
-                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                <View style={styles.metaItem}>
+                  <MaterialCommunityIcons name={genderIcon as any} size={12} color="#64748B" />
+                  <AppText variant="caption" color="#475569" weight="600" style={styles.metaText}>
                     {pet.gender}
                   </AppText>
                 </View>
               )}
 
+              {pet.gender && age !== 'Not set' && (
+                <AppText variant="caption" color="#CBD5E1">
+                  •
+                </AppText>
+              )}
+
               {age !== 'Not set' && (
-                <View style={styles.chip}>
-                  <Ionicons name="calendar-outline" size={11} color="#475569" />
-                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                <View style={styles.metaItem}>
+                  <Ionicons name="calendar-outline" size={11} color="#64748B" />
+                  <AppText variant="caption" color="#475569" weight="600" style={styles.metaText}>
                     {age}
                   </AppText>
                 </View>
               )}
 
+              {((pet.gender && age === 'Not set') || age !== 'Not set') && pet.weight != null && (
+                <AppText variant="caption" color="#CBD5E1">
+                  •
+                </AppText>
+              )}
+
               {pet.weight != null && (
-                <View style={styles.chip}>
-                  <MaterialCommunityIcons name="scale-bathroom" size={11} color="#475569" />
-                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                <View style={styles.metaItem}>
+                  <MaterialCommunityIcons name="scale-bathroom" size={11} color="#64748B" />
+                  <AppText variant="caption" color="#475569" weight="600" style={styles.metaText}>
                     {pet.weight} {pet.weightUnit || 'kg'}
                   </AppText>
                 </View>
@@ -880,25 +892,20 @@ const styles = StyleSheet.create({
     marginTop: 2,
     marginBottom: Spacing.xs,
   },
-  chipsContainer: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     flexWrap: 'wrap',
+    marginTop: 1,
   },
-  chip: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    gap: 3,
   },
-  chipText: {
-    fontSize: 11,
+  metaText: {
+    fontSize: 12,
   },
   cardFooter: {
     flexDirection: 'row',
