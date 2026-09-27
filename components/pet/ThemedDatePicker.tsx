@@ -11,11 +11,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Palette, Spacing } from '../../constants/theme';
+import { useAppThemeColor } from '../sheets/useAppThemeColor';
 
 interface ThemedDatePickerProps {
   visible: boolean;
   value: Date;
   title?: string;
+  accentColor?: string;
+  accentBg?: string;
   minimumDate?: Date;
   maximumDate?: Date;
   onClose: () => void;
@@ -52,11 +55,17 @@ export function ThemedDatePicker({
   visible,
   value,
   title = 'Select Date',
+  accentColor: customAccent,
+  accentBg: customAccentBg,
   minimumDate,
   maximumDate,
   onClose,
   onConfirm,
 }: ThemedDatePickerProps) {
+  const { accentColor: defaultAccent, accentBg: defaultAccentBg } = useAppThemeColor();
+  const themeAccent = customAccent || defaultAccent;
+  const themeAccentBg = customAccentBg || defaultAccentBg;
+
   const initialDate = value instanceof Date && !isNaN(value.getTime()) ? value : new Date();
   const [selectedDate, setSelectedDate] = useState<Date>(initialDate);
   const [displayMonth, setDisplayMonth] = useState<number>(initialDate.getMonth());
@@ -219,12 +228,15 @@ export function ThemedDatePicker({
             </View>
 
             <TouchableOpacity
-              style={styles.todayButton}
+              style={[
+                styles.todayButton,
+                { backgroundColor: themeAccentBg, borderColor: themeAccent },
+              ]}
               onPress={handleJumpToToday}
               activeOpacity={0.7}
             >
-              <Ionicons name="calendar-outline" size={13} color="#3A8F3B" style={{ marginRight: 4 }} />
-              <AppText variant="caption" weight="700" color="#3A8F3B">
+              <Ionicons name="calendar-outline" size={13} color={themeAccent} style={{ marginRight: 4 }} />
+              <AppText variant="caption" weight="700" color={themeAccent}>
                 Today
               </AppText>
             </TouchableOpacity>
@@ -243,7 +255,7 @@ export function ThemedDatePicker({
               <Ionicons
                 name={showYearMonthPicker ? 'chevron-up' : 'chevron-down'}
                 size={18}
-                color="#3A8F3B"
+                color={themeAccent}
                 style={{ marginLeft: 6 }}
               />
             </TouchableOpacity>
@@ -287,7 +299,10 @@ export function ThemedDatePicker({
                           key={m}
                           style={[
                             styles.monthChip,
-                            isSelected && styles.monthChipSelected,
+                            isSelected && [
+                              styles.monthChipSelected,
+                              { backgroundColor: themeAccent, borderColor: themeAccent },
+                            ],
                           ]}
                           onPress={() => {
                             setDisplayMonth(idx);
@@ -326,7 +341,10 @@ export function ThemedDatePicker({
                         key={y}
                         style={[
                           styles.yearItem,
-                          isSelected && styles.yearItemSelected,
+                          isSelected && [
+                            styles.yearItemSelected,
+                            { backgroundColor: themeAccentBg },
+                          ],
                         ]}
                         onPress={() => {
                           setDisplayYear(y);
@@ -337,12 +355,12 @@ export function ThemedDatePicker({
                         <AppText
                           variant="body"
                           weight={isSelected ? '800' : '600'}
-                          color={isSelected ? '#3A8F3B' : '#334155'}
+                          color={isSelected ? themeAccent : '#334155'}
                         >
                           {y}
                         </AppText>
                         {isSelected && (
-                          <Ionicons name="checkmark-circle" size={16} color="#3A8F3B" />
+                          <Ionicons name="checkmark-circle" size={16} color={themeAccent} />
                         )}
                       </TouchableOpacity>
                     );
@@ -387,8 +405,14 @@ export function ThemedDatePicker({
                         activeOpacity={0.7}
                         style={[
                           styles.dayCell,
-                          isSelected && styles.dayCellSelected,
-                          !isSelected && isToday && styles.dayCellToday,
+                          isSelected && [
+                            styles.dayCellSelected,
+                            { backgroundColor: themeAccent, shadowColor: themeAccent },
+                          ],
+                          !isSelected && isToday && [
+                            styles.dayCellToday,
+                            { backgroundColor: themeAccentBg, borderColor: themeAccent },
+                          ],
                         ]}
                       >
                         <AppText
@@ -402,13 +426,15 @@ export function ThemedDatePicker({
                               : !isCurrentMonth
                               ? '#94A3B8'
                               : isToday
-                              ? '#2E7D32'
+                              ? themeAccent
                               : '#1E293B'
                           }
                         >
                           {dayNumber}
                         </AppText>
-                        {!isSelected && isToday && <View style={styles.todayDot} />}
+                        {!isSelected && isToday && (
+                          <View style={[styles.todayDot, { backgroundColor: themeAccent }]} />
+                        )}
                       </TouchableOpacity>
                     </View>
                   );
@@ -430,7 +456,10 @@ export function ThemedDatePicker({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.confirmButton}
+              style={[
+                styles.confirmButton,
+                { backgroundColor: themeAccent, shadowColor: themeAccent },
+              ]}
               onPress={() => {
                 onConfirm(selectedDate);
                 onClose();

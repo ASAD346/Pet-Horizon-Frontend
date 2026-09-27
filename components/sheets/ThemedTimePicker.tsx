@@ -10,11 +10,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Palette, Spacing } from '../../constants/theme';
+import { useAppThemeColor } from './useAppThemeColor';
 
 interface ThemedTimePickerProps {
   visible: boolean;
   value: Date;
   title?: string;
+  accentColor?: string;
+  accentBg?: string;
   onClose: () => void;
   onConfirm: (date: Date) => void;
 }
@@ -33,9 +36,15 @@ export function ThemedTimePicker({
   visible,
   value,
   title = 'Select Time',
+  accentColor: customAccent,
+  accentBg: customAccentBg,
   onClose,
   onConfirm,
 }: ThemedTimePickerProps) {
+  const { accentColor: defaultAccent, accentBg: defaultAccentBg } = useAppThemeColor();
+  const themeAccent = customAccent || defaultAccent;
+  const themeAccentBg = customAccentBg || defaultAccentBg;
+
   const [selectedHour, setSelectedHour] = useState<number>(12);
   const [selectedMinute, setSelectedMinute] = useState<number>(0);
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('AM');
@@ -120,7 +129,10 @@ export function ThemedTimePicker({
                 <TouchableOpacity
                   style={[
                     styles.timeSegmentButton,
-                    activeTab === 'hour' && styles.timeSegmentButtonActive,
+                    activeTab === 'hour' && [
+                      styles.timeSegmentButtonActive,
+                      { backgroundColor: themeAccentBg, borderColor: themeAccent },
+                    ],
                   ]}
                   onPress={() => setActiveTab('hour')}
                   activeOpacity={0.7}
@@ -128,7 +140,7 @@ export function ThemedTimePicker({
                   <AppText
                     variant="h2"
                     weight="800"
-                    color={activeTab === 'hour' ? '#3A8F3B' : '#1E293B'}
+                    color={activeTab === 'hour' ? themeAccent : '#1E293B'}
                   >
                     {formattedTimePreview.hStr}
                   </AppText>
@@ -142,7 +154,10 @@ export function ThemedTimePicker({
                 <TouchableOpacity
                   style={[
                     styles.timeSegmentButton,
-                    activeTab === 'minute' && styles.timeSegmentButtonActive,
+                    activeTab === 'minute' && [
+                      styles.timeSegmentButtonActive,
+                      { backgroundColor: themeAccentBg, borderColor: themeAccent },
+                    ],
                   ]}
                   onPress={() => setActiveTab('minute')}
                   activeOpacity={0.7}
@@ -150,7 +165,7 @@ export function ThemedTimePicker({
                   <AppText
                     variant="h2"
                     weight="800"
-                    color={activeTab === 'minute' ? '#3A8F3B' : '#1E293B'}
+                    color={activeTab === 'minute' ? themeAccent : '#1E293B'}
                   >
                     {formattedTimePreview.mStr}
                   </AppText>
@@ -163,7 +178,10 @@ export function ThemedTimePicker({
               <TouchableOpacity
                 style={[
                   styles.periodButton,
-                  selectedPeriod === 'AM' && styles.periodButtonActive,
+                  selectedPeriod === 'AM' && [
+                    styles.periodButtonActive,
+                    { backgroundColor: themeAccent, shadowColor: themeAccent },
+                  ],
                 ]}
                 onPress={() => setSelectedPeriod('AM')}
                 activeOpacity={0.8}
@@ -179,7 +197,10 @@ export function ThemedTimePicker({
               <TouchableOpacity
                 style={[
                   styles.periodButton,
-                  selectedPeriod === 'PM' && styles.periodButtonActive,
+                  selectedPeriod === 'PM' && [
+                    styles.periodButtonActive,
+                    { backgroundColor: themeAccent, shadowColor: themeAccent },
+                  ],
                 ]}
                 onPress={() => setSelectedPeriod('PM')}
                 activeOpacity={0.8}
@@ -207,20 +228,26 @@ export function ThemedTimePicker({
                 return (
                   <TouchableOpacity
                     key={p.label}
-                    style={[styles.presetChip, isMatch && styles.presetChipActive]}
+                    style={[
+                      styles.presetChip,
+                      isMatch && [
+                        styles.presetChipActive,
+                        { backgroundColor: themeAccentBg, borderColor: themeAccent },
+                      ],
+                    ]}
                     onPress={() => handlePresetSelect(p)}
                     activeOpacity={0.7}
                   >
                     <Ionicons
                       name="time-outline"
                       size={12}
-                      color={isMatch ? '#3A8F3B' : '#64748B'}
+                      color={isMatch ? themeAccent : '#64748B'}
                       style={{ marginRight: 4 }}
                     />
                     <AppText
                       variant="caption"
                       weight={isMatch ? '800' : '600'}
-                      color={isMatch ? '#3A8F3B' : '#475569'}
+                      color={isMatch ? themeAccent : '#475569'}
                     >
                       {p.label}
                     </AppText>
@@ -233,28 +260,40 @@ export function ThemedTimePicker({
           {/* Tabs Indicator (Hour vs Minute) */}
           <View style={styles.tabSelectorRow}>
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'hour' && styles.tabButtonActive]}
+              style={[
+                styles.tabButton,
+                activeTab === 'hour' && [
+                  styles.tabButtonActive,
+                  { borderBottomColor: themeAccent },
+                ],
+              ]}
               onPress={() => setActiveTab('hour')}
               activeOpacity={0.7}
             >
               <AppText
                 variant="bodySmall"
                 weight={activeTab === 'hour' ? '800' : '600'}
-                color={activeTab === 'hour' ? '#3A8F3B' : '#64748B'}
+                color={activeTab === 'hour' ? themeAccent : '#64748B'}
               >
                 Hours (1 - 12)
               </AppText>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.tabButton, activeTab === 'minute' && styles.tabButtonActive]}
+              style={[
+                styles.tabButton,
+                activeTab === 'minute' && [
+                  styles.tabButtonActive,
+                  { borderBottomColor: themeAccent },
+                ],
+              ]}
               onPress={() => setActiveTab('minute')}
               activeOpacity={0.7}
             >
               <AppText
                 variant="bodySmall"
                 weight={activeTab === 'minute' ? '800' : '600'}
-                color={activeTab === 'minute' ? '#3A8F3B' : '#64748B'}
+                color={activeTab === 'minute' ? themeAccent : '#64748B'}
               >
                 Minutes (00 - 55)
               </AppText>
@@ -269,7 +308,13 @@ export function ThemedTimePicker({
                 return (
                   <View key={h} style={styles.gridCellWrapper}>
                     <TouchableOpacity
-                      style={[styles.gridCell, isSelected && styles.gridCellSelected]}
+                      style={[
+                        styles.gridCell,
+                        isSelected && [
+                          styles.gridCellSelected,
+                          { backgroundColor: themeAccent, borderColor: themeAccent, shadowColor: themeAccent },
+                        ],
+                      ]}
                       onPress={() => handleHourSelect(h)}
                       activeOpacity={0.7}
                     >
@@ -294,7 +339,13 @@ export function ThemedTimePicker({
                   return (
                     <View key={m} style={styles.gridCellWrapper}>
                       <TouchableOpacity
-                        style={[styles.gridCell, isSelected && styles.gridCellSelected]}
+                        style={[
+                          styles.gridCell,
+                          isSelected && [
+                            styles.gridCellSelected,
+                            { backgroundColor: themeAccent, borderColor: themeAccent, shadowColor: themeAccent },
+                          ],
+                        ]}
                         onPress={() => setSelectedMinute(m)}
                         activeOpacity={0.7}
                       >
@@ -328,8 +379,13 @@ export function ThemedTimePicker({
                     </AppText>
                   </TouchableOpacity>
 
-                  <View style={styles.exactMinuteBadge}>
-                    <AppText variant="bodySmall" weight="800" color="#3A8F3B">
+                  <View
+                    style={[
+                      styles.exactMinuteBadge,
+                      { backgroundColor: themeAccentBg, borderColor: themeAccent },
+                    ]}
+                  >
+                    <AppText variant="bodySmall" weight="800" color={themeAccent}>
                       {selectedMinute < 10 ? `0${selectedMinute}` : `${selectedMinute}`} min
                     </AppText>
                   </View>
@@ -362,7 +418,10 @@ export function ThemedTimePicker({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.confirmButton}
+              style={[
+                styles.confirmButton,
+                { backgroundColor: themeAccent, shadowColor: themeAccent },
+              ]}
               onPress={handleConfirm}
               activeOpacity={0.85}
             >
