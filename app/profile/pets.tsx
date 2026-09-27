@@ -34,10 +34,45 @@ import { clearActivePetCache } from '@/lib/pet/activePetCache';
 import { calculatePetAge } from '@/lib/pet/birthdayUtils';
 import { fetchAccessiblePets } from '@/lib/pet/fetchAccessiblePets';
 import { clearPetListCache, getPetListCache, setPetListCache } from '@/lib/pet/petListCache';
+import { getStoredSharedPetIds } from '@/lib/pet/sharedPetIdsStorage';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { deletePet } from '@/services/pets/petApi';
 import type { ApiPet } from '@/types/pet';
 import { isPetOwner } from '@/lib/family/formatters';
+
+export function checkIsPetOwner(
+  pet: ApiPet,
+  userId?: string | null,
+  sharedPetIds: string[] = [],
+): boolean {
+  if (pet?._id && sharedPetIds.includes(pet._id)) {
+    return false;
+  }
+  if ((pet as any)?.isShared === true || (pet as any)?.role === 'member' || (pet as any)?.isMember === true) {
+    return false;
+  }
+  if ((pet as any)?.isOwner === true || (pet as any)?.role === 'owner') {
+    return true;
+  }
+
+  const rawOwner =
+    pet.ownerUserId ??
+    (pet as any)?.ownerId ??
+    (pet as any)?.owner ??
+    (pet as any)?.userId ??
+    (pet as any)?.createdBy;
+
+  const rawOwnerId =
+    rawOwner && typeof rawOwner === 'object'
+      ? rawOwner._id ?? rawOwner.id
+      : rawOwner;
+
+  if (rawOwnerId && userId) {
+    return String(rawOwnerId) === String(userId);
+  }
+
+  return true;
+}
 
 interface PetCardItemProps {
   pet: ApiPet;
@@ -45,6 +80,7 @@ interface PetCardItemProps {
   isActive: boolean;
   isBusy: boolean;
   currentUserId?: string;
+  sharedPetIds?: string[];
   onSelectActive: (pet: ApiPet) => void;
   onEdit: (pet: ApiPet) => void;
   onDelete: (pet: ApiPet) => void;
@@ -56,12 +92,13 @@ function PetCardItem({
   isActive,
   isBusy,
   currentUserId,
+  sharedPetIds = [],
   onSelectActive,
   onEdit,
   onDelete,
 }: PetCardItemProps) {
   const [imageError, setImageError] = useState(false);
-  const isOwner = isPetOwner(pet.ownerUserId, currentUserId);
+  const isOwner = checkIsPetOwner(pet, currentUserId, sharedPetIds);
   const age = calculatePetAge(pet.birthday);
 
   const rawImg = pet.image || (pet as any).photoUrl || (pet as any).imageUrl || (pet as any).avatar;
@@ -119,7 +156,7 @@ function PetCardItem({
       ]}
     >
       <View style={[styles.petCard, isActive ? styles.petCardActive : styles.petCardInactive]}>
-        {/* Top Right Badges: Role (Owner / Shared) & Active Status */}
+        {/* Top Right Badges: Role (Owner / Member) & Active Status */}
         <View style={styles.topRightBadges}>
           {isOwner ? (
             <View style={styles.ownerRoleBadge}>
@@ -132,7 +169,7 @@ function PetCardItem({
             <View style={styles.sharedRoleBadge}>
               <Ionicons name="people" size={10} color="#0369A1" />
               <AppText variant="caption" weight="800" color="#0369A1" style={styles.roleBadgeText}>
-                SHARED
+                MEMBER
               </AppText>
             </View>
           )}
@@ -306,6 +343,7 @@ export default function ManagePetsScreen() {
   const initialCache = getPetListCache(scopeKey);
 
   const [pets, setPets] = useState<ApiPet[]>(() => initialCache ?? []);
+  const [sharedPetIds, setSharedPetIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(() => !initialCache || initialCache.length === 0);
   const [refreshing, setRefreshing] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
@@ -324,8 +362,12 @@ export default function ManagePetsScreen() {
         setLoading(true);
       }
       try {
-        const data = await fetchAccessiblePets(token, user?._id);
+        const [data, storedShared] = await Promise.all([
+          fetchAccessiblePets(token, user?._id),
+          getStoredSharedPetIds(user?._id),
+        ]);
         setPets(data);
+        setSharedPetIds(storedShared);
         if (scopeKey) {
           setPetListCache(scopeKey, data);
         }
@@ -555,6 +597,7 @@ export default function ManagePetsScreen() {
                 isActive={pet._id === activePetId}
                 isBusy={switchingId === pet._id}
                 currentUserId={user?._id}
+                sharedPetIds={sharedPetIds}
                 onSelectActive={handleSelectActive}
                 onEdit={handleEditPet}
                 onDelete={handleDeletePress}
