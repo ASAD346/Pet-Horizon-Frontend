@@ -100,8 +100,9 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
       map[d.id] = [];
     });
     entries.forEach((entry) => {
-      const dateKey = toDateKey(parseSafeDate(entry.createdAt));
-      if (map[dateKey] !== undefined) {
+      const entryDate = parseSafeDate(entry.createdAt);
+      const dateKey = toDateKey(entryDate);
+      if (map[dateKey] !== undefined && isJournalEntryValidForTargetDate(entry, entryDate)) {
         const cat = mapActivityTypeToCategory(entry.activityType);
         if (!map[dateKey].includes(cat)) {
           map[dateKey].push(cat);
