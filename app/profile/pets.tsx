@@ -22,7 +22,7 @@ import { CustomButton } from '@/components/ui/AppButton';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
 import { ProfileTheme } from '@/components/profile/profileTheme';
-import { Palette, Radius, Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
@@ -33,7 +33,7 @@ import { activatePetSession } from '@/lib/pet/activatePetSession';
 import { clearActivePetCache } from '@/lib/pet/activePetCache';
 import { calculatePetAge } from '@/lib/pet/birthdayUtils';
 import { fetchAccessiblePets } from '@/lib/pet/fetchAccessiblePets';
-import { clearPetListCache } from '@/lib/pet/petListCache';
+import { clearPetListCache, getPetListCache, setPetListCache } from '@/lib/pet/petListCache';
 import { canAddAnotherPet } from '@/lib/premium/canAddPet';
 import { deletePet } from '@/services/pets/petApi';
 import type { ApiPet } from '@/types/pet';
@@ -75,15 +75,15 @@ function PetCardItem({
   useEffect(() => {
     Animated.timing(animValue, {
       toValue: 1,
-      duration: 350,
-      delay: Math.min(index * 70, 400),
+      duration: 320,
+      delay: Math.min(index * 60, 300),
       useNativeDriver: true,
     }).start();
   }, [animValue, index]);
 
   const handlePressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.98,
+      toValue: 0.985,
       useNativeDriver: true,
     }).start();
   };
@@ -91,15 +91,27 @@ function PetCardItem({
   const handlePressOut = () => {
     Animated.spring(scaleAnim, {
       toValue: 1,
-      friction: 4,
+      friction: 5,
       useNativeDriver: true,
     }).start();
   };
 
   const translateY = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [24, 0],
+    outputRange: [18, 0],
   });
+
+  const genderIcon =
+    pet.gender?.toLowerCase() === 'female'
+      ? 'gender-female'
+      : pet.gender?.toLowerCase() === 'male'
+      ? 'gender-male'
+      : 'gender-male-female';
+
+  // Active pet gets a rich Deep Emerald gradient; Inactive gets a refined forest green gradient
+  const gradientColors = isActive
+    ? (['#0E3821', '#184F2E', '#226D3F'] as const)
+    : (['#1E3A2F', '#274B3C', '#2F5949'] as const);
 
   return (
     <Animated.View
@@ -111,12 +123,27 @@ function PetCardItem({
         },
       ]}
     >
-      <View style={[styles.petCard, isActive && styles.petCardActive]}>
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.petCard, isActive ? styles.petCardActive : styles.petCardInactive]}
+      >
+        {/* Decorative Background Accents */}
+        <View style={styles.cardRing1} />
+        <View style={styles.cardRing2} />
+        <MaterialCommunityIcons
+          name="paw"
+          size={78}
+          color="rgba(255, 255, 255, 0.05)"
+          style={styles.cardWatermark}
+        />
+
         {/* Active Pill Badge on Top Right */}
         {isActive && (
           <View style={styles.activePillBadge}>
             <View style={styles.activeDot} />
-            <AppText variant="caption" weight="800" color="#1B5E20" style={styles.activePillText}>
+            <AppText variant="caption" weight="800" color="#FFFFFF" style={styles.activePillText}>
               ACTIVE
             </AppText>
           </View>
@@ -129,20 +156,20 @@ function PetCardItem({
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           disabled={isActive || isBusy}
-          activeOpacity={0.9}
+          activeOpacity={0.92}
         >
-          {/* Circular Pet Avatar (Matching Home Screen Pet Profile Card) */}
+          {/* Circular Pet Avatar */}
           <View style={styles.avatarContainer}>
             {showRealImage ? (
               <Image
                 source={{ uri: resolvedUri }}
                 style={[
                   styles.avatar,
-                  { borderColor: isActive ? '#2E7D32' : '#E2E8F0' },
+                  { borderColor: isActive ? '#4ADE80' : 'rgba(255, 255, 255, 0.35)' },
                 ]}
                 contentFit="cover"
                 cachePolicy="disk"
-                transition={200}
+                transition={150}
                 onError={() => setImageError(true)}
               />
             ) : (
@@ -150,10 +177,10 @@ function PetCardItem({
                 style={[
                   styles.avatar,
                   styles.placeholderAvatar,
-                  { borderColor: isActive ? '#2E7D32' : '#A5D6A7' },
+                  { borderColor: isActive ? '#4ADE80' : 'rgba(255, 255, 255, 0.35)' },
                 ]}
               >
-                <MaterialCommunityIcons name="paw" size={30} color="#FFFFFF" />
+                <MaterialCommunityIcons name="paw" size={28} color="#FFFFFF" />
               </View>
             )}
           </View>
@@ -164,7 +191,7 @@ function PetCardItem({
               <AppText
                 variant="h3"
                 weight="800"
-                color="#0E3821"
+                color="#FFFFFF"
                 numberOfLines={1}
                 style={styles.petNameText}
               >
@@ -173,15 +200,15 @@ function PetCardItem({
 
               {!isOwner && (
                 <View style={styles.sharedBadge}>
-                  <Ionicons name="people" size={10} color="#0284C7" />
-                  <AppText variant="caption" weight="700" color="#0284C7" style={styles.sharedText}>
+                  <Ionicons name="people" size={11} color="#38BDF8" />
+                  <AppText variant="caption" weight="700" color="#38BDF8" style={styles.sharedText}>
                     Shared
                   </AppText>
                 </View>
               )}
             </View>
 
-            <AppText variant="bodySmall" color="#475569" numberOfLines={1} style={styles.speciesBreedText}>
+            <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.85)" numberOfLines={1} style={styles.speciesBreedText}>
               {pet.species ? pet.species.charAt(0).toUpperCase() + pet.species.slice(1).toLowerCase() : 'Pet'}
               {pet.breed ? ` • ${pet.breed}` : ''}
             </AppText>
@@ -190,18 +217,8 @@ function PetCardItem({
             <View style={styles.chipsContainer}>
               {pet.gender && (
                 <View style={styles.chip}>
-                  <MaterialCommunityIcons
-                    name={
-                      pet.gender.toLowerCase() === 'female'
-                        ? 'gender-female'
-                        : pet.gender.toLowerCase() === 'male'
-                        ? 'gender-male'
-                        : 'gender-male-female'
-                    }
-                    size={12}
-                    color="#475569"
-                  />
-                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                  <MaterialCommunityIcons name={genderIcon as any} size={12} color="#FFFFFF" />
+                  <AppText variant="caption" weight="600" color="#FFFFFF" style={styles.chipText}>
                     {pet.gender}
                   </AppText>
                 </View>
@@ -209,8 +226,8 @@ function PetCardItem({
 
               {age !== 'Not set' && (
                 <View style={styles.chip}>
-                  <Ionicons name="calendar-outline" size={11} color="#475569" />
-                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                  <Ionicons name="calendar-outline" size={11} color="#FFFFFF" />
+                  <AppText variant="caption" weight="600" color="#FFFFFF" style={styles.chipText}>
                     {age}
                   </AppText>
                 </View>
@@ -218,8 +235,8 @@ function PetCardItem({
 
               {pet.weight != null && (
                 <View style={styles.chip}>
-                  <MaterialCommunityIcons name="scale-bathroom" size={11} color="#475569" />
-                  <AppText variant="caption" weight="600" color="#475569" style={styles.chipText}>
+                  <MaterialCommunityIcons name="scale-bathroom" size={11} color="#FFFFFF" />
+                  <AppText variant="caption" weight="600" color="#FFFFFF" style={styles.chipText}>
                     {pet.weight} {pet.weightUnit || 'kg'}
                   </AppText>
                 </View>
@@ -237,14 +254,14 @@ function PetCardItem({
                 style={styles.setActiveBtn}
                 onPress={() => onSelectActive(pet)}
                 disabled={isBusy}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
                 {isBusy ? (
-                  <ActivityIndicator size="small" color="#2E7D32" />
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <>
-                    <Ionicons name="swap-horizontal" size={15} color="#2E7D32" />
-                    <AppText variant="caption" weight="800" color="#2E7D32">
+                    <Ionicons name="swap-horizontal" size={14} color="#FFFFFF" />
+                    <AppText variant="caption" weight="800" color="#FFFFFF">
                       Set as Active
                     </AppText>
                   </>
@@ -252,24 +269,24 @@ function PetCardItem({
               </TouchableOpacity>
             ) : (
               <View style={styles.activeStatusHint}>
-                <Ionicons name="checkmark-circle" size={16} color="#2E7D32" />
-                <AppText variant="caption" weight="700" color="#2E7D32">
+                <Ionicons name="checkmark-circle" size={16} color="#4ADE80" />
+                <AppText variant="caption" weight="700" color="#E8F5E9">
                   Currently Selected
                 </AppText>
               </View>
             )}
           </View>
 
-          {/* Right Action: Edit & Delete Buttons with 8px radius */}
+          {/* Right Action: Edit & Delete Buttons */}
           <View style={styles.footerRight}>
             <TouchableOpacity
               style={styles.editBtn}
               onPress={() => onEdit(pet)}
               hitSlop={6}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
             >
-              <Ionicons name="create-outline" size={15} color="#1E293B" />
-              <AppText variant="caption" weight="700" color="#1E293B" style={{ marginLeft: 4 }}>
+              <Ionicons name="create-outline" size={14} color="#FFFFFF" />
+              <AppText variant="caption" weight="700" color="#FFFFFF" style={{ marginLeft: 4 }}>
                 Edit
               </AppText>
             </TouchableOpacity>
@@ -278,13 +295,13 @@ function PetCardItem({
               style={styles.deleteBtn}
               onPress={() => onDelete(pet)}
               hitSlop={6}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
             >
-              <Ionicons name="trash-outline" size={15} color="#DC2626" />
+              <Ionicons name="trash-outline" size={14} color="#FCA5A5" />
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </LinearGradient>
     </Animated.View>
   );
 }
@@ -296,8 +313,11 @@ export default function ManagePetsScreen() {
   const { showSuccessToast, showErrorToast } = useToast();
   const queryClient = useQueryClient();
 
-  const [pets, setPets] = useState<ApiPet[]>([]);
-  const [loading, setLoading] = useState(true);
+  const scopeKey = token && user?._id ? `${token}:${user._id}` : token;
+  const initialCache = getPetListCache(scopeKey);
+
+  const [pets, setPets] = useState<ApiPet[]>(() => initialCache ?? []);
+  const [loading, setLoading] = useState(() => !initialCache || initialCache.length === 0);
   const [refreshing, setRefreshing] = useState(false);
   const [switchingId, setSwitchingId] = useState<string | null>(null);
 
@@ -308,25 +328,38 @@ export default function ManagePetsScreen() {
 
   const activePetId = user?.activePetId ?? null;
 
-  const loadPets = useCallback(async () => {
-    if (!token) return;
-    try {
-      const data = await fetchAccessiblePets(token, user?._id);
-      setPets(data);
-    } catch (err) {
-      showErrorToast(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }, [token, user?._id, showErrorToast]);
+  const loadPets = useCallback(
+    async (isSilent = false) => {
+      if (!token) return;
+      if (!isSilent && pets.length === 0) {
+        setLoading(true);
+      }
+      try {
+        const data = await fetchAccessiblePets(token, user?._id);
+        setPets(data);
+        if (scopeKey) {
+          setPetListCache(scopeKey, data);
+        }
+      } catch (err) {
+        if (!isSilent) {
+          showErrorToast(getErrorMessage(err));
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token, user?._id, scopeKey, pets.length, showErrorToast],
+  );
 
   useEffect(() => {
-    void loadPets();
+    // If cached data exists, fetch quietly in background; otherwise load with spinner
+    const hasCache = initialCache && initialCache.length > 0;
+    void loadPets(Boolean(hasCache));
   }, [loadPets]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await loadPets();
+    await loadPets(true);
     setRefreshing(false);
   }, [loadPets]);
 
@@ -389,7 +422,11 @@ export default function ManagePetsScreen() {
 
       const remainingPets = pets.filter((p) => p._id !== deleteTargetPet._id);
       setPets(remainingPets);
-      clearPetListCache();
+      if (scopeKey) {
+        setPetListCache(scopeKey, remainingPets);
+      } else {
+        clearPetListCache();
+      }
 
       // If active pet was deleted, switch to the first remaining pet if available
       if (deleteTargetPet._id === activePetId) {
@@ -417,7 +454,7 @@ export default function ManagePetsScreen() {
     } finally {
       setDeleting(false);
     }
-  }, [token, deleteTargetPet, pets, activePetId, user, setSession, queryClient, showSuccessToast, showErrorToast]);
+  }, [token, deleteTargetPet, pets, scopeKey, activePetId, user, setSession, queryClient, showSuccessToast, showErrorToast]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
@@ -470,7 +507,7 @@ export default function ManagePetsScreen() {
               </AppText>
             </View>
 
-            {/* Add Pet Button with tighter 8px radius */}
+            {/* Add Pet Button */}
             <TouchableOpacity
               style={styles.heroAddBtn}
               onPress={handleAddPet}
@@ -495,7 +532,7 @@ export default function ManagePetsScreen() {
         </View>
 
         {/* Pet List */}
-        {loading ? (
+        {loading && pets.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={ProfileTheme.green} />
             <AppText variant="bodySmall" color="#64748B" style={{ marginTop: Spacing.sm }}>
@@ -719,30 +756,57 @@ const styles = StyleSheet.create({
   },
   petCardWrapper: {
     width: '100%',
+    borderRadius: Radius.lg,
+    backgroundColor: 'transparent',
+    overflow: 'hidden',
   },
   petCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: Radius.lg,
     padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
     position: 'relative',
+    overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#0E3821',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
       },
       android: {
-        elevation: 2,
+        elevation: 3,
       },
     }),
   },
   petCardActive: {
-    borderColor: '#2E7D32',
     borderWidth: 1.5,
-    backgroundColor: '#FFFFFF',
+    borderColor: '#4ADE80',
+  },
+  petCardInactive: {
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+  },
+  cardRing1: {
+    position: 'absolute',
+    top: -30,
+    right: -20,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  cardRing2: {
+    position: 'absolute',
+    bottom: -40,
+    left: -20,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  cardWatermark: {
+    position: 'absolute',
+    right: 8,
+    bottom: -6,
   },
   activePillBadge: {
     position: 'absolute',
@@ -751,27 +815,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(74, 222, 128, 0.22)',
     paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingVertical: 3.5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#A5D6A7',
+    borderColor: '#4ADE80',
     zIndex: 2,
   },
   activeDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#4ADE80',
   },
   activePillText: {
-    fontSize: 10,
-    letterSpacing: 0.5,
+    fontSize: 9.5,
+    letterSpacing: 0.6,
   },
   cardHeaderArea: {
     flexDirection: 'row',
     alignItems: 'center',
+    zIndex: 1,
   },
   avatarContainer: {
     marginRight: Spacing.md,
@@ -779,18 +844,18 @@ const styles = StyleSheet.create({
   avatar: {
     width: 60,
     height: 60,
-    borderRadius: 30, // Circular matching home screen
-    backgroundColor: '#F1F5F9',
+    borderRadius: 30,
+    backgroundColor: 'transparent',
     borderWidth: 2,
   },
   placeholderAvatar: {
-    backgroundColor: '#2E7D32', // Emerald green with white paw matching Home screen
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   petDetailsCol: {
     flex: 1,
-    paddingRight: 64, // room for active pill
+    paddingRight: 64, // room for active pill badge
   },
   nameHeaderRow: {
     flexDirection: 'row',
@@ -799,15 +864,18 @@ const styles = StyleSheet.create({
   },
   petNameText: {
     fontSize: 18,
+    letterSpacing: 0.2,
   },
   sharedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
-    backgroundColor: '#E0F2FE',
+    gap: 3,
+    backgroundColor: 'rgba(56, 189, 248, 0.2)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+    borderWidth: 0.8,
+    borderColor: 'rgba(56, 189, 248, 0.4)',
   },
   sharedText: {
     fontSize: 9,
@@ -825,13 +893,13 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3.5,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 7,
-    paddingVertical: 3,
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    paddingHorizontal: 8,
+    paddingVertical: 3.5,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   chipText: {
     fontSize: 11,
@@ -843,7 +911,8 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     paddingTop: Spacing.sm,
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: 'rgba(255, 255, 255, 0.12)',
+    zIndex: 1,
   },
   footerLeft: {
     flexDirection: 'row',
@@ -853,17 +922,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: 'rgba(255, 255, 255, 0.25)',
   },
   activeStatusHint: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 5,
     paddingVertical: 4,
   },
   footerRight: {
@@ -877,16 +946,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#F1F5F9',
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(255, 255, 255, 0.22)',
   },
   deleteBtn: {
     paddingHorizontal: 9,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(239, 68, 68, 0.22)',
     borderWidth: 1,
-    borderColor: '#FEE2E2',
+    borderColor: 'rgba(239, 68, 68, 0.35)',
   },
 });
+
