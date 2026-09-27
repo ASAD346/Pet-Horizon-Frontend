@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
     minWidth: 36,
   },
   timelineList: {
-    gap: Spacing.xs,
+    gap: Spacing.sm,
     paddingBottom: 80,
   },
   fab: {

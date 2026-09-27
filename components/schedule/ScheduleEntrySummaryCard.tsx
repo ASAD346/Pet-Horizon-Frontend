@@ -80,7 +80,6 @@ const styles = StyleSheet.create({
     backgroundColor: HomeTheme.white,
     borderRadius: 14,
     padding: Spacing.sm,
-    marginBottom: Spacing.sm,
     gap: Spacing.sm,
   },
   iconWrap: {
