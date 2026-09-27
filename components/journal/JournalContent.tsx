@@ -32,6 +32,7 @@ import {
   startOfWeek,
   toDateKey,
   mapActivityTypeToCategory,
+  isJournalEntryValidForTargetDate,
 } from '@/lib/journal/journalMappers';
 import { parseSafeDate } from '@/lib/timezone';
 import { resolveMediaUrl } from '@/lib/mediaUrl';

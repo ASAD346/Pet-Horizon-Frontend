@@ -164,12 +164,51 @@ export function mapEntryToTimelineEvent(entry: ApiJournalEntry): TimelineEvent {
   };
 }
 
+export function isJournalEntryValidForTargetDate(
+  entry: ApiJournalEntry,
+  targetDate: Date,
+): boolean {
+  const isMissedOrSkipped =
+    entry.status === 'missed' ||
+    entry.status === 'skipped' ||
+    (entry.note && (
+      entry.note.toLowerCase().startsWith('missed') ||
+      entry.note.toLowerCase().startsWith('skipped') ||
+      entry.note.toLowerCase().startsWith('not performed')
+    ));
+
+  if (isMissedOrSkipped) {
+    const schedDateStr =
+      entry.metadata?.date ||
+      entry.metadata?.scheduleDate ||
+      entry.metadata?.startDate ||
+      entry.relatedScheduleLogId?.date ||
+      entry.relatedScheduleLogId?.scheduleDate;
+
+    if (schedDateStr) {
+      const schedDate = parseSafeDate(schedDateStr);
+      schedDate.setHours(0, 0, 0, 0);
+      const targetMidnight = new Date(targetDate);
+      targetMidnight.setHours(0, 0, 0, 0);
+      if (targetMidnight.getTime() < schedDate.getTime()) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 export function filterEntriesByDate(
   entries: ApiJournalEntry[],
   dateStr: string,
 ): ApiJournalEntry[] {
   const target = parseDateKey(dateStr);
-  return entries.filter((entry) => isSameCalendarDay(parseSafeDate(entry.createdAt), target));
+  return entries.filter((entry) => {
+    const entryDate = parseSafeDate(entry.createdAt);
+    if (!isSameCalendarDay(entryDate, target)) return false;
+    return isJournalEntryValidForTargetDate(entry, target);
+  });
 }
 
 export function filterTimelineByCategory(
