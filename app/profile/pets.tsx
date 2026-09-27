@@ -802,7 +802,7 @@ const styles = StyleSheet.create({
   petCardActive: {
     borderWidth: 1.5,
     borderColor: '#2E7D32',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F4FBF5',
   },
   petCardInactive: {
     borderWidth: 1,
