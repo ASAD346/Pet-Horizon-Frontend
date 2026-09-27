@@ -54,6 +54,17 @@ function getTimezoneFlag(tzString: string): string {
   return '🌐';
 }
 
+function formatTimezoneName(tzString: string): string {
+  if (!tzString) return 'Standard Time';
+  const parts = tzString.split('/').filter(Boolean);
+  if (parts.length >= 2) {
+    const region = parts[0].replace(/_/g, ' ');
+    const city = parts[parts.length - 1].replace(/_/g, ' ');
+    return `${city} · ${region}`;
+  }
+  return tzString.replace(/_/g, ' ');
+}
+
 export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) {
   const { currency, setCurrency } = useLocalization();
   const { timezone } = useTimezone();
@@ -73,10 +84,10 @@ export function LocalizationSheet({ visible, onClose }: LocalizationSheetProps) 
           </AppText>
           <View style={styles.timezoneText}>
             <AppText variant="body" weight="700" color="#1E293B">
-              {timezone}
+              {formatTimezoneName(timezone)}
             </AppText>
             <AppText variant="caption" color="#64748B">
-              {offset ? `${offset} · ` : ''}Auto-detected region
+              {offset ? `${offset} · ` : ''}Auto-detected
             </AppText>
           </View>
         </View>
