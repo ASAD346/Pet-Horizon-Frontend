@@ -395,7 +395,7 @@ export function CustomButton({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={onPress}
-      disabled={disabled || isLoading}
+      disabled={disabled || isBusy}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? title}
       style={[

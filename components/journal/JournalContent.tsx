@@ -300,7 +300,8 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
         uploading={uploadingPhoto}
         onAddPhoto={handleAddPhoto}
         onPhotoPress={setActivePhoto}
-        onDeletePhoto={handleDeletePhoto}
+        themeColor={themeColor}
+        isPremium={isPremium}
       />
     </ScrollView>
     <JournalEntryEditSheet
@@ -325,7 +326,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
               <TouchableOpacity style={styles.modalCloseButton} onPress={() => setActivePhoto(null)}>
                 <Ionicons name="close" size={24} color="#FFFFFF" />
               </TouchableOpacity>
-              {canEditJournal && (
+              {canAddPhoto && (
                 <TouchableOpacity style={styles.modalDeleteButton} onPress={() => handleDeletePhoto(activePhoto)}>
                   <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
                 </TouchableOpacity>
