@@ -15,7 +15,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "33",
+      "buildNumber": "34",
       "associatedDomains": [
         "applinks:pethorizon.app"
       ],
@@ -41,7 +41,7 @@
         "android.permission.RECEIVE_BOOT_COMPLETED"
       ],
       "package": "com.anonymous.PetHorizon",
-      "versionCode": 33,
+      "versionCode": 34,
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
