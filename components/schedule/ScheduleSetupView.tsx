@@ -22,6 +22,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonScheduleSetup } from '@/components/ui/skeletons';
+import { ScheduleDetailSheet, type ScheduleDetailRow } from '@/components/home/ScheduleDetailSheet';
+import { dateToTimeHHmm } from '@/lib/feeding/feedingForm';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { useToast } from '@/hooks/useToast';
@@ -101,6 +103,117 @@ interface ScheduleSetupViewProps {
   onNotificationsPress?: () => void;
   /** Called after a successful toggle so the parent can force-reload pet state */
   onPetReload?: () => void;
+}
+
+function entryToScheduleDetailRow(
+  key: ScheduleSectionKey,
+  entry: EditorEntry,
+): ScheduleDetailRow {
+  if (entry.rawItem) {
+    return { kind: key as any, item: entry.rawItem };
+  }
+
+  if (key === 'feeding') {
+    const fe = entry as FeedingEntryState;
+    return {
+      kind: 'feeding',
+      item: {
+        _id: fe.scheduleId || fe.id,
+        id: fe.scheduleId || fe.id,
+        title: fe.mealType ? `${fe.mealType.charAt(0).toUpperCase() + fe.mealType.slice(1)} Feeding` : 'Feeding',
+        timeOfDay: dateToTimeHHmm(fe.feedingTime),
+        status: fe.status || 'pending',
+        isComplete: fe.isComplete,
+        metadata: {
+          mealType: fe.mealType,
+          amount: fe.amount,
+          unit: fe.unit,
+          notes: fe.notes,
+        },
+      } as any,
+    };
+  }
+
+  if (key === 'walk') {
+    const we = entry as WalkEntryState;
+    return {
+      kind: 'walk',
+      item: {
+        _id: we.scheduleId || we.id,
+        id: we.scheduleId || we.id,
+        title: `${we.walkTime ? we.walkTime.charAt(0).toUpperCase() + we.walkTime.slice(1) : 'Daily'} Walk`,
+        timeOfDay: dateToTimeHHmm(we.walkClockTime),
+        duration: Number(we.duration) || 30,
+        status: we.status || 'pending',
+        isComplete: we.isComplete,
+        metadata: {
+          walkTime: we.walkTime,
+          duration: Number(we.duration) || 30,
+          notes: we.notes,
+        },
+      } as any,
+    };
+  }
+
+  if (key === 'medicine') {
+    const me = entry as MedicineEntryState;
+    return {
+      kind: 'medicine',
+      item: {
+        _id: me.scheduleId || me.id,
+        id: me.scheduleId || me.id,
+        title: me.medicineName || 'Medicine',
+        timeOfDay: dateToTimeHHmm(me.medicineTime),
+        status: me.status || 'pending',
+        isComplete: me.isComplete,
+        metadata: {
+          medicineName: me.medicineName,
+          dose: `${me.doseAmount} ${me.doseForm}`,
+          doseAmount: me.doseAmount,
+          doseForm: me.doseForm,
+          frequency: me.frequency,
+          daysOfWeek: me.daysOfWeek,
+          notes: me.notes,
+        },
+      } as any,
+    };
+  }
+
+  if (key === 'vaccination') {
+    const ve = entry as VaccinationEntryState;
+    return {
+      kind: 'vaccination',
+      item: {
+        _id: ve.scheduleId || ve.id,
+        id: ve.scheduleId || ve.id,
+        title: ve.vaccineName ? `${ve.vaccineName} Vaccine` : 'Vaccination',
+        startDate: ve.scheduleDate?.singleDate ? ve.scheduleDate.singleDate.toISOString() : undefined,
+        status: ve.status || 'pending',
+        isComplete: ve.isComplete,
+        metadata: {
+          vaccineName: ve.vaccineName,
+          recurrenceInterval: ve.recurrenceInterval,
+          frequency: ve.frequency,
+          notes: ve.notes,
+        },
+      } as any,
+    };
+  }
+
+  const ge = entry as GroomingEntryState;
+  return {
+    kind: 'grooming',
+    item: {
+      _id: ge.recordId || ge.id,
+      id: ge.recordId || ge.id,
+      groomingType: ge.groomingType,
+      scheduledDate: ge.scheduleDate?.singleDate ? ge.scheduleDate.singleDate.toISOString() : undefined,
+      status: ge.status || 'pending',
+      isComplete: ge.isComplete,
+      notes: ge.notes,
+      performedAt: ge.performedAt,
+    } as any,
+  };
 }
 
 function ScheduleEntriesSkeleton() {
@@ -264,6 +377,7 @@ export function ScheduleSetupView({
   } | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<'all' | ScheduleSectionKey>('all');
   const [fabMenuVisible, setFabMenuVisible] = useState(false);
+  const [selectedDetailRow, setSelectedDetailRow] = useState<ScheduleDetailRow | null>(null);
 
   const groomingVisibleRef = useRef(groomingVisible);
   groomingVisibleRef.current = groomingVisible;
@@ -824,6 +938,7 @@ export function ScheduleSetupView({
                       accentColor={sectionMeta.color}
                       accentBg={sectionMeta.bg}
                       iconName={sectionMeta.icon}
+                      onPress={() => setSelectedDetailRow(entryToScheduleDetailRow(key, entry))}
                       onEdit={() => openEditEditor(sectionMeta, entry)}
                       onDelete={() => confirmDeleteEntry(sectionMeta, entry)}
                       deleting={!!remoteId && deletingId === remoteId}
@@ -1023,6 +1138,14 @@ export function ScheduleSetupView({
           setDeleteModalVisible(false);
           setPendingDeleteInfo(null);
         }}
+      />
+
+      <ScheduleDetailSheet
+        visible={!!selectedDetailRow}
+        row={selectedDetailRow}
+        onClose={() => setSelectedDetailRow(null)}
+        showActions={false}
+        isPremium={isPremium}
       />
     </View>
   );

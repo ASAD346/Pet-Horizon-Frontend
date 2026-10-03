@@ -93,6 +93,7 @@ export function mapFeedingItem(item: FeedingScheduleItem): FeedingEntryState {
     notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
+    rawItem: item,
   };
 }
 
@@ -117,6 +118,7 @@ export function mapWalkItem(item: WalkScheduleItem): WalkEntryState {
     notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
+    rawItem: item,
   };
 }
 
@@ -155,6 +157,7 @@ export function mapMedicineItem(item: MedicineScheduleItem): MedicineEntryState 
     notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
+    rawItem: item,
   };
 }
 
@@ -180,6 +183,7 @@ export function mapVaccinationItem(item: VaccinationScheduleItem): VaccinationEn
     notes: meta.notes ?? (item as any).notes ?? item.description ?? '',
     status: (item as any).status,
     isComplete: (item as any).isComplete,
+    rawItem: item,
   };
 }
 
@@ -196,6 +200,7 @@ export function mapGroomingItem(item: GroomingRecord): GroomingEntryState {
     reminderOn: item.reminderEnabled === true || (item as any).reminder === true,
     notes: item.notes ?? '',
     performedAt: item.performedAt ?? undefined,
+    rawItem: item,
   };
 }
 

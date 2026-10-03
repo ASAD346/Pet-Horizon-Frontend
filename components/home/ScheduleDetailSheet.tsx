@@ -47,6 +47,7 @@ interface ScheduleDetailSheetProps {
   onClose: () => void;
   onComplete?: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip?: (id: string) => void | Promise<void>;
+  showActions?: boolean;
   isPremium?: boolean;
   /** Current logged-in user's id — forwarded to WalkTimer for multi-user sessions */
   currentUserId?: string;
@@ -116,6 +117,7 @@ export function ScheduleDetailSheet({
   onClose,
   onComplete,
   onSkip,
+  showActions = true,
   isPremium = false,
   currentUserId,
   token,
@@ -495,7 +497,7 @@ export function ScheduleDetailSheet({
           </ScrollView>
 
           {/* Actions */}
-          {row.kind === 'walk' && !isDone && !isSkipped ? (
+          {showActions && row.kind === 'walk' && !isDone && !isSkipped ? (
             // Walk: sheet-styled Start / live-timer / Done
             <View style={styles.footer}>
               {walkStartedAt === null ? (
@@ -562,7 +564,7 @@ export function ScheduleDetailSheet({
                 </>
               )}
             </View>
-          ) : (canComplete || canSkip) ? (
+          ) : showActions && (canComplete || canSkip) ? (
             <View style={styles.footer}>
               {canSkip ? (
                 <Pressable

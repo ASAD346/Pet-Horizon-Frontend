@@ -10,6 +10,7 @@ interface ScheduleEntrySummaryCardProps {
   subtitle: string;
   accentColor: string;
   accentBg: string;
+  onPress?: () => void;
   onEdit: () => void;
   onDelete: () => void;
   deleting?: boolean;
@@ -23,6 +24,7 @@ export function ScheduleEntrySummaryCard({
   subtitle,
   accentColor,
   accentBg,
+  onPress,
   onEdit,
   onDelete,
   deleting,
@@ -34,8 +36,8 @@ export function ScheduleEntrySummaryCard({
     ? 'rgba(212, 160, 23, 0.35)'  // Gold border for premium
     : 'rgba(46, 125, 50, 0.12)';  // Soft green border for free
 
-  return (
-    <View style={[styles.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
+  const content = (
+    <>
       <View style={[styles.iconWrap, { backgroundColor: accentBg }]}>
         <MaterialCommunityIcons name={iconName} size={20} color={accentColor} />
       </View>
@@ -51,7 +53,10 @@ export function ScheduleEntrySummaryCard({
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.actionBtn, styles.editBtn]}
-            onPress={onEdit}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onEdit();
+            }}
             disabled={deleting}
             activeOpacity={0.85}
             accessibilityLabel="Edit schedule"
@@ -60,7 +65,10 @@ export function ScheduleEntrySummaryCard({
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.deleteBtn]}
-            onPress={onDelete}
+            onPress={(e) => {
+              e.stopPropagation?.();
+              onDelete();
+            }}
             disabled={deleting}
             activeOpacity={0.85}
             accessibilityLabel="Delete schedule"
@@ -69,6 +77,24 @@ export function ScheduleEntrySummaryCard({
           </TouchableOpacity>
         </View>
       )}
+    </>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={[styles.card, { borderWidth: 1, borderColor: cardBorderColor }]}
+        onPress={onPress}
+        activeOpacity={0.75}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={[styles.card, { borderWidth: 1, borderColor: cardBorderColor }]}>
+      {content}
     </View>
   );
 }

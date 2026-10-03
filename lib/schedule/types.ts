@@ -17,6 +17,7 @@ export interface FeedingEntryState {
   notes: string;
   status?: string;
   isComplete?: boolean;
+  rawItem?: any;
 }
 
 export interface WalkEntryState {
@@ -31,6 +32,7 @@ export interface WalkEntryState {
   notes: string;
   status?: string;
   isComplete?: boolean;
+  rawItem?: any;
 }
 
 export interface MedicineEntryState {
@@ -49,6 +51,7 @@ export interface MedicineEntryState {
   notes: string;
   status?: string;
   isComplete?: boolean;
+  rawItem?: any;
 }
 
 export interface VaccinationEntryState {
@@ -64,6 +67,7 @@ export interface VaccinationEntryState {
   notes: string;
   status?: string;
   isComplete?: boolean;
+  rawItem?: any;
 }
 
 export interface GroomingEntryState {
@@ -76,6 +80,7 @@ export interface GroomingEntryState {
   status?: string;
   isComplete?: boolean;
   performedAt?: string;
+  rawItem?: any;
 }
 
 export interface ScheduleSectionsState {
