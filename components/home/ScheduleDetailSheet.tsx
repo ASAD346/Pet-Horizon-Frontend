@@ -411,7 +411,7 @@ export function ScheduleDetailSheet({
       <View style={styles.overlay}>
         <Pressable style={styles.backdrop} onPress={onClose} />
 
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 18) }]}>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}>
           {/* Top Pill Handle */}
           <View style={styles.handleContainer}>
             <View style={styles.handle} />

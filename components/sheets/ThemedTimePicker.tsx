@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '../ui/AppText';
 import { Palette, Spacing } from '../../constants/theme';
@@ -41,6 +42,7 @@ export function ThemedTimePicker({
   onClose,
   onConfirm,
 }: ThemedTimePickerProps) {
+  const insets = useSafeAreaInsets();
   const { accentColor: defaultAccent, accentBg: defaultAccentBg } = useAppThemeColor();
   const themeAccent = customAccent || defaultAccent;
   const themeAccentBg = customAccentBg || defaultAccentBg;
@@ -114,7 +116,10 @@ export function ThemedTimePicker({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+        <Pressable
+          style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 20) }]}
+          onPress={(e) => e.stopPropagation()}
+        >
           {/* Drag Handle */}
           <View style={styles.dragHandle} />
 
