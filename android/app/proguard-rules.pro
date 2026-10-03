@@ -28,7 +28,13 @@
 -keep class com.facebook.hermes.unicode.** { *; }
 -keep class com.facebook.jni.** { *; }
 
+# Google Play Billing & OpenIAP (Critical for in-app purchases in minified release builds)
+-keep class com.android.billingclient.api.** { *; }
+-keep class io.github.hyochan.openiap.** { *; }
+-keep class com.google.android.gms.** { *; }
+
 # Optimization & Obfuscation Tweaks
 -repackageclasses ''
 -allowaccessmodification
+
 

@@ -117,8 +117,11 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       const message = await parseErrorMessage(response);
       if (response.status === 401 && token && !path.startsWith('/auth/')) {
         try {
-          const { logout } = await import('@/redux/action');
+          const { logout, showToastAction } = await import('@/redux/action');
           store.dispatch(logout() as any);
+          store.dispatch(showToastAction('Session expired. Please log in again.', 'info') as any);
+          const { router } = await import('expo-router');
+          router.replace('/auth/login');
         } catch {
           // Fail silently
         }
