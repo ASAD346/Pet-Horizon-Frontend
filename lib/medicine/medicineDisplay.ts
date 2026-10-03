@@ -18,11 +18,12 @@ export function medicineScheduleTitle(item: MedicineScheduleItem): string {
 export function medicineScheduleSubtitle(item: MedicineScheduleItem): string {
   const dose = item.metadata?.dose;
   const doseText = dose ? `${dose} · ` : '';
+  const timeStr = item.timeOfDay || (item as any).time || item.metadata?.time || '00:00';
 
   if (item.status === 'done') {
     const when = item.completedAt
       ? formatCompletedAt(item.completedAt)
-      : formatTimeHHmmDisplay(item.timeOfDay);
+      : formatTimeHHmmDisplay(timeStr);
     return `${doseText}Done at ${when}`;
   }
 
@@ -32,7 +33,7 @@ export function medicineScheduleSubtitle(item: MedicineScheduleItem): string {
 
   const freq = item.metadata?.frequency;
   const freqText = freq && freq !== 'daily' ? `${getFrequencyLabel(freq)} · ` : '';
-  return `${doseText}${freqText}${formatTimeHHmmDisplay(item.timeOfDay)}`;
+  return `${doseText}${freqText}${formatTimeHHmmDisplay(timeStr)}`;
 }
 
 export function medicineScheduleColors() {
@@ -40,7 +41,11 @@ export function medicineScheduleColors() {
 }
 
 export function sortMedicineByTime(items: MedicineScheduleItem[]): MedicineScheduleItem[] {
-  return [...items].sort((a, b) => a.timeOfDay.localeCompare(b.timeOfDay));
+  return [...items].sort((a, b) => {
+    const timeA = a.timeOfDay || (a as any).time || a.metadata?.time || '00:00';
+    const timeB = b.timeOfDay || (b as any).time || b.metadata?.time || '00:00';
+    return String(timeA).localeCompare(String(timeB));
+  });
 }
 
 export function pendingMedicineSchedules(items: MedicineScheduleItem[]): MedicineScheduleItem[] {

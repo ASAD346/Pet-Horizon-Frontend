@@ -99,9 +99,10 @@ interface TodaysScheduleSectionProps {
 function rowSortKey(row: ScheduleRow): number {
   if (row.kind === 'grooming') return groomingSortKey(row.item);
   if (row.kind === 'vaccination') return vaccinationSortKey(row.item);
-  const [h, m] = row.item.timeOfDay.split(':').map(Number);
+  const timeStr = (row.item as any).timeOfDay || (row.item as any).time || (row.item as any).metadata?.time || '00:00';
+  const [h, m] = String(timeStr).split(':').map(Number);
   const d = new Date();
-  d.setHours(h, m, 0, 0);
+  d.setHours(isNaN(h) ? 0 : h, isNaN(m) ? 0 : m, 0, 0);
   return d.getTime();
 }
 

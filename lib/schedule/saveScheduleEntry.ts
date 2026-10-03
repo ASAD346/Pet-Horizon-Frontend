@@ -63,10 +63,12 @@ export async function saveScheduleEntry(
         if (gDate) timeDate = new Date(gDate);
       }
 
-      if (timeDate) {
-        const combined = new Date(referenceDate);
-        combined.setHours(timeDate.getHours(), timeDate.getMinutes(), 0, 0);
-        if (combined < new Date()) {
+      if (referenceDate) {
+        const todayMidnight = new Date();
+        todayMidnight.setHours(0, 0, 0, 0);
+        const refMidnight = new Date(referenceDate);
+        refMidnight.setHours(0, 0, 0, 0);
+        if (refMidnight.getTime() < todayMidnight.getTime()) {
           throw new Error('Cannot schedule an activity in the past.');
         }
       }

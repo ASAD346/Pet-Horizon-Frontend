@@ -141,8 +141,9 @@ export function apiDateStringToDate(value: string | undefined | null): Date | nu
 }
 
 /** Convert backend HH:mm to 12-hour display label. */
-export function formatTimeHHmmDisplay(hhmm: string): string {
-  const match = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+export function formatTimeHHmmDisplay(hhmm?: string | null): string {
+  if (!hhmm) return '';
+  const match = String(hhmm).match(/^(\d{1,2}):(\d{2})$/);
   if (!match) return hhmm;
   const d = new Date();
   d.setHours(parseInt(match[1], 10), parseInt(match[2], 10), 0, 0);

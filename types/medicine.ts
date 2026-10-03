@@ -47,6 +47,7 @@ export interface MedicineScheduleItem {
   metadata?: {
     medicineName?: string;
     dose?: string;
+    time?: string;
     doseForm?: MedicineDoseForm;
     frequency?: MedicineFrequency;
     daysOfWeek?: DayOfWeekCode[];

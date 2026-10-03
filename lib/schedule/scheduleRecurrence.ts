@@ -27,8 +27,8 @@ export function parseDateToMidnight(
   const str = String(val).trim();
   if (!str) return null;
 
-  // Handle YYYY-MM-DD format explicitly to avoid UTC timezone off-by-one shifts
-  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  // Only match pure calendar date strings (YYYY-MM-DD) without time components
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (match) {
     const year = parseInt(match[1], 10);
     const month = parseInt(match[2], 10) - 1;

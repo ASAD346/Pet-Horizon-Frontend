@@ -194,16 +194,19 @@ export default function HomeScreen() {
     array: T[],
     keyFn: (item: T) => string
   ): T[] => {
-    const seen = new Set<string>();
+    const seenIds = new Set<string>();
+    const seenKeys = new Set<string>();
     return array.filter((item) => {
       const id = item._id || item.id;
       if (id) {
-        if (seen.has(id)) return false;
-        seen.add(id);
+        if (seenIds.has(id)) return false;
+        seenIds.add(id);
       }
       const key = keyFn(item);
-      if (seen.has(key)) return false;
-      seen.add(key);
+      if (key && key !== '--' && key !== '---') {
+        if (seenKeys.has(key)) return false;
+        seenKeys.add(key);
+      }
       return true;
     });
   };
@@ -219,19 +222,22 @@ export default function HomeScreen() {
 
   const rawFeeding = (effectiveDashboardData?.todaySchedules?.feeding ?? []).filter(isDateWithinRange);
   const feedingSchedules = useMemo(() => 
-    deduplicateByIdOrProps(rawFeeding, (s: any) => `${s.time || ''}-${s.mealType || ''}-${s.amount || ''}-${s.unit || ''}`),
+    deduplicateByIdOrProps(rawFeeding, (s: any) => `${s.timeOfDay || s.time || ''}-${s.mealType || s.metadata?.mealType || ''}-${s.amount || s.metadata?.amount || ''}-${s.unit || s.metadata?.unit || ''}`),
     [rawFeeding]
   );
 
   const rawWalk = (effectiveDashboardData?.todaySchedules?.walk ?? []).filter(isDateWithinRange);
   const walkSchedules = useMemo(() => 
-    deduplicateByIdOrProps(rawWalk, (s: any) => `${s.time || ''}-${s.duration || ''}`),
+    deduplicateByIdOrProps(rawWalk, (s: any) => `${s.timeOfDay || s.time || ''}-${s.duration || s.metadata?.duration || ''}`),
     [rawWalk]
   );
 
   const rawMedicine = (effectiveDashboardData?.todaySchedules?.medicine ?? []).filter(isDateWithinRange);
   const medicineSchedules = useMemo(() => 
-    deduplicateByIdOrProps(rawMedicine, (s: any) => `${s.time || ''}-${s.medicineName || ''}-${s.dose || ''}`),
+    deduplicateByIdOrProps(
+      rawMedicine,
+      (s: any) => `${s.timeOfDay || s.time || s.metadata?.time || ''}-${s.metadata?.medicineName || s.medicineName || s.title || ''}-${s.metadata?.dose || s.dose || ''}`
+    ),
     [rawMedicine]
   );
 
