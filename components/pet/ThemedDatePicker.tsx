@@ -7,10 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
-  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '../ui/AppText';
 import { Palette, Spacing } from '../../constants/theme';
 import { useAppThemeColor } from '../sheets/useAppThemeColor';
@@ -65,7 +63,6 @@ export function ThemedDatePicker({
   onConfirm,
 }: ThemedDatePickerProps) {
   const { accentColor: defaultAccent, accentBg: defaultAccentBg } = useAppThemeColor();
-  const insets = useSafeAreaInsets();
   const themeAccent = customAccent || defaultAccent;
   const themeAccentBg = customAccentBg || defaultAccentBg;
 
@@ -215,13 +212,7 @@ export function ThemedDatePicker({
       onRequestClose={onClose}
     >
       <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable
-          style={[
-            styles.sheet,
-            { paddingBottom: Math.max(insets.bottom + 16, Platform.OS === 'android' ? 28 : 20) },
-          ]}
-          onPress={(e) => e.stopPropagation()}
-        >
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
           {/* Top Drag Pill */}
           <View style={styles.dragHandle} />
 
