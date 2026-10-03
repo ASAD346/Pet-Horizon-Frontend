@@ -13,15 +13,19 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
-import { formatTimeHHmmDisplay, formatUnitLabel } from '@/lib/feeding/feedingForm';
+import { formatTimeHHmmDisplay, formatUnitLabel, getMealTypeLabel, dateToTimeHHmm } from '@/lib/feeding/feedingForm';
 import { feedingScheduleTitle } from '@/lib/feeding/feedingDisplay';
 import { walkScheduleTitle } from '@/lib/walk/walkDisplay';
+import { getWalkTimeLabel } from '@/lib/walk/walkForm';
 import { medicineScheduleTitle } from '@/lib/medicine/medicineDisplay';
+import { getFrequencyLabel } from '@/lib/medicine/medicineForm';
 import { groomingRecordTitle } from '@/lib/grooming/groomingDisplay';
+import { groomingTypeLabel, formatDateLabel } from '@/lib/grooming/groomingForm';
 import { vaccinationScheduleTitle } from '@/lib/vaccination/vaccinationDisplay';
-import { recurrenceIntervalLabel } from '@/lib/vaccination/vaccinationForm';
-import { formatDateLabel } from '@/lib/grooming/groomingForm';
+import { recurrenceIntervalLabel, reminderFrequencyLabel } from '@/lib/vaccination/vaccinationForm';
+import { formatScheduleDateSummary } from '@/lib/schedule/scheduleDate';
 import { parseSafeDate } from '@/lib/timezone';
+import { getTaskDisplayName } from '@/src/utils/taskMappings';
 import {
   isScheduleDoneForDate,
   isScheduleSkippedForDate,
@@ -102,6 +106,132 @@ const KIND_METADATA: Record<
     border: '#FBCFE8',
   },
 };
+
+const DAY_LABELS: Record<string, string> = {
+  MO: 'Mon',
+  TU: 'Tue',
+  WE: 'Wed',
+  TH: 'Thu',
+  FR: 'Fri',
+  SA: 'Sat',
+  SU: 'Sun',
+};
+
+const DOSE_FORM_LABELS: Record<string, string> = {
+  tablet: 'Tablet',
+  syrup: 'Syrup',
+  drops: 'Drops',
+  injection: 'Injection',
+  cream: 'Cream',
+  chewable: 'Chewable',
+  other: 'Other',
+};
+
+function resolveScheduleDateLabel(item: any): string | null {
+  if (item.scheduleDate) {
+    if (typeof item.scheduleDate === 'object' && item.scheduleDate.mode) {
+      return formatScheduleDateSummary(item.scheduleDate);
+    }
+    if (typeof item.scheduleDate === 'string') {
+      const d = parseSafeDate(item.scheduleDate);
+      if (d && !isNaN(d.getTime())) return formatDateLabel(d);
+    }
+  }
+  if (item.startDate && item.endDate) {
+    const start = parseSafeDate(item.startDate);
+    const end = parseSafeDate(item.endDate);
+    if (start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      return `${formatDateLabel(start)} – ${formatDateLabel(end)}`;
+    }
+  }
+  if (item.startDate) {
+    const start = parseSafeDate(item.startDate);
+    if (start && !isNaN(start.getTime())) {
+      return `From ${formatDateLabel(start)}`;
+    }
+  }
+  if (item.date) {
+    const d = parseSafeDate(item.date);
+    if (d && !isNaN(d.getTime())) return formatDateLabel(d);
+  }
+  if (item.scheduledDate) {
+    const d = parseSafeDate(item.scheduledDate);
+    if (d && !isNaN(d.getTime())) return formatDateLabel(d);
+  }
+  if (item.metadata?.dueDate) {
+    const d = parseSafeDate(item.metadata.dueDate);
+    if (d && !isNaN(d.getTime())) return formatDateLabel(d);
+  }
+  return null;
+}
+
+function resolveTimeOfDay(item: any): string | null {
+  const raw =
+    item.timeOfDay ||
+    item.time ||
+    item.metadata?.time ||
+    (item.feedingTime instanceof Date ? dateToTimeHHmm(item.feedingTime) : '') ||
+    (item.walkClockTime instanceof Date ? dateToTimeHHmm(item.walkClockTime) : '') ||
+    (item.medicineTime instanceof Date ? dateToTimeHHmm(item.medicineTime) : '') ||
+    (item.reminderTime instanceof Date ? dateToTimeHHmm(item.reminderTime) : typeof item.reminderTime === 'string' ? item.reminderTime : '') ||
+    (typeof item.metadata?.reminderTime === 'string' ? item.metadata.reminderTime : '');
+
+  if (raw && typeof raw === 'string' && raw.trim()) {
+    return formatTimeHHmmDisplay(raw.trim());
+  }
+  return null;
+}
+
+function resolveReminderLabel(item: any, kind: string): string | null {
+  const meta = item.metadata || {};
+  const isEnabled =
+    meta.reminder === true ||
+    item.reminder === true ||
+    item.notificationsOn === true ||
+    item.reminderOn === true ||
+    item.reminderEnabled === true ||
+    meta.reminderEnabled === true;
+
+  if (kind === 'vaccination') {
+    const freq = meta.frequency || item.frequency;
+    const time = meta.reminderTime || item.reminderTime;
+    const timeFormatted = time ? (time instanceof Date ? dateToTimeHHmm(time) : formatTimeHHmmDisplay(String(time))) : '';
+    if (freq) {
+      const freqLabel = reminderFrequencyLabel(String(freq));
+      return timeFormatted ? `${freqLabel} at ${timeFormatted}` : freqLabel;
+    }
+    if (isEnabled) return timeFormatted ? `At ${timeFormatted}` : 'Enabled';
+    if (meta.reminder === false || item.reminder === false) return 'Off';
+    return null;
+  }
+
+  if (
+    meta.reminder === false ||
+    item.reminder === false ||
+    item.notificationsOn === false ||
+    item.reminderOn === false ||
+    item.reminderEnabled === false
+  ) {
+    return 'Off';
+  }
+
+  const mins = meta.reminderMinutes ?? item.reminderMinutes;
+  const time = meta.reminderTime ?? item.reminderTime;
+
+  if (mins !== undefined && mins !== null && mins !== '') {
+    const numMins = Number(mins);
+    if (numMins === 0) return 'At scheduled time';
+    if (numMins > 0) return `${numMins} mins before`;
+  }
+
+  if (time) {
+    const timeStr = time instanceof Date ? dateToTimeHHmm(time) : String(time);
+    return `At ${formatTimeHHmmDisplay(timeStr)}`;
+  }
+
+  if (isEnabled) return 'Enabled';
+  return null;
+}
 
 function getRowTitle(row: ScheduleDetailRow): string {
   if (row.kind === 'feeding') return feedingScheduleTitle(row.item);
@@ -252,45 +382,99 @@ export function ScheduleDetailSheet({
 
   const renderDetailFields = () => {
     const fields: { label: string; value: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [];
+    const itemMeta = item.metadata || {};
 
-    // Time
-    if (item.timeOfDay) {
-      fields.push({
-        label: 'Scheduled Time',
-        value: formatTimeHHmmDisplay(item.timeOfDay),
-        icon: 'time-outline',
-      });
-    }
-
-    // Feeding specifics
+    // ── Feeding specifics ───────────────────────────────────────────────────
     if (row.kind === 'feeding') {
-      if (item.metadata?.amount) {
-        const uLabel = item.metadata.unit ? formatUnitLabel(item.metadata.unit) : '';
+      const mealType = itemMeta.mealType || item.mealType;
+      if (mealType) {
         fields.push({
-          label: 'Portion',
-          value: `${item.metadata.amount} ${uLabel}`.trim(),
-          icon: 'restaurant-outline',
+          label: 'Meal Type',
+          value: getTaskDisplayName(mealType) || getMealTypeLabel(mealType),
+          icon: 'fast-food-outline',
         });
       }
-      if (item.metadata?.foodType) {
+
+      const time = resolveTimeOfDay(item);
+      if (time) {
+        fields.push({
+          label: 'Scheduled Time',
+          value: time,
+          icon: 'time-outline',
+        });
+      }
+
+      const amount = itemMeta.amount ?? item.amount;
+      const unit = itemMeta.unit ?? item.unit;
+      if (amount) {
+        const num = parseFloat(String(amount));
+        let uLabel = unit ? formatUnitLabel(String(unit)) : '';
+        if (uLabel.toLowerCase() === 'cup' && num > 1) {
+          uLabel = 'cups';
+        }
+        fields.push({
+          label: 'Portion',
+          value: `${amount} ${uLabel}`.trim(),
+          icon: 'scale-outline',
+        });
+      }
+
+      const foodType = itemMeta.foodType || item.foodType;
+      if (foodType) {
         fields.push({
           label: 'Food Type',
-          value: item.metadata.foodType.charAt(0).toUpperCase() + item.metadata.foodType.slice(1),
+          value: foodType.charAt(0).toUpperCase() + foodType.slice(1),
           icon: 'nutrition-outline',
         });
       }
-      if (item.metadata?.foodBrand) {
+
+      const brand = itemMeta.foodBrand || item.foodBrand;
+      if (brand) {
         fields.push({
           label: 'Brand',
-          value: item.metadata.foodBrand,
+          value: brand,
           icon: 'pricetag-outline',
+        });
+      }
+
+      const dateSummary = resolveScheduleDateLabel(item) || 'Daily / Recurring';
+      fields.push({
+        label: 'Schedule Period',
+        value: dateSummary,
+        icon: 'calendar-outline',
+      });
+
+      const reminder = resolveReminderLabel(item, 'feeding');
+      if (reminder) {
+        fields.push({
+          label: 'Reminder',
+          value: reminder,
+          icon: 'notifications-outline',
         });
       }
     }
 
-    // Walk specifics
+    // ── Walk specifics ──────────────────────────────────────────────────────
     if (row.kind === 'walk') {
-      const duration = item.duration ?? item.metadata?.duration;
+      const walkTime = itemMeta.walkTime || item.walkTime;
+      if (walkTime) {
+        fields.push({
+          label: 'Time Slot',
+          value: getWalkTimeLabel(walkTime),
+          icon: 'sunny-outline',
+        });
+      }
+
+      const time = resolveTimeOfDay(item);
+      if (time) {
+        fields.push({
+          label: 'Scheduled Time',
+          value: time,
+          icon: 'time-outline',
+        });
+      }
+
+      const duration = itemMeta.duration ?? item.duration;
       if (duration) {
         fields.push({
           label: 'Target Duration',
@@ -298,63 +482,208 @@ export function ScheduleDetailSheet({
           icon: 'stopwatch-outline',
         });
       }
-      if (item.metadata?.walkTime) {
+
+      const dateSummary = resolveScheduleDateLabel(item) || 'Daily / Recurring';
+      fields.push({
+        label: 'Schedule Period',
+        value: dateSummary,
+        icon: 'calendar-outline',
+      });
+
+      const reminder = resolveReminderLabel(item, 'walk');
+      if (reminder) {
         fields.push({
-          label: 'Time Slot',
-          value: item.metadata.walkTime.charAt(0).toUpperCase() + item.metadata.walkTime.slice(1),
-          icon: 'sunny-outline',
+          label: 'Reminder',
+          value: reminder,
+          icon: 'notifications-outline',
         });
       }
     }
 
-    // Medicine specifics
+    // ── Medicine specifics ──────────────────────────────────────────────────
     if (row.kind === 'medicine') {
-      if (item.metadata?.dose) {
+      const name = itemMeta.medicineName || item.medicineName || (item.title ? item.title.split(' - ')[0] : '');
+      if (name) {
+        fields.push({
+          label: 'Medicine',
+          value: name,
+          icon: 'medkit-outline',
+        });
+      }
+
+      const rawDose = itemMeta.dose || item.dose;
+      const doseAmount = itemMeta.doseAmount || item.doseAmount;
+      const doseForm = itemMeta.doseForm || item.doseForm;
+      const formLabel = doseForm ? (DOSE_FORM_LABELS[String(doseForm).toLowerCase()] || String(doseForm)) : '';
+      const doseVal = rawDose || (doseAmount ? `${doseAmount} ${formLabel}`.trim() : '');
+
+      if (doseVal) {
         fields.push({
           label: 'Dose',
-          value: item.metadata.dose,
+          value: doseVal,
           icon: 'flask-outline',
         });
       }
-      if (item.metadata?.frequency) {
+
+      if (formLabel) {
+        fields.push({
+          label: 'Dose Form',
+          value: formLabel,
+          icon: 'fitness-outline',
+        });
+      }
+
+      const time = resolveTimeOfDay(item);
+      if (time) {
+        fields.push({
+          label: 'Scheduled Time',
+          value: time,
+          icon: 'time-outline',
+        });
+      }
+
+      const freq = itemMeta.frequency || item.frequency;
+      if (freq) {
         fields.push({
           label: 'Frequency',
-          value: item.metadata.frequency.charAt(0).toUpperCase() + item.metadata.frequency.slice(1),
+          value: getFrequencyLabel(freq),
           icon: 'repeat-outline',
+        });
+      }
+
+      const days = itemMeta.daysOfWeek || item.daysOfWeek;
+      if (Array.isArray(days) && days.length > 0) {
+        const daysStr = days.map((d: string) => DAY_LABELS[d] || d).join(', ');
+        fields.push({
+          label: 'Days of Week',
+          value: daysStr,
+          icon: 'calendar-number-outline',
+        });
+      }
+
+      const remaining = itemMeta.remainingPills ?? item.remainingPills;
+      const total = itemMeta.totalPills ?? item.totalPills;
+      if (remaining !== undefined && remaining !== null && remaining !== '') {
+        const stockStr = `${remaining}${total && String(total) !== String(remaining) ? ` / ${total}` : ''} pills left`;
+        fields.push({
+          label: 'Medication Supply',
+          value: stockStr,
+          icon: 'cube-outline',
+        });
+      }
+
+      const dateSummary = resolveScheduleDateLabel(item) || 'Daily / Recurring';
+      fields.push({
+        label: 'Schedule Period',
+        value: dateSummary,
+        icon: 'calendar-outline',
+      });
+
+      const reminder = resolveReminderLabel(item, 'medicine');
+      if (reminder) {
+        fields.push({
+          label: 'Reminder',
+          value: reminder,
+          icon: 'notifications-outline',
         });
       }
     }
 
-    // Grooming specifics
+    // ── Grooming specifics ──────────────────────────────────────────────────
     if (row.kind === 'grooming') {
-      if (item.scheduledDate) {
+      const gType = item.groomingType || item.type || itemMeta.groomingType;
+      if (gType) {
+        fields.push({
+          label: 'Grooming Type',
+          value: groomingTypeLabel(gType),
+          icon: 'cut-outline',
+        });
+      }
+
+      const scheduledDate = resolveScheduleDateLabel(item);
+      if (scheduledDate) {
         fields.push({
           label: 'Scheduled Date',
-          value: formatDateLabel(parseSafeDate(item.scheduledDate)),
+          value: scheduledDate,
           icon: 'calendar-outline',
         });
       }
+
+      if (item.remainingDays !== null && item.remainingDays !== undefined) {
+        let statusVal = '';
+        if (item.remainingDays === 0) statusVal = 'Due Today';
+        else if (item.remainingDays < 0) statusVal = `Overdue by ${Math.abs(item.remainingDays)} day${Math.abs(item.remainingDays) === 1 ? '' : 's'}`;
+        else statusVal = `In ${item.remainingDays} day${item.remainingDays === 1 ? '' : 's'}`;
+        fields.push({
+          label: 'Due Status',
+          value: statusVal,
+          icon: 'hourglass-outline',
+        });
+      }
+
       if (item.nextDueDate) {
         fields.push({
           label: 'Next Due Date',
           value: formatDateLabel(parseSafeDate(item.nextDueDate)),
-          icon: 'calendar-outline',
+          icon: 'calendar-number-outline',
+        });
+      }
+
+      if (item.performedAt) {
+        fields.push({
+          label: 'Last Performed',
+          value: formatDateLabel(parseSafeDate(item.performedAt)),
+          icon: 'checkmark-circle-outline',
+        });
+      }
+
+      const reminder = resolveReminderLabel(item, 'grooming');
+      if (reminder) {
+        fields.push({
+          label: 'Reminder',
+          value: reminder,
+          icon: 'notifications-outline',
         });
       }
     }
 
-    // Vaccination specifics
+    // ── Vaccination specifics ───────────────────────────────────────────────
     if (row.kind === 'vaccination') {
-      const due = item.metadata?.dueDate || item.startDate;
-      if (due) {
+      const vName = itemMeta.vaccineName || item.vaccineName || item.title;
+      if (vName) {
         fields.push({
-          label: 'Due Date',
-          value: formatDateLabel(new Date(due)),
-          icon: 'calendar-outline',
+          label: 'Vaccine',
+          value: vName,
+          icon: 'shield-checkmark-outline',
         });
       }
-      const isRecurring = item.metadata?.isRecurring === true || (item as any).isRecurring === true;
-      const interval = item.metadata?.recurrenceInterval || (item as any).recurrenceInterval;
+
+      const due = itemMeta.dueDate || item.startDate || item.date || item.scheduleDate;
+      if (due) {
+        const dueDate = typeof due === 'object' && due.singleDate ? due.singleDate : parseSafeDate(due);
+        if (dueDate && !isNaN(dueDate.getTime())) {
+          fields.push({
+            label: 'Due Date',
+            value: formatDateLabel(dueDate),
+            icon: 'calendar-outline',
+          });
+        }
+      }
+
+      if (item.remainingDays !== null && item.remainingDays !== undefined) {
+        let statusVal = '';
+        if (item.remainingDays === 0) statusVal = 'Due Today';
+        else if (item.remainingDays < 0) statusVal = `Overdue by ${Math.abs(item.remainingDays)} day${Math.abs(item.remainingDays) === 1 ? '' : 's'}`;
+        else statusVal = `In ${item.remainingDays} day${item.remainingDays === 1 ? '' : 's'}`;
+        fields.push({
+          label: 'Due Status',
+          value: statusVal,
+          icon: 'hourglass-outline',
+        });
+      }
+
+      const isRecurring = itemMeta.isRecurring === true || (item as any).isRecurring === true;
+      const interval = itemMeta.recurrenceInterval || (item as any).recurrenceInterval;
       if (isRecurring && interval) {
         fields.push({
           label: 'Recurrence',
@@ -362,9 +691,39 @@ export function ScheduleDetailSheet({
           icon: 'repeat-outline',
         });
       }
+
+      const reminder = resolveReminderLabel(item, 'vaccination');
+      if (reminder) {
+        fields.push({
+          label: 'Reminder',
+          value: reminder,
+          icon: 'notifications-outline',
+        });
+      }
+
+      const vet = itemMeta.vetName || item.vetName;
+      if (vet) {
+        fields.push({
+          label: 'Clinic / Vet',
+          value: vet,
+          icon: 'business-outline',
+        });
+      }
+
+      const administered = itemMeta.administeredDate || item.administeredDate;
+      if (administered) {
+        const adminDate = parseSafeDate(administered);
+        if (adminDate && !isNaN(adminDate.getTime())) {
+          fields.push({
+            label: 'Administered Date',
+            value: formatDateLabel(adminDate),
+            icon: 'checkmark-circle-outline',
+          });
+        }
+      }
     }
 
-    const notes = item.notes || item.metadata?.notes || item.description || item.metadata?.instructions;
+    const notes = item.notes || itemMeta.notes || item.description || itemMeta.instructions || itemMeta.description;
 
     return (
       <View style={styles.detailContainer}>
@@ -729,7 +1088,7 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   scrollArea: {
-    maxHeight: 280,
+    maxHeight: 420,
   },
   scrollContent: {
     paddingBottom: 8,
