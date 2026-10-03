@@ -56,7 +56,7 @@ export function TodaysPhotosSection({
           )}
         </View>
 
-        {canAddPhoto ? (
+        {canAddMore ? (
           <TouchableOpacity
             style={[
               styles.headerAddBtn,

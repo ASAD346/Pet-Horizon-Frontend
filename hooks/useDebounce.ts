@@ -3,7 +3,7 @@ import { useRouter as useExpoRouter, type Href } from 'expo-router';
 
 // Global singleton timestamp to lock navigation across all components & hooks
 let globalLastNavTime = 0;
-const GLOBAL_NAV_COOLDOWN_MS = 1000;
+const GLOBAL_NAV_COOLDOWN_MS = 450;
 
 export function isNavigationLocked(cooldownMs = GLOBAL_NAV_COOLDOWN_MS): boolean {
   const now = Date.now();
@@ -67,7 +67,7 @@ export function useDebouncedRouter() {
 
   const safePush = useCallback(
     (href: Href, options?: any) => {
-      if (isNavigationLocked(1000)) {
+      if (isNavigationLocked()) {
         return;
       }
       try {
@@ -85,7 +85,7 @@ export function useDebouncedRouter() {
 
   const safeNavigate = useCallback(
     (href: Href, options?: any) => {
-      if (isNavigationLocked(1000)) {
+      if (isNavigationLocked()) {
         return;
       }
       try {
@@ -103,7 +103,7 @@ export function useDebouncedRouter() {
 
   const safeReplace = useCallback(
     (href: Href, options?: any) => {
-      if (isNavigationLocked(1000)) {
+      if (isNavigationLocked()) {
         return;
       }
       router.replace(href as any, options);
@@ -113,7 +113,7 @@ export function useDebouncedRouter() {
 
   const safeBack = useCallback(() => {
     const now = Date.now();
-    if (now - globalLastNavTime < 500) {
+    if (now - globalLastNavTime < 350) {
       return;
     }
     globalLastNavTime = now;
