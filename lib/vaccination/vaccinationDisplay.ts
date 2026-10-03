@@ -1,4 +1,8 @@
-import { formatDateLabel, reminderFrequencyLabel } from '@/lib/vaccination/vaccinationForm';
+import {
+  formatDateLabel,
+  recurrenceIntervalLabel,
+  reminderFrequencyLabel,
+} from '@/lib/vaccination/vaccinationForm';
 import type { VaccinationScheduleItem } from '@/types/vaccination';
 
 const VACCINATION_COLORS = {
@@ -37,8 +41,10 @@ export function vaccinationScheduleSubtitle(item: VaccinationScheduleItem): stri
     parts.push('No due date set');
   }
 
-  if (item.metadata?.isRecurring && item.metadata.recurrenceInterval) {
-    parts.push(`Repeats ${item.metadata.recurrenceInterval}`);
+  const isRecurring = item.metadata?.isRecurring === true || (item as any).isRecurring === true;
+  const interval = item.metadata?.recurrenceInterval || (item as any).recurrenceInterval;
+  if (isRecurring && interval) {
+    parts.push(`Repeats ${recurrenceIntervalLabel(interval)}`);
   }
 
   if (item.metadata?.frequency) {

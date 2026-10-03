@@ -32,6 +32,8 @@ export interface UpdateVaccinationScheduleRequest {
   frequency?: VaccinationReminderFrequency;
   reminderDays?: number;
   reminderTime?: string;
+  isRecurring?: boolean;
+  recurrenceInterval?: VaccinationRecurrenceInterval;
   notes?: string;
   note?: string;
   date?: string;

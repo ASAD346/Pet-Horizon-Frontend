@@ -15,6 +15,7 @@ import {
   parseDoseString,
 } from '@/lib/medicine/medicineForm';
 import {
+  recurrenceIntervalLabel,
   reminderFrequencyLabel,
 } from '@/lib/vaccination/vaccinationForm';
 import { getWalkTimeLabel } from '@/lib/walk/walkForm';
@@ -358,7 +359,8 @@ export function scheduleEntrySubtitle(key: ScheduleSectionKey, entry: ScheduleEn
     }
     case 'vaccination': {
       const e = entry as VaccinationEntryState;
-      return `${formatScheduleDateSummary(e.scheduleDate)} · ${reminderFrequencyLabel(e.frequency)}`;
+      const recurText = e.isRecurring && e.recurrenceInterval ? ` · Repeats ${recurrenceIntervalLabel(e.recurrenceInterval)}` : '';
+      return `${formatScheduleDateSummary(e.scheduleDate)} · ${reminderFrequencyLabel(e.frequency)}${recurText}`;
     }
     case 'grooming': {
       const e = entry as GroomingEntryState;

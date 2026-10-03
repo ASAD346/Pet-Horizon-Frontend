@@ -255,6 +255,8 @@ async function saveVaccinationEntry(token: string, petId: string, entry: Vaccina
       reminder: entry.reminderOn,
       frequency: entry.frequency,
       reminderTime,
+      isRecurring: entry.isRecurring,
+      recurrenceInterval: entry.isRecurring ? entry.recurrenceInterval : undefined,
       notes: noteText || undefined,
       metadata: {
         notificationIds,

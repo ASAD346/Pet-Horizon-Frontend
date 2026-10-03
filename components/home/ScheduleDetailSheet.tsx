@@ -19,6 +19,7 @@ import { walkScheduleTitle } from '@/lib/walk/walkDisplay';
 import { medicineScheduleTitle } from '@/lib/medicine/medicineDisplay';
 import { groomingRecordTitle } from '@/lib/grooming/groomingDisplay';
 import { vaccinationScheduleTitle } from '@/lib/vaccination/vaccinationDisplay';
+import { recurrenceIntervalLabel } from '@/lib/vaccination/vaccinationForm';
 import { formatDateLabel } from '@/lib/grooming/groomingForm';
 import { parseSafeDate } from '@/lib/timezone';
 import {
@@ -352,10 +353,12 @@ export function ScheduleDetailSheet({
           icon: 'calendar-outline',
         });
       }
-      if (item.metadata?.recurrenceInterval) {
+      const isRecurring = item.metadata?.isRecurring === true || (item as any).isRecurring === true;
+      const interval = item.metadata?.recurrenceInterval || (item as any).recurrenceInterval;
+      if (isRecurring && interval) {
         fields.push({
           label: 'Recurrence',
-          value: `Repeats ${item.metadata.recurrenceInterval}`,
+          value: `Repeats ${recurrenceIntervalLabel(interval)}`,
           icon: 'repeat-outline',
         });
       }

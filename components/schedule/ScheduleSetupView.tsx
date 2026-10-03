@@ -192,7 +192,8 @@ function entryToScheduleDetailRow(
         isComplete: ve.isComplete,
         metadata: {
           vaccineName: ve.vaccineName,
-          recurrenceInterval: ve.recurrenceInterval,
+          isRecurring: ve.isRecurring,
+          recurrenceInterval: ve.isRecurring ? ve.recurrenceInterval : undefined,
           frequency: ve.frequency,
           notes: ve.notes,
         },
