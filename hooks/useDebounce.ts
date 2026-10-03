@@ -67,16 +67,15 @@ export function useDebouncedRouter() {
 
   const safePush = useCallback(
     (href: Href, options?: any) => {
-      const targetStr = typeof href === 'string' ? href : (href as any)?.pathname || '';
       if (isNavigationLocked(1000)) {
         return;
       }
-      if (targetStr.includes('notifications') && (router as any).navigate) {
-        (router as any).navigate(href as any, options);
-        return;
-      }
       try {
-        (router as any).navigate?.(href as any, options) ?? router.push(href as any, options);
+        if ((router as any).push) {
+          (router as any).push(href as any, options);
+        } else if ((router as any).navigate) {
+          (router as any).navigate(href as any, options);
+        }
       } catch {
         router.push(href as any, options);
       }
@@ -90,7 +89,11 @@ export function useDebouncedRouter() {
         return;
       }
       try {
-        (router as any).navigate?.(href as any, options) ?? router.push(href as any, options);
+        if ((router as any).navigate) {
+          (router as any).navigate(href as any, options);
+        } else if ((router as any).push) {
+          (router as any).push(href as any, options);
+        }
       } catch {
         router.push(href as any, options);
       }
