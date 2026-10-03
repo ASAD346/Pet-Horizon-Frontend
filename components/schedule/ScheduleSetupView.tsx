@@ -19,7 +19,7 @@ import { HomeTheme, Radius, Spacing, Palette } from '@/constants/theme';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ScheduleScreenHeader } from './ScheduleScreenHeader';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Skeleton, SkeletonCircle } from '@/components/ui/Skeleton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SkeletonScheduleSetup } from '@/components/ui/skeletons';
 import { useAuth } from '@/hooks/useAuth';
@@ -106,8 +106,28 @@ interface ScheduleSetupViewProps {
 function ScheduleEntriesSkeleton() {
   return (
     <View style={styles.entriesSkeleton}>
-      <Skeleton width="100%" height={56} borderRadius={Radius.md} />
-      <Skeleton width="100%" height={56} borderRadius={Radius.md} />
+      {[1, 2, 3].map((i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: '#FFFFFF',
+            borderRadius: Radius.lg,
+            padding: 12,
+            borderWidth: 1,
+            borderColor: '#F1F5F9',
+            gap: 12,
+          }}
+        >
+          <SkeletonCircle size={40} />
+          <View style={{ flex: 1, gap: 6 }}>
+            <Skeleton width="45%" height={15} borderRadius={4} />
+            <Skeleton width="75%" height={12} borderRadius={4} />
+          </View>
+          <Skeleton width={32} height={32} borderRadius={8} />
+        </View>
+      ))}
     </View>
   );
 }
@@ -214,7 +234,16 @@ export function ScheduleSetupView({
   const brandColor = isPremium ? Palette.premium.emerald : Palette.success;
   const brandBg = isPremium ? Palette.premium.emeraldLight : Palette.successLight;
 
-  const [sections, setSections] = useState<ScheduleSectionsState>(() => createInitialScheduleState());
+  const [sections, setSections] = useState<ScheduleSectionsState>(() => {
+    if (pet?._id) {
+      return (
+        queryClient.getQueryData<ScheduleSectionsState>(['schedules', pet._id]) ??
+        getCachedSchedules(pet._id) ??
+        createInitialScheduleState()
+      );
+    }
+    return createInitialScheduleState();
+  });
   const [mealTypeOptions, setMealTypeOptions] = useState<{ value: string; label: string }[]>([]);
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [groomingTypeOptions, setGroomingTypeOptions] = useState<GroomingTypeOption[]>([]);
@@ -260,14 +289,16 @@ export function ScheduleSetupView({
       });
     },
     enabled: Boolean(token && pet?._id && pet._id !== 'fallback-pet-id-123'),
-    staleTime: 0,
+    staleTime: 1000 * 60 * 2,
+    gcTime: 1000 * 60 * 30,
   });
-
-  const schedulesLoading = schedulesQueryLoading && !schedulesQueryFetching;
 
   useEffect(() => {
     if (querySections) {
       setSections(querySections);
+      if (pet?._id) {
+        setCachedSchedules(pet._id, querySections);
+      }
 
       // Cleanup pending notifications that no longer exist in the database
       const activeIds: string[] = [];
@@ -280,10 +311,10 @@ export function ScheduleSetupView({
         }
       });
       void cleanupPendingNotifications(activeIds);
-    } else {
+    } else if (!petLoading && !pet?._id) {
       setSections(createInitialScheduleState());
     }
-  }, [querySections, pet?._id]);
+  }, [querySections, pet?._id, petLoading]);
 
   const reloadSchedules = useCallback(
     async (petId: string) => {
@@ -695,7 +726,7 @@ export function ScheduleSetupView({
           keyboardShouldPersistTaps="handled"
           refreshControl={
             <RefreshControl
-              refreshing={schedulesLoading && !schedulesQueryLoading}
+              refreshing={schedulesQueryFetching && !schedulesQueryLoading}
               onRefresh={() => {
                 if (pet?._id) void reloadSchedules(pet._id);
               }}
@@ -732,13 +763,13 @@ export function ScheduleSetupView({
 
           {accessBannerMessage ? <View style={{ marginVertical: 12, padding: 12, backgroundColor: '#E3F2FD', borderRadius: 8 }}><AppText variant="caption">{accessBannerMessage}</AppText></View> : null}
 
-          {!pet ? (
+          {!pet && !petLoading ? (
             <View style={styles.emptyBox}>
               <AppText variant="bodySmall" color={HomeTheme.textMuted}>
                 Add a pet from the Home tab to start building their care schedule.
               </AppText>
             </View>
-          ) : !canViewAnySchedule ? (
+          ) : !canViewAnySchedule && !(schedulesQueryLoading || (petLoading && !pet)) ? (
             <View style={styles.emptyBox}>
               <AppText variant="bodySmall" color={HomeTheme.textMuted}>
                 Schedule access was not shared for this pet. Switch pets or ask the owner to update your permissions.
@@ -749,7 +780,7 @@ export function ScheduleSetupView({
               styles.timelineList,
               timelineItems.length === 0 && { flex: 1, justifyContent: 'center', paddingBottom: 0 }
             ]}>
-              {schedulesLoading && timelineItems.length === 0 ? (
+              {(schedulesQueryLoading || (petLoading && !pet)) && timelineItems.length === 0 ? (
                 <ScheduleEntriesSkeleton />
               ) : timelineItems.length === 0 ? (
                 <EmptyState
