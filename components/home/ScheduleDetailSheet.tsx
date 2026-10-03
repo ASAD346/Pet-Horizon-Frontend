@@ -276,6 +276,15 @@ export function ScheduleDetailSheet({
       : null;
 
   useEffect(() => {
+    if (!visible) {
+      setCompleteBusy(false);
+      setSkipBusy(false);
+      setWalkBusy(false);
+      walkBusyRef.current = false;
+    }
+  }, [visible]);
+
+  useEffect(() => {
     if (walkStartedAt !== null) {
       walkTimerRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - walkStartedAt) / 1000);

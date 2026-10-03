@@ -170,8 +170,11 @@ export function LogFoodSheet({
 
   useEffect(() => {
     if (visible) {
+      setSaving(false);
       resetForm();
       loadSpeciesFeatures();
+    } else {
+      setSaving(false);
     }
   }, [visible, resetForm, loadSpeciesFeatures]);
 
@@ -211,9 +214,11 @@ export function LogFoodSheet({
       const isEdit = Boolean(entry.scheduleId);
       log.ok('LogFood', isEdit ? 'Feeding schedule updated' : 'Feeding schedule saved', { mealType: entry.mealType, time: timeHHmm, unit: entry.unit });
       showToast(isEdit ? 'Feeding schedule updated successfully!' : 'Food logged successfully!');
+      setSaving(false);
       onSaved?.();
       onClose();
     } catch (e) {
+      setSaving(false);
       showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);

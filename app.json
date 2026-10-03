@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/app-icon.png",
     "notification": {
-      "icon": "./assets/images/app-icon.png",
+      "icon": "./assets/images/NotificationIcon.png",
       "color": "#1B4D3E"
     },
     "scheme": "pethorizon",
@@ -130,7 +130,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/app-icon.png",
+          "icon": "./assets/images/NotificationIcon.png",
           "color": "#1B4D3E",
           "defaultChannel": "default"
         }

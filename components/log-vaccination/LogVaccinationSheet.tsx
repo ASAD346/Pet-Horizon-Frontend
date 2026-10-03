@@ -105,8 +105,11 @@ export function LogVaccinationSheet({
 
   useEffect(() => {
     if (visible) {
+      setSaving(false);
       resetForm();
       loadHistory();
+    } else {
+      setSaving(false);
     }
   }, [visible, resetForm, loadHistory]);
 
@@ -138,10 +141,12 @@ export function LogVaccinationSheet({
         vaccineName: entry.vaccineName.trim(),
       });
       showToast(isEdit ? 'Vaccination schedule updated successfully!' : 'Vaccination logged successfully!');
+      setSaving(false);
       onSaved?.();
-      await loadHistory();
+      void loadHistory();
       onClose();
     } catch (e) {
+      setSaving(false);
       showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);

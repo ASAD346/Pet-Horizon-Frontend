@@ -39,9 +39,14 @@ export function JournalEntryEditSheet({
 
   useEffect(() => {
     if (visible && entry) {
+      setSaving(false);
+      setDeleting(false);
       setNote(entry.note ?? '');
       setActivityType(entry.activityType ?? 'General');
       setError(null);
+    } else {
+      setSaving(false);
+      setDeleting(false);
     }
   }, [visible, entry]);
 
@@ -58,9 +63,11 @@ export function JournalEntryEditSheet({
         note: note.trim(),
         activityType: activityType.trim() || 'General',
       });
+      setSaving(false);
       onSaved();
       onClose();
     } catch (err) {
+      setSaving(false);
       setError(getErrorMessage(err));
     } finally {
       setSaving(false);
@@ -77,9 +84,11 @@ export function JournalEntryEditSheet({
     setError(null);
     try {
       await deleteJournalEntry(token, entry._id);
+      setDeleting(false);
       onSaved();
       onClose();
     } catch (err) {
+      setDeleting(false);
       setError(getErrorMessage(err));
     } finally {
       setDeleting(false);

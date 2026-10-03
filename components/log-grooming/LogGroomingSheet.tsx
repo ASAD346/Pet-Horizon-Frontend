@@ -133,8 +133,11 @@ export function LogGroomingSheet({
 
   useEffect(() => {
     if (visible) {
+      setSaving(false);
       resetForm();
       loadTypes();
+    } else {
+      setSaving(false);
     }
   }, [visible, resetForm, loadTypes]);
 
@@ -170,9 +173,11 @@ export function LogGroomingSheet({
         type: entry.groomingType,
       });
       showToast(isEdit ? 'Grooming schedule updated successfully!' : 'Grooming logged successfully!');
+      setSaving(false);
       onSaved?.();
       onClose();
     } catch (e) {
+      setSaving(false);
       showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);

@@ -86,7 +86,10 @@ export function LogMedicineSheet({
 
   useEffect(() => {
     if (visible) {
+      setSaving(false);
       resetForm();
+    } else {
+      setSaving(false);
     }
   }, [visible, resetForm]);
 
@@ -137,9 +140,11 @@ export function LogMedicineSheet({
         frequency: entry.frequency,
       });
       showToast(isEdit ? 'Medicine schedule updated successfully!' : 'Medicine logged successfully!');
+      setSaving(false);
       onSaved?.();
       onClose();
     } catch (e) {
+      setSaving(false);
       showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);

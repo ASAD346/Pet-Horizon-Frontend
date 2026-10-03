@@ -643,11 +643,13 @@ export function ScheduleSetupView({
         groomingVisible,
       });
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
+      setEditorSaving(false);
       setEditor(null);
       const msg = editor.mode === 'add' ? 'Schedule added successfully.' : 'Schedule updated successfully.';
       showToast(msg);
-      await reloadSchedules(pet._id);
+      void reloadSchedules(pet._id);
     } catch (e) {
+      setEditorSaving(false);
       const err = e instanceof Error ? e.message : 'Unable to save schedule.';
       setEditorError(err);
       showToast(err);
@@ -726,11 +728,13 @@ export function ScheduleSetupView({
       });
 
       queryClient.invalidateQueries({ queryKey: ['dashboard', pet._id] });
+      setDeletingId(null);
       showToast('Schedule deleted.');
       // Reload in background to sync server state (no loading flash)
       void reloadSchedules(pet._id);
     } catch (e) {
       console.error('[handleDeleteEntry] API failed:', e);
+      setDeletingId(null);
       // Rollback optimistic removal on failure
       const err = e instanceof Error ? e.message : 'Unable to delete schedule.';
       showErrorToast(err);

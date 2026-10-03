@@ -25,6 +25,7 @@ interface AppButtonProps {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
+  isLoading?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -40,16 +41,18 @@ export function AppButton({
   variant = 'primary',
   size = 'md',
   loading = false,
+  isLoading = false,
   disabled = false,
   icon,
   style,
   textStyle,
   accessibilityLabel,
 }: AppButtonProps) {
+  const isBusy = Boolean(loading || isLoading);
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
-    if (disabled || loading) return;
+    if (disabled || isBusy) return;
     scale.value = withSpring(0.96);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -140,7 +143,7 @@ export function AppButton({
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       onPress={onPress}
-      disabled={disabled || loading}
+      disabled={disabled || isBusy}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || title}
       hitSlop={height < 44 ? { top: (44 - height) / 2, bottom: (44 - height) / 2, left: 8, right: 8 } : undefined}
@@ -158,7 +161,7 @@ export function AppButton({
         style,
       ]}
     >
-      {loading ? (
+      {isBusy ? (
         <ActivityIndicator size="small" color={text} />
       ) : (
         <View style={styles.content}>
@@ -213,6 +216,7 @@ export interface CustomButtonProps {
   title: string;
   onPress: () => void;
   variant?: 'primary' | 'outline' | 'text';
+  loading?: boolean;
   isLoading?: boolean;
   disabled?: boolean;
   icon?: React.ReactNode;
@@ -233,6 +237,7 @@ export function CustomButton({
   title,
   onPress,
   variant = 'primary',
+  loading = false,
   isLoading = false,
   disabled = false,
   icon,
@@ -240,13 +245,14 @@ export function CustomButton({
   textStyle,
   accessibilityLabel,
 }: CustomButtonProps) {
+  const isBusy = Boolean(isLoading || loading);
   const { user } = useAuth();
   const isPremium = user?.premiumStatus === 'premium';
 
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
-    if (disabled || isLoading) return;
+    if (disabled || isBusy) return;
     scale.value = withSpring(0.96);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -269,7 +275,7 @@ export function CustomButton({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
-        disabled={disabled || isLoading}
+        disabled={disabled || isBusy}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? title}
         style={[
@@ -284,7 +290,7 @@ export function CustomButton({
           style,
         ]}
       >
-        {isLoading ? (
+        {isBusy ? (
           <ActivityIndicator size="small" color={accentColor} />
         ) : (
           <View style={customStyles.innerRow}>
@@ -312,12 +318,12 @@ export function CustomButton({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
-        disabled={disabled || isLoading}
+        disabled={disabled || isBusy}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? title}
         style={[customStyles.base, { backgroundColor: 'transparent', opacity: disabled ? 0.5 : 1 }, animatedStyle, style]}
       >
-        {isLoading ? (
+        {isBusy ? (
           <ActivityIndicator size="small" color={accentColor} />
         ) : (
           <View style={customStyles.innerRow}>
@@ -339,7 +345,7 @@ export function CustomButton({
   }
 
   // ── variant === 'primary' ─────────────────────────────────────────────────
-  const innerContent = isLoading ? (
+  const innerContent = isBusy ? (
     <ActivityIndicator size="small" color="#FFFFFF" />
   ) : (
     <View style={customStyles.innerRow}>
@@ -365,7 +371,7 @@ export function CustomButton({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
-        disabled={disabled || isLoading}
+        disabled={disabled || isBusy}
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel ?? title}
         style={[customStyles.base, { opacity: disabled ? 0.5 : 1 }, animatedStyle, style]}

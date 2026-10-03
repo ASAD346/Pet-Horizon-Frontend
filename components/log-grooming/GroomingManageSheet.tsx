@@ -50,9 +50,14 @@ export function GroomingManageSheet({
 
   useEffect(() => {
     if (visible && record) {
+      setSaving(false);
+      setDeleting(false);
       setNotes(record.notes ?? '');
       setScheduledDate(record.scheduledDate ? new Date(record.scheduledDate) : new Date());
       setError(null);
+    } else {
+      setSaving(false);
+      setDeleting(false);
     }
   }, [visible, record]);
 
@@ -78,9 +83,11 @@ export function GroomingManageSheet({
                 scheduledDate: scheduledDate ? dateToApiDateString(scheduledDate) : null,
               });
               showSuccessToast("Grooming task modified successfully.");
+              setSaving(false);
               onUpdated();
               onClose();
             } catch (err: any) {
+              setSaving(false);
               const errMsg = err?.message || getErrorMessage(err) || "Failed to update record.";
               setError(errMsg);
               showErrorToast(errMsg);
@@ -112,9 +119,11 @@ export function GroomingManageSheet({
             try {
               await deleteGroomingRecord(token, record._id);
               showSuccessToast("Grooming task deleted successfully.");
+              setDeleting(false);
               onUpdated();
               onClose();
             } catch (err: any) {
+              setDeleting(false);
               const errMsg = err?.message || getErrorMessage(err) || "Failed to delete record.";
               setError(errMsg);
               showErrorToast(errMsg);

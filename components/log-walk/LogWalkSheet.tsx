@@ -80,7 +80,10 @@ export function LogWalkSheet({
 
   useEffect(() => {
     if (visible) {
+      setSaving(false);
       resetForm();
+    } else {
+      setSaving(false);
     }
   }, [visible, resetForm]);
 
@@ -114,9 +117,11 @@ export function LogWalkSheet({
       const isEdit = Boolean(entry.scheduleId);
       log.ok('LogWalk', isEdit ? 'Walk schedule updated' : 'Walk schedule saved', { walkTime: entry.walkTime, time: timeHHmm, duration: durationMinutes });
       showToast(isEdit ? 'Walk schedule updated successfully!' : 'Walk logged successfully!');
+      setSaving(false);
       onSaved?.();
       onClose();
     } catch (e) {
+      setSaving(false);
       showErrorToast(getErrorMessage(e));
     } finally {
       setSaving(false);
