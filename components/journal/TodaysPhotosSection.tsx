@@ -58,18 +58,17 @@ export function TodaysPhotosSection({
 
         {canAddPhoto ? (
           <TouchableOpacity
-            style={[styles.headerAddBtn, { backgroundColor: themeColor }]}
+            style={[
+              styles.headerAddBtn,
+              { backgroundColor: themeColor, opacity: uploading ? 0.6 : 1 },
+            ]}
             activeOpacity={0.8}
             onPress={onAddPhoto}
             disabled={uploading}
           >
-            {uploading ? (
-              <ActivityIndicator size="small" color="#FFFFFF" style={styles.btnIcon} />
-            ) : (
-              <Ionicons name="camera" size={16} color="#FFFFFF" style={styles.btnIcon} />
-            )}
+            <Ionicons name="camera" size={16} color="#FFFFFF" style={styles.btnIcon} />
             <AppText variant="caption" weight="700" color="#FFFFFF">
-              {uploading ? 'Adding...' : 'Add Photo'}
+              Add Photo
             </AppText>
           </TouchableOpacity>
         ) : null}
@@ -97,22 +96,26 @@ export function TodaysPhotosSection({
             </AnimatedStackItem>
           ))}
 
-          {canAddMore ? (
+          {uploading && (
+            <View style={[styles.uploadingPhotoCard, { borderColor: themeColor }]}>
+              <ActivityIndicator size="small" color={themeColor} />
+              <AppText variant="caption" weight="600" color={themeColor} style={styles.uploadingCardText}>
+                Uploading...
+              </AppText>
+            </View>
+          )}
+
+          {canAddMore && !uploading ? (
             <TouchableOpacity
               style={[styles.addPhotoCard, { borderColor: themeColor }]}
               activeOpacity={0.75}
               onPress={onAddPhoto}
-              disabled={uploading}
             >
               <View style={[styles.addPhotoCardIcon, { backgroundColor: themeColor + '18' }]}>
-                {uploading ? (
-                  <ActivityIndicator size="small" color={themeColor} />
-                ) : (
-                  <Ionicons name="add" size={24} color={themeColor} />
-                )}
+                <Ionicons name="add" size={24} color={themeColor} />
               </View>
               <AppText variant="caption" weight="700" color={themeColor} style={styles.addCardText}>
-                {uploading ? 'Adding...' : 'Add Photo'}
+                Add Photo
               </AppText>
             </TouchableOpacity>
           ) : null}
@@ -120,29 +123,41 @@ export function TodaysPhotosSection({
       ) : canAddPhoto ? (
         <TouchableOpacity
           style={[styles.emptySlotInteractive, { borderColor: themeColor + '60' }]}
-          activeOpacity={0.8}
-          onPress={onAddPhoto}
+          activeOpacity={uploading ? 1 : 0.8}
+          onPress={uploading ? undefined : onAddPhoto}
           disabled={uploading}
         >
-          <View style={[styles.emptyIconCircle, { backgroundColor: themeColor + '15' }]}>
-            {uploading ? (
-              <ActivityIndicator size="small" color={themeColor} />
-            ) : (
-              <Ionicons name="camera" size={28} color={themeColor} />
-            )}
-          </View>
-          <AppText variant="body" weight="700" color={JournalTheme.text} style={styles.emptyTitle}>
-            {uploading ? 'Uploading Photo...' : 'Add Today’s Photo'}
-          </AppText>
-          <AppText variant="caption" color={JournalTheme.textMuted} style={styles.emptySubtitle}>
-            {uploading ? 'Please wait a moment' : 'Capture or select a memory from your gallery'}
-          </AppText>
-          <View style={[styles.emptyActionPill, { backgroundColor: themeColor }]}>
-            <Ionicons name="add" size={16} color="#FFFFFF" />
-            <AppText variant="caption" weight="700" color="#FFFFFF">
-              Upload Photo
-            </AppText>
-          </View>
+          {uploading ? (
+            <View style={styles.uploadingContainer}>
+              <View style={[styles.emptyIconCircle, { backgroundColor: themeColor + '15' }]}>
+                <ActivityIndicator size="small" color={themeColor} />
+              </View>
+              <AppText variant="body" weight="700" color={JournalTheme.text} style={styles.emptyTitle}>
+                Uploading Photo...
+              </AppText>
+              <AppText variant="caption" color={JournalTheme.textMuted} style={styles.emptySubtitle}>
+                Please wait while your photo is being added
+              </AppText>
+            </View>
+          ) : (
+            <>
+              <View style={[styles.emptyIconCircle, { backgroundColor: themeColor + '15' }]}>
+                <Ionicons name="camera" size={28} color={themeColor} />
+              </View>
+              <AppText variant="body" weight="700" color={JournalTheme.text} style={styles.emptyTitle}>
+                Add Today’s Photo
+              </AppText>
+              <AppText variant="caption" color={JournalTheme.textMuted} style={styles.emptySubtitle}>
+                Capture or select a memory from your gallery
+              </AppText>
+              <View style={[styles.emptyActionPill, { backgroundColor: themeColor }]}>
+                <Ionicons name="add" size={16} color="#FFFFFF" />
+                <AppText variant="caption" weight="700" color="#FFFFFF">
+                  Upload Photo
+                </AppText>
+              </View>
+            </>
+          )}
         </TouchableOpacity>
       ) : (
         <View style={styles.emptySlot}>
@@ -222,6 +237,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E2E8F0',
   },
+  uploadingPhotoCard: {
+    width: 100,
+    height: 100,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xs,
+    gap: 6,
+  },
+  uploadingCardText: {
+    fontSize: 11,
+    textAlign: 'center',
+  },
   addPhotoCard: {
     width: 100,
     height: 100,
@@ -256,6 +287,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     borderWidth: 1.5,
     borderStyle: 'dashed',
+  },
+  uploadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyIconCircle: {
     width: 52,
