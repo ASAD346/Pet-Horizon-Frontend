@@ -407,11 +407,11 @@ export function PremiumHubContent() {
         setSelectedPlanId(yearly?.planId ?? filtered[0].planId);
       }
     } catch (error: any) {
-      Alert.alert('Pet Horizon Premium', getErrorMessage(error));
+      showToast(getErrorMessage(error, 'Could not load subscription plans. Please try again.'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, showToast]);
 
   useEffect(() => {
     loadPlans();
@@ -489,7 +489,7 @@ export function PremiumHubContent() {
 
   const handleStartTrial = async () => {
     if (isPremium) {
-      Alert.alert('Already Premium', 'You already have an active premium subscription.');
+      showToast('You already have an active premium subscription.', 'info');
       return;
     }
     if (!selectedPlan) return;
@@ -517,8 +517,8 @@ export function PremiumHubContent() {
 
     const offerToken = (selectedPlan as any).offerToken || '';
     if (!offerToken && Platform.OS === 'android') {
-      const errorMsg = `Subscription details for the ${selectedPlan.name} plan could not be loaded from Google Play Store. Please try again.`;
-      Alert.alert('Subscription Error', errorMsg);
+      const errorMsg = `Subscription details for the ${selectedPlan.name} plan could not be loaded. Please try again.`;
+      showToast(errorMsg, 'error');
       setCheckoutLoading(false);
       return;
     }
@@ -541,7 +541,6 @@ export function PremiumHubContent() {
     } catch (error: any) {
       console.error('IAP Purchase Flow Launch Failed in PremiumHub:', error);
       console.error('IAP Purchase Flow Launch Failed details:', JSON.stringify(error, null, 2));
-      const errMsg = `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`;
       
       if (error?.code === 'E_ALREADY_OWNED' || error?.message?.includes('already owned') || error?.code?.includes('already-owned')) {
         Alert.alert(
@@ -553,8 +552,9 @@ export function PremiumHubContent() {
           ]
         );
       } else {
-        setCheckoutError(errMsg);
-        Alert.alert('Purchase Error', errMsg);
+        const friendlyMsg = 'Unable to complete Google Play purchase. Please try again.';
+        setCheckoutError(friendlyMsg);
+        showToast(friendlyMsg, 'error');
       }
       setCheckoutLoading(false);
     }
@@ -601,11 +601,11 @@ export function PremiumHubContent() {
       }
       
       if (!restored) {
-        showToast('No active premium subscription found to restore.');
+        showToast('No active premium subscription found to restore.', 'info');
       }
     } catch (err: any) {
       console.error('IAP Restore Failed:', err);
-      Alert.alert('Restore Failed', err?.message || 'Failed to restore purchases. Please verify your Google account setup.');
+      showToast(getErrorMessage(err, 'Failed to restore purchases. Please verify your Google account setup.'), 'error');
     } finally {
       setRestoring(false);
       endConnection();

@@ -97,7 +97,7 @@ export function GroomingManageSheet({
               onClose();
             } catch (err: any) {
               setSaving(false);
-              const errMsg = err?.message || getErrorMessage(err) || "Failed to update record.";
+              const errMsg = getErrorMessage(err, "Failed to update record.");
               setError(errMsg);
               showErrorToast(errMsg);
             } finally {
@@ -133,7 +133,7 @@ export function GroomingManageSheet({
               onClose();
             } catch (err: any) {
               setDeleting(false);
-              const errMsg = err?.message || getErrorMessage(err) || "Failed to delete record.";
+              const errMsg = getErrorMessage(err, "Failed to delete record.");
               setError(errMsg);
               showErrorToast(errMsg);
             } finally {

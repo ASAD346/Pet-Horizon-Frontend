@@ -523,7 +523,7 @@ export default function HomeScreen() {
         ]);
       } catch (err) {
         log.fail('Home', 'Switch pet failed', getErrorMessage(err));
-        Alert.alert('Error', 'Failed to switch pet profile. Please try again.');
+        showToast(getErrorMessage(err, 'Failed to switch pet profile. Please try again.'), 'error');
       }
     },
     [token, pet?._id, pets, user, setSession, reloadPet, reloadPets, refetchDashboard, queryClient],

@@ -212,11 +212,11 @@ export default function EditProfileScreen() {
       await logout();
       router.replace('/auth/login');
     } catch (error) {
-      Alert.alert('Error', getErrorMessage(error));
+      showErrorToast(getErrorMessage(error));
     } finally {
       setDeleting(false);
     }
-  }, [token, user?._id, logout, router]);
+  }, [token, user?._id, logout, router, showErrorToast]);
 
   const displayPhoto = photoUri ?? existingPhotoUrl ?? null;
   const strength = getStrength(newPassword);

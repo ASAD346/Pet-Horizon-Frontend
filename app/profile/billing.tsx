@@ -303,7 +303,7 @@ export default function BillingScreen() {
     } catch (err: any) {
       console.error('[IAP Diagnostics ERROR] Pre-purchase check / restore failed:', err);
       if (!silent) {
-        Alert.alert('Restore Failed', err?.message || 'Failed to restore purchases. Please verify your Google account setup.');
+        showToast(getErrorMessage(err, 'Failed to restore purchases. Please verify your Google account setup.'), 'error');
       }
     } finally {
       if (!silent) {
@@ -311,7 +311,7 @@ export default function BillingScreen() {
       }
     }
     return false;
-  }, [token, reload]);
+  }, [token, reload, showToast]);
 
   useEffect(() => {
     let purchaseUpdateSubscription: any;
@@ -346,7 +346,7 @@ export default function BillingScreen() {
                 throw new Error('Verification failed.');
               }
             } catch (err) {
-              Alert.alert('Verification Failed', 'Could not verify your purchase with Google Play. Please try again or contact support.');
+              showToast('Could not verify your purchase with Google Play. Please try again.', 'error');
             } finally {
               setCheckoutLoading(false);
             }
@@ -452,7 +452,7 @@ export default function BillingScreen() {
 
   const handleSelectPlan = async (planId: 'monthly' | 'yearly') => {
     if (isPremium) {
-      Alert.alert('Already Premium', 'You already have an active premium subscription.');
+      showToast('You already have an active premium subscription.', 'info');
       return;
     }
     selectedPlanRef.current = planId;
@@ -481,9 +481,9 @@ export default function BillingScreen() {
 
     const matched = livePlans.find((p) => p.basePlanId === planId);
     if (!matched) {
-      const errorMsg = `Offer for ${planId} plan was not retrieved from Google Play. Please try again.`;
+      const errorMsg = `Offer for ${planId} plan could not be loaded. Please try again.`;
       console.error(errorMsg);
-      Alert.alert('Subscription Error', errorMsg);
+      showToast(errorMsg, 'error');
       setCheckoutLoading(false);
       return;
     }
@@ -518,10 +518,7 @@ export default function BillingScreen() {
           ]
         );
       } else {
-        Alert.alert(
-          'Purchase Error',
-          `Failed to launch Google Play billing flow.\nCode: ${error?.code || 'unknown'}\nMessage: ${error?.message || 'unknown'}`
-        );
+        showToast('Unable to complete Google Play purchase. Please try again.', 'error');
       }
       setCheckoutLoading(false);
     }

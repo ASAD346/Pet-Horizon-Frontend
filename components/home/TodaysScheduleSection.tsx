@@ -56,8 +56,10 @@ import { SectionHeader } from './SectionHeader';
 import { ScheduleDetailSheet } from './ScheduleDetailSheet';
 import { ActiveWalkHeroCard } from './ActiveWalkHeroCard';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
-import { useAppSelector } from '@/redux/store';
+import { useAppDispatch, useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
+import { showToastAction } from '@/redux/action';
+import { getErrorMessage } from '@/lib/api/errors';
 import { homePillCard } from './homeStyles';
 
 type ScheduleRow =
@@ -221,6 +223,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   currentUserId,
   token,
 }: ScheduleRowCardProps) {
+  const dispatch = useAppDispatch();
   const [completeBusy, setCompleteBusy] = useState(false);
   const [skipBusy, setSkipBusy] = useState(false);
   const clickedRef = useRef(false);
@@ -249,7 +252,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
     try {
       await onComplete(rowId(row));
     } catch (e: any) {
-      Alert.alert('Action Failed', e?.message || 'Could not complete the schedule.');
+      dispatch(showToastAction(getErrorMessage(e, 'Could not complete the schedule.'), 'error'));
       clickedRef.current = false;
     } finally {
       setCompleteBusy(false);
@@ -263,7 +266,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
     try {
       await onSkipFeeding(rowId(row));
     } catch (e: any) {
-      Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
+      dispatch(showToastAction(getErrorMessage(e, 'Could not skip the schedule.'), 'error'));
       clickedRef.current = false;
     } finally {
       setSkipBusy(false);
@@ -361,7 +364,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
                   try {
                     await onSkipMedicine(rowId(row));
                   } catch (e: any) {
-                    Alert.alert('Action Failed', e?.message || 'Could not skip the schedule.');
+                    dispatch(showToastAction(getErrorMessage(e, 'Could not skip the schedule.'), 'error'));
                     clickedRef.current = false;
                   } finally {
                     setSkipBusy(false);

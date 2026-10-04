@@ -146,17 +146,15 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     console.warn(`[API Network Connection Error] Path: ${path}, URL: ${url}, Error Details:`, error);
 
     if (error instanceof Error && error.name === 'AbortError') {
-      const hint = __DEV__ ? ` (${API_BASE_URL})` : '';
       throw new ApiError(
-        `Request timed out. Is the API running? On a real phone, set EXPO_PUBLIC_API_URL to your PC IP in .env${hint}`,
+        'Request timed out. Please check your connection and try again.',
         0,
         'TIMEOUT',
       );
     }
 
-    const hint = __DEV__ ? ` API: ${API_BASE_URL}` : '';
     throw new ApiError(
-      `Unable to reach the server.${hint}`,
+      'Unable to connect. Please check your internet connection and try again.',
       0,
       'NETWORK',
     );

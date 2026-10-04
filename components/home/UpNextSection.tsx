@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { AppText } from '../ui/AppText';
 import { Skeleton } from '@/components/ui/skeletons';
 import { ColorIconBadge } from './ColorIconBadge';
@@ -9,6 +9,9 @@ import { formatTimeHHmmDisplay } from '@/lib/feeding/feedingForm';
 import type { DashboardTask } from '@/types/dashboard';
 import { HomeTheme, Radius, Spacing } from '../../constants/theme';
 import { getTaskDisplayName } from '@/src/utils/taskMappings';
+import { useAppDispatch } from '@/redux/store';
+import { showToastAction } from '@/redux/action';
+import { getErrorMessage } from '@/lib/api/errors';
 
 interface UpNextSectionProps {
   loading?: boolean;
@@ -62,6 +65,7 @@ interface DashboardTaskCardProps {
 }
 
 const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, isPremium = false }: DashboardTaskCardProps) {
+  const dispatch = useAppDispatch();
   const [busy, setBusy] = useState(false);
 
   const TASK_COLORS: Record<string, { color: string; bg: string }> = {
@@ -85,7 +89,7 @@ const DashboardTaskCard = React.memo(function DashboardTaskCard({ task, onLog, i
     try {
       await onLog(task.id);
     } catch (e: any) {
-      Alert.alert('Action Failed', e?.message || 'Could not perform this action.');
+      dispatch(showToastAction(getErrorMessage(e, 'Could not perform this action.'), 'error'));
     } finally {
       setBusy(false);
     }

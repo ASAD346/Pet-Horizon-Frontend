@@ -25,44 +25,103 @@ export class ApiError extends Error {
 export function apiErrorHandler(error: unknown): string {
   if (!error) return 'Something went wrong. Please try again.';
 
+  let msg = '';
+  let status = 0;
+
   if (error instanceof ApiError) {
-    if (error.isNetworkError || error.status === 0) {
-      return "Connection lost. Please check your internet.";
-    }
-    if (error.isUnauthorized || error.status === 401) {
-      if (error.message && error.message.toLowerCase() !== 'unauthorized' && !error.message.includes('401')) {
-        return error.message;
-      }
-      return "Session expired. Please log in again.";
-    }
-    if (error.isForbidden || error.status === 403) {
-      return "You do not have permission to perform this action.";
-    }
-    if (error.status >= 500) {
-      return "Our servers are busy. Please try again in a few moments.";
-    }
-    
-    const msg = error.message || '';
-    if (msg.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/) || msg.includes('server not running') || msg.includes('ECONNREFUSED') || msg.includes('Network Error')) {
-      return "Connection lost. Please check your internet.";
-    }
-    return msg;
+    status = error.status;
+    msg = error.message || '';
+  } else if (error instanceof Error) {
+    msg = error.message || '';
+  } else if (typeof error === 'string') {
+    msg = error;
+  } else if (typeof error === 'object' && error !== null) {
+    const obj = error as Record<string, any>;
+    msg = obj.message || obj.error || JSON.stringify(error);
+    if (typeof obj.status === 'number') status = obj.status;
+  } else {
+    msg = String(error);
   }
 
-  if (error instanceof Error) {
-    const msg = error.message || '';
-    if (msg.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/) || msg.includes('server not running') || msg.includes('ECONNREFUSED') || msg.includes('Network Error') || msg.toLowerCase().includes('network')) {
-      return "Connection lost. Please check your internet.";
-    }
-    return msg;
+  const lower = msg.toLowerCase();
+
+  // 1. Check for network / connection / timeout issues
+  if (
+    status === 0 ||
+    lower.includes('network request failed') ||
+    lower.includes('network error') ||
+    lower.includes('failed to fetch') ||
+    lower.includes('connection lost') ||
+    lower.includes('unable to reach') ||
+    lower.includes('unable to connect') ||
+    lower.includes('econnrefused') ||
+    lower.includes('econnreset') ||
+    lower.includes('enotfound') ||
+    lower.includes('etimedout') ||
+    lower.includes('timeout') ||
+    lower.includes('aborterror') ||
+    msg.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/) ||
+    lower.includes('localhost') ||
+    lower.includes('http://') ||
+    lower.includes('https://')
+  ) {
+    return 'Connection lost. Please check your internet connection and try again.';
   }
 
-  const strErr = String(error);
-  if (strErr.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/) || strErr.includes('server not running') || strErr.includes('ECONNREFUSED') || strErr.toLowerCase().includes('network')) {
-    return "Connection lost. Please check your internet.";
+  // 2. Check for auth / session expiration
+  if (
+    status === 401 ||
+    lower.includes('jwt expired') ||
+    lower.includes('jwt malformed') ||
+    lower.includes('invalid token') ||
+    lower.includes('token expired') ||
+    lower.includes('session expired') ||
+    lower.includes('unauthorized') ||
+    lower.includes('not authenticated')
+  ) {
+    return 'Your session has expired. Please log in again.';
   }
 
-  return strErr;
+  // 3. Check for permission / forbidden
+  if (status === 403 || lower.includes('forbidden') || lower.includes('permission denied')) {
+    return 'You do not have permission to perform this action.';
+  }
+
+  // 4. Check for not found
+  if (status === 404 || lower.includes('not found') || lower.includes('does not exist')) {
+    return 'The requested item could not be found.';
+  }
+
+  // 5. Check for server-side / database / runtime technical errors
+  if (
+    status >= 500 ||
+    lower.includes('internal server error') ||
+    lower.includes('mongoservererror') ||
+    lower.includes('mongoerror') ||
+    lower.includes('casterror') ||
+    lower.includes('e11000') ||
+    lower.includes('typeerror') ||
+    lower.includes('syntaxerror') ||
+    lower.includes('referenceerror') ||
+    lower.includes('stack trace') ||
+    lower.includes('at async') ||
+    lower.includes('status code')
+  ) {
+    return 'Our services are temporarily busy. Please try again in a few moments.';
+  }
+
+  // 6. Clean up raw technical error prefixes
+  let cleaned = msg
+    .replace(/^Error:\s*/i, '')
+    .replace(/^ApiError:\s*/i, '')
+    .replace(/^Request failed:\s*/i, '')
+    .trim();
+
+  if (!cleaned || cleaned.length < 3) {
+    return 'Something went wrong. Please try again.';
+  }
+
+  return cleaned;
 }
 
 export function getErrorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {

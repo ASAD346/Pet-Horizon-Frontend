@@ -98,12 +98,12 @@ export function ProfileHubView() {
       markLoaded();
     } catch (error) {
       if (block) {
-        Alert.alert('Profile', getErrorMessage(error));
+        showToast(getErrorMessage(error), 'error');
       }
     } finally {
       setLoading(false);
     }
-  }, [token, user?._id, user?.activePetId, setSession, shouldBlockUI, markLoaded, reset, refetchPremium]);
+  }, [token, user?._id, user?.activePetId, setSession, shouldBlockUI, markLoaded, reset, refetchPremium, showToast]);
 
   useFocusReload(reload, Boolean(token && user?._id));
 
@@ -136,11 +136,11 @@ export function ProfileHubView() {
       await logout();
       router.replace('/auth/login');
     } catch (error) {
-      Alert.alert('Error', getErrorMessage(error));
+      showToast(getErrorMessage(error), 'error');
     } finally {
       setDeleting(false);
     }
-  }, [token, user?._id, logout, router]);
+  }, [token, user?._id, logout, router, showToast]);
 
   const displayName = user?.fullName?.trim() || user?.email?.split('@')[0] || 'User';
 
