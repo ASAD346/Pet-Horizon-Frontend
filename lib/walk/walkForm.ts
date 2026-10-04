@@ -22,8 +22,7 @@ export function getWalkTimeLabel(value: string): string {
 
 export function defaultWalkTimeDate(): Date {
   const d = new Date();
-  d.setMinutes(d.getMinutes() + 30);
-  d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5, 0, 0);
+  d.setSeconds(0, 0);
   return d;
 }
 
