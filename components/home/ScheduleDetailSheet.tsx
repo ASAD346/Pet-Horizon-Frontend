@@ -355,7 +355,6 @@ export function ScheduleDetailSheet({
     walkBusyRef.current = true;
     setWalkBusy(true);
     const finalSeconds = walkElapsedSeconds;
-    await stopWalk();
     if (walkTimerRef.current) { clearInterval(walkTimerRef.current); walkTimerRef.current = null; }
     try {
       const minutes = Math.max(1, Math.round(finalSeconds / 60));
@@ -363,6 +362,7 @@ export function ScheduleDetailSheet({
       onClose();
     } catch (_) {
     } finally {
+      await stopWalk();
       walkBusyRef.current = false;
       setWalkBusy(false);
     }

@@ -663,7 +663,7 @@ export function TodaysScheduleSection({
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="VIEW ALL" onActionPress={onViewAll} />
 
-      <ActiveWalkHeroCard />
+      <ActiveWalkHeroCard onComplete={onCompleteWalk} onSkip={onSkipWalk} />
 
       {loading ? (
         <SkeletonScheduleSections count={2} />

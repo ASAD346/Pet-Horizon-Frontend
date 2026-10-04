@@ -158,15 +158,15 @@ export function WalkTimer({
     setBusy(true);
     const finalSeconds = elapsedSeconds;
     await cleanUpNotificationAndStorage();
-    await stopWalk();
-    setStartedAt(null);
-    setElapsedSeconds(0);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     try {
       const minutes = Math.max(1, Math.round(finalSeconds / 60));
       await onComplete(scheduleId, minutes);
     } catch (_) {
     } finally {
+      await stopWalk();
+      setStartedAt(null);
+      setElapsedSeconds(0);
       busyRef.current = false;
       setBusy(false);
     }

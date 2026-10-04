@@ -8,6 +8,8 @@ import {
   PetLabeledInput,
   PetPhotoPicker,
   SpeciesSelector,
+  SpeciesIcon,
+  getSpeciesTheme,
   WeightInput,
   WeightUnit,
 } from '@/components/pet';
@@ -546,8 +548,8 @@ export default function RegisterPetScreen() {
                         Species
                       </AppText>
                       <View style={styles.fieldContainer}>
-                        <View style={[styles.fieldIconWrapper, { backgroundColor: '#FDF2F8' }]}>
-                          <MaterialCommunityIcons name={(species ? getSpeciesIcon(species) : 'paw') as any} size={18} color="#DB2777" />
+                        <View style={[styles.fieldIconWrapper, { backgroundColor: getSpeciesTheme(species).bgLight }]}>
+                          <SpeciesIcon species={species || 'other'} size={20} />
                         </View>
                         <AppText style={[styles.fieldValue, { textTransform: 'capitalize' }]} weight="600" color="#1A2B4E">
                           {species || '—'}

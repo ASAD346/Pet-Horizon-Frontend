@@ -125,7 +125,7 @@ export function ActiveWalkOverlay() {
     return `${pad(mins)}:${pad(secs)}`;
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (busy) return;
     setBusy(true);
 
@@ -142,8 +142,6 @@ export function ActiveWalkOverlay() {
       timerRef.current = null;
     }
 
-    // 3. Trigger API and clear states in background asynchronously without blocking UI
-    void stopWalk().catch(() => {});
     void cancelTaskNotifications(scheduleId).catch(() => {});
 
     if (token) {
@@ -152,41 +150,59 @@ export function ActiveWalkOverlay() {
         const now = new Date();
         const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         queryClient.setQueryData(['dashboard', activePetId, todayStr], (prev: any) => {
-          if (!prev || !prev.todaySchedules) return prev;
-          const todaySchedules = { ...prev.todaySchedules };
-          if (todaySchedules.walk) {
-            todaySchedules.walk = (todaySchedules.walk as any[]).filter(
-              (item) => item._id !== scheduleId && item.id !== scheduleId
+          if (!prev) return prev;
+          let updated = { ...prev };
+          if (updated.todaySchedules?.walk) {
+            updated.todaySchedules = {
+              ...updated.todaySchedules,
+              walk: (updated.todaySchedules.walk as any[]).filter(
+                (item) => item._id !== scheduleId && item.id !== scheduleId
+              ),
+            };
+          }
+          if (updated.upcomingTasks) {
+            updated.upcomingTasks = (updated.upcomingTasks as any[]).filter(
+              (task) => task.id !== scheduleId && task._id !== scheduleId
             );
           }
-          return {
-            ...prev,
-            todaySchedules,
-          };
+          const recentActivities = updated.recentActivities ? [...updated.recentActivities] : [];
+          recentActivities.unshift({
+            _id: `temp-${Date.now()}`,
+            activityType: 'Walk',
+            note: 'completed Walk',
+            createdAt: new Date().toISOString(),
+            userId: {
+              _id: 'current-user',
+              fullName: 'You',
+            },
+          });
+          updated.recentActivities = recentActivities.slice(0, 20);
+          return updated;
         });
       }
 
       const now = new Date();
       const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-      completeWalkSchedule(token, scheduleId, {
-        status: 'done',
-        date: localDate,
-        completedAt: new Date().toISOString(),
-        duration: minutes,
-      })
-        .then(() => {
-          showToast('Walk completed successfully! 🐾');
-          queryClient.invalidateQueries({ queryKey: ['dashboard'] });
-          queryClient.invalidateQueries({ queryKey: ['schedules'] });
-        })
-        .catch((err: any) => {
-          showToast(err.message || 'Failed to complete walk.');
-        })
-        .finally(() => {
-          setBusy(false);
+      try {
+        await completeWalkSchedule(token, scheduleId, {
+          status: 'done',
+          date: localDate,
+          completedAt: new Date().toISOString(),
+          duration: minutes,
         });
+        showToast('Walk completed successfully! 🐾');
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+        queryClient.invalidateQueries({ queryKey: ['schedules'] });
+        queryClient.invalidateQueries({ queryKey: ['activity-timeline'] });
+      } catch (err: any) {
+        showToast(err?.message || 'Failed to complete walk.');
+      } finally {
+        await stopWalk().catch(() => {});
+        setBusy(false);
+      }
     } else {
+      await stopWalk().catch(() => {});
       setBusy(false);
     }
   };

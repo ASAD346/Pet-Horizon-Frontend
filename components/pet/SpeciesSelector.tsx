@@ -6,10 +6,11 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { AppText } from '../ui/AppText';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
-import { getSpeciesIcon } from '../../services/pets/speciesIcons';
+import { SpeciesIcon, getSpeciesTheme } from './SpeciesIcon';
 import { Palette, Radius, Spacing } from '../../constants/theme';
 
 interface SpeciesSelectorProps {
@@ -23,7 +24,16 @@ interface SpeciesSelectorProps {
   required?: boolean;
 }
 
-const POPULARITY_ORDER = ['dog', 'cat', 'bird', 'rabbit', 'hamster', 'fish', 'reptile', 'other'];
+const POPULARITY_ORDER = [
+  'dog',
+  'cat',
+  'bird',
+  'rabbit',
+  'hamster',
+  'fish',
+  'reptile',
+  'other',
+];
 
 export function SpeciesSelector({
   speciesList,
@@ -46,9 +56,19 @@ export function SpeciesSelector({
     });
   }, [speciesList]);
 
+  const handleSelect = (species: string) => {
+    if (disabled) return;
+    try {
+      Haptics.selectionAsync();
+    } catch {
+      // Haptics optional
+    }
+    onChange(species);
+  };
+
   // ── Read-only: show only the selected species as a status badge ───────────
   if (readOnly) {
-    const icon = value ? getSpeciesIcon(value) : null;
+    const theme = getSpeciesTheme(value);
     return (
       <View style={styles.wrapper}>
         <AppText variant="bodySmall" weight="700" color="#1A2B4E" style={styles.label}>
@@ -56,13 +76,21 @@ export function SpeciesSelector({
           {required ? <AppText variant="bodySmall" weight="700" color="#EF4444"> *</AppText> : null}
         </AppText>
         <View style={styles.readOnlyRow}>
-          {icon ? (
-            <View style={styles.readOnlyBadge}>
-              <MaterialCommunityIcons name={icon} size={24} color="#2E7D32" />
+          {value ? (
+            <View
+              style={[
+                styles.readOnlyBadge,
+                {
+                  backgroundColor: theme.bgLight,
+                  borderColor: theme.borderSelected,
+                },
+              ]}
+            >
+              <SpeciesIcon species={value} size={26} />
               <AppText
-                variant="caption"
-                color="#1B5E20"
-                weight="800"
+                variant="body"
+                color={theme.selectedTextColor}
+                weight="700"
                 style={styles.readOnlyBadgeLabel}
                 numberOfLines={1}
               >
@@ -70,7 +98,9 @@ export function SpeciesSelector({
               </AppText>
             </View>
           ) : (
-            <AppText variant="bodySmall" color={Palette.gray[500]}>—</AppText>
+            <AppText variant="bodySmall" color={Palette.gray[500]}>
+              —
+            </AppText>
           )}
         </View>
       </View>
@@ -90,37 +120,51 @@ export function SpeciesSelector({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
+          contentContainerStyle={styles.scrollRow}
         >
           {sortedList.map((species) => {
-            const selected = value === species;
-            const icon = getSpeciesIcon(species);
-            
-            // Soft colored style mapping
-            const iconColor = selected ? '#2E7D32' : '#64748B';
-            const labelColor = selected ? '#1B5E20' : '#475569';
+            const isSelected = value?.trim().toLowerCase() === species.trim().toLowerCase();
+            const theme = getSpeciesTheme(species);
 
             return (
               <TouchableOpacity
                 key={species}
                 style={[
                   styles.tile,
-                  selected && styles.tileSelected,
+                  {
+                    backgroundColor: isSelected ? theme.bgSelected : theme.bgLight,
+                    borderColor: isSelected ? theme.borderSelected : theme.borderLight,
+                  },
+                  isSelected && styles.tileSelected,
                   disabled && styles.tileDisabled,
                 ]}
-                onPress={() => !disabled && onChange(species)}
-                activeOpacity={disabled ? 1 : 0.85}
+                onPress={() => handleSelect(species)}
+                activeOpacity={disabled ? 1 : 0.8}
                 disabled={disabled}
               >
-                <MaterialCommunityIcons
-                  name={icon}
-                  size={24}
-                  color={iconColor}
-                />
+                {/* Selection Check Badge */}
+                {isSelected ? (
+                  <View
+                    style={[
+                      styles.checkBadge,
+                      { backgroundColor: theme.borderSelected },
+                    ]}
+                  >
+                    <Ionicons name="checkmark-sharp" size={11} color="#FFFFFF" />
+                  </View>
+                ) : null}
+
+                {/* Vector Species Illustration */}
+                <View style={styles.iconWrapper}>
+                  <SpeciesIcon species={species} size={36} selected={isSelected} />
+                </View>
+
+                {/* Capitalized Label */}
                 <AppText
                   variant="caption"
-                  color={labelColor}
-                  style={[styles.tileLabel, selected && styles.tileLabelSelected, disabled && styles.tileLabelDisabled]}
+                  color={isSelected ? theme.selectedTextColor : theme.textColor}
+                  weight={isSelected ? '700' : '600'}
+                  style={styles.tileLabel}
                   numberOfLines={1}
                 >
                   {species}
@@ -148,44 +192,79 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xs,
     marginLeft: 4,
   },
-  row: {
+  scrollRow: {
     flexDirection: 'row',
-    gap: 8,
-    paddingRight: Spacing.sm,
-    paddingVertical: 2,
+    gap: 10,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
   },
   tile: {
-    width: 68,
-    height: 68,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E2E8F0',
+    position: 'relative',
+    width: 74,
+    height: 82,
+    borderRadius: Radius.lg,
+    borderWidth: 1.8,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.xs,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 1.5 },
+        shadowOpacity: 0.05,
+        shadowRadius: 3,
+      },
+      android: {
+        elevation: 1.5,
+      },
+    }),
   },
   tileSelected: {
-    backgroundColor: '#E8F5E9',
-    borderColor: '#4CAF50',
+    borderWidth: 2.2,
+    transform: [{ scale: 1.02 }],
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.12,
+        shadowRadius: 5,
+      },
+      android: {
+        elevation: 3.5,
+      },
+    }),
   },
   tileDisabled: {
-    opacity: 0.5,
-    backgroundColor: '#F1F5F9',
-    borderColor: '#CBD5E1',
+    opacity: 0.55,
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  checkBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 17,
+    height: 17,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+  },
+  iconWrapper: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
   },
   tileLabel: {
-    marginTop: 4,
-    fontSize: 10,
-    fontWeight: '600',
-    maxWidth: 64,
+    fontSize: 11,
     textAlign: 'center',
-  },
-  tileLabelSelected: {
-    fontWeight: '800',
-  },
-  tileLabelDisabled: {
-    color: '#94A3B8',
+    textTransform: 'capitalize',
+    maxWidth: 68,
   },
   errorText: {
     marginTop: Spacing.xs,
@@ -199,25 +278,23 @@ const styles = StyleSheet.create({
   readOnlyBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#4CAF50',
+    gap: 10,
+    borderRadius: Radius.md,
+    borderWidth: 1.8,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 8,
     ...Platform.select({
       ios: {
-        shadowColor: '#2E7D32',
+        shadowColor: '#000000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
+        shadowOpacity: 0.06,
         shadowRadius: 4,
       },
       android: { elevation: 2 },
     }),
   },
   readOnlyBadgeLabel: {
-    fontSize: 13,
+    fontSize: 14,
     textTransform: 'capitalize',
   },
 });
