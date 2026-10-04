@@ -9,6 +9,7 @@ import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
   createDefaultScheduleDate,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import {
   buildDoseString,
@@ -121,7 +122,7 @@ export function LogMedicineSheet({
       return;
     }
 
-    const dateError = validateScheduleDate(entry.scheduleDate);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.medicineTime);
     if (dateError) {
       showErrorToast(dateError);
       return;

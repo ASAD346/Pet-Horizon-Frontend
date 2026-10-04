@@ -26,6 +26,7 @@ import {
   buildScheduleDatePayload,
   buildVaccinationDatePayload,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import { scheduleLocalNotificationsForEntry } from '@/lib/push/notificationSetup';
 import type {
@@ -50,29 +51,19 @@ export async function saveScheduleEntry(
   options: { groomingVisible?: boolean } = {},
 ): Promise<void> {
   const scheduleDateState = (entry as any).scheduleDate;
-  if (scheduleDateState) {
-    const referenceDate = scheduleDateState.mode === 'single' ? scheduleDateState.singleDate : scheduleDateState.startDate;
-    if (referenceDate) {
-      let timeDate = new Date();
-      if (key === 'feeding') timeDate = (entry as FeedingEntryState).feedingTime;
-      else if (key === 'walk') timeDate = (entry as WalkEntryState).walkClockTime;
-      else if (key === 'medicine') timeDate = (entry as MedicineEntryState).medicineTime;
-      else if (key === 'vaccination') timeDate = (entry as VaccinationEntryState).reminderTime;
-      else if (key === 'grooming') {
-        const gDate = (entry as GroomingEntryState).scheduleDate?.singleDate;
-        if (gDate) timeDate = new Date(gDate);
-      }
+  let timeDate: Date | null = null;
+  if (key === 'feeding') timeDate = (entry as FeedingEntryState).feedingTime;
+  else if (key === 'walk') timeDate = (entry as WalkEntryState).walkClockTime;
+  else if (key === 'medicine') timeDate = (entry as MedicineEntryState).medicineTime;
+  else if (key === 'vaccination') timeDate = (entry as VaccinationEntryState).reminderTime;
+  else if (key === 'grooming') {
+    const gDate = (entry as GroomingEntryState).scheduleDate?.singleDate;
+    if (gDate) timeDate = new Date(gDate);
+  }
 
-      if (referenceDate) {
-        const todayMidnight = new Date();
-        todayMidnight.setHours(0, 0, 0, 0);
-        const refMidnight = new Date(referenceDate);
-        refMidnight.setHours(0, 0, 0, 0);
-        if (refMidnight.getTime() < todayMidnight.getTime()) {
-          throw new Error('Cannot schedule an activity in the past.');
-        }
-      }
-    }
+  const futureError = validateFutureSchedule(scheduleDateState, timeDate);
+  if (futureError) {
+    throw new Error(futureError);
   }
 
   switch (key) {

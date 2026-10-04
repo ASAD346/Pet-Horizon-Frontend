@@ -87,6 +87,7 @@ export function ScheduleDateFields({
         visible={singlePickerVisible}
         title="Schedule date"
         value={value.singleDate ?? new Date()}
+        minimumDate={new Date()}
         onClose={() => setSinglePickerVisible(false)}
         onConfirm={(date) => {
           onChange({ ...value, singleDate: date });
@@ -98,6 +99,7 @@ export function ScheduleDateFields({
         visible={startPickerVisible}
         title={value.mode === 'ongoing' ? 'Starts on' : 'Start date'}
         value={value.startDate ?? new Date()}
+        minimumDate={new Date()}
         maximumDate={value.mode === 'range' ? (value.endDate ?? undefined) : undefined}
         onClose={() => setStartPickerVisible(false)}
         onConfirm={(date) => {

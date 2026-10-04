@@ -67,6 +67,15 @@ export function GroomingManageSheet({
       return;
     }
     if (!token || !record || resolvedReadOnly) return;
+    if (scheduledDate) {
+      const scheduledMidnight = new Date(scheduledDate.getFullYear(), scheduledDate.getMonth(), scheduledDate.getDate());
+      const todayMidnight = new Date();
+      todayMidnight.setHours(0, 0, 0, 0);
+      if (scheduledMidnight.getTime() < todayMidnight.getTime()) {
+        showErrorToast('Scheduled date cannot be in the past.');
+        return;
+      }
+    }
     Alert.alert(
       "Modify Schedule?",
       "Are you sure you want to proceed with this action? This change cannot be undone.",
@@ -214,6 +223,7 @@ export function GroomingManageSheet({
         visible={pickerVisible}
         title="Scheduled date"
         value={scheduledDate ?? new Date()}
+        minimumDate={new Date()}
         onClose={() => setPickerVisible(false)}
         onConfirm={(date) => {
           setScheduledDate(date);

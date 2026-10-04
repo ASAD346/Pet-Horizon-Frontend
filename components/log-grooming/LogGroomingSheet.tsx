@@ -8,6 +8,7 @@ import {
   buildGroomingDatePayload,
   createDefaultScheduleDate,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import { createGroomingRecord, fetchGroomingTypes, groomingTypesCache } from '@/services/grooming/groomingApi';
 import type { GroomingTypeOption } from '@/types/grooming';
@@ -160,7 +161,8 @@ export function LogGroomingSheet({
       showErrorToast('Select a grooming type.');
       return;
     }
-    const dateError = validateScheduleDate(entry.scheduleDate);
+    const gDate = entry.scheduleDate?.singleDate ? new Date(entry.scheduleDate.singleDate) : null;
+    const dateError = validateFutureSchedule(entry.scheduleDate, gDate);
     if (dateError) {
       showErrorToast(dateError);
       return;

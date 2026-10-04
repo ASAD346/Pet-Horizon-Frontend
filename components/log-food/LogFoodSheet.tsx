@@ -13,6 +13,7 @@ import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
   createDefaultScheduleDate,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -200,7 +201,7 @@ export function LogFoodSheet({
       showErrorToast('Enter an amount.');
       return;
     }
-    const dateError = validateScheduleDate(entry.scheduleDate);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.feedingTime);
     if (dateError) {
       showErrorToast(dateError);
       return;

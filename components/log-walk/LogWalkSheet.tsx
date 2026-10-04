@@ -15,6 +15,7 @@ import {
 import {
   createDefaultScheduleDate,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import { FormSheetShell } from '../sheets';
 import { WalkEntryCard } from '../schedule/entries/WalkEntryCard';
@@ -103,7 +104,7 @@ export function LogWalkSheet({
       showErrorToast('Enter a valid duration in minutes.');
       return;
     }
-    const dateError = validateScheduleDate(entry.scheduleDate);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.walkClockTime);
     if (dateError) {
       showErrorToast(dateError);
       return;

@@ -12,6 +12,7 @@ import {
   buildScheduleDatePayload,
   buildVaccinationDatePayload,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import { createGroomingRecord } from '@/services/grooming/groomingApi';
 import { createFeedingSchedule } from '@/services/schedules/feedingApi';
@@ -54,13 +55,13 @@ export async function saveAllSchedules(
         pushError(errors, label, 'Enter an amount.');
         continue;
       }
-      const timeHHmm = dateToTimeHHmm(entry.feedingTime);
-      const noteText = entry.notes.trim();
-      const dateError = validateScheduleDate(entry.scheduleDate);
+      const dateError = validateFutureSchedule(entry.scheduleDate, entry.feedingTime);
       if (dateError) {
         pushError(errors, label, dateError);
         continue;
       }
+      const timeHHmm = dateToTimeHHmm(entry.feedingTime);
+      const noteText = entry.notes.trim();
       try {
         await createFeedingSchedule(token, {
           petId,
@@ -92,13 +93,13 @@ export async function saveAllSchedules(
         pushError(errors, label, 'Enter a valid duration in minutes.');
         continue;
       }
-      const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
-      const noteText = entry.notes.trim();
-      const dateError = validateScheduleDate(entry.scheduleDate);
+      const dateError = validateFutureSchedule(entry.scheduleDate, entry.walkClockTime);
       if (dateError) {
         pushError(errors, label, dateError);
         continue;
       }
+      const timeHHmm = dateToTimeHHmm(entry.walkClockTime);
+      const noteText = entry.notes.trim();
       try {
         await createWalkSchedule(token, {
           petId,
@@ -138,7 +139,7 @@ export async function saveAllSchedules(
         pushError(errors, label, 'Select at least one day for a weekly schedule.');
         continue;
       }
-      const dateError = validateScheduleDate(entry.scheduleDate);
+      const dateError = validateFutureSchedule(entry.scheduleDate, entry.medicineTime);
       if (dateError) {
         pushError(errors, label, dateError);
         continue;
@@ -180,7 +181,7 @@ export async function saveAllSchedules(
         pushError(errors, label, 'Enter a vaccine name.');
         continue;
       }
-      const dateError = validateScheduleDate(entry.scheduleDate);
+      const dateError = validateFutureSchedule(entry.scheduleDate, entry.reminderTime);
       if (dateError) {
         pushError(errors, label, dateError);
         continue;
@@ -218,7 +219,8 @@ export async function saveAllSchedules(
           pushError(errors, label, 'Select a grooming type.');
           continue;
         }
-        const dateError = validateScheduleDate(entry.scheduleDate);
+        const gDate = entry.scheduleDate?.singleDate ? new Date(entry.scheduleDate.singleDate) : null;
+        const dateError = validateFutureSchedule(entry.scheduleDate, gDate);
         if (dateError) {
           pushError(errors, label, dateError);
           continue;

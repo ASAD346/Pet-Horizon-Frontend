@@ -10,6 +10,7 @@ import { LOG_SHEET_THEMES } from '@/lib/log/logSheetThemes';
 import {
   createDefaultScheduleDate,
   validateScheduleDate,
+  validateFutureSchedule,
 } from '@/lib/schedule/scheduleDate';
 import { Skeleton, SkeletonList } from '@/components/ui/skeletons';
 import {
@@ -127,7 +128,7 @@ export function LogVaccinationSheet({
       showErrorToast('Enter a vaccine name.');
       return;
     }
-    const dateError = validateScheduleDate(entry.scheduleDate);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.reminderTime);
     if (dateError) {
       showErrorToast(dateError);
       return;
