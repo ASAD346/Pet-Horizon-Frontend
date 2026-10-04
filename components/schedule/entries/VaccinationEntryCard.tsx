@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
   FormSegmentedControl,
@@ -31,8 +31,8 @@ interface VaccinationEntryCardProps {
 export function VaccinationEntryCard({
   entry,
   index,
-  accentColor = '#0EA5E9',
-  accentBg = '#E0F2FE',
+  accentColor = '#DB2777',
+  accentBg = '#FCE7F3',
   canRemove,
   embeddedInSheet = false,
   onChange,
@@ -56,9 +56,14 @@ export function VaccinationEntryCard({
     <View style={styles.formContainer}>
       {/* Vaccine Details Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          VACCINE DETAILS
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="shield-plus-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            VACCINE DETAILS
+          </AppText>
+        </View>
 
         <FormTextInput
           label="Vaccine Name"
@@ -66,14 +71,20 @@ export function VaccinationEntryCard({
           value={entry.vaccineName}
           onChangeText={(vaccineName) => onChange({ ...entry, vaccineName })}
           placeholder="e.g. Rabies, DHPP, Bordetella, Distemper"
+          accentColor={accentColor}
         />
       </View>
 
       {/* Schedule & Timing Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          SCHEDULE & TIMING
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="clock-time-four-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            SCHEDULE & TIMING
+          </AppText>
+        </View>
 
         <ScheduleDateFields
           value={entry.scheduleDate}
@@ -86,6 +97,7 @@ export function VaccinationEntryCard({
           value={entry.reminderOn}
           onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
           icon="notifications-outline"
+          accentColor={accentColor}
         />
 
         {entry.reminderOn ? (
@@ -97,6 +109,7 @@ export function VaccinationEntryCard({
                 label: o.label,
               }))}
               selected={entry.frequency}
+              accentColor={accentColor}
               onSelect={(frequency) =>
                 onChange({ ...entry, frequency: frequency as VaccinationEntryState['frequency'] })
               }
@@ -114,6 +127,7 @@ export function VaccinationEntryCard({
           value={entry.isRecurring}
           onValueChange={(isRecurring) => onChange({ ...entry, isRecurring })}
           icon="repeat-outline"
+          accentColor={accentColor}
         />
 
         {entry.isRecurring ? (
@@ -121,6 +135,7 @@ export function VaccinationEntryCard({
             label="Recurrence Interval"
             options={VACCINATION_RECURRENCE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
             selected={entry.recurrenceInterval}
+            accentColor={accentColor}
             onSelect={(recurrenceInterval) =>
               onChange({
                 ...entry,
@@ -133,12 +148,21 @@ export function VaccinationEntryCard({
 
       {/* Notes Card */}
       <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="note-text-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            NOTES & INSTRUCTIONS
+          </AppText>
+        </View>
         <FormTextInput
           label="Instructions & Notes"
           value={entry.notes}
           onChangeText={(notes) => onChange({ ...entry, notes })}
           placeholder="Optional details (veterinarian, batch #, clinic)..."
           multiline
+          accentColor={accentColor}
         />
       </View>
     </View>
@@ -177,22 +201,34 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     gap: 12,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sectionIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionHeader: {
-    letterSpacing: 0.6,
-    marginBottom: -2,
+    letterSpacing: 0.8,
   },
   entryCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     marginBottom: 16,
     gap: 12,
   },

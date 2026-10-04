@@ -23,6 +23,7 @@ import { saveScheduleEntry } from '@/lib/schedule/saveScheduleEntry';
 import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const GROOMING_THEME = LOG_SHEET_THEMES.grooming;
 
@@ -231,9 +232,17 @@ export function LogGroomingSheet({
       {loadingTypes ? (
         <SkeletonChipGrid count={4} />
       ) : !groomingVisible ? (
-        <AppText variant="bodySmall" color={HomeTheme.textMuted} style={{ marginVertical: 12 }}>
-          Grooming is not available for this pet species.
-        </AppText>
+        <View style={{ padding: 28, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#ECEEF2', marginVertical: 8 }}>
+          <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+            <MaterialCommunityIcons name="content-cut" size={26} color="#94A3B8" />
+          </View>
+          <AppText variant="bodySmall" weight="700" color={HomeTheme.text} style={{ marginBottom: 4 }}>
+            Grooming Not Required
+          </AppText>
+          <AppText variant="caption" color={HomeTheme.textMuted} style={{ textAlign: 'center', lineHeight: 18 }}>
+            Grooming schedules are not applicable for this pet species.
+          </AppText>
+        </View>
       ) : (
         <GroomingEntryCard
           entry={entry}

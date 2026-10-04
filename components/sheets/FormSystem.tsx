@@ -37,11 +37,15 @@ interface FormSectionProps {
   title: string;
   icon?: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   required?: boolean;
+  accentColor?: string;
+  accentBg?: string;
   children: React.ReactNode;
 }
 
-export function FormSection({ title, icon, required, children }: FormSectionProps) {
-  const { accentColor, accentBg } = useAppThemeColor();
+export function FormSection({ title, icon, required, accentColor: propAccentColor, accentBg: propAccentBg, children }: FormSectionProps) {
+  const theme = useAppThemeColor();
+  const accentColor = propAccentColor ?? theme.accentColor;
+  const accentBg = propAccentBg ?? theme.accentBg;
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -72,6 +76,7 @@ interface FormTextInputProps extends BaseInputProps {
   multiline?: boolean;
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address';
+  accentColor?: string;
 }
 
 export function FormTextInput({
@@ -84,8 +89,10 @@ export function FormTextInput({
   keyboardType = 'default',
   error,
   required,
+  accentColor: propAccentColor,
 }: FormTextInputProps) {
-  const { accentColor } = useAppThemeColor();
+  const theme = useAppThemeColor();
+  const accentColor = propAccentColor ?? theme.accentColor;
   const [focused, setFocused] = React.useState(false);
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
 
@@ -127,6 +134,7 @@ interface FormNumberInputProps extends BaseInputProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   unit?: string; // Integrated inline unit
+  accentColor?: string;
 }
 
 export function FormNumberInput({
@@ -137,8 +145,10 @@ export function FormNumberInput({
   unit,
   error,
   required,
+  accentColor: propAccentColor,
 }: FormNumberInputProps) {
-  const { accentColor } = useAppThemeColor();
+  const theme = useAppThemeColor();
+  const accentColor = propAccentColor ?? theme.accentColor;
   const [focused, setFocused] = React.useState(false);
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
 
@@ -284,6 +294,7 @@ interface FormSegmentedControlProps extends BaseInputProps {
   options: { value: string; label: string }[];
   selected: string;
   onSelect: (value: string) => void;
+  accentColor?: string;
 }
 
 export function FormSegmentedControl({
@@ -293,8 +304,10 @@ export function FormSegmentedControl({
   onSelect,
   error,
   required,
+  accentColor: propAccentColor,
 }: FormSegmentedControlProps) {
-  const { accentColor } = useAppThemeColor();
+  const theme = useAppThemeColor();
+  const accentColor = propAccentColor ?? theme.accentColor;
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.fieldContainer}>
@@ -341,10 +354,12 @@ interface FormToggleRowProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
   icon?: React.ComponentProps<typeof Ionicons>['name'];
+  accentColor?: string;
 }
 
-export function FormToggleRow({ label, value, onValueChange, icon }: FormToggleRowProps) {
-  const { accentColor } = useAppThemeColor();
+export function FormToggleRow({ label, value, onValueChange, icon, accentColor: propAccentColor }: FormToggleRowProps) {
+  const theme = useAppThemeColor();
+  const accentColor = propAccentColor ?? theme.accentColor;
   const isReadOnly = useAppSelector(selectIsFormReadOnly);
   return (
     <View style={styles.toggleRow}>

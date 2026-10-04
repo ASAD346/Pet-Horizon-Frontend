@@ -20,6 +20,8 @@ import {
 } from '@/lib/feeding/feedingForm';
 import type { FeedingEntryState } from '@/lib/schedule/types';
 import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
+import { useAppSelector } from '@/redux/store';
+import { selectIsFormReadOnly } from '@/redux/reducer';
 
 const MEAL_TYPE_ICONS: Record<
   string,
@@ -32,7 +34,29 @@ const MEAL_TYPE_ICONS: Record<
   morning_feed: 'weather-sunset-up',
   evening_feed: 'weather-night',
   automatic_feeder: 'robot',
+  dry_food: 'food-drumstick',
+  wet_food: 'food-variant',
+  raw_diet: 'food-drumstick-outline',
+  kibble: 'grain',
+  seeds: 'seed-outline',
+  pellets: 'scatter-plot',
+  hay: 'grass',
+  fresh_food: 'food-apple-outline',
+  treats: 'cookie-outline',
 };
+
+function getMealIcon(value: string): React.ComponentProps<typeof MaterialCommunityIcons>['name'] {
+  const v = value.toLowerCase();
+  if (MEAL_TYPE_ICONS[v]) return MEAL_TYPE_ICONS[v];
+  if (v.includes('breakfast') || v.includes('morning')) return 'weather-sunset-up';
+  if (v.includes('lunch') || v.includes('noon')) return 'white-balance-sunny';
+  if (v.includes('dinner') || v.includes('evening') || v.includes('night')) return 'weather-night';
+  if (v.includes('snack') || v.includes('treat')) return 'bone';
+  if (v.includes('seed')) return 'seed-outline';
+  if (v.includes('pellet')) return 'scatter-plot';
+  if (v.includes('hay') || v.includes('grass')) return 'grass';
+  return 'bowl-mix-outline';
+}
 
 const REMINDER_OPTIONS: SheetOption[] = REMINDER_MINUTES_OPTIONS.map((o) => ({
   value: String(o.value),
@@ -64,6 +88,7 @@ export function FeedingEntryCard({
   onChange,
   onRemove,
 }: FeedingEntryCardProps) {
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
   const [unitPickerVisible, setUnitPickerVisible] = useState(false);
@@ -112,9 +137,14 @@ export function FeedingEntryCard({
     <View style={styles.formContainer}>
       {/* Meal Details Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          MEAL DETAILS
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="bowl-mix-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            MEAL DETAILS
+          </AppText>
+        </View>
 
         <View style={styles.fieldGroup}>
           <AppText variant="caption" weight="700" color="#5C6470" style={styles.fieldLabel}>
@@ -123,7 +153,7 @@ export function FeedingEntryCard({
           <View style={styles.formGrid}>
             {mealTypeOptions.map((item) => {
               const isSelected = entry.mealType === item.value;
-              const iconName = MEAL_TYPE_ICONS[item.value] || 'food-drumstick';
+              const iconName = getMealIcon(item.value);
               return (
                 <TouchableOpacity
                   key={item.value}
@@ -133,8 +163,10 @@ export function FeedingEntryCard({
                       borderColor: accentColor,
                       backgroundColor: accentBg,
                     },
+                    isReadOnly && styles.readOnlyChip,
                   ]}
-                  onPress={() => onChange({ ...entry, mealType: item.value })}
+                  onPress={() => !isReadOnly && onChange({ ...entry, mealType: item.value })}
+                  disabled={isReadOnly}
                   activeOpacity={0.7}
                 >
                   <MaterialCommunityIcons
@@ -147,6 +179,7 @@ export function FeedingEntryCard({
                     weight={isSelected ? '700' : '600'}
                     color={isSelected ? accentColor : '#334155'}
                     style={styles.chipText}
+                    numberOfLines={1}
                   >
                     {item.label}
                   </AppText>
@@ -164,6 +197,7 @@ export function FeedingEntryCard({
               value={entry.amount}
               onChangeText={(amount) => onChange({ ...entry, amount })}
               placeholder="e.g. 1"
+              accentColor={accentColor}
             />
           </View>
           <View style={{ flex: 1 }}>
@@ -180,9 +214,14 @@ export function FeedingEntryCard({
 
       {/* Schedule & Timing Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          SCHEDULE & TIMING
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="clock-time-four-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            SCHEDULE & TIMING
+          </AppText>
+        </View>
 
         <ScheduleDateFields
           value={entry.scheduleDate}
@@ -204,6 +243,7 @@ export function FeedingEntryCard({
               label="Remind me"
               value={entry.notificationsOn}
               onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
+              accentColor={accentColor}
             />
           </View>
         </View>
@@ -220,12 +260,21 @@ export function FeedingEntryCard({
 
       {/* Notes Card */}
       <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="note-text-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            NOTES & INSTRUCTIONS
+          </AppText>
+        </View>
         <FormTextInput
           label="Instructions & Notes"
           value={entry.notes}
           onChangeText={(notes) => onChange({ ...entry, notes })}
           placeholder="Optional details (brand, treats, food prep)..."
           multiline
+          accentColor={accentColor}
         />
       </View>
     </View>
@@ -264,15 +313,27 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     gap: 12,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sectionIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionHeader: {
-    letterSpacing: 0.6,
-    marginBottom: -2,
+    letterSpacing: 0.8,
   },
   fieldGroup: {
     gap: 6,
@@ -283,31 +344,35 @@ const styles = StyleSheet.create({
   formGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
+    rowGap: 8,
   },
   chipCard: {
-    flexBasis: '47%',
-    flexGrow: 1,
+    width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     backgroundColor: '#F8FAFC',
+  },
+  readOnlyChip: {
+    opacity: 0.65,
+    backgroundColor: '#F1F5F9',
   },
   chipText: {
     fontSize: 12,
   },
   entryCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     marginBottom: 16,
     gap: 12,
   },

@@ -14,13 +14,14 @@ import {
 import type { SheetOption } from '@/components/sheets';
 import { HomeTheme } from '@/constants/theme';
 import {
-  formatTimeDisplay,
   getReminderMinutesLabel,
   REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
 import type { WalkEntryState } from '@/lib/schedule/types';
 import { ScheduleDateFields } from '@/components/schedule/ScheduleDateFields';
 import { WALK_TIME_OPTIONS } from '@/lib/walk/walkForm';
+import { useAppSelector } from '@/redux/store';
+import { selectIsFormReadOnly } from '@/redux/reducer';
 
 const WALK_TIME_ICONS: Record<
   string,
@@ -58,6 +59,7 @@ export function WalkEntryCard({
   onChange,
   onRemove,
 }: WalkEntryCardProps) {
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
 
@@ -88,9 +90,14 @@ export function WalkEntryCard({
     <View style={styles.formContainer}>
       {/* Walk Details Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          WALK DETAILS
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="paw" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            WALK DETAILS
+          </AppText>
+        </View>
 
         <View style={styles.fieldGroup}>
           <AppText variant="caption" weight="700" color="#5C6470" style={styles.fieldLabel}>
@@ -109,8 +116,10 @@ export function WalkEntryCard({
                       borderColor: accentColor,
                       backgroundColor: accentBg,
                     },
+                    isReadOnly && styles.readOnlyChip,
                   ]}
-                  onPress={() => onChange({ ...entry, walkTime: item.value })}
+                  onPress={() => !isReadOnly && onChange({ ...entry, walkTime: item.value })}
+                  disabled={isReadOnly}
                   activeOpacity={0.7}
                 >
                   <MaterialCommunityIcons
@@ -123,6 +132,7 @@ export function WalkEntryCard({
                     weight={isSelected ? '700' : '600'}
                     color={isSelected ? accentColor : '#334155'}
                     style={styles.chipText}
+                    numberOfLines={1}
                   >
                     {item.label}
                   </AppText>
@@ -149,6 +159,7 @@ export function WalkEntryCard({
               onChangeText={(duration) => onChange({ ...entry, duration })}
               placeholder="e.g. 30"
               unit="mins"
+              accentColor={accentColor}
             />
           </View>
         </View>
@@ -156,9 +167,14 @@ export function WalkEntryCard({
 
       {/* Schedule & Timing Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          SCHEDULE & TIMING
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="clock-time-four-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            SCHEDULE & TIMING
+          </AppText>
+        </View>
 
         <ScheduleDateFields
           value={entry.scheduleDate}
@@ -171,6 +187,7 @@ export function WalkEntryCard({
           value={entry.notificationsOn}
           onValueChange={(notificationsOn) => onChange({ ...entry, notificationsOn })}
           icon="notifications-outline"
+          accentColor={accentColor}
         />
 
         {entry.notificationsOn ? (
@@ -185,12 +202,21 @@ export function WalkEntryCard({
 
       {/* Notes Card */}
       <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="note-text-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            NOTES & INSTRUCTIONS
+          </AppText>
+        </View>
         <FormTextInput
           label="Instructions & Notes"
           value={entry.notes}
           onChangeText={(notes) => onChange({ ...entry, notes })}
           placeholder="Optional details (route, leash, dog park)..."
           multiline
+          accentColor={accentColor}
         />
       </View>
     </View>
@@ -229,15 +255,27 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     gap: 12,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sectionIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionHeader: {
-    letterSpacing: 0.6,
-    marginBottom: -2,
+    letterSpacing: 0.8,
   },
   fieldGroup: {
     gap: 6,
@@ -248,31 +286,35 @@ const styles = StyleSheet.create({
   formGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
+    rowGap: 8,
   },
   chipCard: {
-    flexBasis: '47%',
-    flexGrow: 1,
+    width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     backgroundColor: '#F8FAFC',
+  },
+  readOnlyChip: {
+    opacity: 0.65,
+    backgroundColor: '#F1F5F9',
   },
   chipText: {
     fontSize: 12,
   },
   entryCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     marginBottom: 16,
     gap: 12,
   },

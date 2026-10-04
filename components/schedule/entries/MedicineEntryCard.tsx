@@ -3,7 +3,6 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import {
-  FormSection,
   FormSegmentedControl,
   FormTimeInput,
   FormNumberInput,
@@ -16,7 +15,6 @@ import {
 import type { SheetOption } from '@/components/sheets';
 import { HomeTheme } from '@/constants/theme';
 import {
-  formatTimeDisplay,
   getReminderMinutesLabel,
   REMINDER_MINUTES_OPTIONS,
 } from '@/lib/feeding/feedingForm';
@@ -28,6 +26,8 @@ import {
   FREQUENCY_OPTIONS,
   getDoseUnitLabel,
 } from '@/lib/medicine/medicineForm';
+import { useAppSelector } from '@/redux/store';
+import { selectIsFormReadOnly } from '@/redux/reducer';
 
 const DOSAGE_FORM_ITEMS: {
   value: MedicineDoseForm;
@@ -68,10 +68,12 @@ export function MedicineEntryCard({
   onChange,
   onRemove,
 }: MedicineEntryCardProps) {
+  const isReadOnly = useAppSelector(selectIsFormReadOnly);
   const [timePickerVisible, setTimePickerVisible] = useState(false);
   const [reminderPickerVisible, setReminderPickerVisible] = useState(false);
 
   const toggleDay = (day: DayOfWeekCode) => {
+    if (isReadOnly) return;
     const days = entry.daysOfWeek.includes(day)
       ? entry.daysOfWeek.filter((d) => d !== day)
       : [...entry.daysOfWeek, day];
@@ -105,9 +107,14 @@ export function MedicineEntryCard({
     <View style={styles.formContainer}>
       {/* Medicine & Dosage Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          MEDICINE DETAILS
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="pill" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            MEDICINE DETAILS
+          </AppText>
+        </View>
 
         <FormTextInput
           label="Medicine Name"
@@ -115,6 +122,7 @@ export function MedicineEntryCard({
           value={entry.medicineName}
           onChangeText={(medicineName) => onChange({ ...entry, medicineName })}
           placeholder="e.g. Amoxicillin, Eye Drops, Vitamin C"
+          accentColor={accentColor}
         />
 
         <View style={styles.fieldGroup}>
@@ -133,8 +141,10 @@ export function MedicineEntryCard({
                       borderColor: accentColor,
                       backgroundColor: accentBg,
                     },
+                    isReadOnly && styles.readOnlyChip,
                   ]}
-                  onPress={() => onChange({ ...entry, doseForm: item.value })}
+                  onPress={() => !isReadOnly && onChange({ ...entry, doseForm: item.value })}
+                  disabled={isReadOnly}
                   activeOpacity={0.7}
                 >
                   <MaterialCommunityIcons
@@ -147,6 +157,7 @@ export function MedicineEntryCard({
                     weight={isSelected ? '700' : '600'}
                     color={isSelected ? accentColor : '#334155'}
                     style={styles.chipText}
+                    numberOfLines={1}
                   >
                     {item.label}
                   </AppText>
@@ -163,14 +174,20 @@ export function MedicineEntryCard({
           onChangeText={(doseAmount) => onChange({ ...entry, doseAmount })}
           placeholder="e.g. 1"
           unit={getDoseUnitLabel(entry.doseForm)}
+          accentColor={accentColor}
         />
       </View>
 
       {/* Schedule & Timing Card */}
       <View style={styles.sectionCard}>
-        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionHeader}>
-          SCHEDULE & TIMING
-        </AppText>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="clock-time-four-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            SCHEDULE & TIMING
+          </AppText>
+        </View>
 
         <ScheduleDateFields
           value={entry.scheduleDate}
@@ -191,6 +208,7 @@ export function MedicineEntryCard({
             required
             options={FREQUENCY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
             selected={entry.frequency}
+            accentColor={accentColor}
             onSelect={(frequency) =>
               onChange({
                 ...entry,
@@ -203,7 +221,7 @@ export function MedicineEntryCard({
 
         {entry.scheduleDate?.mode !== 'single' && entry.frequency === 'weekly' ? (
           <View style={styles.daysContainer}>
-            <AppText variant="caption" weight="700" color="#5C6470" style={{ marginBottom: 4 }}>
+            <AppText variant="caption" weight="700" color="#5C6470" style={{ marginBottom: 6 }}>
               DAYS OF WEEK <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
             </AppText>
             <View style={styles.daysRow}>
@@ -212,10 +230,22 @@ export function MedicineEntryCard({
                 return (
                   <TouchableOpacity
                     key={option.value}
-                    style={[styles.dayButton, selected && { backgroundColor: accentColor }]}
+                    style={[
+                      styles.dayButton,
+                      selected
+                        ? { backgroundColor: accentColor, borderColor: accentColor }
+                        : { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' },
+                      isReadOnly && styles.readOnlyChip,
+                    ]}
                     onPress={() => toggleDay(option.value as DayOfWeekCode)}
+                    disabled={isReadOnly}
+                    activeOpacity={0.7}
                   >
-                    <AppText variant="caption" weight="700" color={selected ? HomeTheme.white : '#1C1F24'}>
+                    <AppText
+                      variant="caption"
+                      weight="800"
+                      color={selected ? HomeTheme.white : '#475569'}
+                    >
                       {option.label}
                     </AppText>
                   </TouchableOpacity>
@@ -239,6 +269,7 @@ export function MedicineEntryCard({
               label="Remind me"
               value={entry.reminderOn}
               onValueChange={(reminderOn) => onChange({ ...entry, reminderOn })}
+              accentColor={accentColor}
             />
           </View>
         </View>
@@ -255,12 +286,21 @@ export function MedicineEntryCard({
 
       {/* Notes Card */}
       <View style={styles.sectionCard}>
+        <View style={styles.sectionHeaderRow}>
+          <View style={[styles.sectionIconBadge, { backgroundColor: accentBg }]}>
+            <MaterialCommunityIcons name="note-text-outline" size={16} color={accentColor} />
+          </View>
+          <AppText variant="caption" weight="800" color="#5C6470" style={styles.sectionHeader}>
+            NOTES & INSTRUCTIONS
+          </AppText>
+        </View>
         <FormTextInput
           label="Instructions & Notes"
           value={entry.notes}
           onChangeText={(notes) => onChange({ ...entry, notes })}
           placeholder="e.g. Give after food with water..."
           multiline
+          accentColor={accentColor}
         />
       </View>
     </View>
@@ -299,15 +339,27 @@ const styles = StyleSheet.create({
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     gap: 12,
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  sectionIconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionHeader: {
-    letterSpacing: 0.6,
-    marginBottom: -2,
+    letterSpacing: 0.8,
   },
   fieldGroup: {
     gap: 6,
@@ -318,31 +370,35 @@ const styles = StyleSheet.create({
   formGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    justifyContent: 'space-between',
+    rowGap: 8,
   },
   chipCard: {
-    flexBasis: '31%',
-    flexGrow: 1,
+    width: '31.5%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 4,
     paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 10,
+    paddingHorizontal: 4,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
     backgroundColor: '#F8FAFC',
+  },
+  readOnlyChip: {
+    opacity: 0.65,
+    backgroundColor: '#F1F5F9',
   },
   chipText: {
     fontSize: 12,
   },
   entryCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    padding: 14,
+    borderColor: '#ECEEF2',
+    padding: 16,
     marginBottom: 16,
     gap: 12,
   },
@@ -372,9 +428,9 @@ const styles = StyleSheet.create({
   },
   dayButton: {
     flex: 1,
-    height: 36,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 8,
+    height: 38,
+    borderRadius: 10,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
