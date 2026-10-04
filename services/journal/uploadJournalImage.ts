@@ -2,21 +2,8 @@ import { Platform } from 'react-native';
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants/api';
 import { ApiError } from '@/lib/api/errors';
 import { log } from '@/lib/log';
+import { prepareImageForUpload } from '@/lib/uploadUtils';
 import type { ApiJournalEntry } from '@/types/journal';
-
-function guessMimeType(uri: string): string {
-  const lower = uri.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.heic')) return 'image/heic';
-  return 'image/jpeg';
-}
-
-function fileNameFromUri(uri: string): string {
-  const segment = uri.split('/').pop();
-  if (segment && segment.includes('.')) return segment;
-  return `journal-${Date.now()}.jpg`;
-}
 
 export async function uploadJournalImage(
   token: string,
@@ -30,12 +17,15 @@ export async function uploadJournalImage(
   if (Platform.OS === 'web') {
     const response = await fetch(localUri);
     const blob = await response.blob();
-    formData.append('file', blob, fileNameFromUri(localUri));
+    const seg = localUri.split('/').pop() ?? `journal-${Date.now()}.jpg`;
+    formData.append('file', blob, seg);
   } else {
+    const file = await prepareImageForUpload(localUri, 'journal');
+    log.info('JournalAPI', 'Journal image prepared', { name: file.name, type: file.type, uri: file.uri.slice(0, 60) });
     formData.append('file', {
-      uri: localUri,
-      name: fileNameFromUri(localUri),
-      type: guessMimeType(localUri),
+      uri: file.uri,
+      name: file.name,
+      type: file.type,
     } as unknown as Blob);
   }
 
