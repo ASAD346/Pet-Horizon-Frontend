@@ -4,7 +4,7 @@
     "jsEngine": "hermes",
     "slug": "Pet-Horizon",
     "version": "1.0.10",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/app-icon.png",
     "notification": {
       "icon": "./assets/images/NotificationIcon.png",
@@ -138,7 +138,8 @@
       "expo-localization",
       "expo-font",
       "expo-iap",
-      "./plugins/withEdgeToEdgeStyles.js"
+      "./plugins/withEdgeToEdgeStyles.js",
+      "./plugins/withLargeScreenOrientation.js"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -31,7 +31,7 @@ export function EmptyPetStateCard({
       </AppText>
 
       <AppText variant="body" style={styles.description}>
-        You don't currently have any linked pets. You can register your own pet or join a family by scanning an invite QR code.
+        You don&apos;t currently have any linked pets. You can register your own pet or join a family by scanning an invite QR code.
       </AppText>
 
       <View style={styles.buttonContainer}>

@@ -15,6 +15,7 @@ import { AppState } from 'react-native';
 import React, { useEffect } from 'react';
 import { NotificationProvider, useNotificationStore } from '@/context/NotificationContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useAdaptiveScreenOrientation } from '@/hooks/useAdaptiveScreenOrientation';
 import { ActiveWalkProvider } from '@/context/ActiveWalkContext';
 import { ActiveWalkOverlay } from '@/components/home/ActiveWalkOverlay';
 
@@ -38,6 +39,7 @@ export const queryClient = new QueryClient({
 });
 
 function InnerLayout() {
+  useAdaptiveScreenOrientation();
   const colorScheme = useColorScheme();
   const { token, isBootstrapping } = useAuth();
   const { syncWithServer } = useNotificationStore();
