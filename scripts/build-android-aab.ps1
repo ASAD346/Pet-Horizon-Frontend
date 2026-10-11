@@ -71,7 +71,9 @@ function Set-GradleProperty {
 
 $gradleProps = "$ProjectRoot\android\gradle.properties"
 Set-GradleProperty -FilePath $gradleProps -Key "reactNativeArchitectures" -Value $ReleaseAbi
-Write-Host "Set reactNativeArchitectures=$ReleaseAbi in gradle.properties"
+Set-GradleProperty -FilePath $gradleProps -Key "android.enableMinifyInReleaseBuilds" -Value "true"
+Set-GradleProperty -FilePath $gradleProps -Key "android.enableShrinkResourcesInReleaseBuilds" -Value "true"
+Write-Host "Set reactNativeArchitectures=$ReleaseAbi and enabled R8/shrinkResources in gradle.properties"
 
 $localProps = "$ProjectRoot\android\local.properties"
 $sdkDir = $AndroidSdk -replace '\\', '/'

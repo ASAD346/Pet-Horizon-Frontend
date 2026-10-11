@@ -3,7 +3,7 @@
     "name": "Pet Horizon",
     "jsEngine": "hermes",
     "slug": "Pet-Horizon",
-    "version": "1.0.10",
+    "version": "1.0.11",
     "orientation": "default",
     "icon": "./assets/images/app-icon.png",
     "notification": {
@@ -15,7 +15,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "35",
+      "buildNumber": "36",
       "associatedDomains": [
         "applinks:pethorizon.app"
       ],
@@ -40,7 +40,7 @@
         "android.permission.RECEIVE_BOOT_COMPLETED"
       ],
       "package": "com.anonymous.PetHorizon",
-      "versionCode": 35,
+      "versionCode": 36,
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
