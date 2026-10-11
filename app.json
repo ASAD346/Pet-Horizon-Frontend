@@ -137,7 +137,8 @@
       "@react-native-google-signin/google-signin",
       "expo-localization",
       "expo-font",
-      "expo-iap"
+      "expo-iap",
+      "./plugins/withEdgeToEdgeStyles.js"
     ],
     "experiments": {
       "typedRoutes": true,
