@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   StyleSheet,
   View,
   TouchableOpacity,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeModal } from '@/components/ui/SafeModal';
 import { AppText } from '@/components/ui/AppText';
 import { CustomButton } from '@/components/ui/AppButton';
@@ -152,6 +152,9 @@ export function AcceptInviteModal({
                   <Image
                     source={{ uri: resolveMediaUrl(info.pet.photoUrl) }}
                     style={styles.petPhoto}
+                    contentFit="cover"
+                    transition={200}
+                    cachePolicy="memory-disk"
                   />
                 ) : (
                   <View style={[styles.petPhoto, styles.photoFallback]}>

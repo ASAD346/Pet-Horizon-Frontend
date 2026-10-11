@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Image,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -170,6 +170,9 @@ export default function InviteAcceptScreen() {
                 <Image
                   source={{ uri: resolveMediaUrl(info.pet.photoUrl) }}
                   style={styles.petPhoto}
+                  contentFit="cover"
+                  transition={200}
+                  cachePolicy="memory-disk"
                 />
               ) : (
                 <View style={[styles.petPhoto, styles.photoFallback]}>

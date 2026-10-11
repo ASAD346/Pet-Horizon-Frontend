@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Image,
   Modal,
   Platform,
   Pressable,
@@ -10,6 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
@@ -253,6 +253,9 @@ export function ActivityDetailSheet({
                     <Image
                       source={{ uri: item.actorImage }}
                       style={styles.miniAvatarImage}
+                      contentFit="cover"
+                      transition={200}
+                      cachePolicy="memory-disk"
                     />
                   ) : (
                     <Text style={styles.miniAvatarText}>

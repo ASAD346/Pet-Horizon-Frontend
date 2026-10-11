@@ -6,7 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '../ui/AppText';
 import { HeaderActionButtons } from '../ui/HeaderActionButtons';
 import { Spacing } from '../../constants/theme';
-import { Image, Pressable } from 'react-native';
+import { Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { useAuth } from '@/hooks/useAuth';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
@@ -98,7 +99,13 @@ export function HomeHeader({
               >
                 <View style={[styles.avatarInnerContainer, isPremium ? { backgroundColor: 'rgba(212, 160, 23, 0.18)' } : { backgroundColor: 'rgba(255,255,255,0.22)' }, userImage ? { backgroundColor: 'transparent' } : {}]}>
                   {userImage ? (
-                    <Image source={{ uri: userImage }} style={styles.avatarImage} />
+                    <Image
+                      source={{ uri: userImage }}
+                      style={styles.avatarImage}
+                      contentFit="cover"
+                      transition={200}
+                      cachePolicy="memory-disk"
+                    />
                   ) : (
                     <AppText weight="800" style={[styles.avatarText, isPremium ? { color: '#FFF176' } : { color: '#FFFFFF' }]}>
                       {userInitial}

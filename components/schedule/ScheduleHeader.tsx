@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
 import { ScheduleTheme } from './scheduleTheme';
@@ -25,7 +26,7 @@ export function ScheduleHeader({ petName }: ScheduleHeaderProps) {
         <Image
           source={require('../../assets/images/onboarding.png')}
           style={styles.art}
-          resizeMode="contain"
+          contentFit="contain"
         />
       </View>
     </View>

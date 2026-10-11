@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, Image, Pressable } from 'react-native';
+import { View, StyleSheet, Text, Pressable } from 'react-native';
+import { Image } from 'expo-image';
 import { AppText } from '../ui/AppText';
 import { EmptyState } from '../ui/EmptyState';
 import { ColorIconBadge } from './ColorIconBadge';
@@ -139,7 +140,13 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
                     {/* Actor Avatar or Badge */}
                     <View style={[styles.miniAvatar, { backgroundColor: item.actorColor || '#5B9BD5' }]}>
                       {item.actorImage ? (
-                        <Image source={{ uri: item.actorImage }} style={styles.miniAvatarImage} />
+                        <Image
+                          source={{ uri: item.actorImage }}
+                          style={styles.miniAvatarImage}
+                          contentFit="cover"
+                          transition={200}
+                          cachePolicy="memory-disk"
+                        />
                       ) : (
                         <Text style={styles.miniAvatarText}>{item.actorInitial || 'U'}</Text>
                       )}

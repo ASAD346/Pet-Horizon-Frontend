@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Image,
   Platform,
   StyleSheet,
   Switch,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
@@ -71,6 +71,9 @@ function MemberAvatarLarge({
         <Image
           source={{ uri: resolved }}
           style={styles.avatarImage}
+          contentFit="cover"
+          transition={200}
+          cachePolicy="memory-disk"
           onError={() => setImageError(true)}
         />
       </View>

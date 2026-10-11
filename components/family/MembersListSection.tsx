@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Platform, Image } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { SkeletonList } from '@/components/ui/skeletons';
@@ -27,7 +28,13 @@ function MemberAvatar({ color, pictureUrl }: { color: string; pictureUrl?: strin
     if (resolvedUrl) {
       return (
         <View style={[styles.avatarOuter, { borderColor: color }]}>
-          <Image source={{ uri: resolvedUrl }} style={styles.avatarImage} />
+          <Image
+            source={{ uri: resolvedUrl }}
+            style={styles.avatarImage}
+            contentFit="cover"
+            transition={200}
+            cachePolicy="memory-disk"
+          />
         </View>
       );
     }

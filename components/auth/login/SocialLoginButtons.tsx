@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, Platform, Image } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { AntDesign } from '@expo/vector-icons';
 import { AppButton } from '../../ui/AppButton'; // Social buttons keep brand-specific styles
 import { OrDivider } from '../OrDivider';
@@ -35,7 +36,7 @@ export function SocialLoginButtons({
         disabled={googleLoading || googleDisabled}
         style={styles.googleButton}
         textStyle={styles.googleButtonText}
-        icon={<Image source={GOOGLE_ICON} style={styles.googleIconImage} />}
+        icon={<Image source={GOOGLE_ICON} style={styles.googleIconImage} contentFit="contain" />}
       />
 
       {Platform.OS === 'ios' ? (

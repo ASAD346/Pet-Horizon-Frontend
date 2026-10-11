@@ -33,6 +33,17 @@
 -keep class io.github.hyochan.openiap.** { *; }
 -keep class com.google.android.gms.** { *; }
 
+# Glide (used by expo-image for bitmap decoding, memory pooling and downsampling)
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep class * extends com.bumptech.glide.module.AppGlideModule {
+    <init>(...);
+}
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
+    **[] $VALUES;
+    public *;
+}
+-dontwarn com.bumptech.glide.load.resource.bitmap.VideoDecoder
+
 # Optimization & Obfuscation Tweaks
 -repackageclasses ''
 -allowaccessmodification
