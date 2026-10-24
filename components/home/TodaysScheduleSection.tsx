@@ -94,6 +94,7 @@ interface TodaysScheduleSectionProps {
   onCancelWalk?: (id: string) => void | Promise<void>;
   isPremium?: boolean;
   onViewAll?: () => void;
+  onSetUpSchedule?: () => void;
   /** Current user's id — used to detect walk sessions by other members */
   currentUserId?: string;
   /** Auth token — forwarded to WalkTimer so it can persist walk sessions */
@@ -588,6 +589,7 @@ export function TodaysScheduleSection({
   onCancelWalk,
   isPremium = false,
   onViewAll,
+  onSetUpSchedule,
   currentUserId,
   token,
 }: TodaysScheduleSectionProps) {
@@ -703,6 +705,9 @@ export function TodaysScheduleSection({
               icon="calendar-check-outline"
               title="No tasks scheduled today"
               description="Your pet's care schedule is clear for today."
+              buttonLabel="Set Up Schedule"
+              onButtonPress={onSetUpSchedule ?? onViewAll}
+              buttonVariant="success"
             />
           </View>
         )

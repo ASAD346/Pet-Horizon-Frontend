@@ -17,7 +17,7 @@ import {
 } from '@/lib/schedule/scheduleDate';
 import { fetchPetPermissions } from '@/services/schedules/feedingApi';
 import React, { useCallback, useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, Switch, StyleSheet } from 'react-native';
 import { useToast } from '@/hooks/useToast';
 import { AppText } from '@/components/ui/AppText';
 import { SkeletonChipGrid } from '@/components/ui/skeletons';
@@ -61,6 +61,7 @@ export function LogFoodSheet({
   const [unitOptions, setUnitOptions] = useState<{ value: string; label: string }[]>([]);
   const [featuresLoading, setFeaturesLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [repeatDaily, setRepeatDaily] = useState(true);
   const { showToast, showErrorToast } = useToast();
 
   const [entry, setEntry] = useState<FeedingEntryState>(() => (initialEntry ? { ...initialEntry } : {
@@ -76,6 +77,7 @@ export function LogFoodSheet({
   }));
 
   const resetForm = useCallback(() => {
+    setRepeatDaily(true);
     if (initialEntry) {
       setEntry({ ...initialEntry });
     } else {
@@ -202,7 +204,8 @@ export function LogFoodSheet({
       return;
     }
     const isEdit = Boolean(entry.scheduleId);
-    const dateError = validateFutureSchedule(entry.scheduleDate, entry.feedingTime, isEdit);
+    const allowPastOrPresent = !isEdit;
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.feedingTime, isEdit, allowPastOrPresent);
     if (dateError) {
       showErrorToast(dateError);
       return;
@@ -212,10 +215,18 @@ export function LogFoodSheet({
 
     setSaving(true);
     try {
-      await saveScheduleEntry(token, petId, 'feeding', entry);
-      const isEdit = Boolean(entry.scheduleId);
-      log.ok('LogFood', isEdit ? 'Feeding schedule updated' : 'Feeding schedule saved', { mealType: entry.mealType, time: timeHHmm, unit: entry.unit });
-      showToast(isEdit ? 'Feeding schedule updated successfully!' : 'Food logged successfully!');
+      const entryToSave = {
+        ...entry,
+        scheduleDate: isEdit
+          ? entry.scheduleDate
+          : (repeatDaily ? createDefaultScheduleDate('ongoing') : createDefaultScheduleDate('single')),
+      };
+      await saveScheduleEntry(token, petId, 'feeding', entryToSave, {
+        isCompleted: !isEdit,
+        allowPastOrPresent,
+      });
+      log.ok('LogFood', isEdit ? 'Feeding schedule updated' : 'Feeding logged', { mealType: entry.mealType, time: timeHHmm, unit: entry.unit });
+      showToast(isEdit ? 'Feeding schedule updated successfully!' : (repeatDaily ? 'Meal logged & daily schedule created!' : 'Meal logged successfully!'));
       setSaving(false);
       onSaved?.();
       onClose();
@@ -260,11 +271,19 @@ export function LogFoodSheet({
       visible={visible}
       onClose={onClose}
       title={entry.scheduleId ? 'Edit Feeding' : 'Log Food'}
-      subtitle="Schedule meals & feeding reminders"
+      subtitle={entry.scheduleId ? 'Update scheduled meal & reminders' : 'Log pet meal & optionally repeat daily'}
       icon={FOOD_THEME.icon}
       accentColor={FOOD_THEME.color}
       accentBg={FOOD_THEME.bg}
-      saveLabel={resolvedReadOnly ? undefined : (entry.scheduleId ? 'Save Changes' : 'Save Feeding')}
+      saveLabel={
+        resolvedReadOnly
+          ? undefined
+          : entry.scheduleId
+          ? 'Save Changes'
+          : repeatDaily
+          ? 'Log & Schedule Daily'
+          : 'Log Meal Now'
+      }
       onSave={handleSave}
       saving={saving}
       saveDisabled={featuresLoading || !entry.mealType || !entry.unit || resolvedReadOnly}
@@ -274,19 +293,61 @@ export function LogFoodSheet({
       {featuresLoading ? (
         <SkeletonChipGrid count={4} />
       ) : (
-        <FeedingEntryCard
-          entry={entry}
-          index={0}
-          accentColor={FOOD_THEME.color}
-          accentBg={FOOD_THEME.bg}
-          mealTypeOptions={mealTypeOptions}
-          unitOptions={unitOptions}
-          canRemove={false}
-          embeddedInSheet
-          onChange={setEntry}
-          onRemove={() => {}}
-        />
+        <>
+          <FeedingEntryCard
+            entry={entry}
+            index={0}
+            accentColor={FOOD_THEME.color}
+            accentBg={FOOD_THEME.bg}
+            mealTypeOptions={mealTypeOptions}
+            unitOptions={unitOptions}
+            canRemove={false}
+            embeddedInSheet
+            hideScheduleDate={!entry.scheduleId}
+            onChange={setEntry}
+            onRemove={() => {}}
+          />
+
+          {!entry.scheduleId ? (
+            <View style={styles.scheduleOptionCard}>
+              <View style={styles.scheduleOptionText}>
+                <AppText variant="body" weight="700" color="#1E293B">
+                  Repeat daily
+                </AppText>
+                <AppText variant="caption" color="#64748B">
+                  Also schedule this meal for tomorrow and upcoming days
+                </AppText>
+              </View>
+              <Switch
+                value={repeatDaily}
+                onValueChange={setRepeatDaily}
+                trackColor={{ false: '#E2E8F0', true: '#FDE68A' }}
+                thumbColor={repeatDaily ? '#D97706' : '#94A3B8'}
+              />
+            </View>
+          ) : null}
+        </>
       )}
     </FormSheetShell>
   );
 }
+
+const styles = StyleSheet.create({
+  scheduleOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    padding: 14,
+    marginTop: 8,
+    marginBottom: 16,
+    gap: 12,
+  },
+  scheduleOptionText: {
+    flex: 1,
+    gap: 2,
+  },
+});

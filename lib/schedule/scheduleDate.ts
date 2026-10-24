@@ -129,12 +129,17 @@ export function validateScheduleDate(state: ScheduleDateState): string | null {
 export function validateFutureSchedule(
   state?: ScheduleDateState | null,
   timeDate?: Date | null,
-  isEdit: boolean = false
+  isEdit: boolean = false,
+  allowPastOrPresent: boolean = false,
 ): string | null {
   if (!state) return null;
 
   const basicError = validateScheduleDate(state);
   if (basicError) return basicError;
+
+  if (allowPastOrPresent) {
+    return null;
+  }
 
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

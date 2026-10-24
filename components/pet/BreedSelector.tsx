@@ -34,7 +34,14 @@ export function BreedSelector({
 }: BreedSelectorProps) {
   const [visible, setVisible] = useState(false);
 
-  const placeholder = loading ? 'Loading breeds…' : breeds.length ? 'Select breed' : 'No breeds available';
+  const normalizedBreeds = React.useMemo(() => {
+    if (!breeds || breeds.length === 0) return [];
+    const withoutOther = breeds.filter((b) => b.trim().toLowerCase() !== 'other');
+    const hasOther = breeds.some((b) => b.trim().toLowerCase() === 'other');
+    return hasOther ? [...withoutOther, 'Other'] : withoutOther;
+  }, [breeds]);
+
+  const placeholder = loading ? 'Loading breeds…' : normalizedBreeds.length ? 'Select breed' : 'No breeds available';
   const displayValue = value || placeholder;
 
   // ── Read-only info card ──────────────────────────────────────
@@ -66,9 +73,9 @@ export function BreedSelector({
       ) : (
       <TouchableOpacity
         style={[styles.field, error ? styles.fieldError : null, disabled ? styles.fieldDisabled : null, visible && styles.fieldActive]}
-        onPress={() => !disabled && breeds.length > 0 && setVisible(true)}
+        onPress={() => !disabled && normalizedBreeds.length > 0 && setVisible(true)}
         activeOpacity={0.8}
-        disabled={disabled || breeds.length === 0}
+        disabled={disabled || normalizedBreeds.length === 0}
       >
         <AppText
           variant="body"
@@ -92,7 +99,7 @@ export function BreedSelector({
       <SheetOptionPicker
         visible={visible}
         title="Select Breed"
-        options={breeds.map((b) => ({ value: b, label: b }))}
+        options={normalizedBreeds.map((b) => ({ value: b, label: b }))}
         selectedValue={value}
         onClose={() => setVisible(false)}
         onSelect={(val) => {

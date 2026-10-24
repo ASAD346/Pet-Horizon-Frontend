@@ -48,7 +48,7 @@ export async function saveScheduleEntry(
     | MedicineEntryState
     | VaccinationEntryState
     | GroomingEntryState,
-  options: { groomingVisible?: boolean } = {},
+  options: { groomingVisible?: boolean; allowPastOrPresent?: boolean; isCompleted?: boolean } = {},
 ): Promise<void> {
   const scheduleDateState = (entry as any).scheduleDate;
   let timeDate: Date | null = null;
@@ -61,14 +61,20 @@ export async function saveScheduleEntry(
     if (gDate) timeDate = new Date(gDate);
   }
 
-  const futureError = validateFutureSchedule(scheduleDateState, timeDate);
+  const isEdit = Boolean((entry as any).scheduleId);
+  const futureError = validateFutureSchedule(
+    scheduleDateState,
+    timeDate,
+    isEdit,
+    options.allowPastOrPresent || options.isCompleted,
+  );
   if (futureError) {
     throw new Error(futureError);
   }
 
   switch (key) {
     case 'feeding':
-      await saveFeedingEntry(token, petId, entry as FeedingEntryState);
+      await saveFeedingEntry(token, petId, entry as FeedingEntryState, options);
       return;
     case 'walk':
       await saveWalkEntry(token, petId, entry as WalkEntryState);
@@ -87,7 +93,12 @@ export async function saveScheduleEntry(
   }
 }
 
-async function saveFeedingEntry(token: string, petId: string, entry: FeedingEntryState) {
+async function saveFeedingEntry(
+  token: string,
+  petId: string,
+  entry: FeedingEntryState,
+  options: { isCompleted?: boolean; allowPastOrPresent?: boolean } = {},
+) {
   if (!entry.mealType) throw new Error('Select a meal type.');
   if (!entry.unit) throw new Error('Select a unit.');
   if (!entry.amount.trim()) throw new Error('Enter an amount.');
@@ -107,6 +118,8 @@ async function saveFeedingEntry(token: string, petId: string, entry: FeedingEntr
     reminderTime: entry.notificationsOn
       ? addMinutesToTimeHHmm(timeHHmm, entry.reminderMinutes)
       : undefined,
+    isCompleted: options.isCompleted,
+    allowPast: options.allowPastOrPresent || options.isCompleted,
     ...buildScheduleDatePayload(entry.scheduleDate),
   };
 

@@ -714,6 +714,8 @@ export default function HomeScreen() {
               onReopenTask={handleReopenTask}
               onCancelWalk={handleCancelWalk}
               isPremium={isPremium}
+              onViewAll={() => router.push('/explore' as Href)}
+              onSetUpSchedule={() => router.push('/explore' as Href)}
               currentUserId={user?._id ?? undefined}
               token={token ?? undefined}
             />

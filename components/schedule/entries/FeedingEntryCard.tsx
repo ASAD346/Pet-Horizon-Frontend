@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { View, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { AppText } from '@/components/ui/AppText';
 import {
   FormTimeInput,
@@ -72,6 +73,7 @@ interface FeedingEntryCardProps {
   unitOptions: { value: string; label: string }[];
   canRemove: boolean;
   embeddedInSheet?: boolean;
+  hideScheduleDate?: boolean;
   onChange: (next: FeedingEntryState) => void;
   onRemove: () => void;
 }
@@ -85,6 +87,7 @@ export function FeedingEntryCard({
   unitOptions,
   canRemove,
   embeddedInSheet = false,
+  hideScheduleDate = false,
   onChange,
   onRemove,
 }: FeedingEntryCardProps) {
@@ -97,6 +100,28 @@ export function FeedingEntryCard({
     value: o.value,
     label: o.label,
   }));
+
+  const handleDecrement = () => {
+    if (isReadOnly) return;
+    const current = parseFloat(entry.amount) || 0;
+    const next = Math.max(0.25, Math.round((current - 0.5) * 100) / 100);
+    const formatted = String(next);
+    onChange({ ...entry, amount: formatted });
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handleIncrement = () => {
+    if (isReadOnly) return;
+    const current = parseFloat(entry.amount) || 0;
+    const next = Math.round((current + 0.5) * 100) / 100;
+    const formatted = String(next);
+    onChange({ ...entry, amount: formatted });
+    if (Platform.OS !== 'web') {
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const pickers = (
     <>
@@ -190,15 +215,49 @@ export function FeedingEntryCard({
         </View>
 
         <View style={styles.twoColRow}>
-          <View style={{ flex: 1.15 }}>
-            <FormNumberInput
-              label="Portion Amount"
-              required
-              value={entry.amount}
-              onChangeText={(amount) => onChange({ ...entry, amount })}
-              placeholder="e.g. 1"
-              accentColor={accentColor}
-            />
+          <View style={{ flex: 1.25 }}>
+            <View style={styles.fieldGroup}>
+              <AppText variant="caption" weight="700" color="#5C6470" style={styles.fieldLabel}>
+                PORTION AMOUNT <AppText variant="caption" weight="700" color="#EF4444">*</AppText>
+              </AppText>
+              <View style={[styles.stepperContainer, isReadOnly && styles.stepperDisabled]}>
+                <TouchableOpacity
+                  style={[
+                    styles.stepperBtn,
+                    { backgroundColor: accentBg },
+                    (isReadOnly || (parseFloat(entry.amount) || 0) <= 0.25) && styles.stepperBtnDisabled,
+                  ]}
+                  onPress={handleDecrement}
+                  disabled={isReadOnly || (parseFloat(entry.amount) || 0) <= 0.25}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="minus" size={16} color={accentColor} />
+                </TouchableOpacity>
+
+                <TextInput
+                  style={[styles.stepperInput, isReadOnly && { color: '#94A3B8' }]}
+                  value={entry.amount}
+                  onChangeText={(val) => {
+                    const cleaned = val.replace(/[^0-9.]/g, '');
+                    onChange({ ...entry, amount: cleaned });
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder="1"
+                  placeholderTextColor="#94A3B8"
+                  editable={!isReadOnly}
+                  textAlign="center"
+                />
+
+                <TouchableOpacity
+                  style={[styles.stepperBtn, { backgroundColor: accentColor }]}
+                  onPress={handleIncrement}
+                  disabled={isReadOnly}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="plus" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
           <View style={{ flex: 1 }}>
             <FormSelectInput
@@ -223,11 +282,13 @@ export function FeedingEntryCard({
           </AppText>
         </View>
 
-        <ScheduleDateFields
-          value={entry.scheduleDate}
-          onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
-          accentColor={accentColor}
-        />
+        {!hideScheduleDate ? (
+          <ScheduleDateFields
+            value={entry.scheduleDate}
+            onChange={(scheduleDate) => onChange({ ...entry, scheduleDate })}
+            accentColor={accentColor}
+          />
+        ) : null}
 
         <View style={styles.twoColRow}>
           <View style={styles.halfCol}>
@@ -390,5 +451,39 @@ const styles = StyleSheet.create({
   },
   halfCol: {
     flex: 1,
+  },
+  stepperContainer: {
+    height: 52,
+    backgroundColor: '#FCFCFD',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#EFEFEF',
+    paddingHorizontal: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  stepperDisabled: {
+    opacity: 0.65,
+    backgroundColor: '#F1F5F9',
+  },
+  stepperBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperBtnDisabled: {
+    opacity: 0.35,
+  },
+  stepperInput: {
+    flex: 1,
+    height: '100%',
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E293B',
+    paddingHorizontal: 4,
   },
 });
