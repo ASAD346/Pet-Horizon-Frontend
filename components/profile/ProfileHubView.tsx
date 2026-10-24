@@ -38,6 +38,7 @@ import { PrivacyPolicySheet } from './PrivacyPolicySheet';
 import { HelpSupportSheet } from './HelpSupportSheet';
 import { FeedbackSheet } from './FeedbackSheet';
 import { LocalizationSheet } from './LocalizationSheet';
+import { NotificationSettingsSheet } from './NotificationSettingsSheet';
 import { calculatePetAge, formatDate } from '@/lib/pet/birthdayUtils';
 import { fetchAccessiblePets } from '@/lib/pet/fetchAccessiblePets';
 
@@ -65,6 +66,7 @@ export function ProfileHubView() {
   const [helpVisible, setHelpVisible] = useState(false);
   const [feedbackVisible, setFeedbackVisible] = useState(false);
   const [localizationVisible, setLocalizationVisible] = useState(false);
+  const [notificationSettingsVisible, setNotificationSettingsVisible] = useState(false);
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -376,6 +378,12 @@ export function ProfileHubView() {
             onPress={() => setLocalizationVisible(true)}
           />
           <ProfileMenuRow
+            icon="notifications-outline"
+            title="Notifications & Reminders"
+            subtitle="Push alerts, reminders & family updates"
+            onPress={() => setNotificationSettingsVisible(true)}
+          />
+          <ProfileMenuRow
             icon="card-outline"
             title="Billing & Subscription"
             subtitle="Invoices, payment method, cancel"
@@ -419,6 +427,7 @@ export function ProfileHubView() {
       <HelpSupportSheet visible={helpVisible} onClose={() => setHelpVisible(false)} />
       <FeedbackSheet visible={feedbackVisible} onClose={() => setFeedbackVisible(false)} token={token} />
       <LocalizationSheet visible={localizationVisible} onClose={() => setLocalizationVisible(false)} />
+      <NotificationSettingsSheet visible={notificationSettingsVisible} onClose={() => setNotificationSettingsVisible(false)} />
 
       {/* Confirmation Modals */}
       <AppConfirmModal

@@ -193,16 +193,27 @@ export async function preparePushNotifications(): Promise<boolean> {
 /**
  * Request the native FCM/APNs token so Firebase can target this device.
  * Must run after channels + permission on Android 13+.
+ * If permission has not been granted yet, only prompts if requestIfMissing is explicitly true.
  */
-export async function acquireDevicePushToken(): Promise<string | null> {
+export async function acquireDevicePushToken(requestIfMissing = false): Promise<string | null> {
   if (isExpoGo() || Platform.OS === 'web') {
     log.info(SCOPE, 'Token acquisition skipped in Expo Go / web');
     return null;
   }
 
-  const granted = await preparePushNotifications();
+  await ensureNotificationHandler();
+  await ensureAndroidNotificationChannels();
+
+  const Notifications = await getNotificationsModule();
+  const perm = await Notifications.getPermissionsAsync();
+  let granted = perm.status === 'granted';
+
+  if (!granted && requestIfMissing) {
+    granted = await requestPushPermission(false);
+  }
+
   if (!granted) {
-    log.warn(SCOPE, 'Notification permission denied — enable notifications in phone settings');
+    log.info(SCOPE, 'Notification permission not granted yet — skipping token acquisition');
     return null;
   }
 
@@ -292,6 +303,16 @@ export async function scheduleLocalNotificationsForEntry(
     const notificationsOn = entry.notificationsOn || entry.reminderOn || false;
     if (!notificationsOn) {
       return [];
+    }
+
+    // Contextual permission prompt: If user enabled reminders for this entry, prompt now
+    const permStatus = await Notifications.getPermissionsAsync();
+    if (permStatus.status !== 'granted') {
+      const granted = await requestPushPermission(false);
+      if (!granted) {
+        log.info(SCOPE, 'User declined notification permission when scheduling entry');
+        return [];
+      }
     }
 
     // Determine the reminder date/time and schedule type

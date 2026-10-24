@@ -7,4 +7,5 @@ export { HelpSupportSheet } from './HelpSupportSheet';
 export { PremiumActiveCard } from './PremiumActiveCard';
 export { FeedbackSheet } from './FeedbackSheet';
 export { LocalizationSheet } from './LocalizationSheet';
+export { NotificationSettingsSheet } from './NotificationSettingsSheet';
 

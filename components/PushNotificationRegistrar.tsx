@@ -22,11 +22,6 @@ export function PushNotificationRegistrar() {
   useEffect(() => {
     void ensureNotificationHandler();
 
-    // Trigger cold start sequential permission check/requests (Notifications -> Camera -> Photos)
-    import('@/lib/permissions/permissionsManager')
-      .then(({ requestColdStartPermissions }) => requestColdStartPermissions())
-      .catch(() => {});
-
     if (isExpoGo()) return;
 
     import('@/lib/push/registerPushToken')

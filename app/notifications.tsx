@@ -57,6 +57,21 @@ function getNotificationCategory(item: any): string {
   const b = (item.body || '').toLowerCase();
   const type = (item.type || '').toLowerCase();
 
+  // Check special event types first
+  if (
+    type === 'missed_task' ||
+    t.includes('missed')
+  ) {
+    return 'missed_task';
+  }
+  if (
+    type === 'family_activity' ||
+    t.includes('care update') ||
+    t.includes('walk started')
+  ) {
+    return 'family_activity';
+  }
+
   if (
     type === 'feeding' || type === 'food' ||
     t.includes('feed') || b.includes('feed') ||
@@ -115,6 +130,8 @@ const CATEGORY_STYLES: Record<string, { icon: string; color: string; bg: string;
   medicine: { icon: 'medical-outline', color: '#9333EA', bg: '#F3E8FF', unreadBg: '#FAF5FF' },
   grooming: { icon: 'cut-outline', color: '#0D9488', bg: '#CCFBF1', unreadBg: '#F2FDFB' },
   vaccination: { icon: 'shield-checkmark-outline', color: '#DB2777', bg: '#FCE7F3', unreadBg: '#FFF5F9' },
+  missed_task: { icon: 'alert-circle-outline', color: '#EA580C', bg: '#FFEDD5', unreadBg: '#FFF7ED' },
+  family_activity: { icon: 'people-outline', color: '#0284C7', bg: '#E0F2FE', unreadBg: '#F0F9FF' },
   general: { icon: 'notifications-outline', color: '#4B5563', bg: '#F3F4F6', unreadBg: '#FAFAFA' },
 };
 

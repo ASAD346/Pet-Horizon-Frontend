@@ -50,79 +50,50 @@ export async function getAppPermissionsStatus(): Promise<PermissionStatusSummary
 }
 
 /**
- * Requests native cold-start permissions sequentially:
- * 1. Post Notifications
- * 2. Camera
- * 3. Photo Gallery / Media Library
- *
- * Runs non-intrusively in sequence and does not block app rendering.
+ * Requests Notification permission contextually (just-in-time).
+ * If permission was previously denied and force is true, opens device settings.
  */
-export async function requestColdStartPermissions(): Promise<void> {
-  if (Platform.OS === 'web') return;
+export async function requestNotificationPermission(force = false): Promise<boolean> {
+  if (Platform.OS === 'web' || isExpoGo()) return false;
 
   try {
-    const hasPrompted = await AsyncStorage.getItem(COLD_START_KEY);
-
-    // 1. Post Notifications
-    if (!isExpoGo()) {
-      try {
-        await ensureNotificationHandler();
-        await ensureAndroidNotificationChannels();
-
-        const Notifications = await import('expo-notifications');
-        const notifPerm = await Notifications.getPermissionsAsync();
-
-        if (notifPerm.status !== 'granted') {
-          // If never prompted, or can ask again
-          if (!hasPrompted || notifPerm.canAskAgain) {
-            log.info(SCOPE, 'Requesting notification permission on cold start...');
-            await Notifications.requestPermissionsAsync({
-              ios: {
-                allowAlert: true,
-                allowBadge: true,
-                allowSound: true,
-              },
-            });
-          }
-        }
-      } catch (e) {
-        log.warn(SCOPE, 'Notification permission request error', e instanceof Error ? e.message : String(e));
-      }
-    }
-
-    // 2. Camera
-    try {
-      const camPerm = await ImagePicker.getCameraPermissionsAsync();
-      if (!camPerm.granted) {
-        if (!hasPrompted || camPerm.canAskAgain) {
-          log.info(SCOPE, 'Requesting camera permission on cold start...');
-          await ImagePicker.requestCameraPermissionsAsync();
-        }
-      }
-    } catch (e) {
-      log.warn(SCOPE, 'Camera permission request error', e instanceof Error ? e.message : String(e));
-    }
-
-    // 3. Photo Library / Gallery
-    try {
-      const mediaPerm = await ImagePicker.getMediaLibraryPermissionsAsync();
-      if (!mediaPerm.granted) {
-        if (!hasPrompted || mediaPerm.canAskAgain) {
-          log.info(SCOPE, 'Requesting media library permission on cold start...');
-          await ImagePicker.requestMediaLibraryPermissionsAsync();
-        }
-      }
-    } catch (e) {
-      log.warn(SCOPE, 'Media library permission request error', e instanceof Error ? e.message : String(e));
-    }
-
-    // Mark cold start as prompted
-    if (!hasPrompted) {
-      await AsyncStorage.setItem(COLD_START_KEY, 'true');
-    }
-
-    log.ok(SCOPE, 'Cold start native permissions flow completed');
-  } catch (error) {
-    log.fail(SCOPE, 'Error during cold start permissions flow', error instanceof Error ? error.message : String(error));
+    const { requestPushPermission } = await import('@/lib/push/notificationSetup');
+    return await requestPushPermission(force);
+  } catch (err) {
+    log.warn(SCOPE, 'Error requesting notification permission', err instanceof Error ? err.message : String(err));
+    return false;
   }
+}
+
+/**
+ * Requests Camera permission contextually when the user activates a feature that requires it.
+ */
+export async function requestCameraPermission(): Promise<boolean> {
+  try {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    return perm.granted;
+  } catch (err) {
+    log.warn(SCOPE, 'Error requesting camera permission', err instanceof Error ? err.message : String(err));
+    return false;
+  }
+}
+
+/**
+ * Requests Photo Library permission contextually.
+ */
+export async function requestPhotoLibraryPermission(): Promise<boolean> {
+  try {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    return perm.granted;
+  } catch (err) {
+    log.warn(SCOPE, 'Error requesting photo library permission', err instanceof Error ? err.message : String(err));
+    return false;
+  }
+}
+
+/**
+ * @deprecated Cold start permission prompting has been removed. Permissions are now requested just-in-time.
+ */
+export async function requestColdStartPermissions(): Promise<void> {
+  // Intentionally a no-op to prevent OS permission dialogs on launch.
 }
