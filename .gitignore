@@ -25,6 +25,9 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+hs_err_pid*
+replay_pid*
 
 # macOS
 .DS_Store
