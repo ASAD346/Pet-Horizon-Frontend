@@ -55,6 +55,8 @@ export async function fetchFeedingSchedules(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString, getDeviceTimezone } from '@/lib/timezone';
+
 export async function createFeedingSchedule(
   token: string,
   body: CreateFeedingScheduleRequest,
@@ -65,11 +67,16 @@ export async function createFeedingSchedule(
     time: body.time,
     reminderMinutes: body.reminderMinutes,
   });
+  const timezone = getDeviceTimezone();
+  const payload = {
+    timezone,
+    ...body,
+  };
   try {
     const data = await apiRequest<FeedingScheduleItem>(API_ENDPOINTS.schedules.feeding, {
       method: 'POST',
       token,
-      body,
+      body: payload,
     });
     log.ok(SCOPE, 'Feeding schedule created', { id: data._id });
     return data;
@@ -78,8 +85,6 @@ export async function createFeedingSchedule(
     throw error;
   }
 }
-
-import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
 
 export async function completeFeedingSchedule(
   token: string,
@@ -131,6 +136,31 @@ export async function skipFeedingSchedule(
     return data;
   } catch (error) {
     log.fail(SCOPE, 'Skip feeding failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function reopenFeedingSchedule(
+  token: string,
+  scheduleId: string,
+  date?: string,
+): Promise<{ success: boolean; scheduleItem?: any }> {
+  log.info(SCOPE, 'POST /schedules/feeding/:id/reopen', { scheduleId });
+  const localDate = date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload = {
+    date: localDate,
+    status: 'pending',
+  };
+  try {
+    const data = await apiRequest<{ success: boolean; scheduleItem?: any }>(
+      `${API_ENDPOINTS.schedules.feeding}/${scheduleId}/reopen${query}`,
+      { method: 'POST', token, body: payload },
+    );
+    log.ok(SCOPE, 'Feeding schedule reopened', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Reopen feeding failed', getErrorMessage(error));
     throw error;
   }
 }

@@ -4,6 +4,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AppText } from '@/components/ui/AppText';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { Radius, Spacing } from '@/constants/theme';
 import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,9 +25,10 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 interface ActiveWalkHeroCardProps {
   onComplete?: (scheduleId: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip?: (scheduleId: string) => void | Promise<void>;
+  onCancelWalk?: (scheduleId: string) => void | Promise<void>;
 }
 
-export function ActiveWalkHeroCard({ onComplete, onSkip }: ActiveWalkHeroCardProps = {}) {
+export function ActiveWalkHeroCard({ onComplete, onSkip, onCancelWalk }: ActiveWalkHeroCardProps = {}) {
   const { activeWalk, stopWalk } = useActiveWalk();
   const { token } = useAuth();
   const { isPremium } = usePremiumStatus();
@@ -205,7 +207,33 @@ export function ActiveWalkHeroCard({ onComplete, onSkip }: ActiveWalkHeroCardPro
       busyRef.current = false;
     }
   };
-  handleCompleteRef.current = handleComplete;
+  const [confirmCancelVisible, setConfirmCancelVisible] = useState(false);
+
+  const handleCancel = () => {
+    if (busy) return;
+    setConfirmCancelVisible(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    setConfirmCancelVisible(false);
+    setBusy(true);
+    setForceHidden(true);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    void cancelTaskNotifications(activeWalk.scheduleId).catch(() => {});
+    try {
+      if (onCancelWalk) {
+        await onCancelWalk(activeWalk.scheduleId);
+      }
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to cancel walk session.');
+    } finally {
+      await stopWalk(activeWalk.scheduleId).catch(() => {});
+      setBusy(false);
+    }
+  };
 
   // Premium & Free Theme Tokens
   const theme = isPremium
@@ -309,6 +337,14 @@ export function ActiveWalkHeroCard({ onComplete, onSkip }: ActiveWalkHeroCardPro
                   LIVE
                 </AppText>
               </View>
+
+              <Pressable
+                onPress={handleCancel}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={({ pressed }) => [styles.cancelIconBtn, pressed && { opacity: 0.6 }]}
+              >
+                <Ionicons name="close-circle-outline" size={17} color="#94A3B8" />
+              </Pressable>
             </View>
 
             {/* Timer Counter & Goal percentage pill */}
@@ -355,6 +391,17 @@ export function ActiveWalkHeroCard({ onComplete, onSkip }: ActiveWalkHeroCardPro
           </Pressable>
         </View>
       </LinearGradient>
+
+      <AppConfirmModal
+        visible={confirmCancelVisible}
+        title="Cancel Walk Session?"
+        message="This will stop the timer and reset the walk task back to pending."
+        confirmLabel="Cancel Walk"
+        cancelLabel="Keep Walking"
+        variant="danger"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setConfirmCancelVisible(false)}
+      />
     </View>
   );
 }
@@ -504,5 +551,10 @@ const styles = StyleSheet.create({
   },
   btnDisabled: {
     opacity: 0.6,
+  },
+  cancelIconBtn: {
+    marginLeft: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

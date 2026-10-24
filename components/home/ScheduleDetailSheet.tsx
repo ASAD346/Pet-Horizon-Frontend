@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Modal,
   Platform,
   Pressable,
@@ -12,6 +13,7 @@ import {
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { formatTimeHHmmDisplay, formatUnitLabel, getMealTypeLabel, dateToTimeHHmm } from '@/lib/feeding/feedingForm';
 import { feedingScheduleTitle } from '@/lib/feeding/feedingDisplay';
@@ -52,6 +54,8 @@ interface ScheduleDetailSheetProps {
   onClose: () => void;
   onComplete?: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip?: (id: string) => void | Promise<void>;
+  onReopen?: (id: string, kind: ScheduleDetailRow['kind']) => void | Promise<void>;
+  onCancelWalk?: (id: string) => void | Promise<void>;
   showActions?: boolean;
   isPremium?: boolean;
   /** Current logged-in user's id — forwarded to WalkTimer for multi-user sessions */
@@ -248,6 +252,8 @@ export function ScheduleDetailSheet({
   onClose,
   onComplete,
   onSkip,
+  onReopen,
+  onCancelWalk,
   showActions = true,
   isPremium = false,
   currentUserId,
@@ -258,6 +264,7 @@ export function ScheduleDetailSheet({
   const insets = useSafeAreaInsets();
   const [completeBusy, setCompleteBusy] = useState(false);
   const [skipBusy, setSkipBusy] = useState(false);
+  const [reopenBusy, setReopenBusy] = useState(false);
 
   // ── Walk-specific timer state ────────────────────────────────────────────────
   const [walkElapsedSeconds, setWalkElapsedSeconds] = useState(0);
@@ -279,6 +286,7 @@ export function ScheduleDetailSheet({
     if (!visible) {
       setCompleteBusy(false);
       setSkipBusy(false);
+      setReopenBusy(false);
       setWalkBusy(false);
       walkBusyRef.current = false;
     }
@@ -319,7 +327,7 @@ export function ScheduleDetailSheet({
   const title = getRowTitle(row);
 
   const handleComplete = async () => {
-    if (!onComplete || completeBusy || skipBusy) return;
+    if (!onComplete || completeBusy || skipBusy || reopenBusy) return;
     setCompleteBusy(true);
     try {
       await onComplete(item._id);
@@ -332,7 +340,7 @@ export function ScheduleDetailSheet({
   };
 
   const handleSkip = async () => {
-    if (!onSkip || completeBusy || skipBusy) return;
+    if (!onSkip || completeBusy || skipBusy || reopenBusy) return;
     setSkipBusy(true);
     try {
       await onSkip(item._id);
@@ -342,6 +350,45 @@ export function ScheduleDetailSheet({
     } finally {
       setSkipBusy(false);
     }
+  };
+
+  const [reopenConfirmVisible, setReopenConfirmVisible] = useState(false);
+  const [cancelWalkConfirmVisible, setCancelWalkConfirmVisible] = useState(false);
+
+  const handleReopen = () => {
+    if (!onReopen || reopenBusy) return;
+    setReopenConfirmVisible(true);
+  };
+
+  const executeReopen = async () => {
+    setReopenConfirmVisible(false);
+    setReopenBusy(true);
+    try {
+      if (onReopen) await onReopen(item._id, row.kind);
+      onClose();
+    } catch {
+      // Error handled in parent
+    } finally {
+      setReopenBusy(false);
+    }
+  };
+
+  const handleWalkCancel = () => {
+    if (!walkItem || walkBusy) return;
+    setCancelWalkConfirmVisible(true);
+  };
+
+  const executeWalkCancel = async () => {
+    setCancelWalkConfirmVisible(false);
+    if (walkTimerRef.current) {
+      clearInterval(walkTimerRef.current);
+      walkTimerRef.current = null;
+    }
+    await stopWalk(walkItem?._id);
+    if (onCancelWalk && walkItem) {
+      await onCancelWalk(walkItem._id);
+    }
+    onClose();
   };
 
   // ── Walk handlers ────────────────────────────────────────────────────────────
@@ -899,8 +946,16 @@ export function ScheduleDetailSheet({
                   </Pressable>
                 </>
               ) : (
-                // Running — show live timer + Done
+                // Running — show Cancel + live timer + Done
                 <>
+                  <Pressable
+                    style={({ pressed }) => [styles.cancelWalkBtn, pressed && styles.btnPressed]}
+                    disabled={walkBusy}
+                    onPress={handleWalkCancel}
+                  >
+                    <Ionicons name="close-circle-outline" size={16} color="#DC2626" />
+                    <AppText style={styles.cancelWalkText} weight="700" color="#DC2626">Cancel</AppText>
+                  </Pressable>
                   <View style={styles.walkTimerDisplay}>
                     <View style={[
                       styles.walkTimerDot,
@@ -981,9 +1036,56 @@ export function ScheduleDetailSheet({
                 </Pressable>
               ) : null}
             </View>
+          ) : showActions && (isDone || isSkipped) && onReopen ? (
+            <View style={styles.footer}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.reopenBtn,
+                  pressed && styles.btnPressed,
+                ]}
+                disabled={reopenBusy}
+                onPress={handleReopen}
+              >
+                {reopenBusy ? (
+                  <ActivityIndicator size="small" color="#2563EB" />
+                ) : (
+                  <View style={styles.reopenBtnContent}>
+                    <Ionicons name="refresh-outline" size={18} color="#2563EB" />
+                    <AppText style={styles.reopenBtnText} weight="700" color="#2563EB">
+                      Reopen Task
+                    </AppText>
+                  </View>
+                )}
+              </Pressable>
+            </View>
           ) : null}
         </View>
       </View>
+
+      {/* Custom Reopen Confirmation Modal */}
+      <AppConfirmModal
+        visible={reopenConfirmVisible}
+        title="Reopen Task?"
+        message="This will restore the task back to Pending and remove its completion record for today."
+        confirmLabel="Reopen"
+        cancelLabel="Cancel"
+        variant="primary"
+        loading={reopenBusy}
+        onConfirm={executeReopen}
+        onCancel={() => setReopenConfirmVisible(false)}
+      />
+
+      {/* Custom Cancel Walk Confirmation Modal */}
+      <AppConfirmModal
+        visible={cancelWalkConfirmVisible}
+        title="Cancel Walk Session?"
+        message="This will stop the timer and reset the walk task back to pending."
+        confirmLabel="Cancel Walk"
+        cancelLabel="Keep Walking"
+        variant="danger"
+        onConfirm={executeWalkCancel}
+        onCancel={() => setCancelWalkConfirmVisible(false)}
+      />
     </Modal>
   );
 }
@@ -1239,5 +1341,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontVariant: ['tabular-nums'],
     letterSpacing: 0.5,
+  },
+  cancelWalkBtn: {
+    height: 44,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  cancelWalkText: {
+    fontSize: 13,
+  },
+  reopenBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reopenBtnContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  reopenBtnText: {
+    fontSize: 14,
   },
 });

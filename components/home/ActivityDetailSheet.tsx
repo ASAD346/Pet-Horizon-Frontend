@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   Modal,
   Platform,
   Pressable,
@@ -13,6 +14,7 @@ import { Image } from 'expo-image';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/AppText';
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { HomeTheme, Radius, Spacing } from '@/constants/theme';
 import { getTaskDisplayName } from '@/src/utils/taskMappings';
 import type { RecentActivityItem } from './RecentActivitySection';
@@ -21,6 +23,7 @@ interface ActivityDetailSheetProps {
   visible: boolean;
   item: RecentActivityItem | null;
   onClose: () => void;
+  onReopenTask?: (id: string, kind: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination') => void | Promise<void>;
   isPremium?: boolean;
 }
 
@@ -121,9 +124,12 @@ export function ActivityDetailSheet({
   visible,
   item,
   onClose,
+  onReopenTask,
   isPremium = false,
 }: ActivityDetailSheetProps) {
   const insets = useSafeAreaInsets();
+  const [confirmReopenVisible, setConfirmReopenVisible] = useState(false);
+  const [reopenBusy, setReopenBusy] = useState(false);
 
   if (!item) return null;
 
@@ -132,6 +138,24 @@ export function ActivityDetailSheet({
   const isSkipped = item.isSkipped;
 
   const displayTitle = formatRawTitle(item.actionText);
+
+  const isTaskCategory = ['food', 'feeding', 'walk', 'medicine', 'grooming', 'vaccination'].includes(categoryKey);
+  const canReopen = Boolean(isTaskCategory && (item.scheduleId || item.id) && onReopenTask);
+
+  const handleConfirmReopen = async () => {
+    setConfirmReopenVisible(false);
+    if (!onReopenTask || !item) return;
+    const kind = item.category === 'food' ? 'feeding' : (item.category as any);
+    const targetId = item.scheduleId || item.id;
+    if (!targetId || !kind) return;
+    setReopenBusy(true);
+    try {
+      await onReopenTask(targetId, kind);
+      onClose();
+    } finally {
+      setReopenBusy(false);
+    }
+  };
 
   return (
     <Modal
@@ -418,6 +442,26 @@ export function ActivityDetailSheet({
 
           {/* Footer Action Button */}
           <View style={styles.footer}>
+            {canReopen ? (
+              <TouchableOpacity
+                style={styles.reopenBtn}
+                onPress={() => setConfirmReopenVisible(true)}
+                disabled={reopenBusy}
+                activeOpacity={0.8}
+              >
+                {reopenBusy ? (
+                  <ActivityIndicator size="small" color="#2563EB" />
+                ) : (
+                  <View style={styles.btnRow}>
+                    <Ionicons name="refresh" size={16} color="#2563EB" />
+                    <AppText variant="bodySmall" weight="800" color="#2563EB">
+                      Reopen Task
+                    </AppText>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ) : null}
+
             <TouchableOpacity
               style={[
                 styles.dismissBtn,
@@ -436,6 +480,17 @@ export function ActivityDetailSheet({
           </View>
         </View>
       </View>
+
+      <AppConfirmModal
+        visible={confirmReopenVisible}
+        title="Reopen Task?"
+        message="This will mark the task as pending so you can log or complete it again."
+        confirmLabel="Reopen"
+        cancelLabel="Keep as is"
+        variant="primary"
+        onConfirm={handleConfirmReopen}
+        onCancel={() => setConfirmReopenVisible(false)}
+      />
     </Modal>
   );
 }
@@ -635,8 +690,26 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F1F5F9',
     marginTop: 6,
+    flexDirection: 'row',
+    gap: 10,
+  },
+  reopenBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1.2,
+    borderColor: '#93C5FD',
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   dismissBtn: {
+    flex: 1,
     height: 44,
     borderRadius: 12,
     borderWidth: 1,

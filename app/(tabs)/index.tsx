@@ -148,6 +148,8 @@ export default function HomeScreen() {
     skipMedicine,
     completeGrooming,
     completeVaccination,
+    cancelWalk,
+    reopenTask,
   } = useDashboardQuery(token, effectivePet?._id, false);
 
   const { showToast } = useToast();
@@ -446,6 +448,7 @@ export default function HomeScreen() {
         actorColor,
         category,
         isSkipped,
+        scheduleId: entry.relatedScheduleId || entry.scheduleId || entry.metadata?.scheduleId || entry.referenceId || entry.metadata?.referenceId || entry.scheduleRef || entry.sourceScheduleId,
       };
     });
   }, [dashboardData?.recentActivities, user]);
@@ -572,6 +575,14 @@ export default function HomeScreen() {
   const handleCompleteVaccination = useCallback(async (scheduleId: string) => {
     await completeVaccination(scheduleId);
   }, [completeVaccination]);
+
+  const handleReopenTask = useCallback(async (id: string, kind: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination') => {
+    await reopenTask({ id, kind });
+  }, [reopenTask]);
+
+  const handleCancelWalk = useCallback(async (id: string) => {
+    await cancelWalk(id);
+  }, [cancelWalk]);
 
   const [isPullRefreshing, setIsPullRefreshing] = useState(false);
 
@@ -700,6 +711,8 @@ export default function HomeScreen() {
               onCompleteGrooming={canEdit('grooming') ? handleCompleteGrooming : undefined}
               onManageGrooming={canEdit('grooming') ? openGroomingManage : undefined}
               onCompleteVaccination={canEdit('vaccination') ? handleCompleteVaccination : undefined}
+              onReopenTask={handleReopenTask}
+              onCancelWalk={handleCancelWalk}
               isPremium={isPremium}
               currentUserId={user?._id ?? undefined}
               token={token ?? undefined}
@@ -709,6 +722,7 @@ export default function HomeScreen() {
               activities={recentActivities}
               isPremium={isPremium}
               todayOnly={false}
+              onReopenTask={handleReopenTask}
             />
           </>
         )}

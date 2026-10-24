@@ -128,7 +128,8 @@ export function validateScheduleDate(state: ScheduleDateState): string | null {
 
 export function validateFutureSchedule(
   state?: ScheduleDateState | null,
-  timeDate?: Date | null
+  timeDate?: Date | null,
+  isEdit: boolean = false
 ): string | null {
   if (!state) return null;
 
@@ -145,11 +146,11 @@ export function validateFutureSchedule(
       state.singleDate.getDate()
     );
 
-    if (single.getTime() < today.getTime()) {
+    if (!isEdit && single.getTime() < today.getTime()) {
       return 'Scheduled date cannot be in the past.';
     }
 
-    if (single.getTime() === today.getTime() && timeDate instanceof Date && !isNaN(timeDate.getTime())) {
+    if (!isEdit && single.getTime() === today.getTime() && timeDate instanceof Date && !isNaN(timeDate.getTime())) {
       const scheduledMinutes = timeDate.getHours() * 60 + timeDate.getMinutes();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -171,7 +172,7 @@ export function validateFutureSchedule(
       state.endDate.getDate()
     );
 
-    if (start.getTime() < today.getTime()) {
+    if (!isEdit && start.getTime() < today.getTime()) {
       return 'Start date cannot be in the past.';
     }
     if (end.getTime() < today.getTime()) {
@@ -185,7 +186,7 @@ export function validateFutureSchedule(
       state.startDate.getMonth(),
       state.startDate.getDate()
     );
-    if (start.getTime() < today.getTime()) {
+    if (!isEdit && start.getTime() < today.getTime()) {
       return 'Start date cannot be in the past.';
     }
   }

@@ -128,7 +128,8 @@ export function LogVaccinationSheet({
       showErrorToast('Enter a vaccine name.');
       return;
     }
-    const dateError = validateFutureSchedule(entry.scheduleDate, entry.reminderTime);
+    const isEdit = Boolean(entry.scheduleId);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.reminderTime, isEdit);
     if (dateError) {
       showErrorToast(dateError);
       return;

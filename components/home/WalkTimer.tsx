@@ -9,6 +9,8 @@ import { useActiveWalk } from '@/context/ActiveWalkContext';
 import { useAppSelector } from '@/redux/store';
 import { selectActivePetId } from '@/redux/reducer';
 
+import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
+
 interface ActiveWalkSession {
   userId: string;
   userName: string;
@@ -23,6 +25,7 @@ interface WalkTimerProps {
   targetDuration?: number;
   onComplete: (id: string, elapsedMinutes?: number) => void | Promise<void>;
   onSkip: (id: string) => void | Promise<void>;
+  onCancelWalk?: (id: string) => void | Promise<void>;
   /** Active session from the server (set by whoever started the walk) */
   activeSession?: ActiveWalkSession | null;
   /** Current logged-in user's id to determine if we are the walker */
@@ -39,6 +42,7 @@ export function WalkTimer({
   targetDuration = 30,
   onComplete,
   onSkip,
+  onCancelWalk,
   activeSession,
   currentUserId,
   token,
@@ -48,6 +52,7 @@ export function WalkTimer({
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [confirmCancelVisible, setConfirmCancelVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // Refs so interval callback always sees latest values without stale closures
   const busyRef = useRef(false);
@@ -186,6 +191,21 @@ export function WalkTimer({
     }
   };
 
+  const handleConfirmCancel = async () => {
+    setConfirmCancelVisible(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    setStartedAt(null);
+    setElapsedSeconds(0);
+    await cleanUpNotificationAndStorage();
+    await stopWalk(scheduleId);
+    if (onCancelWalk) {
+      await onCancelWalk(scheduleId);
+    }
+  };
+
   if (isDone) {
     return (
       <View style={styles.checks}>
@@ -265,6 +285,16 @@ export function WalkTimer({
 
   return (
     <View style={styles.actionRow}>
+      <Pressable
+        style={({ pressed }) => [
+          styles.cancelIconBtn,
+          pressed && styles.pressedBtn,
+        ]}
+        disabled={busy}
+        onPress={() => setConfirmCancelVisible(true)}
+      >
+        <Ionicons name="close" size={15} color="#DC2626" />
+      </Pressable>
       <View style={styles.timerWrapper}>
         <View style={[styles.pulseDot, timerExpired && { backgroundColor: '#16A34A' }]} />
         <AppText
@@ -287,6 +317,17 @@ export function WalkTimer({
       >
         {busy ? <ActivityIndicator size="small" color="#FFFFFF" /> : <AppText variant="caption" weight="800" color="#FFFFFF">Done</AppText>}
       </Pressable>
+
+      <AppConfirmModal
+        visible={confirmCancelVisible}
+        title="Cancel Walk Session?"
+        message="This will stop the timer and reset the walk task back to pending."
+        confirmLabel="Cancel Walk"
+        cancelLabel="Keep Walking"
+        variant="danger"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setConfirmCancelVisible(false)}
+      />
     </View>
   );
 }
@@ -398,5 +439,15 @@ const styles = StyleSheet.create({
   inProgressText: {
     fontSize: 10,
     flexShrink: 1,
+  },
+  cancelIconBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

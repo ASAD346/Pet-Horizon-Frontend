@@ -90,6 +90,8 @@ interface TodaysScheduleSectionProps {
   onCompleteGrooming?: (recordId: string) => void | Promise<void>;
   onManageGrooming?: (recordId: string) => void | Promise<void>;
   onCompleteVaccination?: (scheduleId: string) => void | Promise<void>;
+  onReopenTask?: (id: string, kind: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination') => void | Promise<void>;
+  onCancelWalk?: (id: string) => void | Promise<void>;
   isPremium?: boolean;
   onViewAll?: () => void;
   /** Current user's id — used to detect walk sessions by other members */
@@ -202,6 +204,7 @@ interface ScheduleRowCardProps {
   onCompleteGrooming?: (id: string) => void | Promise<void>;
   onManageGrooming?: (id: string) => void | Promise<void>;
   onCompleteVaccination?: (id: string) => void | Promise<void>;
+  onCancelWalk?: (id: string) => void | Promise<void>;
   isPremium?: boolean;
   currentUserId?: string;
   token?: string;
@@ -219,6 +222,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
   onCompleteGrooming,
   onManageGrooming,
   onCompleteVaccination,
+  onCancelWalk,
   isPremium = false,
   currentUserId,
   token,
@@ -341,6 +345,7 @@ const ScheduleRowCard = React.memo(function ScheduleRowCard({
           targetDuration={row.kind === 'walk' ? (row.item.metadata?.duration ?? row.item.duration ?? 30) : undefined}
           onComplete={onCompleteWalk!}
           onSkip={onSkipWalk!}
+          onCancelWalk={onCancelWalk}
           activeSession={row.kind === 'walk' ? row.item.metadata?.activeSession : null}
           currentUserId={currentUserId}
           token={token}
@@ -579,6 +584,8 @@ export function TodaysScheduleSection({
   onCompleteGrooming,
   onManageGrooming,
   onCompleteVaccination,
+  onReopenTask,
+  onCancelWalk,
   isPremium = false,
   onViewAll,
   currentUserId,
@@ -625,52 +632,71 @@ export function TodaysScheduleSection({
     activeWalk && (!activeWalk.petId || !activePetId || activeWalk.petId === activePetId)
   );
 
-  const items = useMemo(
-    () => {
-      const merged = mergeScheduleRows(
-        feedingSchedules,
-        walkSchedules,
-        medicineSchedules,
-        groomingRecords,
-        vaccinationSchedules,
-      );
-      const filtered = merged.filter((row) => {
-        const item = row.item as any;
-        const status = item.status || 'pending';
-        const isComplete = rowIsDone(row) || item.isComplete === true;
+  const [showCompleted, setShowCompleted] = useState(true);
 
-        // Hide walk item from list if it's currently active (tracked by ActiveWalkHeroCard)
-        if (row.kind === 'walk' && activeWalk && (activeWalk.scheduleId === item._id || activeWalk.scheduleId === item.id)) {
-          return false;
-        }
+  const { pendingItems, completedItems } = useMemo(() => {
+    const merged = mergeScheduleRows(
+      feedingSchedules,
+      walkSchedules,
+      medicineSchedules,
+      groomingRecords,
+      vaccinationSchedules,
+    );
 
-        return status === 'pending' && !isComplete;
-      });
+    const pending: ScheduleRow[] = [];
+    const completed: ScheduleRow[] = [];
 
-      // Sort by rowSortKey
-      filtered.sort((a, b) => rowSortKey(a) - rowSortKey(b));
-      return filtered;
-    },
-    [feedingSchedules, walkSchedules, medicineSchedules, groomingRecords, vaccinationSchedules, activeWalk],
-  );
+    for (const row of merged) {
+      const item = row.item as any;
+      const status = item.status || 'pending';
+      const isComplete = rowIsDone(row) || item.isComplete === true || status === 'completed';
+
+      // Hide walk item from list if it's currently active (tracked by ActiveWalkHeroCard)
+      if (
+        row.kind === 'walk' &&
+        activeWalk &&
+        (activeWalk.scheduleId === item._id || activeWalk.scheduleId === item.id)
+      ) {
+        continue;
+      }
+
+      if (isComplete || status === 'completed') {
+        completed.push(row);
+      } else {
+        pending.push(row);
+      }
+    }
+
+    pending.sort((a, b) => rowSortKey(a) - rowSortKey(b));
+    completed.sort((a, b) => rowSortKey(a) - rowSortKey(b));
+
+    return { pendingItems: pending, completedItems: completed };
+  }, [
+    feedingSchedules,
+    walkSchedules,
+    medicineSchedules,
+    groomingRecords,
+    vaccinationSchedules,
+    activeWalk,
+  ]);
 
   const cardBorderColor = isPremium
     ? 'rgba(212, 160, 23, 0.35)'
     : 'rgba(46, 125, 50, 0.12)';
 
   const MAX_HOME_ITEMS = 5;
-  const visibleItems = items.slice(0, MAX_HOME_ITEMS);
-  const overflowCount = items.length - MAX_HOME_ITEMS;
+  const visibleItems = pendingItems.slice(0, MAX_HOME_ITEMS);
+  const overflowCount = pendingItems.length - MAX_HOME_ITEMS;
 
   return (
     <View style={styles.section}>
       <SectionHeader title="Today's Schedule" actionLabel="VIEW ALL" onActionPress={onViewAll} />
 
-      <ActiveWalkHeroCard onComplete={onCompleteWalk} onSkip={onSkipWalk} />
+      <ActiveWalkHeroCard onComplete={onCompleteWalk} onSkip={onSkipWalk} onCancelWalk={onCancelWalk} />
 
       {loading ? (
         <SkeletonScheduleSections count={2} />
-      ) : items.length === 0 ? (
+      ) : pendingItems.length === 0 && completedItems.length === 0 ? (
         hasActiveWalkToday ? null : (
           <View style={{ marginVertical: Spacing.xs }}>
             <EmptyState
@@ -682,6 +708,15 @@ export function TodaysScheduleSection({
         )
       ) : (
         <>
+          {pendingItems.length === 0 && completedItems.length > 0 ? (
+            <View style={styles.allDoneBanner}>
+              <Ionicons name="checkmark-circle" size={18} color="#16A34A" />
+              <AppText style={styles.allDoneText} weight="700">
+                All scheduled tasks completed for today! Tap any task below to view details or reopen.
+              </AppText>
+            </View>
+          ) : null}
+
           {visibleItems.map((row, index) => (
             <AnimatedStackItem
               key={`${row.kind}-${rowId(row)}`}
@@ -702,6 +737,7 @@ export function TodaysScheduleSection({
                 onCompleteGrooming={onCompleteGrooming}
                 onManageGrooming={onManageGrooming}
                 onCompleteVaccination={onCompleteVaccination}
+                onCancelWalk={onCancelWalk}
                 isPremium={isPremium}
                 currentUserId={currentUserId}
                 token={token}
@@ -719,6 +755,62 @@ export function TodaysScheduleSection({
               </AppText>
             </TouchableOpacity>
           ) : null}
+
+          {completedItems.length > 0 ? (
+            <View style={styles.completedSection}>
+              <TouchableOpacity
+                style={styles.completedHeader}
+                onPress={() => setShowCompleted((prev) => !prev)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.completedHeaderLeft}>
+                  <Ionicons name="checkmark-done-circle" size={17} color={HomeTheme.cardGreen} />
+                  <AppText variant="caption" weight="800" color="#334155" style={{ marginLeft: 6 }}>
+                    Completed Today ({completedItems.length})
+                  </AppText>
+                </View>
+                <View style={styles.completedToggleBadge}>
+                  <AppText variant="caption" weight="700" color="#64748B" style={{ marginRight: 4 }}>
+                    {showCompleted ? 'Hide' : 'Show'}
+                  </AppText>
+                  <Ionicons
+                    name={showCompleted ? 'chevron-up' : 'chevron-down'}
+                    size={14}
+                    color="#64748B"
+                  />
+                </View>
+              </TouchableOpacity>
+
+              {showCompleted &&
+                completedItems.map((row, index) => (
+                  <AnimatedStackItem
+                    key={`completed-${row.kind}-${rowId(row)}`}
+                    index={index}
+                    direction="up"
+                    staggerMs={40}
+                    distance={16}
+                  >
+                    <ScheduleRowCard
+                      row={row}
+                      onOpenDetail={setSelectedDetailRow}
+                      onCompleteFeeding={onCompleteFeeding}
+                      onSkipFeeding={onSkipFeeding}
+                      onCompleteWalk={onCompleteWalk}
+                      onSkipWalk={onSkipWalk}
+                      onCompleteMedicine={onCompleteMedicine}
+                      onSkipMedicine={onSkipMedicine}
+                      onCompleteGrooming={onCompleteGrooming}
+                      onManageGrooming={onManageGrooming}
+                      onCompleteVaccination={onCompleteVaccination}
+                      onCancelWalk={onCancelWalk}
+                      isPremium={isPremium}
+                      currentUserId={currentUserId}
+                      token={token}
+                    />
+                  </AnimatedStackItem>
+                ))}
+            </View>
+          ) : null}
         </>
       )}
 
@@ -728,6 +820,8 @@ export function TodaysScheduleSection({
         onClose={() => setSelectedDetailRow(null)}
         onComplete={handleDetailComplete}
         onSkip={handleDetailSkip}
+        onReopen={onReopenTask}
+        onCancelWalk={onCancelWalk}
         isPremium={isPremium}
         currentUserId={currentUserId}
         token={token}
@@ -877,5 +971,45 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(46, 125, 50, 0.05)',
     borderWidth: 1,
     borderColor: 'rgba(46, 125, 50, 0.12)',
+  },
+  completedSection: {
+    marginTop: Spacing.sm,
+  },
+  completedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginBottom: 6,
+  },
+  completedHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  completedToggleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  allDoneBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: Spacing.xs,
+    gap: 8,
+  },
+  allDoneText: {
+    fontSize: 13,
+    color: '#15803D',
+    flex: 1,
   },
 });

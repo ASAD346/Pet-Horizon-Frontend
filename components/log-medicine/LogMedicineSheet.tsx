@@ -122,7 +122,8 @@ export function LogMedicineSheet({
       return;
     }
 
-    const dateError = validateFutureSchedule(entry.scheduleDate, entry.medicineTime);
+    const isEdit = Boolean(entry.scheduleId);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.medicineTime, isEdit);
     if (dateError) {
       showErrorToast(dateError);
       return;

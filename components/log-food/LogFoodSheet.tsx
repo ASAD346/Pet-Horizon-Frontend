@@ -201,7 +201,8 @@ export function LogFoodSheet({
       showErrorToast('Enter an amount.');
       return;
     }
-    const dateError = validateFutureSchedule(entry.scheduleDate, entry.feedingTime);
+    const isEdit = Boolean(entry.scheduleId);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.feedingTime, isEdit);
     if (dateError) {
       showErrorToast(dateError);
       return;

@@ -31,6 +31,7 @@ export interface RecentActivityItem {
   actorColor?: string;
   category?: string;
   isSkipped?: boolean;
+  scheduleId?: string;
 }
 
 interface RecentActivitySectionProps {
@@ -39,6 +40,7 @@ interface RecentActivitySectionProps {
   onViewAll?: () => void;
   /** When true, only show activities from today (home screen mode) */
   todayOnly?: boolean;
+  onReopenTask?: (id: string, kind: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination') => void | Promise<void>;
 }
 
 function formatRawString(text: string) {
@@ -65,6 +67,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
   isPremium = false,
   onViewAll,
   todayOnly = true,
+  onReopenTask,
 }: RecentActivitySectionProps) {
   const { timezone } = useTimezone();
   const [selectedItem, setSelectedItem] = useState<RecentActivityItem | null>(null);
@@ -175,6 +178,7 @@ export const RecentActivitySection = React.memo(function RecentActivitySection({
         visible={!!selectedItem}
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
+        onReopenTask={onReopenTask}
         isPremium={isPremium}
       />
     </View>

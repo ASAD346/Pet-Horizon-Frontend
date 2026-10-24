@@ -3,11 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UnifiedDashboardData } from '@/types/dashboard';
 import { fetchUnifiedDashboard } from '@/services/dashboard/dashboardApi';
-import { completeFeedingSchedule, skipFeedingSchedule } from '@/services/schedules/feedingApi';
-import { completeWalkSchedule, startWalkSession as startWalkSessionApi } from '@/services/schedules/walkApi';
-import { completeMedicineSchedule } from '@/services/schedules/medicineApi';
-import { completeGroomingRecord } from '@/services/grooming/groomingApi';
-import { completeVaccinationSchedule } from '@/services/schedules/vaccinationApi';
+import { completeFeedingSchedule, skipFeedingSchedule, reopenFeedingSchedule } from '@/services/schedules/feedingApi';
+import { completeWalkSchedule, startWalkSession as startWalkSessionApi, reopenWalkSchedule, cancelWalkSession as cancelWalkSessionApi } from '@/services/schedules/walkApi';
+import { completeMedicineSchedule, reopenMedicineSchedule } from '@/services/schedules/medicineApi';
+import { completeGroomingRecord, reopenGroomingRecord } from '@/services/grooming/groomingApi';
+import { completeVaccinationSchedule, reopenVaccinationSchedule } from '@/services/schedules/vaccinationApi';
 import { useToast } from '@/hooks/useToast';
 import { deduplicateSchedules as globalDeduplicate } from '@/lib/schedule/scheduleUtils';
 import { cancelTaskNotifications, cleanupPendingNotifications } from '@/lib/push/notificationSetup';
@@ -147,6 +147,36 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     if (todaySchedules[category]) {
       todaySchedules[category] = (todaySchedules[category] as any[]).filter(
         (item) => item._id !== itemId && item.id !== itemId
+      );
+    }
+    return {
+      ...prev,
+      todaySchedules,
+    };
+  };
+
+  const updateCacheScheduleItemStatus = (
+    prev: any,
+    category: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination',
+    itemId: string,
+    status: 'pending' | 'done' | 'skipped',
+  ): any => {
+    if (!prev || !prev.todaySchedules) return prev;
+    const todaySchedules = { ...prev.todaySchedules };
+    if (todaySchedules[category]) {
+      todaySchedules[category] = (todaySchedules[category] as any[]).map((item) =>
+        item._id === itemId || item.id === itemId
+          ? {
+              ...item,
+              status,
+              isComplete: status === 'done',
+              completedAt: status === 'done' ? new Date().toISOString() : undefined,
+              metadata: {
+                ...(item.metadata || {}),
+                ...(status === 'pending' ? { activeSession: null } : {}),
+              },
+            }
+          : item
       );
     }
     return {
@@ -499,6 +529,166 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     },
   });
 
+  // 6. Feeding Reopen Mutation
+  const reopenFeedingMutation = useMutation({
+    mutationFn: async (scheduleId: string) => {
+      return reopenFeedingSchedule(token!, scheduleId, localDateStr);
+    },
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
+      let itemTitle = 'Feeding';
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+        itemTitle = findItemTitle(prev, 'feeding', scheduleId, 'Feeding');
+        return updateCacheScheduleItemStatus(prev, 'feeding', scheduleId, 'pending');
+      });
+      showToast(`${itemTitle} reopened as pending!`);
+      return { previousDashboard };
+    },
+    onError: (err, scheduleId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
+    },
+  });
+
+  // 7. Walk Reopen Mutation
+  const reopenWalkMutation = useMutation({
+    mutationFn: async (scheduleId: string) => {
+      return reopenWalkSchedule(token!, scheduleId, localDateStr);
+    },
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
+      let itemTitle = 'Walk';
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+        itemTitle = findItemTitle(prev, 'walk', scheduleId, 'Walk');
+        return updateCacheScheduleItemStatus(prev, 'walk', scheduleId, 'pending');
+      });
+      showToast(`${itemTitle} reopened as pending!`);
+      return { previousDashboard };
+    },
+    onError: (err, scheduleId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
+    },
+  });
+
+  // 8. Medicine Reopen Mutation
+  const reopenMedicineMutation = useMutation({
+    mutationFn: async (scheduleId: string) => {
+      return reopenMedicineSchedule(token!, scheduleId, localDateStr);
+    },
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
+      let itemTitle = 'Medicine';
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+        itemTitle = findItemTitle(prev, 'medicine', scheduleId, 'Medicine');
+        return updateCacheScheduleItemStatus(prev, 'medicine', scheduleId, 'pending');
+      });
+      showToast(`${itemTitle} reopened as pending!`);
+      return { previousDashboard };
+    },
+    onError: (err, scheduleId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
+    },
+  });
+
+  // 9. Grooming Reopen Mutation
+  const reopenGroomingMutation = useMutation({
+    mutationFn: async (recordId: string) => {
+      return reopenGroomingRecord(token!, recordId);
+    },
+    onMutate: async (recordId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
+      let itemTitle = 'Grooming';
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+        itemTitle = findItemTitle(prev, 'grooming', recordId, 'Grooming');
+        return updateCacheScheduleItemStatus(prev, 'grooming', recordId, 'pending');
+      });
+      showToast(`${itemTitle} reopened as pending!`);
+      return { previousDashboard };
+    },
+    onError: (err, recordId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
+    },
+  });
+
+  // 10. Vaccination Reopen Mutation
+  const reopenVaccinationMutation = useMutation({
+    mutationFn: async (scheduleId: string) => {
+      return reopenVaccinationSchedule(token!, scheduleId, localDateStr);
+    },
+    onMutate: async (scheduleId) => {
+      await queryClient.cancelQueries({ queryKey: ['dashboard', petId] });
+      const previousDashboard = queryClient.getQueryData(['dashboard', petId, localDateStr]);
+      let itemTitle = 'Vaccination';
+      queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+        itemTitle = findItemTitle(prev, 'vaccination', scheduleId, 'Vaccination');
+        return updateCacheScheduleItemStatus(prev, 'vaccination', scheduleId, 'pending');
+      });
+      showToast(`${itemTitle} reopened as pending!`);
+      return { previousDashboard };
+    },
+    onError: (err, scheduleId, context) => {
+      if (context?.previousDashboard) {
+        queryClient.setQueryData(['dashboard', petId, localDateStr], context.previousDashboard);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+      queryClient.invalidateQueries({ queryKey: ['schedules', petId] });
+      queryClient.invalidateQueries({ queryKey: ['activity-timeline', petId] });
+    },
+  });
+
+  const cancelWalk = async (scheduleId: string) => {
+    if (!token) return;
+    queryClient.setQueryData(['dashboard', petId, localDateStr], (prev: any) => {
+      if (!prev?.todaySchedules?.walk) return prev;
+      return {
+        ...prev,
+        todaySchedules: {
+          ...prev.todaySchedules,
+          walk: (prev.todaySchedules.walk as any[]).map((item: any) =>
+            (item._id === scheduleId || item.id === scheduleId)
+              ? { ...item, metadata: { ...(item.metadata || {}), activeSession: null } }
+              : item
+          ),
+        },
+      };
+    });
+    void cancelWalkSessionApi(token, scheduleId).catch(() => {});
+    queryClient.invalidateQueries({ queryKey: ['dashboard', petId] });
+  };
+
   const startWalk = async (scheduleId: string) => {
     if (!token) return;
     // Optimistically write activeSession into the local cache so the current user's
@@ -522,6 +712,26 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     void startWalkSessionApi(token, scheduleId).catch(() => {});
   };
 
+  const reopenTask = async (
+    arg1: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination' | { id: string; kind?: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination'; category?: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination' },
+    arg2?: string
+  ) => {
+    let category: 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination';
+    let id: string;
+    if (typeof arg1 === 'object') {
+      category = (arg1.kind || arg1.category) as any;
+      id = arg1.id;
+    } else {
+      category = arg1;
+      id = arg2!;
+    }
+    if (category === 'feeding') return reopenFeedingMutation.mutateAsync(id);
+    if (category === 'walk') return reopenWalkMutation.mutateAsync(id);
+    if (category === 'medicine') return reopenMedicineMutation.mutateAsync(id);
+    if (category === 'grooming') return reopenGroomingMutation.mutateAsync(id);
+    if (category === 'vaccination') return reopenVaccinationMutation.mutateAsync(id);
+  };
+
   return {
     data,
     isLoading,
@@ -529,14 +739,21 @@ export function useDashboardQuery(token: string | null, petId: string | null | u
     error,
     refetch,
     startWalk,
+    cancelWalk,
+    reopenTask,
     completeFeeding: completeFeedingMutation.mutateAsync,
     skipFeeding: skipFeedingMutation.mutateAsync,
+    reopenFeeding: reopenFeedingMutation.mutateAsync,
     completeWalk: (scheduleId: string, elapsedMinutes?: number) =>
       completeWalkMutation.mutateAsync({ scheduleId, elapsedMinutes }),
     skipWalk: skipWalkMutation.mutateAsync,
+    reopenWalk: reopenWalkMutation.mutateAsync,
     completeMedicine: completeMedicineMutation.mutateAsync,
     skipMedicine: skipMedicineMutation.mutateAsync,
+    reopenMedicine: reopenMedicineMutation.mutateAsync,
     completeGrooming: completeGroomingMutation.mutateAsync,
+    reopenGrooming: reopenGroomingMutation.mutateAsync,
     completeVaccination: completeVaccinationMutation.mutateAsync,
+    reopenVaccination: reopenVaccinationMutation.mutateAsync,
   };
 }

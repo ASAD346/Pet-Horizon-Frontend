@@ -104,7 +104,8 @@ export function LogWalkSheet({
       showErrorToast('Enter a valid duration in minutes.');
       return;
     }
-    const dateError = validateFutureSchedule(entry.scheduleDate, entry.walkClockTime);
+    const isEdit = Boolean(entry.scheduleId);
+    const dateError = validateFutureSchedule(entry.scheduleDate, entry.walkClockTime, isEdit);
     if (dateError) {
       showErrorToast(dateError);
       return;

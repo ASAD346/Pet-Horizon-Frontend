@@ -162,7 +162,8 @@ export function LogGroomingSheet({
       return;
     }
     const gDate = entry.scheduleDate?.singleDate ? new Date(entry.scheduleDate.singleDate) : null;
-    const dateError = validateFutureSchedule(entry.scheduleDate, gDate);
+    const isEdit = Boolean(entry.recordId);
+    const dateError = validateFutureSchedule(entry.scheduleDate, gDate, isEdit);
     if (dateError) {
       showErrorToast(dateError);
       return;

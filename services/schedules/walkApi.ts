@@ -33,6 +33,8 @@ export async function fetchTodayWalkSchedules(
   }
 }
 
+import { getTimezoneQueryParams, getLocalDateString, getDeviceTimezone } from '@/lib/timezone';
+
 export async function createWalkSchedule(
   token: string,
   body: CreateWalkScheduleRequest,
@@ -43,11 +45,16 @@ export async function createWalkSchedule(
     time: body.time,
     duration: body.duration,
   });
+  const timezone = getDeviceTimezone();
+  const payload = {
+    timezone,
+    ...body,
+  };
   try {
     const data = await apiRequest<WalkScheduleItem>(API_ENDPOINTS.schedules.walk, {
       method: 'POST',
       token,
-      body,
+      body: payload,
     });
     log.ok(SCOPE, 'Walk schedule created', { id: data._id });
     return data;
@@ -56,8 +63,6 @@ export async function createWalkSchedule(
     throw error;
   }
 }
-
-import { getTimezoneQueryParams, getLocalDateString } from '@/lib/timezone';
 
 export async function completeWalkSchedule(
   token: string,
@@ -170,6 +175,49 @@ export async function startWalkSession(
   } catch (error) {
     // Non-fatal: local timer still works even if backend call fails
     log.fail(SCOPE, 'Start walk session backend sync failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function cancelWalkSession(
+  token: string,
+  scheduleId: string,
+): Promise<{ success: boolean }> {
+  log.info(SCOPE, 'POST /schedules/walk/:id/cancel-session', { scheduleId });
+  try {
+    const data = await apiRequest<{ success: boolean }>(
+      `${API_ENDPOINTS.schedules.walk}/${scheduleId}/cancel-session`,
+      { method: 'POST', token },
+    );
+    log.ok(SCOPE, 'Walk session cancelled on backend', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Cancel walk session backend sync failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function reopenWalkSchedule(
+  token: string,
+  scheduleId: string,
+  date?: string,
+): Promise<{ success: boolean; scheduleItem?: any }> {
+  log.info(SCOPE, 'POST /schedules/walk/:id/reopen', { scheduleId });
+  const localDate = date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload = {
+    date: localDate,
+    status: 'pending',
+  };
+  try {
+    const data = await apiRequest<{ success: boolean; scheduleItem?: any }>(
+      `${API_ENDPOINTS.schedules.walk}/${scheduleId}/reopen${query}`,
+      { method: 'POST', token, body: payload },
+    );
+    log.ok(SCOPE, 'Walk schedule reopened', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Reopen walk failed', getErrorMessage(error));
     throw error;
   }
 }

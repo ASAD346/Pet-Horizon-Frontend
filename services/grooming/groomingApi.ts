@@ -175,3 +175,24 @@ export async function deleteGroomingRecord(token: string, id: string): Promise<{
     throw error;
   }
 }
+
+export async function reopenGroomingRecord(
+  token: string,
+  id: string,
+): Promise<CompleteGroomingResponse> {
+  log.info(SCOPE, 'POST /grooming/:id/reopen', { id });
+  try {
+    const data = await apiRequest<CompleteGroomingResponse>(
+      API_ENDPOINTS.grooming.reopen(id),
+      {
+        method: 'POST',
+        token,
+      },
+    );
+    log.ok(SCOPE, 'Grooming record reopened', { id });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Reopen grooming failed', getErrorMessage(error));
+    throw error;
+  }
+}

@@ -169,3 +169,28 @@ export async function deleteMedicineSchedule(
     throw error;
   }
 }
+
+export async function reopenMedicineSchedule(
+  token: string,
+  scheduleId: string,
+  date?: string,
+): Promise<{ success: boolean; scheduleItem?: any }> {
+  log.info(SCOPE, 'POST /schedules/medicine/:id/reopen', { scheduleId });
+  const localDate = date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload = {
+    date: localDate,
+    status: 'pending',
+  };
+  try {
+    const data = await apiRequest<{ success: boolean; scheduleItem?: any }>(
+      `${API_ENDPOINTS.schedules.medicine}/${scheduleId}/reopen${query}`,
+      { method: 'POST', token, body: payload },
+    );
+    log.ok(SCOPE, 'Medicine schedule reopened', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Reopen medicine failed', getErrorMessage(error));
+    throw error;
+  }
+}

@@ -15,7 +15,7 @@ export interface ActiveWalk {
 interface ActiveWalkContextType {
   activeWalk: ActiveWalk | null;
   startWalk: (scheduleId: string, petId: string, targetDuration: number, title?: string, token?: string) => Promise<void>;
-  stopWalk: () => Promise<void>;
+  stopWalk: (scheduleId?: string) => Promise<void>;
   loadActiveWalk: () => Promise<void>;
 }
 
@@ -72,15 +72,16 @@ export function ActiveWalkProvider({ children }: { children: React.ReactNode }) 
     }
   }, []);
 
-  const stopWalk = useCallback(async () => {
+  const stopWalk = useCallback(async (scheduleId?: string) => {
     const current = activeWalk;
+    const targetId = scheduleId || current?.scheduleId;
     setActiveWalk(null);
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
-      if (current) {
-        await AsyncStorage.removeItem(`walk_timer_started_${current.scheduleId}`);
+      if (targetId) {
+        await AsyncStorage.removeItem(`walk_timer_started_${targetId}`);
         try {
-          await Notifications.cancelScheduledNotificationAsync(`walk-done-${current.scheduleId}`);
+          await Notifications.cancelScheduledNotificationAsync(`walk-done-${targetId}`);
         } catch (_) {}
       }
     } catch (err) {

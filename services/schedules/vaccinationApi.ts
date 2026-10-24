@@ -123,6 +123,31 @@ export async function deleteVaccinationSchedule(
   }
 }
 
+export async function reopenVaccinationSchedule(
+  token: string,
+  scheduleId: string,
+  date?: string,
+): Promise<{ success: boolean; scheduleItem?: any }> {
+  log.info(SCOPE, 'POST /schedules/vaccination/:id/reopen', { scheduleId });
+  const localDate = date || getLocalDateString();
+  const query = getTimezoneQueryParams(localDate);
+  const payload = {
+    date: localDate,
+    status: 'pending',
+  };
+  try {
+    const data = await apiRequest<{ success: boolean; scheduleItem?: any }>(
+      `${API_ENDPOINTS.schedules.vaccination}/${scheduleId}/reopen${query}`,
+      { method: 'POST', token, body: payload },
+    );
+    log.ok(SCOPE, 'Vaccination schedule reopened', { scheduleId });
+    return data;
+  } catch (error) {
+    log.fail(SCOPE, 'Reopen vaccination failed', getErrorMessage(error));
+    throw error;
+  }
+}
+
 export async function fetchVaccinationHistory(
   token: string,
   petId: string,
