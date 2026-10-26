@@ -1,5 +1,5 @@
 export type TimingMode = 'exact' | 'window';
-export type WindowPreset = 'morning' | 'lunch' | 'afternoon' | 'evening' | 'night' | 'custom' | '';
+export type WindowPreset = 'morning' | 'lunch' | 'around_lunch' | 'afternoon' | 'evening' | 'around_meal' | 'night' | 'custom' | 'custom_window' | '';
 export type SwapStatus = 'none' | 'pending' | 'accepted' | 'declined' | 'expired' | 'escalated';
 export type TaskCategory = 'feeding' | 'walk' | 'medicine' | 'grooming' | 'vaccination';
 
