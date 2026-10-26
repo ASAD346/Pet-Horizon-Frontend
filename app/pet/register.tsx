@@ -19,6 +19,8 @@ import { AppText } from '@/components/ui/AppText';
 import { Palette, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
+import { useAppDispatch } from '@/redux/store';
+import { showUpgradePromptAction } from '@/redux/action';
 import { getErrorMessage } from '@/lib/api/errors';
 import { isPetOwner } from '@/lib/family/formatters';
 import { dateToApiDateString } from '@/lib/grooming/groomingForm';
@@ -59,6 +61,7 @@ import { LoginHeaderDecor } from '@/components/auth/login';
 const DEFAULT_BIRTHDAY = new Date(2021, 4, 15);
 
 export default function RegisterPetScreen() {
+  const dispatch = useAppDispatch();
   const router = useDebouncedRouter();
   const params = useLocalSearchParams<{ mode?: string; petId?: string }>();
   const isAddMode = params.mode === 'add';
@@ -67,6 +70,31 @@ export default function RegisterPetScreen() {
   const { token, user, logout, setSession } = useAuth();
   const { showToast, showSuccessToast, showErrorToast } = useToast();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!token || !isAddMode) return;
+    let mounted = true;
+    (async () => {
+      try {
+        const existingPets = await fetchPets(token);
+        if (!mounted) return;
+        const isPremium = user?.premiumStatus === 'premium';
+        if (!canAddAnotherPet(existingPets.length, isPremium)) {
+          dispatch(
+            showUpgradePromptAction({
+              feature: 'pets',
+              onCancelRedirectBack: true,
+            })
+          );
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [token, isAddMode, user?.premiumStatus, dispatch]);
 
   const [speciesList, setSpeciesList] = useState<string[]>([]);
   const [breeds, setBreeds] = useState<string[]>([]);
@@ -233,8 +261,12 @@ export default function RegisterPetScreen() {
       const existingPets = await fetchPets(token);
       const isPremium = user?.premiumStatus === 'premium';
       if (!canAddAnotherPet(existingPets.length, isPremium)) {
-        showToast('Upgrade to Premium to add another pet.', 'info');
-        router.back();
+        dispatch(
+          showUpgradePromptAction({
+            feature: 'pets',
+            onCancelRedirectBack: true,
+          })
+        );
         isSubmitting.current = false;
         return;
       }

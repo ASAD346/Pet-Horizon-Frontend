@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { useAppSelector } from '@/redux/store';
+import { useAppDispatch, useAppSelector } from '@/redux/store';
 import { selectAuthUser } from '@/redux/reducer';
+import { showUpgradePromptAction } from '@/redux/action';
 import { type Href, useFocusEffect } from 'expo-router';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { useNotificationStore } from '@/context/NotificationContext';
@@ -98,6 +99,7 @@ const ACTIVITY_COLORS: Record<string, { color: string; bg: string }> = {
 };
 
 export default function HomeScreen() {
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const isFocused = useIsFocused();
   const { timezone } = useTimezone();
@@ -535,12 +537,12 @@ export default function HomeScreen() {
   const handleAddPet = useCallback(() => {
     if (pets.length > 0 && !canAddAnotherPet(pets.length, isPremium)) {
       setPetSwitcherVisible(false);
-      showToast('Upgrade to Premium to add another pet.', 'info');
+      dispatch(showUpgradePromptAction({ feature: 'pets' }));
       return;
     }
     setPetSwitcherVisible(false);
     router.push({ pathname: '/pet/register', params: pets.length > 0 ? { mode: 'add' } : undefined });
-  }, [pets.length, isPremium, router, showToast]);
+  }, [pets.length, isPremium, router, dispatch]);
 
 
 

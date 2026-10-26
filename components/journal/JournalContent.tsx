@@ -16,6 +16,8 @@ import { useToast } from '@/hooks/useToast';
 import { useAuth } from '@/hooks/useAuth';
 import { useActivePet } from '@/hooks/useActivePet';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useAppDispatch } from '@/redux/store';
+import { showUpgradePromptAction } from '@/redux/action';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchJournalEntries } from '@/services/journal/journalApi';
 import { usePetPermissions } from '@/hooks/usePetPermissions';
@@ -169,6 +171,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
   }, []);
 
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const { isPremium } = usePremiumStatus();
 
@@ -185,7 +188,7 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
     const currentPhotoCount = photos.length;
 
     if (!isPremium && currentPhotoCount >= 1) {
-      showToast('Upgrade to Premium to add more photos.', 'info');
+      dispatch(showUpgradePromptAction({ feature: 'photos' }));
       return;
     }
 

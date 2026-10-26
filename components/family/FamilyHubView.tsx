@@ -51,8 +51,11 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useTabHeaderActions } from '@/hooks/useTabHeaderActions';
 import type { FamilyMemberDisplay, GenerateInviteResponse, PetMemberRow } from '@/types/family';
 import { useRouter } from 'expo-router';
+import { useAppDispatch } from '@/redux/store';
+import { showUpgradePromptAction } from '@/redux/action';
 
 export function FamilyHubView() {
+  const dispatch = useAppDispatch();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { clearance: tabBarClearance } = useTabBarLayout();
@@ -209,15 +212,15 @@ export function FamilyHubView() {
 
   const handleInvitePress = useCallback(() => {
     if (!isPremium) {
-      showToast('Upgrade to Premium to invite family members.', 'info');
+      dispatch(showUpgradePromptAction({ feature: 'family' }));
       return;
     }
     setInviteSheetVisible(true);
-  }, [isPremium, showToast]);
+  }, [isPremium, dispatch]);
 
   const handleShareCode = useCallback(async () => {
     if (!isPremium) {
-      showToast('Upgrade to Premium to invite family members.', 'info');
+      dispatch(showUpgradePromptAction({ feature: 'family' }));
       return;
     }
     if (!invite) return;
@@ -228,7 +231,7 @@ export function FamilyHubView() {
     } catch {
       // User dismissed share sheet.
     }
-  }, [isPremium, invite, showToast]);
+  }, [isPremium, invite, dispatch]);
 
   const joinCode = invite ? formatJoinCode(invite.inviteToken) : null;
 
@@ -347,6 +350,7 @@ export function FamilyHubView() {
                   showInviteSection={isOwner}
                   onShareCode={handleShareCode}
                   onInvitePress={handleInvitePress}
+                  onUpgradePress={() => dispatch(showUpgradePromptAction({ feature: 'family' }))}
                 />
 
                 {!isPremium && (isOwner || userHasOwnedPet) ? (

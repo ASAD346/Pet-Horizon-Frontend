@@ -1,7 +1,7 @@
 import { combineReducers, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { AuthSession } from '@/types/auth';
 import type { ApiPet } from '@/types/pet';
-import type { AppState, AuthState, ToastState, UiState, FamilyState } from './types';
+import type { AppState, AuthState, ToastState, UiState, FamilyState, UpgradeModalState } from './types';
 
 const initialAuthState: AuthState = {
   user: null,
@@ -20,6 +20,14 @@ const initialUiState: UiState = {
 
 const initialFamilyState: FamilyState = {
   members: [],
+};
+
+const initialUpgradeModalState: UpgradeModalState = {
+  visible: false,
+  title: undefined,
+  message: undefined,
+  feature: undefined,
+  onCancelRedirectBack: false,
 };
 
 const authSlice = createSlice({
@@ -92,6 +100,35 @@ const familySlice = createSlice({
   },
 });
 
+const upgradeModalSlice = createSlice({
+  name: 'upgradeModal',
+  initialState: initialUpgradeModalState,
+  reducers: {
+    showUpgradeModal: (
+      state,
+      action: PayloadAction<{
+        title?: string;
+        message?: string;
+        feature?: 'pets' | 'family' | 'photos' | 'general';
+        onCancelRedirectBack?: boolean;
+      } | undefined>
+    ) => {
+      state.visible = true;
+      state.title = action?.payload?.title;
+      state.message = action?.payload?.message;
+      state.feature = action?.payload?.feature ?? 'general';
+      state.onCancelRedirectBack = Boolean(action?.payload?.onCancelRedirectBack);
+    },
+    hideUpgradeModal: (state) => {
+      state.visible = false;
+      state.title = undefined;
+      state.message = undefined;
+      state.feature = undefined;
+      state.onCancelRedirectBack = false;
+    },
+  },
+});
+
 export const {
   setSession: setSessionAction,
   setActivePet: setActivePetAction,
@@ -112,14 +149,20 @@ export const {
   updateMemberPermissionsSuccess,
 } = familySlice.actions;
 
+export const {
+  showUpgradeModal: showUpgradeModalActionInternal,
+  hideUpgradeModal: hideUpgradeModalAction,
+} = upgradeModalSlice.actions;
+
 export const rootReducer = combineReducers({
   auth: authSlice.reducer,
   toast: toastSlice.reducer,
   ui: uiSlice.reducer,
   family: familySlice.reducer,
+  upgradeModal: upgradeModalSlice.reducer,
 });
 
-export type { AppState, AuthState, ToastState, UiState, FamilyState } from './types';
+export type { AppState, AuthState, ToastState, UiState, FamilyState, UpgradeModalState } from './types';
 
 // Typed selectors
 export const selectAuthUser = (state: AppState) => state.auth.user;
@@ -131,3 +174,4 @@ export const selectToastMessage = (state: AppState) => state.toast.message;
 export const selectToastType = (state: AppState) => state.toast.type;
 export const selectIsFormReadOnly = (state: AppState) => state.ui.isFormReadOnly;
 export const selectActivePetId = (state: AppState) => state.auth.activePet?._id || state.auth.user?.activePetId || null;
+export const selectUpgradeModal = (state: AppState) => state.upgradeModal;

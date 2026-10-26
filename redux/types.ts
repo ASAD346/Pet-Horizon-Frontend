@@ -21,9 +21,18 @@ export interface FamilyState {
   members: any[];
 }
 
+export interface UpgradeModalState {
+  visible: boolean;
+  title?: string;
+  message?: string;
+  feature?: 'pets' | 'family' | 'photos' | 'general';
+  onCancelRedirectBack?: boolean;
+}
+
 export interface AppState {
   auth: AuthState;
   toast: ToastState;
   ui: UiState;
   family: FamilyState;
+  upgradeModal: UpgradeModalState;
 }

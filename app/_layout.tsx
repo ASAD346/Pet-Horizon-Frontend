@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { AuthBootstrap } from '@/components/auth/AuthBootstrap';
 import { PushNotificationRegistrar } from '@/components/PushNotificationRegistrar';
 import { ToastHost } from '@/components/ui/ToastHost';
+import { UpgradePromptHost } from '@/components/ui/UpgradePromptHost';
 import { ensureNotificationHandler } from '@/lib/push/notificationSetup';
 import { store } from '@/redux/store';
 import { useColorScheme } from '../hooks/use-color-scheme';
@@ -92,6 +93,7 @@ export default function RootLayout() {
               <AuthBootstrap />
               <InnerLayout />
               <ToastHost />
+              <UpgradePromptHost />
             </ActiveWalkProvider>
           </NotificationProvider>
         </SafeAreaProvider>

@@ -17,6 +17,7 @@ interface FamilyOverviewCardProps {
   showInviteSection?: boolean;
   onShareCode?: () => void;
   onInvitePress?: () => void;
+  onUpgradePress?: () => void;
 }
 
 export function FamilyOverviewCard({
@@ -30,6 +31,7 @@ export function FamilyOverviewCard({
   showInviteSection = true,
   onShareCode,
   onInvitePress,
+  onUpgradePress,
 }: FamilyOverviewCardProps) {
   // Deep Forest Emerald gradient for Premium with gold trim, vibrant brand green for Free
   const gradientColors = isPremium 
@@ -84,11 +86,19 @@ export function FamilyOverviewCard({
                 </AppText>
               </View>
             ) : (
-              <View style={styles.freePill}>
-                <AppText variant="caption" weight="800" color="rgba(255, 255, 255, 0.9)" style={styles.pillText}>
-                  FREE PLAN
+              <TouchableOpacity
+                style={[styles.freePill, onUpgradePress && styles.freePillInteractive]}
+                onPress={onUpgradePress}
+                activeOpacity={0.7}
+                disabled={!onUpgradePress}
+                accessibilityRole="button"
+                accessibilityLabel="Upgrade to Premium"
+              >
+                <MaterialCommunityIcons name="crown-outline" size={11} color="#FFF176" style={{ marginRight: 3 }} />
+                <AppText variant="caption" weight="800" color="#FFF176" style={styles.pillText}>
+                  FREE • UPGRADE
                 </AppText>
-              </View>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -226,6 +236,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 0.8,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  freePillInteractive: {
+    backgroundColor: 'rgba(255, 241, 118, 0.18)',
+    borderColor: 'rgba(255, 241, 118, 0.45)',
   },
   pillText: {
     fontSize: 9,

@@ -18,8 +18,10 @@ import {
   hideToastAction,
   setFormReadOnlyAction,
   updateMemberPermissionsSuccess,
+  showUpgradeModalActionInternal,
+  hideUpgradeModalAction,
 } from './reducer';
-import type { AppState, ToastState } from './types';
+import type { AppState, ToastState, UpgradeModalState } from './types';
 
 export type AppThunk<ReturnType = void> = ThunkAction<
   ReturnType,
@@ -33,6 +35,15 @@ export type AppAction = UnknownAction;
 export const showToastAction = (message: string, type: ToastState['type'] = 'info') =>
   showToastActionInternal({ message, type });
 
+export const showUpgradePromptAction = (options?: {
+  title?: string;
+  message?: string;
+  feature?: UpgradeModalState['feature'];
+  onCancelRedirectBack?: boolean;
+}) => showUpgradeModalActionInternal(options);
+
+export const hideUpgradePromptAction = () => hideUpgradeModalAction();
+
 // Re-export actions for backward compatibility
 export {
   setSessionAction,
@@ -42,6 +53,7 @@ export {
   hideToastAction,
   setFormReadOnlyAction,
   updateMemberPermissionsSuccess,
+  hideUpgradeModalAction,
 };
 
 export function bootstrapAuth(): AppThunk {

@@ -126,6 +126,20 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
           // Fail silently
         }
       }
+      if (response.status === 403 && /premium|subscription/i.test(message)) {
+        try {
+          const { showUpgradePromptAction } = await import('@/redux/action');
+          store.dispatch(
+            showUpgradePromptAction({
+              title: 'Premium Required',
+              message,
+              feature: 'general',
+            }) as any
+          );
+        } catch {
+          // Fail silently
+        }
+      }
       throw new ApiError(message, response.status);
     }
 

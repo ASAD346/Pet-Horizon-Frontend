@@ -26,6 +26,8 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { usePremiumStatus } from '@/hooks/usePremiumStatus';
+import { useAppDispatch } from '@/redux/store';
+import { showUpgradePromptAction } from '@/redux/action';
 import { useToast } from '@/hooks/useToast';
 import { getErrorMessage } from '@/lib/api/errors';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
@@ -337,6 +339,7 @@ function PetCardItem({
 
 export default function ManagePetsScreen() {
   const router = useDebouncedRouter();
+  const dispatch = useAppDispatch();
   const { token, user, setSession } = useAuth();
   const { isPremium } = usePremiumStatus();
   const { showSuccessToast, showErrorToast } = useToast();
@@ -354,7 +357,6 @@ export default function ManagePetsScreen() {
   // Modals state
   const [deleteTargetPet, setDeleteTargetPet] = useState<ApiPet | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [premiumPromptVisible, setPremiumPromptVisible] = useState(false);
 
   const activePetId = user?.activePetId ?? null;
 
@@ -401,11 +403,11 @@ export default function ManagePetsScreen() {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const allowed = canAddAnotherPet(pets.length, isPremium);
     if (!allowed) {
-      setPremiumPromptVisible(true);
+      dispatch(showUpgradePromptAction({ feature: 'pets' }));
       return;
     }
     router.navigate({ pathname: '/pet/register', params: { mode: 'add' } } as any);
-  }, [pets.length, isPremium, router]);
+  }, [pets.length, isPremium, router, dispatch]);
 
   const handleSelectActive = useCallback(
     async (pet: ApiPet) => {
@@ -621,21 +623,6 @@ export default function ManagePetsScreen() {
         loading={deleting}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTargetPet(null)}
-      />
-
-      {/* Premium Upgrade Modal */}
-      <AppConfirmModal
-        visible={premiumPromptVisible}
-        title="Upgrade to Premium"
-        message="Free accounts can register 1 pet profile. Upgrade to PetHorizon Premium for unlimited pet profiles, advanced insights, and family collaboration!"
-        confirmLabel="View Plans"
-        cancelLabel="Maybe Later"
-        variant="warning"
-        onConfirm={() => {
-          setPremiumPromptVisible(false);
-          router.navigate('/profile/premium' as Href);
-        }}
-        onCancel={() => setPremiumPromptVisible(false)}
       />
     </SafeAreaView>
   );
