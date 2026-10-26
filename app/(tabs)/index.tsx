@@ -620,8 +620,10 @@ export default function HomeScreen() {
         dateLabel={formatDateLabel(new Date(), timezone)}
         notificationCount={unreadCount}
         onJournalPress={canViewJournal ? () => setJournalVisible(true) : undefined}
+        onHealthCardPress={() => router.navigate('/pet/health-card' as Href)}
         onNotificationsPress={() => router.navigate('/notifications' as Href)}
         showJournal={canViewJournal}
+        showHealthCard={Boolean(effectivePet)}
         topInset={insets.top}
         isPremium={isPremium}
       />

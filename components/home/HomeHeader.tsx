@@ -18,7 +18,9 @@ interface HomeHeaderProps {
   notificationCount?: number;
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
+  onHealthCardPress?: () => void;
   showJournal?: boolean;
+  showHealthCard?: boolean;
   /** Status bar height — header extends behind the status bar */
   topInset?: number;
   isPremium?: boolean;
@@ -39,7 +41,9 @@ export function HomeHeader({
   notificationCount = 0,
   onJournalPress,
   onNotificationsPress,
+  onHealthCardPress,
   showJournal = true,
+  showHealthCard = true,
   topInset = 0,
   isPremium = false,
 }: HomeHeaderProps) {
@@ -145,7 +149,9 @@ export function HomeHeader({
               notificationCount={notificationCount}
               onJournalPress={onJournalPress}
               onNotificationsPress={onNotificationsPress}
+              onHealthCardPress={onHealthCardPress}
               showJournal={showJournal}
+              showHealthCard={showHealthCard}
               dark
             />
           </View>

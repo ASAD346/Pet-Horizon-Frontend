@@ -9,8 +9,10 @@ interface HeaderActionButtonsProps {
   notificationCount?: number;
   onJournalPress?: () => void;
   onNotificationsPress?: () => void;
+  onHealthCardPress?: () => void;
   onQrScanPress?: () => void;
   showJournal?: boolean;
+  showHealthCard?: boolean;
   /** When true, renders icon buttons as dark-themed (white icons on navy) */
   dark?: boolean;
 }
@@ -19,8 +21,10 @@ export function HeaderActionButtons({
   notificationCount = 0,
   onJournalPress,
   onNotificationsPress,
+  onHealthCardPress,
   onQrScanPress,
   showJournal = true,
+  showHealthCard = true,
   dark = false,
 }: HeaderActionButtonsProps) {
   const badgeLabel = notificationCount > 99 ? '99+' : String(notificationCount);
@@ -71,6 +75,18 @@ export function HeaderActionButtons({
           accessibilityLabel="Open pet journal"
         >
           <MaterialCommunityIcons name="notebook-outline" size={20} color={iconColor} />
+        </TouchableOpacity>
+      ) : null}
+
+      {showHealthCard && onHealthCardPress ? (
+        <TouchableOpacity
+          style={[styles.iconBtn, btnStyle]}
+          activeOpacity={0.75}
+          onPress={() => handlePress(onHealthCardPress)}
+          disabled={isLocked}
+          accessibilityLabel="Open pet health card"
+        >
+          <MaterialCommunityIcons name="card-account-details-outline" size={20} color={iconColor} />
         </TouchableOpacity>
       ) : null}
 

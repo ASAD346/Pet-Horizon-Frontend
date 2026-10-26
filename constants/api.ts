@@ -48,6 +48,8 @@ export const API_ENDPOINTS = {
     species: '/species',
     breeds: '/breeds',
     permissionsMe: (petId: string) => `/pets/${petId}/permissions/me`,
+    healthCard: (petId: string) => `/pets/${petId}/health-card`,
+    healthVitals: (petId: string) => `/pets/${petId}/health-card/vitals`,
   },
   dashboard: {
     status: '/dashboard/status',
