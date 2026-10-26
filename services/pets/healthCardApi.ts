@@ -38,7 +38,7 @@ export interface HealthCardSummaryStats {
 export interface HealthTimelineEvent {
   id: string;
   source: 'activity' | 'schedule' | 'grooming_record';
-  category: 'vaccination' | 'medicine' | 'grooming' | 'vet_visit' | 'custom' | string;
+  category: 'vaccination' | 'medicine' | 'grooming' | 'custom' | string;
   title: string;
   description?: string;
   dose?: string | null;
@@ -57,7 +57,6 @@ export interface PetHealthCardResponse {
     vaccination: number;
     medicine: number;
     grooming: number;
-    vet_visit: number;
   };
   timeline: HealthTimelineEvent[];
 }

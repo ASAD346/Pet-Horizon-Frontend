@@ -5,7 +5,7 @@ import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
 import type { HealthTimelineEvent } from '@/services/pets/healthCardApi';
 
-export type HealthCategory = 'all' | 'vaccination' | 'medicine' | 'grooming' | 'vet_visit';
+export type HealthCategory = 'all' | 'vaccination' | 'medicine' | 'grooming';
 
 interface HealthTimelineSectionProps {
   timeline: HealthTimelineEvent[];
@@ -20,7 +20,6 @@ const CATEGORY_CHIPS: { id: HealthCategory; label: string; icon: string }[] = [
   { id: 'vaccination', label: 'Vaccines', icon: 'needle' },
   { id: 'medicine', label: 'Medicines', icon: 'pill' },
   { id: 'grooming', label: 'Grooming', icon: 'content-cut' },
-  { id: 'vet_visit', label: 'Vet Visits', icon: 'doctor' },
 ];
 
 function getCategoryConfig(category: string) {
@@ -46,19 +45,12 @@ function getCategoryConfig(category: string) {
         bg: '#F3E5F5',
         label: 'Grooming',
       };
-    case 'vet_visit':
-      return {
-        icon: 'doctor',
-        color: '#00796B',
-        bg: '#E0F2F1',
-        label: 'Vet Visit',
-      };
     default:
       return {
         icon: 'medical-bag',
         color: '#475569',
         bg: '#F1F5F9',
-        label: 'Clinical Log',
+        label: 'Care Log',
       };
   }
 }
