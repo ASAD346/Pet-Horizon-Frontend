@@ -102,68 +102,50 @@ export default function PetHealthCardScreen() {
     <View style={styles.root}>
       <StatusBar style="light" />
 
-      {/* TOP HEADER: Matching Notifications & Home screens */}
+      {/* TOP HEADER: Compact subtle brand forest-green top app bar */}
       <View style={styles.headerWrapper}>
-        <View style={styles.curveClipper}>
-          <LinearGradient
-            colors={gradientColors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.headerGradient, { paddingTop: Math.max(insets.top, Spacing.sm) + 6 }]}
-          >
-            {/* Background Decorative Rings */}
-            <View style={StyleSheet.absoluteFill} pointerEvents="none">
-              <View style={styles.bgRing1} />
-              <View style={styles.bgRing2} />
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.headerGradient, { paddingTop: Math.max(insets.top, Spacing.sm) + 2 }]}
+        >
+          <View style={styles.headerRow}>
+            {/* Back Button */}
+            <TouchableOpacity
+              onPress={handleBack}
+              style={styles.backButton}
+              hitSlop={12}
+              accessibilityLabel="Go back"
+            >
+              <Ionicons
+                name="chevron-back"
+                size={16}
+                color={isPremium ? '#184F2E' : '#2E7D32'}
+              />
+            </TouchableOpacity>
+
+            {/* Center: Title & Subtitle */}
+            <View style={styles.headerTitleContainer}>
+              <AppText variant="h3" weight="800" color="#FFFFFF" numberOfLines={1}>
+                {effectivePet?.name ? `${effectivePet.name}'s Health Passport` : 'Pet Health Passport'}
+              </AppText>
+              <AppText variant="caption" weight="600" color="rgba(255, 255, 255, 0.85)">
+                Clinical Reference & Care Log
+              </AppText>
             </View>
 
-            <View style={styles.headerRow}>
-              {/* Back Button matching notifications */}
-              <TouchableOpacity
-                onPress={handleBack}
-                style={styles.backButton}
-                hitSlop={12}
-                accessibilityLabel="Go back"
-              >
-                <Ionicons
-                  name="chevron-back"
-                  size={16}
-                  color={isPremium ? '#184F2E' : '#3A8F3B'}
-                />
-              </TouchableOpacity>
-
-              {/* Center: Title & Subtitle */}
-              <View style={styles.headerTitleContainer}>
-                <AppText variant="h3" weight="800" color="#FFFFFF" numberOfLines={1}>
-                  {effectivePet?.name ? `${effectivePet.name}'s Health Card` : 'Pet Health Card'}
-                </AppText>
-                <AppText variant="caption" weight="600" color="rgba(255, 255, 255, 0.85)">
-                  Digital Health Passport
-                </AppText>
-              </View>
-
-              {/* Right Action: Show Vet Mode Button */}
-              <TouchableOpacity
-                onPress={() => setShowVetModalVisible(true)}
-                style={styles.rightActionBtn}
-                hitSlop={12}
-                accessibilityLabel="Show vet summary view"
-              >
-                <Ionicons name="medkit" size={16} color={isPremium ? '#184F2E' : '#3A8F3B'} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Bottom accent divider line */}
-            <View
-              style={[
-                styles.headerDivider,
-                isPremium
-                  ? { backgroundColor: 'rgba(212, 160, 23, 0.3)' }
-                  : { backgroundColor: 'rgba(255, 255, 255, 0.15)' },
-              ]}
-            />
-          </LinearGradient>
-        </View>
+            {/* Right Action: Show Vet Mode Button */}
+            <TouchableOpacity
+              onPress={() => setShowVetModalVisible(true)}
+              style={styles.rightActionBtn}
+              hitSlop={12}
+              accessibilityLabel="Show vet summary view"
+            >
+              <Ionicons name="medkit" size={16} color={isPremium ? '#184F2E' : '#2E7D32'} />
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
 
       {/* MAIN SCREEN BODY */}
@@ -248,58 +230,31 @@ export default function PetHealthCardScreen() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#F4F6F4',
+    backgroundColor: '#F8FAFC',
   },
   headerWrapper: {
     width: '100%',
     zIndex: 10,
+    backgroundColor: '#0E3821',
     ...Platform.select({
       ios: {
         shadowColor: '#0E3821',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
       },
-      android: { elevation: 6 },
+      android: { elevation: 4 },
     }),
   },
-  curveClipper: {
-    borderBottomLeftRadius: 26,
-    borderBottomRightRadius: 26,
-    overflow: 'hidden',
-    backgroundColor: '#F1F7F1',
-  },
   headerGradient: {
-    paddingBottom: 0,
-    borderBottomLeftRadius: 26,
-    borderBottomRightRadius: 26,
-    overflow: 'hidden',
     paddingHorizontal: Spacing.lg,
-  },
-  bgRing1: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    top: -60,
-    right: -40,
-  },
-  bgRing2: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    bottom: -40,
-    left: -20,
+    paddingBottom: Spacing.xs,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 56,
-    paddingBottom: 8,
+    height: 50,
     position: 'relative',
   },
   backButton: {

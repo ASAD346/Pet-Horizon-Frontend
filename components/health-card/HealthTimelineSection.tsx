@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
@@ -35,15 +35,15 @@ function getCategoryConfig(category: string) {
     case 'medicine':
       return {
         icon: 'pill',
-        color: '#1976D2',
+        color: '#0D47A1',
         bg: '#E3F2FD',
         label: 'Medicine',
       };
     case 'grooming':
       return {
         icon: 'content-cut',
-        color: '#C2185B',
-        bg: '#FCE4EC',
+        color: '#8E24AA',
+        bg: '#F3E5F5',
         label: 'Grooming',
       };
     case 'vet_visit':
@@ -56,9 +56,9 @@ function getCategoryConfig(category: string) {
     default:
       return {
         icon: 'medical-bag',
-        color: '#455A64',
-        bg: '#ECEFF1',
-        label: 'Care Record',
+        color: '#475569',
+        bg: '#F1F5F9',
+        label: 'Clinical Log',
       };
   }
 }
@@ -66,13 +66,13 @@ function getCategoryConfig(category: string) {
 function getStatusStyle(status: string) {
   switch (status) {
     case 'completed':
-      return { bg: '#E8F5E9', text: '#2E7D32', label: 'Completed' };
+      return { bg: '#F0FDF4', text: '#15803D', label: 'Completed' };
     case 'overdue':
-      return { bg: '#FFEBEE', text: '#C62828', label: 'Overdue' };
+      return { bg: '#FEF2F2', text: '#B91C1C', label: 'Overdue' };
     case 'active':
-      return { bg: '#E3F2FD', text: '#1565C0', label: 'Active Course' };
+      return { bg: '#EFF6FF', text: '#1D4ED8', label: 'Active Course' };
     default:
-      return { bg: '#FFF8E1', text: '#F57F17', label: 'Scheduled' };
+      return { bg: '#FFFBEB', text: '#B45309', label: 'Scheduled' };
   }
 }
 
@@ -90,14 +90,16 @@ export function HealthTimelineSection({
 
   return (
     <View style={styles.container}>
-      {/* Section Title */}
+      {/* Section Header */}
       <View style={styles.headerRow}>
         <AppText variant="h3" weight="800" color="#0E3821">
-          Medical & Care History
+          Clinical Care & History
         </AppText>
-        <AppText variant="caption" color="#64748B">
-          {filteredEvents.length} {filteredEvents.length === 1 ? 'event' : 'events'}
-        </AppText>
+        <View style={styles.countBadge}>
+          <AppText variant="caption" weight="700" color="#64748B">
+            {filteredEvents.length} {filteredEvents.length === 1 ? 'record' : 'records'}
+          </AppText>
+        </View>
       </View>
 
       {/* Filter Chips Bar */}
@@ -120,7 +122,7 @@ export function HealthTimelineSection({
               <MaterialCommunityIcons
                 name={chip.icon as any}
                 size={14}
-                color={isSelected ? '#FFFFFF' : '#475569'}
+                color={isSelected ? '#FFFFFF' : '#64748B'}
               />
               <AppText
                 variant="caption"
@@ -140,13 +142,13 @@ export function HealthTimelineSection({
       {filteredEvents.length === 0 ? (
         <View style={styles.emptyCard}>
           <View style={styles.emptyIconCircle}>
-            <MaterialCommunityIcons name="clipboard-text-outline" size={32} color="#5CB35D" />
+            <MaterialCommunityIcons name="clipboard-pulse-outline" size={30} color="#0E3821" />
           </View>
-          <AppText variant="bodySmall" weight="700" color="#0E3821" style={styles.emptyTitle}>
-            No Records in this Category
+          <AppText variant="bodySmall" weight="800" color="#0E3821" style={styles.emptyTitle}>
+            No Clinical Records Found
           </AppText>
           <AppText variant="caption" color="#64748B" style={styles.emptySubtitle}>
-            Administered vaccines, medications, and care logs for {petName} will appear here chronologically.
+            Vaccination logs, active prescriptions, and veterinary consults for {petName} will appear here chronologically.
           </AppText>
         </View>
       ) : (
@@ -168,7 +170,7 @@ export function HealthTimelineSection({
                 {/* Left Connector Line & Icon Node */}
                 <View style={styles.leftColumn}>
                   <View style={[styles.iconCircle, { backgroundColor: cfg.bg }]}>
-                    <MaterialCommunityIcons name={cfg.icon as any} size={16} color={cfg.color} />
+                    <MaterialCommunityIcons name={cfg.icon as any} size={15} color={cfg.color} />
                   </View>
                   {index < filteredEvents.length - 1 && <View style={styles.verticalLine} />}
                 </View>
@@ -186,7 +188,7 @@ export function HealthTimelineSection({
                     </View>
 
                     <View style={[styles.statusBadge, { backgroundColor: sStyle.bg }]}>
-                      <AppText variant="caption" weight="700" color={sStyle.text}>
+                      <AppText variant="caption" weight="800" color={sStyle.text}>
                         {sStyle.label}
                       </AppText>
                     </View>
@@ -195,8 +197,8 @@ export function HealthTimelineSection({
                   {/* Dose / Administration info */}
                   {item.dose && (
                     <View style={styles.detailRow}>
-                      <MaterialCommunityIcons name="information-outline" size={12} color="#1565C0" />
-                      <AppText variant="caption" weight="700" color="#1565C0" style={styles.detailText}>
+                      <MaterialCommunityIcons name="information-outline" size={12} color="#0D47A1" />
+                      <AppText variant="caption" weight="700" color="#0D47A1" style={styles.detailText}>
                         Dose: {item.dose}
                       </AppText>
                     </View>
@@ -231,7 +233,7 @@ export function HealthTimelineSection({
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.xs,
   },
   headerRow: {
     flexDirection: 'row',
@@ -239,16 +241,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
+  countBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+  },
   chipsScroll: {
     gap: Spacing.xs,
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.sm + 4,
   },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
-    paddingVertical: 7,
-    borderRadius: Radius.full,
+    paddingVertical: 8,
+    borderRadius: Radius.md,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
@@ -289,15 +297,19 @@ const styles = StyleSheet.create({
   cardContent: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg,
-    padding: Spacing.sm,
+    borderRadius: Radius.md,
+    padding: Spacing.sm + 2,
     borderWidth: 1,
-    borderColor: '#E8ECEF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 3,
-    elevation: 1,
+    borderColor: '#E2E8F0',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: { elevation: 1 },
+    }),
   },
   cardHeader: {
     flexDirection: 'row',
@@ -343,17 +355,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#E8ECEF',
-    marginTop: Spacing.sm,
+    borderColor: '#E2E8F0',
+    marginTop: Spacing.xs,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
+        shadowRadius: 6,
+      },
+      android: { elevation: 1 },
+    }),
   },
   emptyIconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#E8F5E9',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#F0FDF4',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
   },
   emptyTitle: {
     fontSize: 14,
