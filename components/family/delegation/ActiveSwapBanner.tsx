@@ -21,9 +21,9 @@ export function ActiveSwapBanner({ pendingSwaps, onAcceptSwap }: ActiveSwapBanne
           <View style={styles.content}>
             <View style={styles.headerRow}>
               <View style={styles.pillBadge}>
-                <Ionicons name="swap-horizontal" size={12} color="#D84315" />
-                <AppText variant="caption" weight="700" color="#D84315">
-                  Swap Request
+                <Ionicons name="swap-horizontal" size={13} color="#D84315" />
+                <AppText variant="caption" weight="800" color="#D84315" style={{ fontSize: 11 }}>
+                  SWAP NEEDED
                 </AppText>
               </View>
               <AppText variant="caption" color={Palette.gray[600]}>
@@ -34,8 +34,8 @@ export function ActiveSwapBanner({ pendingSwaps, onAcceptSwap }: ActiveSwapBanne
             </View>
 
             <AppText variant="bodySmall" weight="700" color={Palette.gray[900]} style={styles.title}>
-              {task.activeSwap?.requestedByName || 'Family Member'} needs cover for{' '}
-              <AppText variant="bodySmall" weight="800" color={Palette.primary.base}>
+              {task.activeSwap?.requestedByName || 'Family Member'} requested cover for{' '}
+              <AppText variant="bodySmall" weight="800" color="#184F2E">
                 {task.title || task.category}
               </AppText>
             </AppText>
@@ -52,8 +52,8 @@ export function ActiveSwapBanner({ pendingSwaps, onAcceptSwap }: ActiveSwapBanne
                 activeOpacity={0.8}
                 onPress={() => onAcceptSwap(task)}
               >
-                <Ionicons name="hand-left-outline" size={14} color="#FFFFFF" />
-                <AppText variant="caption" weight="700" color="#FFFFFF">
+                <Ionicons name="hand-right" size={13} color="#FFFFFF" />
+                <AppText variant="caption" weight="800" color="#FFFFFF">
                   I Can Cover
                 </AppText>
               </TouchableOpacity>
@@ -72,18 +72,18 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   card: {
-    backgroundColor: '#FFF5EB',
-    borderRadius: Radius.md,
+    backgroundColor: '#FFF8F0',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#FFD1A4',
+    borderColor: '#FFE0B2',
     flexDirection: 'row',
     overflow: 'hidden',
     ...Platform.select({
       ios: {
         shadowColor: '#E67E22',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
       },
       android: { elevation: 2 },
     }),
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     backgroundColor: '#E67E22',
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: Radius.full,
   },

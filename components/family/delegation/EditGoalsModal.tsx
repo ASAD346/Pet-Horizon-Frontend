@@ -59,23 +59,24 @@ export function EditGoalsModal({
         <View style={styles.sheetContainer}>
           <View style={styles.grabber} />
 
+          {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="trophy-outline" size={20} color="#D4A017" />
+              <Ionicons name="trophy-outline" size={22} color="#D4A017" />
             </View>
             <View style={styles.headerTitles}>
-              <AppText variant="h3" weight="800" color={Palette.primary.base}>
+              <AppText variant="h3" weight="800" color="#184F2E">
                 Household Walking Goals
               </AppText>
               <AppText variant="caption" color={Palette.gray[600]}>
-                Set weekly activity targets for your care team
+                Customize weekly activity targets for your care circle
               </AppText>
             </View>
           </View>
 
           <View style={styles.inputGroup}>
-            <AppText variant="caption" weight="700" color={Palette.gray[700]}>
-              Weekly Walking Target (Minutes)
+            <AppText variant="caption" weight="800" color="#184F2E" style={styles.inputLabel}>
+              WEEKLY WALKING TARGET (MINUTES)
             </AppText>
             <TextInput
               style={styles.input}
@@ -86,8 +87,8 @@ export function EditGoalsModal({
           </View>
 
           <View style={styles.inputGroup}>
-            <AppText variant="caption" weight="700" color={Palette.gray[700]}>
-              Weekly Target Distance (Km)
+            <AppText variant="caption" weight="800" color="#184F2E" style={styles.inputLabel}>
+              WEEKLY TARGET DISTANCE (KM)
             </AppText>
             <TextInput
               style={styles.input}
@@ -98,8 +99,8 @@ export function EditGoalsModal({
           </View>
 
           <View style={styles.inputGroup}>
-            <AppText variant="caption" weight="700" color={Palette.gray[700]}>
-              Daily Minimum Walks Count
+            <AppText variant="caption" weight="800" color="#184F2E" style={styles.inputLabel}>
+              DAILY MINIMUM WALKS COUNT
             </AppText>
             <TextInput
               style={styles.input}
@@ -109,7 +110,7 @@ export function EditGoalsModal({
             />
           </View>
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <View style={styles.actionsRow}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.7}>
               <AppText variant="bodySmall" weight="700" color={Palette.gray[700]}>
@@ -145,18 +146,18 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? 40 : Spacing.xl,
     gap: Spacing.sm,
   },
   grabber: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Palette.gray[300],
+    backgroundColor: '#CBD5E1',
     alignSelf: 'center',
     marginBottom: Spacing.xs,
   },
@@ -167,29 +168,36 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: '#FFF8E1',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE082',
   },
   headerTitles: {
     flex: 1,
   },
   inputGroup: {
     gap: 4,
+    marginTop: 2,
+  },
+  inputLabel: {
+    letterSpacing: 0.5,
+    fontSize: 11,
   },
   input: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: Radius.md,
+    backgroundColor: '#F8FAF8',
+    borderRadius: 14,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingVertical: 12,
     fontSize: 16,
-    fontWeight: '700',
-    color: Palette.gray[900],
+    fontWeight: '800',
+    color: '#184F2E',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -203,7 +211,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.full,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F1F5F9',
   },
   saveBtn: {
     flex: 2,
@@ -211,7 +219,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: Radius.full,
-    backgroundColor: Palette.primary.base,
+    backgroundColor: '#2E7D32',
   },
   btnDisabled: {
     opacity: 0.6,

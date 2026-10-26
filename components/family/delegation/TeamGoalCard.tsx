@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { FamilyGoalStats } from '@/types/delegation';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 interface TeamGoalCardProps {
   stats: FamilyGoalStats | null;
@@ -20,42 +22,53 @@ export function TeamGoalCard({ stats, onEditGoals, isOwner }: TeamGoalCardProps)
   const contributors = stats?.currentWeekStats?.memberBreakdown || [];
 
   // SVG circular ring dimensions
-  const size = 88;
-  const strokeWidth = 8;
+  const size = 96;
+  const strokeWidth = 9;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (circumference * percent) / 100;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.cardWrapper}>
       <LinearGradient
-        colors={['#0E331E', '#184F2E', '#226D3F']}
+        colors={['#0E3821', '#184F2E', '#267343']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
       >
-        {/* Header */}
+        {/* Subtle decorative background rings matching FamilyHubHeader */}
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+          <View style={styles.bgRing1} />
+          <View style={styles.bgRing2} />
+        </View>
+
+        {/* Top Header Row */}
         <View style={styles.headerRow}>
-          <View style={styles.titleWrap}>
+          <View style={styles.badgeRow}>
             <View style={styles.proBadge}>
-              <Ionicons name="sparkles" size={12} color="#D4A017" />
-              <AppText variant="caption" weight="800" color="#D4A017">
-                PRO TEAM GOAL
+              <Ionicons name="sparkles" size={11} color="#D4A017" />
+              <AppText variant="caption" weight="800" color="#D4A017" style={styles.proBadgeText}>
+                PRO WALKING GOAL
               </AppText>
             </View>
-            <AppText variant="bodySmall" weight="800" color="#FFFFFF">
-              Weekly Household Walking
+            <AppText variant="caption" color="rgba(255, 255, 255, 0.75)">
+              Weekly Household Target
             </AppText>
           </View>
+
           {isOwner && onEditGoals ? (
-            <TouchableOpacity style={styles.editBtn} onPress={onEditGoals} activeOpacity={0.7}>
-              <Ionicons name="options-outline" size={16} color="rgba(255, 255, 255, 0.85)" />
+            <TouchableOpacity style={styles.editBtn} onPress={onEditGoals} activeOpacity={0.75}>
+              <Ionicons name="options-outline" size={15} color="#FFFFFF" />
+              <AppText variant="caption" weight="700" color="#FFFFFF">
+                Edit Goal
+              </AppText>
             </TouchableOpacity>
           ) : null}
         </View>
 
-        {/* Main Goal Progress View */}
-        <View style={styles.progressSection}>
+        {/* Center Progress Ring & Key Metrics */}
+        <View style={styles.contentRow}>
+          {/* Circular SVG Ring */}
           <View style={styles.ringWrapper}>
             <Svg width={size} height={size}>
               {/* Background Track */}
@@ -63,7 +76,7 @@ export function TeamGoalCard({ stats, onEditGoals, isOwner }: TeamGoalCardProps)
                 cx={size / 2}
                 cy={size / 2}
                 r={radius}
-                stroke="rgba(255, 255, 255, 0.15)"
+                stroke="rgba(255, 255, 255, 0.16)"
                 strokeWidth={strokeWidth}
                 fill="none"
               />
@@ -81,50 +94,60 @@ export function TeamGoalCard({ stats, onEditGoals, isOwner }: TeamGoalCardProps)
                 transform={`rotate(-90 ${size / 2} ${size / 2})`}
               />
             </Svg>
-            <View style={styles.centerTextContainer}>
-              <AppText variant="body" weight="800" color="#FFFFFF">
+
+            {/* Inner Ring Text */}
+            <View style={styles.ringCenterText}>
+              <AppText variant="h3" weight="800" color="#FFFFFF">
                 {percent}%
+              </AppText>
+              <AppText variant="caption" color="rgba(255, 255, 255, 0.7)" style={{ fontSize: 9 }}>
+                REACHED
               </AppText>
             </View>
           </View>
 
-          <View style={styles.metricsContainer}>
-            <View style={styles.metricRow}>
-              <AppText variant="h3" weight="800" color="#FFFFFF">
+          {/* Metrics Description */}
+          <View style={styles.metricsCol}>
+            <View style={styles.headlineRow}>
+              <AppText variant="h2" weight="800" color="#FFFFFF" style={styles.numberBig}>
                 {currentMinutes}
               </AppText>
-              <AppText variant="bodySmall" color="rgba(255, 255, 255, 0.7)">
+              <AppText variant="body" color="rgba(255, 255, 255, 0.75)" style={{ marginBottom: 4 }}>
                 {' '}/ {weeklyTarget} mins
               </AppText>
             </View>
-            <AppText variant="caption" color="rgba(255, 255, 255, 0.85)">
+
+            <AppText variant="caption" color="rgba(255, 255, 255, 0.85)" style={styles.subStatus}>
               {percent >= 100
-                ? '🎉 Weekly goal completed!'
-                : `${weeklyTarget - currentMinutes} mins remaining this week`}
+                ? '🏆 Weekly household milestone achieved!'
+                : `${Math.max(0, weeklyTarget - currentMinutes)} mins to reach team goal`}
             </AppText>
 
-            {/* Overlapping member avatars */}
-            <View style={styles.avatarsRow}>
+            {/* Member Contributions */}
+            <View style={styles.contributorsRow}>
               {contributors.length > 0 ? (
-                contributors.slice(0, 4).map((member, idx) => (
-                  <View
-                    key={member.userId || idx}
-                    style={[styles.avatarWrap, { marginLeft: idx > 0 ? -10 : 0 }]}
-                  >
-                    {member.avatarUrl ? (
-                      <Image source={{ uri: member.avatarUrl }} style={styles.avatarImg} />
-                    ) : (
-                      <View style={styles.avatarFallback}>
-                        <AppText variant="caption" weight="800" color="#184F2E">
-                          {member.name?.charAt(0)?.toUpperCase() || 'M'}
-                        </AppText>
+                contributors.slice(0, 3).map((m, idx) => {
+                  const media = resolveMediaUrl(m.avatarUrl);
+                  return (
+                    <View key={m.userId || idx} style={styles.contributorChip}>
+                      <View style={styles.avatarMini}>
+                        {media ? (
+                          <Image source={{ uri: media }} style={styles.avatarImg} contentFit="cover" />
+                        ) : (
+                          <AppText variant="caption" weight="800" color="#184F2E" style={{ fontSize: 10 }}>
+                            {m.name.charAt(0).toUpperCase()}
+                          </AppText>
+                        )}
                       </View>
-                    )}
-                  </View>
-                ))
+                      <AppText variant="caption" weight="700" color="#FFFFFF" style={{ fontSize: 11 }}>
+                        {m.minutesWalked}m
+                      </AppText>
+                    </View>
+                  );
+                })
               ) : (
-                <AppText variant="caption" color="rgba(255, 255, 255, 0.6)">
-                  Log a walk to record household progress
+                <AppText variant="caption" color="rgba(255, 255, 255, 0.65)">
+                  Log a walk to record shared progress
                 </AppText>
               )}
             </View>
@@ -136,34 +159,56 @@ export function TeamGoalCard({ stats, onEditGoals, isOwner }: TeamGoalCardProps)
 }
 
 const styles = StyleSheet.create({
-  container: {
+  cardWrapper: {
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
-    borderRadius: Radius.lg,
+    borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#D4A017',
+    borderColor: 'rgba(212, 160, 23, 0.35)', // subtle gold trim
     ...Platform.select({
       ios: {
-        shadowColor: '#0E331E',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.16,
-        shadowRadius: 8,
+        shadowColor: '#0E3821',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.18,
+        shadowRadius: 10,
       },
-      android: { elevation: 3 },
+      android: { elevation: 4 },
     }),
   },
   gradient: {
-    padding: Spacing.md,
+    padding: Spacing.md + 2,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  bgRing1: {
+    position: 'absolute',
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    borderWidth: 28,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
+    top: -80,
+    right: -60,
+  },
+  bgRing2: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 18,
+    borderColor: 'rgba(255, 255, 255, 0.03)',
+    bottom: -40,
+    left: -20,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  titleWrap: {
-    gap: 2,
+  badgeRow: {
+    gap: 3,
   },
   proBadge: {
     flexDirection: 'row',
@@ -171,62 +216,85 @@ const styles = StyleSheet.create({
     gap: 4,
     backgroundColor: 'rgba(212, 160, 23, 0.18)',
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: Radius.full,
     alignSelf: 'flex-start',
-    marginBottom: 2,
+    borderWidth: 0.5,
+    borderColor: 'rgba(212, 160, 23, 0.4)',
+  },
+  proBadgeText: {
+    fontSize: 10,
+    letterSpacing: 0.5,
   },
   editBtn: {
-    padding: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: Radius.full,
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
-  progressSection: {
+  contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    marginTop: 4,
+    marginTop: 2,
   },
   ringWrapper: {
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  centerTextContainer: {
+  ringCenterText: {
     position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  metricsContainer: {
+  metricsCol: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
-  metricRow: {
+  headlineRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
+    alignItems: 'flex-end',
   },
-  avatarsRow: {
+  numberBig: {
+    fontSize: 28,
+    lineHeight: 32,
+  },
+  subStatus: {
+    lineHeight: 16,
+    marginBottom: 4,
+  },
+  contributorsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  contributorChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+    paddingRight: 8,
+    paddingLeft: 3,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
   },
-  avatarWrap: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
+  avatarMini: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
     overflow: 'hidden',
-    backgroundColor: '#E8F5E9',
   },
   avatarImg: {
     width: '100%',
     height: '100%',
-  },
-  avatarFallback: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

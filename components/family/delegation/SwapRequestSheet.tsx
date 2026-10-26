@@ -6,14 +6,15 @@ import {
   TouchableOpacity,
   ScrollView,
   TextInput,
-  Image,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Palette, Radius, Spacing } from '@/constants/theme';
 import type { DelegationTask, FamilyCaretaker } from '@/types/delegation';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 interface SwapRequestSheetProps {
   visible: boolean;
@@ -34,13 +35,11 @@ export function SwapRequestSheet({
   onSubmit,
   submitting = false,
 }: SwapRequestSheetProps) {
-  // null = broadcast to everyone in household
   const [selectedTargetId, setSelectedTargetId] = useState<string | null>(null);
   const [note, setNote] = useState('');
 
   if (!task) return null;
 
-  // Filter out current user from potential targets
   const eligibleCaretakers = caretakers.filter((c) => c.userId !== currentUserId);
 
   const handleSubmit = () => {
@@ -48,12 +47,7 @@ export function SwapRequestSheet({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.backdrop}
@@ -66,11 +60,11 @@ export function SwapRequestSheet({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="swap-horizontal" size={20} color={Palette.secondary.base} />
+              <Ionicons name="swap-horizontal" size={20} color="#E67E22" />
             </View>
             <View style={styles.headerTitles}>
-              <AppText variant="h3" weight="800" color={Palette.primary.base}>
-                Request Chore Coverage
+              <AppText variant="h3" weight="800" color="#184F2E">
+                Request Chore Swap
               </AppText>
               <AppText variant="caption" color={Palette.gray[600]}>
                 For “{task.title || task.category}” ({task.timingMode === 'window' ? `${task.window?.startTime} – ${task.window?.endTime}` : task.exactTime})
@@ -78,12 +72,12 @@ export function SwapRequestSheet({
             </View>
           </View>
 
-          {/* Recipient Selection Section */}
-          <AppText variant="bodySmall" weight="800" color={Palette.gray[800]} style={styles.sectionLabel}>
-            Who should cover this?
+          {/* Target Selection */}
+          <AppText variant="caption" weight="800" color="#184F2E" style={styles.sectionLabel}>
+            WHO SHOULD COVER THIS?
           </AppText>
 
-          {/* Broadcast pill button */}
+          {/* Open Call Option */}
           <TouchableOpacity
             style={[
               styles.broadcastOption,
@@ -96,31 +90,31 @@ export function SwapRequestSheet({
               <Ionicons
                 name="megaphone-outline"
                 size={18}
-                color={selectedTargetId === null ? '#FFFFFF' : Palette.secondary.base}
+                color={selectedTargetId === null ? '#FFFFFF' : '#E67E22'}
               />
             </View>
             <View style={styles.broadcastTextWrap}>
               <AppText
                 variant="bodySmall"
-                weight="700"
-                color={selectedTargetId === null ? Palette.primary.base : Palette.gray[800]}
+                weight="800"
+                color={selectedTargetId === null ? '#184F2E' : Palette.gray[800]}
               >
                 Ask Everyone in Family (Open Call)
               </AppText>
               <AppText variant="caption" color={Palette.gray[600]}>
-                First family member to accept gets the task
+                First caretaker to accept takes over the chore
               </AppText>
             </View>
             {selectedTargetId === null ? (
-              <Ionicons name="checkmark-circle" size={20} color={Palette.secondary.base} />
+              <Ionicons name="checkmark-circle" size={22} color="#E67E22" />
             ) : null}
           </TouchableOpacity>
 
-          {/* Direct Member Carousel */}
+          {/* Specific Caretaker Carousel */}
           {eligibleCaretakers.length > 0 ? (
             <>
               <AppText variant="caption" weight="700" color={Palette.gray[500]} style={styles.subLabel}>
-                Or ask a specific caretaker:
+                Or ask a specific family member:
               </AppText>
 
               <ScrollView
@@ -130,22 +124,21 @@ export function SwapRequestSheet({
               >
                 {eligibleCaretakers.map((member) => {
                   const isSelected = selectedTargetId === member.userId;
+                  const media = resolveMediaUrl(member.avatarUrl);
+
                   return (
                     <TouchableOpacity
                       key={member.userId}
-                      style={[
-                        styles.memberItem,
-                        isSelected && styles.memberItemSelected,
-                      ]}
+                      style={[styles.memberItem, isSelected && styles.memberItemSelected]}
                       onPress={() => setSelectedTargetId(member.userId)}
                       activeOpacity={0.8}
                     >
                       <View style={styles.avatarWrap}>
-                        {member.avatarUrl ? (
-                          <Image source={{ uri: member.avatarUrl }} style={styles.avatarImg} />
+                        {media ? (
+                          <Image source={{ uri: media }} style={styles.avatarImg} contentFit="cover" />
                         ) : (
                           <View style={styles.avatarFallback}>
-                            <AppText variant="bodySmall" weight="800" color={Palette.primary.base}>
+                            <AppText variant="bodySmall" weight="800" color="#184F2E">
                               {member.name.charAt(0).toUpperCase()}
                             </AppText>
                           </View>
@@ -159,7 +152,7 @@ export function SwapRequestSheet({
                       <AppText
                         variant="caption"
                         weight={isSelected ? '800' : '600'}
-                        color={isSelected ? Palette.secondary.base : Palette.gray[800]}
+                        color={isSelected ? '#E67E22' : Palette.gray[800]}
                         numberOfLines={1}
                         style={styles.memberName}
                       >
@@ -173,12 +166,12 @@ export function SwapRequestSheet({
           ) : null}
 
           {/* Optional Note */}
-          <AppText variant="bodySmall" weight="800" color={Palette.gray[800]} style={styles.sectionLabel}>
-            Optional Note:
+          <AppText variant="caption" weight="800" color="#184F2E" style={styles.sectionLabel}>
+            OPTIONAL NOTE FOR THE FAMILY
           </AppText>
           <TextInput
             style={styles.textInput}
-            placeholder="e.g., Stuck in a meeting, can someone feed Milo?"
+            placeholder="e.g. Stuck at work until 3pm, can someone handle lunch?"
             placeholderTextColor={Palette.gray[400]}
             value={note}
             onChangeText={setNote}
@@ -188,9 +181,9 @@ export function SwapRequestSheet({
 
           {/* Accountability Notice */}
           <View style={styles.accountabilityCard}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={Palette.primary.base} />
+            <Ionicons name="shield-checkmark" size={16} color="#184F2E" />
             <AppText variant="caption" color={Palette.gray[700]} style={styles.accountabilityText}>
-              Accountability Note: You remain the assigned caretaker until a family member accepts this swap.
+              Accountability Note: You remain the assigned caretaker until another member accepts.
             </AppText>
           </View>
 
@@ -208,7 +201,7 @@ export function SwapRequestSheet({
               activeOpacity={0.8}
               disabled={submitting}
             >
-              <Ionicons name="paper-plane-outline" size={16} color="#FFFFFF" />
+              <Ionicons name="paper-plane" size={15} color="#FFFFFF" />
               <AppText variant="bodySmall" weight="800" color="#FFFFFF">
                 {submitting ? 'Sending...' : 'Send Swap Request'}
               </AppText>
@@ -231,18 +224,18 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? 40 : Spacing.xl,
     gap: Spacing.sm,
   },
   grabber: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Palette.gray[300],
+    backgroundColor: '#CBD5E1',
     alignSelf: 'center',
     marginBottom: Spacing.xs,
   },
@@ -253,46 +246,50 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Palette.secondary.light,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFF5EB',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
   },
   headerTitles: {
     flex: 1,
   },
   sectionLabel: {
+    letterSpacing: 0.5,
     marginTop: 4,
+    fontSize: 11,
   },
   subLabel: {
-    marginTop: 4,
+    marginTop: 2,
   },
   broadcastOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderRadius: Radius.md,
+    padding: Spacing.md - 2,
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
     backgroundColor: '#FAFAFA',
     gap: Spacing.md,
   },
   broadcastOptionSelected: {
-    borderColor: Palette.secondary.base,
+    borderColor: '#E67E22',
     backgroundColor: '#FFF8F0',
   },
   broadcastIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Palette.secondary.light,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFF5EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
   broadcastIconSelected: {
-    backgroundColor: Palette.secondary.base,
+    backgroundColor: '#E67E22',
   },
   broadcastTextWrap: {
     flex: 1,
@@ -304,34 +301,33 @@ const styles = StyleSheet.create({
   },
   memberItem: {
     alignItems: 'center',
-    width: 64,
+    width: 68,
     padding: 6,
-    borderRadius: Radius.md,
+    borderRadius: 14,
     borderWidth: 1.5,
     borderColor: 'transparent',
   },
   memberItemSelected: {
-    borderColor: Palette.secondary.base,
+    borderColor: '#E67E22',
     backgroundColor: '#FFF8F0',
   },
   avatarWrap: {
     position: 'relative',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    overflow: 'visible',
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     marginBottom: 4,
   },
   avatarImg: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   avatarFallback: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: Palette.primary.light,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -339,10 +335,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: Palette.secondary.base,
+    width: 17,
+    height: 17,
+    borderRadius: 8.5,
+    backgroundColor: '#E67E22',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
@@ -352,24 +348,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   textInput: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: Radius.md,
+    backgroundColor: '#F8FAF8',
+    borderRadius: 14,
     padding: Spacing.md,
     fontSize: 14,
     color: Palette.gray[900],
     minHeight: 64,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
   },
   accountabilityCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: Spacing.sm,
-    backgroundColor: '#F0F3FA',
+    backgroundColor: '#EEF6EE',
     padding: Spacing.sm + 2,
-    borderRadius: Radius.sm,
-    marginTop: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+    marginTop: 2,
   },
   accountabilityText: {
     flex: 1,
@@ -387,7 +385,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.full,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F1F5F9',
   },
   submitBtn: {
     flex: 2,
@@ -397,7 +395,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderRadius: Radius.full,
-    backgroundColor: Palette.secondary.base,
+    backgroundColor: '#E67E22',
   },
   btnDisabled: {
     opacity: 0.6,

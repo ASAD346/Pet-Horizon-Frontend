@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { JournalTheme, Palette, Radius, Spacing } from '@/constants/theme';
 import type { DelegationTask, TaskCategory } from '@/types/delegation';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 interface DelegationTaskCardProps {
   task: DelegationTask;
@@ -15,12 +17,15 @@ interface DelegationTaskCardProps {
   onTakeChorePress: (task: DelegationTask) => void;
 }
 
-const CATEGORY_COLORS: Record<TaskCategory, { bar: string; bg: string; icon: keyof typeof Ionicons.glyphMap }> = {
-  feeding: { bar: JournalTheme.food, bg: JournalTheme.foodBg, icon: 'restaurant-outline' },
-  walk: { bar: JournalTheme.walk, bg: JournalTheme.walkBg, icon: 'paw-outline' },
-  medicine: { bar: JournalTheme.medicine, bg: JournalTheme.medicineBg, icon: 'medkit-outline' },
-  grooming: { bar: JournalTheme.grooming, bg: JournalTheme.groomingBg, icon: 'cut-outline' },
-  vaccination: { bar: '#7B1FA2', bg: '#F3E5F5', icon: 'shield-checkmark-outline' },
+const CATEGORY_STYLES: Record<
+  TaskCategory,
+  { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; bg: string }
+> = {
+  feeding: { label: 'Feeding', icon: 'restaurant-outline', color: '#D32F2F', bg: '#FFEBEE' },
+  walk: { label: 'Walk & Exercise', icon: 'paw-outline', color: '#E65100', bg: '#FFF3E0' },
+  medicine: { label: 'Medication', icon: 'medkit-outline', color: '#1565C0', bg: '#E3F2FD' },
+  grooming: { label: 'Grooming', icon: 'cut-outline', color: '#C2185B', bg: '#FCE4EC' },
+  vaccination: { label: 'Vaccination', icon: 'shield-checkmark-outline', color: '#6A1B9A', bg: '#F3E5F5' },
 };
 
 export function DelegationTaskCard({
@@ -32,7 +37,7 @@ export function DelegationTaskCard({
   onCompletePress,
   onTakeChorePress,
 }: DelegationTaskCardProps) {
-  const categoryConfig = CATEGORY_COLORS[task.category] || CATEGORY_COLORS.feeding;
+  const categoryConfig = CATEGORY_STYLES[task.category] || CATEGORY_STYLES.feeding;
   const isCompleted = Boolean(task.completion?.isCompleted);
   const isAssigned = Boolean(task.assignment?.userId);
   const isAssignedToMe = Boolean(currentUserId && task.assignment?.userId === currentUserId);
@@ -42,122 +47,146 @@ export function DelegationTaskCard({
     ? `${task.window?.preset ? `${task.window.preset.charAt(0).toUpperCase() + task.window.preset.slice(1)} • ` : ''}${task.window?.startTime || '--:--'} – ${task.window?.endTime || '--:--'}`
     : task.exactTime || 'Scheduled';
 
+  const avatarMedia = resolveMediaUrl(task.assignment?.avatarUrl);
+
   return (
     <View style={[styles.card, isCompleted && styles.cardCompleted]}>
-      {/* 4px Left Category Status Bar */}
-      <View style={[styles.leftBar, { backgroundColor: isCompleted ? Palette.success : categoryConfig.bar }]} />
+      {/* 4px Left Organic Accent Bar */}
+      <View
+        style={[
+          styles.leftAccentBar,
+          { backgroundColor: isCompleted ? Palette.success : categoryConfig.color },
+        ]}
+      />
 
-      <View style={styles.cardContent}>
-        {/* Top Meta Row: Time Window Badge & Category Icon */}
-        <View style={styles.metaRow}>
+      <View style={styles.inner}>
+        {/* Top Meta Line: Category Badge + Time Window Pill */}
+        <View style={styles.topMetaRow}>
+          <View style={[styles.categoryPill, { backgroundColor: categoryConfig.bg }]}>
+            <Ionicons name={categoryConfig.icon} size={13} color={categoryConfig.color} />
+            <AppText variant="caption" weight="800" color={categoryConfig.color} style={{ fontSize: 11 }}>
+              {categoryConfig.label}
+            </AppText>
+          </View>
+
+          {/* Time Window Pill */}
           <TouchableOpacity
-            style={[styles.windowBadge, isCompleted && styles.windowBadgeCompleted]}
+            style={[styles.windowPill, isCompleted && styles.windowPillCompleted]}
             onPress={() => onWindowPress(task)}
             activeOpacity={0.7}
+            disabled={isCompleted}
           >
-            <Ionicons name="time-outline" size={13} color={isCompleted ? Palette.gray[600] : '#B78103'} />
+            <Ionicons
+              name={task.timingMode === 'window' ? 'hourglass-outline' : 'alarm-outline'}
+              size={12}
+              color={isCompleted ? Palette.gray[500] : '#B78103'}
+            />
             <AppText
               variant="caption"
               weight="700"
-              color={isCompleted ? Palette.gray[600] : '#795548'}
+              color={isCompleted ? Palette.gray[600] : '#8D6E63'}
+              style={{ fontSize: 11 }}
             >
               {windowLabel}
             </AppText>
             {!isCompleted ? (
-              <Ionicons name="chevron-down" size={12} color="#B78103" />
+              <Ionicons name="chevron-down" size={11} color="#B78103" />
             ) : null}
           </TouchableOpacity>
-
-          <View style={[styles.categoryIconWrap, { backgroundColor: categoryConfig.bg }]}>
-            <Ionicons name={categoryConfig.icon} size={15} color={categoryConfig.bar} />
-          </View>
         </View>
 
-        {/* Title */}
+        {/* Task Title */}
         <AppText
           variant="body"
           weight="800"
           color={isCompleted ? Palette.gray[500] : Palette.gray[900]}
           style={[styles.title, isCompleted && styles.titleCompleted]}
         >
-          {task.title || task.category.charAt(0).toUpperCase() + task.category.slice(1)}
+          {task.title || categoryConfig.label}
         </AppText>
 
-        {/* Assignee Chip */}
-        <View style={styles.assigneeRow}>
+        {/* Caretaker Assignment & Swap Status */}
+        <View style={styles.assigneeLine}>
           <TouchableOpacity
-            style={[styles.assigneeChip, isAssignedToMe && styles.assigneeChipMe]}
+            style={[
+              styles.assigneeChip,
+              isAssignedToMe && styles.assigneeChipMe,
+              !isAssigned && styles.assigneeChipUnassigned,
+            ]}
             onPress={() => onAssignPress(task)}
-            activeOpacity={0.7}
+            activeOpacity={0.75}
             disabled={isCompleted}
           >
             {isAssigned ? (
-              task.assignment.avatarUrl ? (
-                <Image source={{ uri: task.assignment.avatarUrl }} style={styles.avatarImg} />
+              avatarMedia ? (
+                <Image source={{ uri: avatarMedia }} style={styles.avatarImg} contentFit="cover" />
               ) : (
-                <View style={styles.avatarFallback}>
-                  <AppText variant="caption" weight="800" color={Palette.primary.base}>
+                <View style={[styles.avatarFallback, isAssignedToMe && { backgroundColor: '#184F2E' }]}>
+                  <AppText variant="caption" weight="800" color={isAssignedToMe ? '#FFFFFF' : '#184F2E'} style={{ fontSize: 10 }}>
                     {task.assignment.name.charAt(0).toUpperCase()}
                   </AppText>
                 </View>
               )
             ) : (
-              <View style={styles.unassignedAvatar}>
-                <Ionicons name="person-add-outline" size={12} color={Palette.secondary.base} />
+              <View style={styles.unassignedIcon}>
+                <Ionicons name="person-add" size={11} color="#E67E22" />
               </View>
             )}
 
-            <View style={styles.assigneeTextWrap}>
-              <AppText variant="caption" weight="700" color={isAssignedToMe ? Palette.primary.base : Palette.gray[700]}>
-                {isAssignedToMe ? 'Assigned to You' : task.assignment?.name || 'Open to Family'}
-              </AppText>
-            </View>
+            <AppText
+              variant="caption"
+              weight="700"
+              color={isAssignedToMe ? '#184F2E' : !isAssigned ? '#B78103' : Palette.gray[800]}
+              numberOfLines={1}
+            >
+              {isAssignedToMe ? 'Assigned to You' : task.assignment?.name || 'Open to Family'}
+            </AppText>
 
             {!isCompleted ? (
-              <Ionicons name="swap-vertical" size={12} color={Palette.gray[400]} />
+              <Ionicons name="swap-vertical" size={11} color={Palette.gray[400]} />
             ) : null}
           </TouchableOpacity>
 
-          {/* Active Swap Indicator */}
+          {/* Pending Swap Tag */}
           {task.activeSwap?.isRequested ? (
             <View style={styles.swapRequestedTag}>
-              <Ionicons name="swap-horizontal" size={11} color="#D84315" />
-              <AppText variant="caption" weight="700" color="#D84315">
-                Swap Pending
+              <Ionicons name="swap-horizontal" size={12} color="#D84315" />
+              <AppText variant="caption" weight="800" color="#D84315" style={{ fontSize: 11 }}>
+                Swap Requested
               </AppText>
             </View>
           ) : null}
         </View>
 
-        {/* Real-time lock indicator */}
+        {/* Real-time concurrency lock alert */}
         {isLockedByOther ? (
-          <View style={styles.lockRow}>
-            <Ionicons name="lock-closed" size={12} color="#E65100" />
+          <View style={styles.lockNotice}>
+            <Ionicons name="hand-right" size={13} color="#E65100" />
             <AppText variant="caption" weight="700" color="#E65100">
               {task.inProgressLock?.lockedByName || 'A family member'} is doing this right now
             </AppText>
           </View>
         ) : null}
 
-        {/* Footer Actions */}
+        {/* Footer: Completed vs Active actions */}
         {isCompleted ? (
-          <View style={styles.completedFooter}>
-            <Ionicons name="checkmark-circle" size={16} color={Palette.success} />
+          <View style={styles.completedBanner}>
+            <Ionicons name="checkmark-circle" size={17} color={Palette.success} />
             <AppText variant="caption" weight="700" color={Palette.success}>
-              Completed by {task.completion?.performedBy?.name || 'Family member'}
+              Completed by {task.completion?.performedBy?.name || 'Family Member'}
               {task.completion?.wasCovered ? ' (Covered)' : ''}
             </AppText>
           </View>
         ) : (
-          <View style={styles.actionFooter}>
+          <View style={styles.actionRow}>
             {isAssignedToMe && !isLockedByOther ? (
               <TouchableOpacity
-                style={styles.ghostSwapBtn}
+                style={styles.requestSwapBtn}
                 onPress={() => onSwapPress(task)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="swap-horizontal" size={14} color={Palette.secondary.base} />
-                <AppText variant="caption" weight="700" color={Palette.secondary.base}>
+                <Ionicons name="swap-horizontal" size={14} color="#E67E22" />
+                <AppText variant="caption" weight="700" color="#E67E22">
                   Request Swap
                 </AppText>
               </TouchableOpacity>
@@ -165,11 +194,11 @@ export function DelegationTaskCard({
               <TouchableOpacity
                 style={styles.takeChoreBtn}
                 onPress={() => onTakeChorePress(task)}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
-                <Ionicons name="hand-right-outline" size={13} color={Palette.primary.base} />
-                <AppText variant="caption" weight="700" color={Palette.primary.base}>
-                  Take Chore
+                <Ionicons name="hand-right-outline" size={13} color="#184F2E" />
+                <AppText variant="caption" weight="800" color="#184F2E">
+                  I'll Take This
                 </AppText>
               </TouchableOpacity>
             ) : (
@@ -200,17 +229,17 @@ export function DelegationTaskCard({
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
     flexDirection: 'row',
     overflow: 'hidden',
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.sm + 4,
     ...Platform.select({
       ios: {
-        shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 2 },
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.05,
         shadowRadius: 6,
       },
@@ -220,42 +249,43 @@ const styles = StyleSheet.create({
   cardCompleted: {
     backgroundColor: '#FAFAFA',
     borderColor: '#E8E8E8',
-    opacity: 0.85,
+    opacity: 0.88,
   },
-  leftBar: {
+  leftAccentBar: {
     width: 4,
   },
-  cardContent: {
+  inner: {
     flex: 1,
     padding: Spacing.md,
     gap: 8,
   },
-  metaRow: {
+  topMetaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  windowBadge: {
+  categoryPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+  },
+  windowPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     backgroundColor: '#FFF8E1',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: Radius.sm,
-    borderWidth: 0.5,
+    borderRadius: Radius.full,
+    borderWidth: 1,
     borderColor: '#FFE082',
   },
-  windowBadgeCompleted: {
+  windowPillCompleted: {
     backgroundColor: '#EEEEEE',
     borderColor: '#E0E0E0',
-  },
-  categoryIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   title: {
     fontSize: 16,
@@ -264,7 +294,7 @@ const styles = StyleSheet.create({
   titleCompleted: {
     textDecorationLine: 'line-through',
   },
-  assigneeRow: {
+  assigneeLine: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
@@ -275,107 +305,115 @@ const styles = StyleSheet.create({
     gap: 6,
     backgroundColor: '#F5F5F5',
     paddingVertical: 3,
-    paddingHorizontal: 8,
+    paddingRight: 10,
+    paddingLeft: 3,
     borderRadius: Radius.full,
     borderWidth: 1,
     borderColor: '#EEEEEE',
   },
   assigneeChipMe: {
-    backgroundColor: '#F0F3FA',
-    borderColor: '#D4DCED',
+    backgroundColor: '#E8F5E9',
+    borderColor: '#C8E6C9',
+  },
+  assigneeChipUnassigned: {
+    backgroundColor: '#FFF8F0',
+    borderColor: '#FFE0B2',
   },
   avatarImg: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
   },
   avatarFallback: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#E2E8F0',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  unassignedAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFE8D6',
+  unassignedIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFE0B2',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  assigneeTextWrap: {
-    maxWidth: 160,
   },
   swapRequestedTag: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
     backgroundColor: '#FBE9E7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Radius.full,
-  },
-  lockRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FFF3E0',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radius.xs,
+    paddingVertical: 3,
+    borderRadius: Radius.full,
+    borderWidth: 0.5,
+    borderColor: '#FFCCBC',
   },
-  completedFooter: {
+  lockNotice: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
-    paddingTop: 6,
+    backgroundColor: '#FFF3E0',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: Radius.sm,
+  },
+  completedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+    paddingTop: 8,
     borderTopWidth: 0.5,
     borderTopColor: '#EEEEEE',
   },
-  actionFooter: {
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 4,
-    paddingTop: 6,
+    marginTop: 2,
+    paddingTop: 8,
     borderTopWidth: 0.5,
     borderTopColor: '#EEEEEE',
   },
-  ghostSwapBtn: {
+  requestSwapBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
   },
   takeChoreBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#F0F3FA',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    gap: 5,
+    backgroundColor: '#E8F5E9',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
     borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
   markDoneBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: Palette.success,
+    backgroundColor: '#2E7D32',
     paddingVertical: 7,
-    paddingHorizontal: 14,
+    paddingHorizontal: 15,
     borderRadius: Radius.full,
     ...Platform.select({
       ios: {
-        shadowColor: Palette.success,
+        shadowColor: '#2E7D32',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
+        shadowOpacity: 0.25,
         shadowRadius: 3,
       },
-      android: { elevation: 1 },
+      android: { elevation: 2 },
     }),
   },
   markDoneDisabled: {

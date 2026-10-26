@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Palette, Radius, Spacing } from '@/constants/theme';
@@ -290,7 +290,7 @@ export function FamilyTasksHub({
           <AppText
             variant="caption"
             weight={filter === 'all' ? '800' : '600'}
-            color={filter === 'all' ? Palette.primary.base : Palette.gray[600]}
+            color={filter === 'all' ? '#184F2E' : Palette.gray[600]}
           >
             All Chores ({tasks.length})
           </AppText>
@@ -304,7 +304,7 @@ export function FamilyTasksHub({
           <AppText
             variant="caption"
             weight={filter === 'mine' ? '800' : '600'}
-            color={filter === 'mine' ? Palette.primary.base : Palette.gray[600]}
+            color={filter === 'mine' ? '#184F2E' : Palette.gray[600]}
           >
             My Tasks
           </AppText>
@@ -318,7 +318,7 @@ export function FamilyTasksHub({
           <AppText
             variant="caption"
             weight={filter === 'unassigned' ? '800' : '600'}
-            color={filter === 'unassigned' ? Palette.primary.base : Palette.gray[600]}
+            color={filter === 'unassigned' ? '#184F2E' : Palette.gray[600]}
           >
             Open to Family
           </AppText>
@@ -453,21 +453,32 @@ const styles = StyleSheet.create({
   },
   segmentedTabs: {
     flexDirection: 'row',
-    backgroundColor: '#EAEAEA',
+    backgroundColor: 'rgba(230, 240, 230, 0.75)',
     borderRadius: Radius.full,
     padding: 3,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   segmentBtn: {
     flex: 1,
-    paddingVertical: 7,
+    paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.full,
   },
   segmentBtnActive: {
     backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#184F2E',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+      },
+      android: { elevation: 2 },
+    }),
   },
   loadingWrap: {
     paddingVertical: Spacing.xl,
@@ -479,9 +490,9 @@ const styles = StyleSheet.create({
     gap: 6,
     marginHorizontal: Spacing.lg,
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.md,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
     marginBottom: Spacing.md,
   },
 });

@@ -19,7 +19,7 @@ import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
 import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
 import { MembersListSection } from '@/components/family/MembersListSection';
 import { FamilyTasksHub } from '@/components/family/delegation';
-import { HomeTheme, Spacing, Radius } from '@/constants/theme';
+import { HomeTheme, Spacing, Radius, Palette } from '@/constants/theme';
 import { SkeletonFamilyHub } from '@/components/ui/skeletons';
 import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
 import { useAuth } from '@/hooks/useAuth';
@@ -90,6 +90,7 @@ export function FamilyHubView() {
   const [refreshing, setRefreshing] = useState(false);
   const [permissionsVisible, setPermissionsVisible] = useState(false);
   const [selectedMember, setSelectedMember] = useState<PetMemberRow | null>(null);
+  const [activeTab, setActiveTab] = useState<'team' | 'chores'>('team');
   const guestScopeKey =
     token && pet?._id && !isOwner ? `${token}:${pet._id}:guest` : null;
   const { shouldBlockUI: shouldBlockGuestUI, markLoaded: markGuestLoaded, reset: resetGuestScope } =
@@ -292,85 +293,133 @@ export function FamilyHubView() {
 
         {pet ? (
           <>
-            <FamilyOverviewCard
-              familyName={familyName}
-              memberCount={displayMembers.length}
-              petCount={1}
-              isPremium={isPremium}
-              joinCode={joinCode}
-              loadingInvite={false}
-              canInvite={canInvite}
-              // Show invite section if: user owns this pet, OR user has global management rights
-              // (premium + owns at least one other pet). Hides it only for non-premium caregivers.
-              showInviteSection={isOwner}
-              onShareCode={handleShareCode}
-              onInvitePress={handleInvitePress}
-            />
+            {/* Top Hub Navigation: Care Team vs Chore Delegation */}
+            <View style={styles.topSegmentContainer}>
+              <TouchableOpacity
+                style={[styles.topSegmentButton, activeTab === 'team' && styles.topSegmentActive]}
+                onPress={() => setActiveTab('team')}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="people"
+                  size={16}
+                  color={activeTab === 'team' ? '#184F2E' : Palette.gray[600]}
+                />
+                <AppText
+                  variant="bodySmall"
+                  weight={activeTab === 'team' ? '800' : '600'}
+                  color={activeTab === 'team' ? '#184F2E' : Palette.gray[600]}
+                >
+                  Care Team & Access
+                </AppText>
+              </TouchableOpacity>
 
-            {!isPremium && (isOwner || userHasOwnedPet) ? (
-              <View style={styles.bannerWrap}>
-                <AuthInfoBanner message="Upgrade to Premium to generate invite links and add family members to care for your pet." />
-              </View>
-            ) : null}
-
-            <MembersListSection
-              members={displayMembers}
-              loading={membersLoading || guestLoading}
-              manageableIds={isOwner ? manageableMemberIds : []}
-              isPremium={isPremium}
-              isOwner={isOwner}
-              hostName={ownerName}
-              currentUserId={user?._id}
-              onMemberSettingsPress={(memberId) => {
-                const found = members.find(
-                  (m) => String(m.userId?._id || (m as any).id || (m as any)._id) === String(memberId)
-                );
-                if (found) {
-                  setSelectedMember(found);
-                  setPermissionsVisible(true);
-                }
-              }}
-            />
-
-            {/* Family Chore Delegation & Shared Care Hub */}
-            <FamilyTasksHub
-              token={token}
-              petId={activePetId ?? pet?._id ?? null}
-              currentUserId={user?._id}
-              isOwner={isOwner}
-              isPremium={isPremium}
-              familyName={familyName}
-              onUpgradePress={() => router.push('/profile/billing')}
-            />
-
-            {/* Join another family workspace via QR scan */}
-            {isOwner ? (
-              <>
-                <View style={styles.sectionHeader}>
-                  <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
-                    Collaborate
+              <TouchableOpacity
+                style={[styles.topSegmentButton, activeTab === 'chores' && styles.topSegmentActive]}
+                onPress={() => setActiveTab('chores')}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="calendar-outline"
+                  size={16}
+                  color={activeTab === 'chores' ? '#184F2E' : Palette.gray[600]}
+                />
+                <AppText
+                  variant="bodySmall"
+                  weight={activeTab === 'chores' ? '800' : '600'}
+                  color={activeTab === 'chores' ? '#184F2E' : Palette.gray[600]}
+                >
+                  Chores & Goals
+                </AppText>
+                <View style={styles.proSmallBadge}>
+                  <AppText variant="caption" weight="800" color="#D4A017" style={{ fontSize: 9 }}>
+                    PRO
                   </AppText>
                 </View>
-                <TouchableOpacity
-                  style={styles.joinFamilyCard}
-                  onPress={() => setQrScannerVisible(true)}
-                  activeOpacity={0.85}
-                >
-                  <View style={styles.joinIconBg}>
-                    <Ionicons name="qr-code-outline" size={24} color="#3A8F3B" />
+              </TouchableOpacity>
+            </View>
+
+            {activeTab === 'team' ? (
+              <>
+                <FamilyOverviewCard
+                  familyName={familyName}
+                  memberCount={displayMembers.length}
+                  petCount={1}
+                  isPremium={isPremium}
+                  joinCode={joinCode}
+                  loadingInvite={false}
+                  canInvite={canInvite}
+                  showInviteSection={isOwner}
+                  onShareCode={handleShareCode}
+                  onInvitePress={handleInvitePress}
+                />
+
+                {!isPremium && (isOwner || userHasOwnedPet) ? (
+                  <View style={styles.bannerWrap}>
+                    <AuthInfoBanner message="Upgrade to Premium to generate invite links and add family members to care for your pet." />
                   </View>
-                  <View style={styles.joinTextContainer}>
-                    <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
-                      Join Another Family
-                    </AppText>
-                    <AppText variant="caption" color={HomeTheme.textMuted}>
-                      Scan a QR invitation to co-manage another pet.
-                    </AppText>
-                  </View>
-                  <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
-                </TouchableOpacity>
+                ) : null}
+
+                <MembersListSection
+                  members={displayMembers}
+                  loading={membersLoading || guestLoading}
+                  manageableIds={isOwner ? manageableMemberIds : []}
+                  isPremium={isPremium}
+                  isOwner={isOwner}
+                  hostName={ownerName}
+                  currentUserId={user?._id}
+                  onMemberSettingsPress={(memberId) => {
+                    const found = members.find(
+                      (m) => String(m.userId?._id || (m as any).id || (m as any)._id) === String(memberId)
+                    );
+                    if (found) {
+                      setSelectedMember(found);
+                      setPermissionsVisible(true);
+                    }
+                  }}
+                />
+
+                {/* Join another family workspace via QR scan */}
+                {isOwner ? (
+                  <>
+                    <View style={styles.sectionHeader}>
+                      <AppText variant="body" weight="800" color={HomeTheme.text} style={styles.sectionTitle}>
+                        Collaborate
+                      </AppText>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.joinFamilyCard}
+                      onPress={() => setQrScannerVisible(true)}
+                      activeOpacity={0.85}
+                    >
+                      <View style={styles.joinIconBg}>
+                        <Ionicons name="qr-code-outline" size={24} color="#3A8F3B" />
+                      </View>
+                      <View style={styles.joinTextContainer}>
+                        <AppText variant="bodySmall" weight="800" color={HomeTheme.text}>
+                          Join Another Family
+                        </AppText>
+                        <AppText variant="caption" color={HomeTheme.textMuted}>
+                          Scan a QR invitation to co-manage another pet.
+                        </AppText>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={HomeTheme.textMuted} />
+                    </TouchableOpacity>
+                  </>
+                ) : null}
               </>
-            ) : null}
+            ) : (
+              /* Chore Delegation & Shared Care Hub in its own clean view */
+              <FamilyTasksHub
+                token={token}
+                petId={activePetId ?? pet?._id ?? null}
+                currentUserId={user?._id}
+                isOwner={isOwner}
+                isPremium={isPremium}
+                familyName={familyName}
+                onUpgradePress={() => router.push('/profile/billing')}
+              />
+            )}
           </>
         ) : null}
       </ScrollView>
@@ -539,5 +588,44 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     lineHeight: 22,
+  },
+  topSegmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(230, 240, 230, 0.75)',
+    borderRadius: Radius.full,
+    padding: 3,
+    marginHorizontal: Spacing.lg,
+    marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  topSegmentButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 9,
+    borderRadius: Radius.full,
+  },
+  topSegmentActive: {
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#184F2E',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: { elevation: 2 },
+    }),
+  },
+  proSmallBadge: {
+    backgroundColor: '#FFFDF0',
+    borderWidth: 1,
+    borderColor: '#FFE082',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: Radius.full,
   },
 });

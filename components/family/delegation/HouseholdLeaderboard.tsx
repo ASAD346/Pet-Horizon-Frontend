@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, Image, Platform } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Palette, Radius, Spacing } from '@/constants/theme';
-import type { FamilyGoalStats, MemberContribution } from '@/types/delegation';
+import type { FamilyGoalStats } from '@/types/delegation';
+import { resolveMediaUrl } from '@/lib/mediaUrl';
 
 interface HouseholdLeaderboardProps {
   stats: FamilyGoalStats | null;
@@ -18,29 +20,34 @@ export function HouseholdLeaderboard({ stats, familyName = 'Household' }: Househ
 
   return (
     <View style={styles.container}>
-      {/* Positive Header Banner */}
-      <View style={styles.banner}>
-        <Ionicons name="trophy" size={20} color="#D4A017" />
-        <View style={styles.bannerTextWrap}>
-          <AppText variant="bodySmall" weight="800" color="#1A2B4E">
-            {familyName} Care Adherence: {adherence}% 🏆
+      {/* Inspiring Positive Adherence Card */}
+      <View style={styles.adherenceBanner}>
+        <View style={styles.trophyIconWrap}>
+          <Ionicons name="trophy" size={20} color="#D4A017" />
+        </View>
+        <View style={styles.bannerTextCol}>
+          <AppText variant="bodySmall" weight="800" color="#184F2E">
+            {familyName} Adherence: {adherence}% 🏆
           </AppText>
-          <AppText variant="caption" color={Palette.gray[600]}>
-            Great job keeping Milo healthy and happy together this week!
+          <AppText variant="caption" color={Palette.gray[600]} style={{ lineHeight: 16 }}>
+            Wonderful team effort keeping your pet cared for and healthy this week!
           </AppText>
         </View>
       </View>
 
-      {/* Leaderboard List */}
+      {/* Contribution Table Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <AppText variant="caption" weight="800" color={Palette.gray[500]} style={{ letterSpacing: 0.5 }}>
-            THIS WEEK'S CONTRIBUTIONS
+          <Ionicons name="ribbon-outline" size={15} color="#184F2E" />
+          <AppText variant="caption" weight="800" color="#184F2E" style={styles.headerTitle}>
+            FAMILY ACTIVITY & BADGES
           </AppText>
         </View>
 
         {members.map((member, index) => {
           const isFirst = index === 0 && member.minutesWalked > 0;
+          const media = resolveMediaUrl(member.avatarUrl);
+
           return (
             <View
               key={member.userId || index}
@@ -50,7 +57,7 @@ export function HouseholdLeaderboard({ stats, familyName = 'Household' }: Househ
                 {isFirst ? (
                   <Ionicons name="ribbon" size={20} color="#D4A017" />
                 ) : (
-                  <AppText variant="caption" weight="800" color={Palette.gray[500]}>
+                  <AppText variant="caption" weight="800" color={Palette.gray[400]}>
                     #{index + 1}
                   </AppText>
                 )}
@@ -58,11 +65,11 @@ export function HouseholdLeaderboard({ stats, familyName = 'Household' }: Househ
 
               {/* Avatar */}
               <View style={styles.avatarWrap}>
-                {member.avatarUrl ? (
-                  <Image source={{ uri: member.avatarUrl }} style={styles.avatarImg} />
+                {media ? (
+                  <Image source={{ uri: media }} style={styles.avatarImg} contentFit="cover" />
                 ) : (
                   <View style={styles.avatarFallback}>
-                    <AppText variant="caption" weight="800" color={Palette.primary.base}>
+                    <AppText variant="caption" weight="800" color="#184F2E">
                       {member.name.charAt(0).toUpperCase()}
                     </AppText>
                   </View>
@@ -71,30 +78,30 @@ export function HouseholdLeaderboard({ stats, familyName = 'Household' }: Househ
 
               {/* Member Details */}
               <View style={styles.memberInfo}>
-                <AppText variant="bodySmall" weight="700" color={Palette.gray[900]}>
+                <AppText variant="bodySmall" weight="800" color={Palette.gray[900]}>
                   {member.name}
                 </AppText>
                 <View style={styles.badgeRow}>
                   <View style={styles.badgeChip}>
-                    <AppText variant="caption" weight="700" color="#184F2E">
+                    <AppText variant="caption" weight="700" color="#184F2E" style={{ fontSize: 10 }}>
                       {member.badge || 'Care Champion 🐾'}
                     </AppText>
                   </View>
                 </View>
               </View>
 
-              {/* Metric stats */}
+              {/* Stats */}
               <View style={styles.metricWrap}>
                 {member.minutesWalked > 0 ? (
-                  <AppText variant="bodySmall" weight="800" color={Palette.primary.base}>
-                    {member.minutesWalked} min
+                  <AppText variant="bodySmall" weight="800" color="#184F2E">
+                    {member.minutesWalked} mins
                   </AppText>
                 ) : (
-                  <AppText variant="bodySmall" weight="800" color={Palette.primary.base}>
+                  <AppText variant="bodySmall" weight="800" color="#184F2E">
                     {member.totalTasksCount} tasks
                   </AppText>
                 )}
-                <AppText variant="caption" color={Palette.gray[500]}>
+                <AppText variant="caption" color={Palette.gray[500]} style={{ fontSize: 11 }}>
                   {member.walksCount} walks • {member.feedingsCount} feeds
                 </AppText>
               </View>
@@ -112,56 +119,73 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
     gap: Spacing.sm,
   },
-  banner: {
+  adherenceBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
     backgroundColor: '#FFFDF0',
     borderWidth: 1,
     borderColor: '#FFE082',
-    borderRadius: Radius.md,
+    borderRadius: 18,
     padding: Spacing.md,
   },
-  bannerTextWrap: {
+  trophyIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFF8E1',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FFE082',
+  },
+  bannerTextCol: {
     flex: 1,
     gap: 2,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
     ...Platform.select({
       ios: {
-        shadowColor: '#1A2B4E',
-        shadowOffset: { width: 0, height: 2 },
+        shadowColor: '#2E7D32',
+        shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.05,
-        shadowRadius: 4,
+        shadowRadius: 5,
       },
       android: { elevation: 2 },
     }),
   },
   cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: '#FAFAFA',
+    paddingVertical: Spacing.sm + 2,
+    backgroundColor: '#F8FAF8',
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
+  },
+  headerTitle: {
+    letterSpacing: 0.5,
+    fontSize: 11,
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm + 4,
-    gap: Spacing.md,
+    gap: Spacing.md - 2,
   },
   rowDivider: {
     borderBottomWidth: 1,
     borderBottomColor: '#F5F5F5',
   },
   rankWrap: {
-    width: 24,
+    width: 22,
     alignItems: 'center',
   },
   avatarWrap: {
@@ -178,7 +202,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Palette.primary.light,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -191,9 +215,9 @@ const styles = StyleSheet.create({
   },
   badgeChip: {
     backgroundColor: '#E8F5E9',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: Radius.xs,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radius.full,
   },
   metricWrap: {
     alignItems: 'flex-end',

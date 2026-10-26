@@ -28,15 +28,17 @@ const PRESETS: Array<{
   desc: string;
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
+  bg: string;
 }> = [
   {
     id: 'morning',
-    title: 'Morning Care',
+    title: 'Morning Window',
     startTime: '07:00',
     endTime: '10:00',
     desc: '7:00 AM – 10:00 AM',
     icon: 'sunny-outline',
-    color: '#F57C00',
+    color: '#E65100',
+    bg: '#FFF3E0',
   },
   {
     id: 'lunch',
@@ -46,6 +48,7 @@ const PRESETS: Array<{
     desc: '11:30 AM – 2:00 PM',
     icon: 'restaurant-outline',
     color: '#D4A017',
+    bg: '#FFF8E1',
   },
   {
     id: 'afternoon',
@@ -55,6 +58,7 @@ const PRESETS: Array<{
     desc: '2:00 PM – 5:00 PM',
     icon: 'paw-outline',
     color: '#2E7D32',
+    bg: '#E8F5E9',
   },
   {
     id: 'evening',
@@ -63,16 +67,18 @@ const PRESETS: Array<{
     endTime: '20:00',
     desc: '5:00 PM – 8:00 PM',
     icon: 'partly-sunny-outline',
-    color: '#1E88E5',
+    color: '#1565C0',
+    bg: '#E3F2FD',
   },
   {
     id: 'night',
-    title: 'Night Wind-down',
+    title: 'Night Care',
     startTime: '20:00',
     endTime: '23:00',
     desc: '8:00 PM – 11:00 PM',
     icon: 'moon-outline',
-    color: '#5E35B1',
+    color: '#6A1B9A',
+    bg: '#F3E5F5',
   },
 ];
 
@@ -126,21 +132,22 @@ export function FlexibleWindowPickerModal({
         <View style={styles.sheetContainer}>
           <View style={styles.grabber} />
 
+          {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="time-outline" size={20} color={Palette.primary.base} />
+              <Ionicons name="time-outline" size={22} color="#184F2E" />
             </View>
             <View style={styles.headerTitles}>
-              <AppText variant="h3" weight="800" color={Palette.primary.base}>
-                Schedule Timing Mode
+              <AppText variant="h3" weight="800" color="#184F2E">
+                Chore Timing Window
               </AppText>
               <AppText variant="caption" color={Palette.gray[600]}>
-                Choose between an exact time or a relaxed window
+                Switch between exact clock times and relaxed fuzzy windows
               </AppText>
             </View>
           </View>
 
-          {/* Mode Switcher */}
+          {/* Mode Segment Switcher */}
           <View style={styles.modeTabs}>
             <TouchableOpacity
               style={[styles.modeTab, mode === 'window' && styles.modeTabActive]}
@@ -150,12 +157,12 @@ export function FlexibleWindowPickerModal({
               <Ionicons
                 name="hourglass-outline"
                 size={14}
-                color={mode === 'window' ? Palette.primary.base : Palette.gray[600]}
+                color={mode === 'window' ? '#184F2E' : Palette.gray[600]}
               />
               <AppText
                 variant="bodySmall"
                 weight={mode === 'window' ? '800' : '600'}
-                color={mode === 'window' ? Palette.primary.base : Palette.gray[600]}
+                color={mode === 'window' ? '#184F2E' : Palette.gray[600]}
               >
                 Flexible Window
               </AppText>
@@ -169,23 +176,23 @@ export function FlexibleWindowPickerModal({
               <Ionicons
                 name="alarm-outline"
                 size={14}
-                color={mode === 'exact' ? Palette.primary.base : Palette.gray[600]}
+                color={mode === 'exact' ? '#184F2E' : Palette.gray[600]}
               />
               <AppText
                 variant="bodySmall"
                 weight={mode === 'exact' ? '800' : '600'}
-                color={mode === 'exact' ? Palette.primary.base : Palette.gray[600]}
+                color={mode === 'exact' ? '#184F2E' : Palette.gray[600]}
               >
                 Exact Time
               </AppText>
             </TouchableOpacity>
           </View>
 
-          {/* Content depending on mode */}
+          {/* Window Presets List */}
           {mode === 'window' ? (
             <ScrollView style={styles.presetsList} showsVerticalScrollIndicator={false}>
-              <AppText variant="caption" weight="700" color={Palette.gray[600]} style={styles.helperText}>
-                Select a care window. Household members can complete chores anytime within this range without triggering late alerts.
+              <AppText variant="caption" color={Palette.gray[600]} style={styles.helperText}>
+                Choose a time window. Family caretakers can complete this chore anytime within the window without triggering late alerts.
               </AppText>
 
               {PRESETS.map((p) => {
@@ -195,16 +202,16 @@ export function FlexibleWindowPickerModal({
                     key={p.id}
                     style={[styles.presetRow, isSelected && styles.presetRowSelected]}
                     onPress={() => handleSelectPreset(p)}
-                    activeOpacity={0.7}
+                    activeOpacity={0.75}
                   >
-                    <View style={[styles.presetIconWrap, { backgroundColor: `${p.color}15` }]}>
+                    <View style={[styles.presetIconWrap, { backgroundColor: p.bg }]}>
                       <Ionicons name={p.icon} size={18} color={p.color} />
                     </View>
                     <View style={styles.presetTextWrap}>
                       <AppText
                         variant="bodySmall"
                         weight="800"
-                        color={isSelected ? Palette.primary.base : Palette.gray[900]}
+                        color={isSelected ? '#184F2E' : Palette.gray[900]}
                       >
                         {p.title}
                       </AppText>
@@ -213,7 +220,7 @@ export function FlexibleWindowPickerModal({
                       </AppText>
                     </View>
                     {isSelected ? (
-                      <Ionicons name="checkmark-circle" size={20} color={Palette.primary.base} />
+                      <Ionicons name="checkmark-circle" size={22} color="#184F2E" />
                     ) : null}
                   </TouchableOpacity>
                 );
@@ -221,19 +228,19 @@ export function FlexibleWindowPickerModal({
             </ScrollView>
           ) : (
             <View style={styles.exactModeContainer}>
-              <AppText variant="caption" color={Palette.gray[600]}>
-                Set a specific clock time for this chore (best for strict medications or timed vet appointments).
+              <AppText variant="caption" color={Palette.gray[600]} style={{ textAlign: 'center' }}>
+                Set a specific clock time for this chore (ideal for medications or strict veterinary diets).
               </AppText>
               <View style={styles.exactTimeChip}>
-                <Ionicons name="time" size={18} color={Palette.primary.base} />
-                <AppText variant="h3" weight="800" color={Palette.primary.base}>
+                <Ionicons name="time" size={22} color="#184F2E" />
+                <AppText variant="h2" weight="800" color="#184F2E">
                   {exactTime}
                 </AppText>
               </View>
             </View>
           )}
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <View style={styles.actionsRow}>
             <TouchableOpacity style={styles.cancelBtn} onPress={onClose} activeOpacity={0.7}>
               <AppText variant="bodySmall" weight="700" color={Palette.gray[700]}>
@@ -269,19 +276,19 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? 40 : Spacing.xl,
-    maxHeight: '80%',
+    maxHeight: '82%',
     gap: Spacing.sm,
   },
   grabber: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Palette.gray[300],
+    backgroundColor: '#CBD5E1',
     alignSelf: 'center',
     marginBottom: Spacing.xs,
   },
@@ -292,19 +299,21 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Palette.primary.light,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
   headerTitles: {
     flex: 1,
   },
   modeTabs: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F1F5F9',
     borderRadius: Radius.full,
     padding: 3,
     marginTop: 4,
@@ -322,12 +331,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
+        shadowColor: '#184F2E',
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowRadius: 3,
       },
-      android: { elevation: 1 },
+      android: { elevation: 2 },
     }),
   },
   presetsList: {
@@ -343,20 +352,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
     padding: Spacing.md - 2,
-    borderRadius: Radius.md,
+    borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
     marginBottom: Spacing.xs + 2,
     backgroundColor: '#FAFAFA',
   },
   presetRowSelected: {
-    borderColor: Palette.primary.base,
-    backgroundColor: '#F0F3FA',
+    borderColor: '#184F2E',
+    backgroundColor: '#EEF6EE',
   },
   presetIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -371,13 +380,13 @@ const styles = StyleSheet.create({
   exactTimeChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: Palette.primary.light,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: Radius.lg,
+    gap: 10,
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#D4DCED',
+    borderColor: '#C8E6C9',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -391,7 +400,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.full,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F1F5F9',
   },
   saveBtn: {
     flex: 2,
@@ -399,7 +408,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 12,
     borderRadius: Radius.full,
-    backgroundColor: Palette.primary.base,
+    backgroundColor: '#2E7D32',
   },
   btnDisabled: {
     opacity: 0.6,

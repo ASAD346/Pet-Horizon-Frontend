@@ -61,12 +61,13 @@ export function CompleteTaskModal({
         <View style={styles.sheetContainer}>
           <View style={styles.grabber} />
 
+          {/* Header */}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
-              <Ionicons name="checkmark-done" size={22} color={Palette.success} />
+              <Ionicons name="checkmark-done" size={24} color="#2E7D32" />
             </View>
             <View style={styles.headerTitles}>
-              <AppText variant="h3" weight="800" color={Palette.primary.base}>
+              <AppText variant="h3" weight="800" color="#184F2E">
                 Complete Chore
               </AppText>
               <AppText variant="caption" color={Palette.gray[600]}>
@@ -77,8 +78,8 @@ export function CompleteTaskModal({
 
           {isWalk ? (
             <View style={styles.walkInputsContainer}>
-              <AppText variant="bodySmall" weight="800" color={Palette.gray[800]}>
-                Walk Activity Log
+              <AppText variant="caption" weight="800" color="#184F2E" style={styles.sectionLabel}>
+                WALK ACTIVITY METRICS
               </AppText>
               <View style={styles.walkRow}>
                 <View style={styles.inputBox}>
@@ -109,12 +110,12 @@ export function CompleteTaskModal({
           ) : null}
 
           {/* Notes */}
-          <AppText variant="bodySmall" weight="800" color={Palette.gray[800]} style={{ marginTop: 4 }}>
-            Notes / Observations (Optional):
+          <AppText variant="caption" weight="800" color="#184F2E" style={styles.sectionLabel}>
+            NOTES / OBSERVATIONS (OPTIONAL)
           </AppText>
           <TextInput
             style={styles.textInput}
-            placeholder={isWalk ? "e.g., Milo had lots of energy and met other dogs!" : "e.g., Ate all kibble with appetite."}
+            placeholder={isWalk ? "e.g., Milo enjoyed walking near the park!" : "e.g., Ate full breakfast eagerly."}
             placeholderTextColor={Palette.gray[400]}
             value={notes}
             onChangeText={setNotes}
@@ -138,7 +139,7 @@ export function CompleteTaskModal({
             >
               <Ionicons name="checkmark-circle" size={16} color="#FFFFFF" />
               <AppText variant="bodySmall" weight="800" color="#FFFFFF">
-                {completing ? 'Recording...' : 'Mark as Completed'}
+                {completing ? 'Recording...' : 'Mark as Done'}
               </AppText>
             </TouchableOpacity>
           </View>
@@ -159,18 +160,18 @@ const styles = StyleSheet.create({
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? 40 : Spacing.xl,
     gap: Spacing.sm,
   },
   grabber: {
-    width: 36,
+    width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: Palette.gray[300],
+    backgroundColor: '#CBD5E1',
     alignSelf: 'center',
     marginBottom: Spacing.xs,
   },
@@ -181,19 +182,26 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Palette.successLight,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
   },
   headerTitles: {
     flex: 1,
   },
+  sectionLabel: {
+    letterSpacing: 0.5,
+    marginTop: 4,
+    fontSize: 11,
+  },
   walkInputsContainer: {
     gap: Spacing.xs,
-    marginTop: 4,
+    marginTop: 2,
   },
   walkRow: {
     flexDirection: 'row',
@@ -201,28 +209,28 @@ const styles = StyleSheet.create({
   },
   inputBox: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
-    padding: Spacing.sm + 2,
-    borderRadius: Radius.md,
+    backgroundColor: '#F8FAF8',
+    padding: Spacing.sm + 4,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
   },
   numberInput: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '800',
-    color: Palette.gray[900],
+    color: '#184F2E',
     marginTop: 2,
   },
   textInput: {
-    backgroundColor: '#F5F5F5',
-    borderRadius: Radius.md,
+    backgroundColor: '#F8FAF8',
+    borderRadius: 14,
     padding: Spacing.md,
     fontSize: 14,
     color: Palette.gray[900],
-    minHeight: 56,
+    minHeight: 64,
     textAlignVertical: 'top',
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: '#E2E8F0',
   },
   actionsRow: {
     flexDirection: 'row',
@@ -236,7 +244,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: Radius.full,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F1F5F9',
   },
   completeBtn: {
     flex: 2,
@@ -246,7 +254,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 12,
     borderRadius: Radius.full,
-    backgroundColor: Palette.success,
+    backgroundColor: '#2E7D32',
   },
   btnDisabled: {
     opacity: 0.6,
