@@ -28,6 +28,7 @@ import {
   HealthPassportCard,
   HealthTimelineSection,
   ShowVetModal,
+  EditVitalsModal,
   type HealthCategory,
 } from '@/components/health-card';
 import type { HealthCardPet } from '@/services/pets/healthCardApi';
@@ -41,6 +42,7 @@ export default function PetHealthCardScreen() {
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showVetModalVisible, setShowVetModalVisible] = useState(false);
+  const [editVitalsVisible, setEditVitalsVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<HealthCategory>('all');
 
   const effectivePetId = activePet?._id ?? user?.activePetId;
@@ -320,6 +322,7 @@ export default function PetHealthCardScreen() {
             stats={effectiveStats}
             isPremium={isPremium}
             onShowVet={() => setShowVetModalVisible(true)}
+            onEditVitals={() => setEditVitalsVisible(true)}
           />
 
           {/* 2. Chronological Medical History Timeline */}
@@ -340,6 +343,17 @@ export default function PetHealthCardScreen() {
           onClose={() => setShowVetModalVisible(false)}
           pet={effectivePet}
           timeline={healthData?.timeline || []}
+        />
+      )}
+
+      {/* EDIT MEDICAL DETAILS MODAL */}
+      {effectivePet && (
+        <EditVitalsModal
+          visible={editVitalsVisible}
+          onClose={() => setEditVitalsVisible(false)}
+          pet={effectivePet}
+          token={token}
+          onSuccess={() => void refetch()}
         />
       )}
     </View>
