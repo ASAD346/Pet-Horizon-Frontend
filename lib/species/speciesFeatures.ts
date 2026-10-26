@@ -14,14 +14,14 @@ const FEEDING_MEAL_TYPES: Record<string, string[]> = {
 };
 
 const INVENTORY_UNITS: Record<string, string[]> = {
-  Dog: ['g', 'gram', 'kg', 'lb', 'cup', 'cups'],
-  Cat: ['g', 'gram', 'kg', 'lb', 'cup', 'cups'],
-  Bird: ['g', 'gram', 'grams'],
-  Fish: ['g', 'gram', 'grams', 'pinch'],
-  Hamster: ['g', 'gram', 'tbsp', 'tablespoon', 'tablespoons'],
-  Rabbit: ['g', 'gram', 'kg', 'lb', 'cup', 'cups'],
-  Reptile: ['g', 'gram', 'kg', 'cup'],
-  Other: ['g', 'gram', 'kg', 'lb', 'cup', 'cups'],
+  Dog: ['g', 'kg', 'lb', 'cup'],
+  Cat: ['g', 'kg', 'lb', 'cup'],
+  Bird: ['g'],
+  Fish: ['g', 'pinch'],
+  Hamster: ['g', 'tbsp'],
+  Rabbit: ['g', 'kg', 'lb', 'cup'],
+  Reptile: ['g', 'kg', 'cup'],
+  Other: ['g', 'kg', 'lb', 'cup'],
 };
 
 const GROOMING_TYPES: Record<string, string[]> = {
