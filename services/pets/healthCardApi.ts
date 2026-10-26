@@ -19,6 +19,7 @@ export interface HealthCardPet {
   medicalNotes: string;
   allergies: string;
   vetClinic: string;
+  emergencyContact: string;
   bloodGroup: string;
   image: string | null;
 }
@@ -64,6 +65,7 @@ export interface PetHealthCardResponse {
 export interface UpdateVitalsPayload {
   allergies?: string;
   vetClinic?: string;
+  emergencyContact?: string;
   bloodGroup?: string;
   medicalNotes?: string;
 }

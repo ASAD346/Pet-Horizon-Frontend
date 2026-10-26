@@ -21,6 +21,7 @@ export interface ApiPet {
   medicalNotes?: string;
   allergies?: string;
   vetClinic?: string;
+  emergencyContact?: string;
   bloodGroup?: string;
   image?: string | null;
   imagePublicId?: string | null;

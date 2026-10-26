@@ -78,6 +78,7 @@ export default function PetHealthCardScreen() {
         medicalNotes: activePet.medicalNotes || '',
         allergies: activePet.allergies || '',
         vetClinic: activePet.vetClinic || '',
+        emergencyContact: activePet.emergencyContact || '',
         bloodGroup: activePet.bloodGroup || '',
         image: activePet.image || null,
       };

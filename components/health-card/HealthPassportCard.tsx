@@ -249,6 +249,27 @@ export function HealthPassportCard({
                 {pet.vetClinic || 'Tap to add clinic details'}
               </AppText>
             </View>
+
+            {/* Emergency Phone Row */}
+            {pet.emergencyContact ? (
+              <View style={styles.clinicalItemRow}>
+                <View style={styles.emergencyIcon}>
+                  <Ionicons name="call" size={13} color="#D32F2F" />
+                </View>
+                <AppText variant="caption" weight="700" color="#D32F2F">
+                  Emergency:
+                </AppText>
+                <AppText
+                  variant="caption"
+                  weight="800"
+                  color="#D32F2F"
+                  style={styles.clinicalItemValue}
+                  numberOfLines={1}
+                >
+                  {pet.emergencyContact}
+                </AppText>
+              </View>
+            ) : null}
           </View>
 
           {/* Edit Pencil Icon Button */}
@@ -429,6 +450,9 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   clinicIcon: {
+    marginRight: 6,
+  },
+  emergencyIcon: {
     marginRight: 6,
   },
   clinicalItemValue: {
