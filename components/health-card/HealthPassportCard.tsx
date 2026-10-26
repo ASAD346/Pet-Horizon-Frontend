@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
+import { formatPetAge, formatPetWeight } from '@/services/pets/petDisplay';
 import type { HealthCardPet, HealthCardSummaryStats } from '@/services/pets/healthCardApi';
 
 interface HealthPassportCardProps {
@@ -13,6 +14,7 @@ interface HealthPassportCardProps {
   stats: HealthCardSummaryStats;
   isPremium?: boolean;
   onShowVet?: () => void;
+  onEditVitals?: () => void;
 }
 
 export function HealthPassportCard({
@@ -20,24 +22,41 @@ export function HealthPassportCard({
   stats,
   isPremium = false,
   onShowVet,
+  onEditVitals,
 }: HealthPassportCardProps) {
   const imageUrl = pet.image ? resolveMediaUrl(pet.image) : null;
 
-  // Premium: Deep Forest Emerald with Gold trim; Free: Brand Rich Green
-  const gradientColors = isPremium
-    ? (['#0E331E', '#184F2E', '#226D3F'] as const)
-    : (['#1E5E3A', '#2E7D32', '#388E3C'] as const);
+  // Accurately compute age from birthday or age field
+  const displayAge = useMemo(() => {
+    if (pet.birthday) {
+      const formatted = formatPetAge(pet.birthday);
+      if (formatted && formatted !== '—' && formatted !== 'Not set') {
+        return formatted;
+      }
+    }
+    if (pet.age !== null && pet.age !== undefined && !Number.isNaN(Number(pet.age))) {
+      const num = Number(pet.age);
+      return `${num} ${num === 1 ? 'yr' : 'yrs'}`;
+    }
+    return 'Not set';
+  }, [pet.birthday, pet.age]);
 
-  const cardBorderColor = isPremium ? 'rgba(212, 160, 23, 0.45)' : 'rgba(255, 255, 255, 0.2)';
+  // Formatted weight
+  const displayWeight = formatPetWeight(pet.weight, pet.weightUnit);
+
+  // Formatted gender
+  const displayGender = pet.gender
+    ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1).toLowerCase()
+    : 'Not set';
 
   // Vaccine status color helper
-  const getVaccineBadge = () => {
+  const vBadge = useMemo(() => {
     const s = stats.vaccineStatus?.status;
     if (s === 'up_to_date') {
       return {
         bg: '#E8F5E9',
         text: '#1B5E20',
-        icon: 'checkmark-circle' as const,
+        dot: '#2E7D32',
         label: 'Vaccines Up to Date',
       };
     }
@@ -45,7 +64,7 @@ export function HealthPassportCard({
       return {
         bg: '#FFF8E1',
         text: '#B78103',
-        icon: 'time' as const,
+        dot: '#F57F17',
         label: 'Vaccine Due Soon',
       };
     }
@@ -53,200 +72,248 @@ export function HealthPassportCard({
       return {
         bg: '#FFEBEE',
         text: '#C62828',
-        icon: 'alert-circle' as const,
+        dot: '#D32F2F',
         label: 'Vaccine Overdue',
       };
     }
     return {
-      bg: '#F5F5F5',
-      text: '#616161',
-      icon: 'help-circle' as const,
+      bg: '#F1F5F9',
+      text: '#475569',
+      dot: '#94A3B8',
       label: 'No Vaccine Record',
     };
-  };
-
-  const vBadge = getVaccineBadge();
+  }, [stats.vaccineStatus]);
 
   // Format last groomed date
   const formatGroomedDate = (isoStr: string | null) => {
-    if (!isoStr) return 'None recorded';
+    if (!isoStr) return 'None';
     try {
       const d = new Date(isoStr);
-      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     } catch {
-      return 'None recorded';
+      return 'None';
     }
   };
 
   return (
-    <LinearGradient
-      colors={gradientColors}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.card, { borderColor: cardBorderColor }]}
-    >
-      {/* Background Decorative Paw Print Watermark */}
-      <MaterialCommunityIcons
-        name="paw"
-        size={110}
-        color="rgba(255, 255, 255, 0.05)"
-        style={styles.watermark}
+    <View style={styles.cardContainer}>
+      {/* Top Slim Gradient Accent Ribbon */}
+      <LinearGradient
+        colors={
+          isPremium
+            ? ['#D4A017', '#F1C40F', '#D4A017']
+            : ['#1B5E20', '#2E7D32', '#43A047']
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.accentRibbon}
       />
 
-      {/* Top Bar: Pet Avatar + Details + Show Vet Button */}
-      <View style={styles.topRow}>
-        <View style={styles.avatarWrapper}>
-          {imageUrl ? (
-            <Image
-              source={{ uri: imageUrl }}
-              style={styles.avatar}
-              contentFit="cover"
-              transition={200}
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <MaterialCommunityIcons name="paw" size={32} color="#FFFFFF" />
-            </View>
-          )}
-          {isPremium && (
-            <View style={styles.crownBadge}>
-              <Ionicons name="star" size={10} color="#0E331E" />
-            </View>
-          )}
-        </View>
+      {/* Main Card Content */}
+      <View style={styles.innerCard}>
+        {/* Header Row: Pet Photo, Identity, and Action Buttons */}
+        <View style={styles.headerRow}>
+          <View style={styles.avatarWrapper}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.avatar} contentFit="cover" transition={150} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <MaterialCommunityIcons name="paw" size={26} color="#2E7D32" />
+              </View>
+            )}
+            {isPremium && (
+              <View style={styles.crownTag}>
+                <Ionicons name="star" size={9} color="#FFFFFF" />
+              </View>
+            )}
+          </View>
 
-        <View style={styles.petIdentity}>
-          <View style={styles.nameRow}>
-            <AppText variant="h3" weight="800" color="#FFFFFF" numberOfLines={1}>
-              {pet.name}
+          <View style={styles.nameBlock}>
+            <View style={styles.nameRow}>
+              <AppText variant="h3" weight="800" color="#0E3821" numberOfLines={1}>
+                {pet.name}
+              </AppText>
+              <View style={[styles.passportSeal, isPremium && styles.passportSealPremium]}>
+                <AppText
+                  variant="caption"
+                  weight="800"
+                  color={isPremium ? '#B78103' : '#2E7D32'}
+                  style={styles.sealText}
+                >
+                  {isPremium ? 'PREMIUM PASSPORT' : 'DIGITAL PASSPORT'}
+                </AppText>
+              </View>
+            </View>
+
+            <AppText variant="caption" weight="600" color="#64748B">
+              {pet.breed ? `${pet.breed} • ${pet.species || 'Pet'}` : pet.species || 'Companion'}
             </AppText>
           </View>
-          <AppText variant="caption" weight="600" color="rgba(255, 255, 255, 0.85)">
-            {pet.breed || pet.species ? `${pet.breed || pet.species} • ${pet.species || 'Pet'}` : 'Companion'}
-          </AppText>
-          <View style={styles.passportTag}>
-            <MaterialCommunityIcons name="card-account-details-outline" size={12} color="#E8F5E9" />
-            <AppText variant="caption" weight="700" color="#E8F5E9" style={styles.passportTagText}>
-              DIGITAL HEALTH PASSPORT
+
+          {/* Show Vet Button */}
+          {onShowVet && (
+            <TouchableOpacity
+              style={styles.showVetBtn}
+              onPress={onShowVet}
+              activeOpacity={0.8}
+              accessibilityLabel="Show veterinary clinical summary"
+            >
+              <Ionicons name="medkit" size={13} color="#2E7D32" />
+              <AppText variant="caption" weight="800" color="#2E7D32">
+                Vet Card
+              </AppText>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* 3-Column Metrics Capsule Bar (Age, Weight, Sex) */}
+        <View style={styles.vitalsBar}>
+          <View style={styles.vitalSegment}>
+            <AppText variant="caption" weight="700" color="#64748B" style={styles.vitalLabel}>
+              AGE
+            </AppText>
+            <AppText variant="bodySmall" weight="800" color="#0E3821">
+              {displayAge}
+            </AppText>
+          </View>
+
+          <View style={styles.vitalDivider} />
+
+          <View style={styles.vitalSegment}>
+            <AppText variant="caption" weight="700" color="#64748B" style={styles.vitalLabel}>
+              WEIGHT
+            </AppText>
+            <AppText variant="bodySmall" weight="800" color="#0E3821">
+              {displayWeight}
+            </AppText>
+          </View>
+
+          <View style={styles.vitalDivider} />
+
+          <View style={styles.vitalSegment}>
+            <AppText variant="caption" weight="700" color="#64748B" style={styles.vitalLabel}>
+              SEX
+            </AppText>
+            <AppText variant="bodySmall" weight="800" color="#0E3821">
+              {displayGender}
             </AppText>
           </View>
         </View>
 
-        {onShowVet && (
-          <TouchableOpacity
-            style={styles.showVetBtn}
-            onPress={onShowVet}
-            activeOpacity={0.8}
-            accessibilityLabel="Show vet summary view"
-          >
-            <Ionicons name="medkit" size={14} color="#0E3821" />
-            <AppText variant="caption" weight="800" color="#0E3821">
-              Show Vet
+        {/* Clinical Notes & Allergies Strip (Interactive with Edit Pencil) */}
+        <TouchableOpacity
+          style={styles.medicalStrip}
+          onPress={onEditVitals}
+          activeOpacity={0.75}
+          accessibilityLabel="Edit allergies and clinic details"
+        >
+          <View style={styles.medicalStripContent}>
+            {/* Allergies Row */}
+            <View style={styles.clinicalItemRow}>
+              <View style={styles.alertDot}>
+                <Ionicons
+                  name={pet.allergies ? 'alert-circle' : 'checkmark-circle'}
+                  size={14}
+                  color={pet.allergies ? '#D32F2F' : '#2E7D32'}
+                />
+              </View>
+              <AppText variant="caption" weight="700" color="#334155">
+                Allergies:
+              </AppText>
+              <AppText
+                variant="caption"
+                weight="700"
+                color={pet.allergies ? '#D32F2F' : '#64748B'}
+                style={styles.clinicalItemValue}
+                numberOfLines={1}
+              >
+                {pet.allergies || 'None reported'}
+              </AppText>
+            </View>
+
+            {/* Clinic Row */}
+            <View style={styles.clinicalItemRow}>
+              <View style={styles.clinicIcon}>
+                <MaterialCommunityIcons name="hospital-building" size={14} color="#1565C0" />
+              </View>
+              <AppText variant="caption" weight="700" color="#334155">
+                Vet Clinic:
+              </AppText>
+              <AppText
+                variant="caption"
+                weight="600"
+                color={pet.vetClinic ? '#0E3821' : '#64748B'}
+                style={styles.clinicalItemValue}
+                numberOfLines={1}
+              >
+                {pet.vetClinic || 'Tap to add clinic details'}
+              </AppText>
+            </View>
+          </View>
+
+          {/* Edit Pencil Icon Button */}
+          <View style={styles.editPencilBtn}>
+            <MaterialCommunityIcons name="pencil-outline" size={16} color="#2E7D32" />
+          </View>
+        </TouchableOpacity>
+
+        {/* Status Badges Row: Vaccines, Active Meds, Grooming */}
+        <View style={styles.badgesRow}>
+          {/* Vaccine Badge */}
+          <View style={[styles.badgePill, { backgroundColor: vBadge.bg }]}>
+            <View style={[styles.statusDot, { backgroundColor: vBadge.dot }]} />
+            <AppText variant="caption" weight="800" color={vBadge.text} style={styles.badgeText}>
+              {vBadge.label}
             </AppText>
-          </TouchableOpacity>
-        )}
-      </View>
+          </View>
 
-      {/* Vitals Grid: Age, Weight, Gender, Allergies, Vet Clinic */}
-      <View style={styles.vitalsGrid}>
-        <View style={styles.vitalItem}>
-          <AppText variant="caption" color="rgba(255, 255, 255, 0.65)" style={styles.vitalLabel}>
-            AGE
-          </AppText>
-          <AppText variant="bodySmall" weight="700" color="#FFFFFF">
-            {pet.age !== null && pet.age !== undefined ? `${pet.age} yr` : '—'}
-          </AppText>
-        </View>
+          {/* Active Meds Badge */}
+          <View style={[styles.badgePill, styles.medsBadge]}>
+            <MaterialCommunityIcons name="pill" size={13} color="#1565C0" />
+            <AppText variant="caption" weight="800" color="#1565C0" style={styles.badgeText}>
+              {stats.activeMedsCount > 0 ? `${stats.activeMedsCount} Active Meds` : '0 Active Meds'}
+            </AppText>
+          </View>
 
-        <View style={styles.vitalItem}>
-          <AppText variant="caption" color="rgba(255, 255, 255, 0.65)" style={styles.vitalLabel}>
-            WEIGHT
-          </AppText>
-          <AppText variant="bodySmall" weight="700" color="#FFFFFF">
-            {pet.weight ? `${pet.weight} ${pet.weightUnit || 'kg'}` : '—'}
-          </AppText>
-        </View>
-
-        <View style={styles.vitalItem}>
-          <AppText variant="caption" color="rgba(255, 255, 255, 0.65)" style={styles.vitalLabel}>
-            GENDER
-          </AppText>
-          <AppText variant="bodySmall" weight="700" color="#FFFFFF">
-            {pet.gender ? pet.gender.charAt(0).toUpperCase() + pet.gender.slice(1) : '—'}
-          </AppText>
-        </View>
-
-        <View style={styles.vitalItem}>
-          <AppText variant="caption" color="rgba(255, 255, 255, 0.65)" style={styles.vitalLabel}>
-            ALLERGIES
-          </AppText>
-          <AppText variant="bodySmall" weight="700" color="#FFFFFF" numberOfLines={1}>
-            {pet.allergies || 'None'}
-          </AppText>
-        </View>
-
-        <View style={[styles.vitalItem, styles.vitalItemFull]}>
-          <AppText variant="caption" color="rgba(255, 255, 255, 0.65)" style={styles.vitalLabel}>
-            VET CLINIC
-          </AppText>
-          <AppText variant="bodySmall" weight="700" color="#FFFFFF" numberOfLines={1}>
-            {pet.vetClinic || 'Not specified'}
-          </AppText>
+          {/* Grooming Badge */}
+          <View style={[styles.badgePill, styles.groomBadge]}>
+            <MaterialCommunityIcons name="content-cut" size={13} color="#6A1B9A" />
+            <AppText variant="caption" weight="800" color="#6A1B9A" style={styles.badgeText}>
+              Groomed: {formatGroomedDate(stats.lastGroomedDate)}
+            </AppText>
+          </View>
         </View>
       </View>
-
-      {/* Quick Status Badges Bar */}
-      <View style={styles.badgesBar}>
-        {/* Vaccine Status Pill */}
-        <View style={[styles.statusPill, { backgroundColor: vBadge.bg }]}>
-          <Ionicons name={vBadge.icon} size={13} color={vBadge.text} />
-          <AppText variant="caption" weight="700" color={vBadge.text} style={styles.statusPillText}>
-            {vBadge.label}
-          </AppText>
-        </View>
-
-        {/* Active Meds Pill */}
-        <View style={[styles.statusPill, styles.medsPill]}>
-          <MaterialCommunityIcons name="pill" size={13} color="#0D47A1" />
-          <AppText variant="caption" weight="700" color="#0D47A1" style={styles.statusPillText}>
-            {stats.activeMedsCount > 0
-              ? `${stats.activeMedsCount} Active Med${stats.activeMedsCount > 1 ? 's' : ''}`
-              : '0 Active Meds'}
-          </AppText>
-        </View>
-
-        {/* Last Groomed Pill */}
-        <View style={[styles.statusPill, styles.groomPill]}>
-          <MaterialCommunityIcons name="content-cut" size={13} color="#4A148C" />
-          <AppText variant="caption" weight="700" color="#4A148C" style={styles.statusPillText}>
-            Groomed: {formatGroomedDate(stats.lastGroomedDate)}
-          </AppText>
-        </View>
-      </View>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
     borderRadius: Radius.xl,
-    padding: Spacing.md,
-    borderWidth: 1.5,
     overflow: 'hidden',
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     marginBottom: Spacing.md,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0E3821',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 10,
+      },
+      android: { elevation: 2 },
+    }),
   },
-  watermark: {
-    position: 'absolute',
-    right: -15,
-    bottom: -15,
+  accentRibbon: {
+    height: 4,
+    width: '100%',
   },
-  topRow: {
+  innerCard: {
+    padding: Spacing.md,
+  },
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.md,
@@ -256,116 +323,152 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   avatar: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    backgroundColor: '#E8F5E9',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F1F5F2',
   },
-  avatarPlaceholder: {
-    width: 62,
-    height: 62,
-    borderRadius: 31,
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  avatarFallback: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#E8F5E9',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#C8E6C9',
   },
-  crownBadge: {
+  crownTag: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#FFF176',
-    borderRadius: 8,
-    width: 16,
-    height: 16,
+    backgroundColor: '#D4A017',
+    borderRadius: 7,
+    width: 15,
+    height: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  petIdentity: {
+  nameBlock: {
     flex: 1,
   },
   nameRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
   },
-  passportTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  passportSeal: {
+    backgroundColor: '#E8F5E9',
     paddingHorizontal: 6,
     paddingVertical: 2,
-    borderRadius: Radius.sm,
-    alignSelf: 'flex-start',
-    marginTop: 4,
+    borderRadius: Radius.xs,
   },
-  passportTagText: {
-    marginLeft: 4,
+  passportSealPremium: {
+    backgroundColor: '#FFF8E1',
+  },
+  sealText: {
     fontSize: 9,
     letterSpacing: 0.5,
   },
   showVetBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: Spacing.sm,
+    backgroundColor: '#E8F5E9',
+    paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: Radius.full,
     gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  vitalsGrid: {
+  vitalsBar: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    backgroundColor: 'rgba(0, 0, 0, 0.12)',
-    borderRadius: Radius.md,
-    padding: Spacing.sm,
-    gap: Spacing.xs,
-    marginBottom: Spacing.md,
+    alignItems: 'center',
+    backgroundColor: '#F8FAF9',
+    borderRadius: Radius.lg,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    borderWidth: 1,
+    borderColor: '#EEF2EE',
+    marginBottom: Spacing.sm,
   },
-  vitalItem: {
-    width: '48%',
-    paddingVertical: 4,
-    paddingHorizontal: 6,
+  vitalSegment: {
+    flex: 1,
+    alignItems: 'center',
   },
-  vitalItemFull: {
-    width: '98%',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(255, 255, 255, 0.15)',
-    paddingTop: 6,
-    marginTop: 2,
+  vitalDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#E2E8F0',
   },
   vitalLabel: {
     fontSize: 10,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
     marginBottom: 2,
   },
-  badgesBar: {
+  medicalStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FBFDFB',
+    borderRadius: Radius.lg,
+    padding: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E4EBE4',
+    marginBottom: Spacing.sm,
+  },
+  medicalStripContent: {
+    flex: 1,
+    gap: 4,
+  },
+  clinicalItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  alertDot: {
+    marginRight: 6,
+  },
+  clinicIcon: {
+    marginRight: 6,
+  },
+  clinicalItemValue: {
+    marginLeft: 4,
+    flex: 1,
+  },
+  editPencilBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: Spacing.xs,
+  },
+  badgesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.xs,
   },
-  statusPill: {
+  badgePill: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: Spacing.sm,
     paddingVertical: 5,
     borderRadius: Radius.full,
-    gap: 4,
+    gap: 5,
   },
-  medsPill: {
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  medsBadge: {
     backgroundColor: '#E3F2FD',
   },
-  groomPill: {
+  groomBadge: {
     backgroundColor: '#F3E5F5',
   },
-  statusPillText: {
+  badgeText: {
     fontSize: 11,
   },
 });

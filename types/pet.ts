@@ -14,8 +14,14 @@ export interface ApiPet {
   breed?: string;
   gender?: string;
   birthday?: string;
+  age?: number | null;
   weight?: number;
   weightUnit?: string;
+  color?: string;
+  medicalNotes?: string;
+  allergies?: string;
+  vetClinic?: string;
+  bloodGroup?: string;
   image?: string | null;
   imagePublicId?: string | null;
   ownerUserId?: string | null;
