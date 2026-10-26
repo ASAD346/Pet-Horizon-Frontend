@@ -301,14 +301,14 @@ export function FamilyHubView() {
                 activeOpacity={0.8}
               >
                 <Ionicons
-                  name="people-outline"
-                  size={16}
-                  color={activeTab === 'team' ? '#184F2E' : Palette.gray[600]}
+                  name={activeTab === 'team' ? 'people' : 'people-outline'}
+                  size={17}
+                  color={activeTab === 'team' ? '#184F2E' : '#64748B'}
                 />
                 <AppText
                   variant="bodySmall"
-                  weight={activeTab === 'team' ? '800' : '600'}
-                  color={activeTab === 'team' ? '#184F2E' : Palette.gray[600]}
+                  weight={activeTab === 'team' ? '700' : '600'}
+                  color={activeTab === 'team' ? '#184F2E' : '#64748B'}
                 >
                   Care Team
                 </AppText>
@@ -320,14 +320,14 @@ export function FamilyHubView() {
                 activeOpacity={0.8}
               >
                 <Ionicons
-                  name="checkbox-outline"
-                  size={16}
-                  color={activeTab === 'chores' ? '#184F2E' : Palette.gray[600]}
+                  name={activeTab === 'chores' ? 'checkbox' : 'checkbox-outline'}
+                  size={17}
+                  color={activeTab === 'chores' ? '#184F2E' : '#64748B'}
                 />
                 <AppText
                   variant="bodySmall"
-                  weight={activeTab === 'chores' ? '800' : '600'}
-                  color={activeTab === 'chores' ? '#184F2E' : Palette.gray[600]}
+                  weight={activeTab === 'chores' ? '700' : '600'}
+                  color={activeTab === 'chores' ? '#184F2E' : '#64748B'}
                 >
                   Daily Chores
                 </AppText>
@@ -586,9 +586,9 @@ const styles = StyleSheet.create({
   },
   topSegmentContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(230, 240, 230, 0.75)',
-    borderRadius: Radius.full,
-    padding: 3,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 14,
+    padding: 4,
     marginHorizontal: Spacing.lg,
     marginBottom: Spacing.md,
     borderWidth: 1,
@@ -599,17 +599,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 9,
-    borderRadius: Radius.full,
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
   topSegmentActive: {
     backgroundColor: '#FFFFFF',
     ...Platform.select({
       ios: {
-        shadowColor: '#184F2E',
+        shadowColor: '#0F172A',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.08,
         shadowRadius: 4,
       },
       android: { elevation: 2 },

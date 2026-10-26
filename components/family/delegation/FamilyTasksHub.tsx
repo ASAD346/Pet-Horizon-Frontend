@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, Platform, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/AppText';
 import { Palette, Radius, Spacing } from '@/constants/theme';
@@ -110,6 +110,16 @@ export function FamilyTasksHub({
       tasks
         .filter((t) => t.isLockedByOther && t.inProgressLock?.isLocked)
         .map((t) => ({ taskTitle: t.title || t.category, lock: t.inProgressLock })),
+    [tasks]
+  );
+
+  const myTasksCount = useMemo(
+    () => tasks.filter((t) => t.assignment?.userId === currentUserId).length,
+    [tasks, currentUserId]
+  );
+
+  const unassignedTasksCount = useMemo(
+    () => tasks.filter((t) => !t.assignment?.userId).length,
     [tasks]
   );
 
@@ -262,49 +272,91 @@ export function FamilyTasksHub({
       {/* Double Care Real-Time Lock Banner */}
       <DoubleCareBanner locks={activeLocks} />
 
-      {/* Segmented Filter Control */}
-      <View style={styles.segmentedTabs}>
-        <TouchableOpacity
-          style={[styles.segmentBtn, filter === 'all' && styles.segmentBtnActive]}
-          onPress={() => setFilter('all')}
-          activeOpacity={0.8}
+      {/* Sleek Filter Tabs Bar */}
+      <View style={styles.filterBarContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterScrollContent}
         >
-          <AppText
-            variant="caption"
-            weight={filter === 'all' ? '800' : '600'}
-            color={filter === 'all' ? '#184F2E' : Palette.gray[600]}
+          <TouchableOpacity
+            style={[styles.filterChip, filter === 'all' && styles.filterChipActive]}
+            onPress={() => setFilter('all')}
+            activeOpacity={0.75}
           >
-            All Chores ({tasks.length})
-          </AppText>
-        </TouchableOpacity>
+            <AppText
+              variant="caption"
+              weight={filter === 'all' ? '700' : '600'}
+              color={filter === 'all' ? '#FFFFFF' : Palette.gray[700]}
+              numberOfLines={1}
+            >
+              All Chores
+            </AppText>
+            <View style={[styles.filterCountBadge, filter === 'all' && styles.filterCountBadgeActive]}>
+              <AppText
+                variant="caption"
+                weight="700"
+                color={filter === 'all' ? '#184F2E' : Palette.gray[600]}
+                style={styles.badgeText}
+                numberOfLines={1}
+              >
+                {tasks.length}
+              </AppText>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.segmentBtn, filter === 'mine' && styles.segmentBtnActive]}
-          onPress={() => setFilter('mine')}
-          activeOpacity={0.8}
-        >
-          <AppText
-            variant="caption"
-            weight={filter === 'mine' ? '800' : '600'}
-            color={filter === 'mine' ? '#184F2E' : Palette.gray[600]}
+          <TouchableOpacity
+            style={[styles.filterChip, filter === 'mine' && styles.filterChipActive]}
+            onPress={() => setFilter('mine')}
+            activeOpacity={0.75}
           >
-            My Tasks
-          </AppText>
-        </TouchableOpacity>
+            <AppText
+              variant="caption"
+              weight={filter === 'mine' ? '700' : '600'}
+              color={filter === 'mine' ? '#FFFFFF' : Palette.gray[700]}
+              numberOfLines={1}
+            >
+              My Tasks
+            </AppText>
+            <View style={[styles.filterCountBadge, filter === 'mine' && styles.filterCountBadgeActive]}>
+              <AppText
+                variant="caption"
+                weight="700"
+                color={filter === 'mine' ? '#184F2E' : Palette.gray[600]}
+                style={styles.badgeText}
+                numberOfLines={1}
+              >
+                {myTasksCount}
+              </AppText>
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.segmentBtn, filter === 'unassigned' && styles.segmentBtnActive]}
-          onPress={() => setFilter('unassigned')}
-          activeOpacity={0.8}
-        >
-          <AppText
-            variant="caption"
-            weight={filter === 'unassigned' ? '800' : '600'}
-            color={filter === 'unassigned' ? '#184F2E' : Palette.gray[600]}
+          <TouchableOpacity
+            style={[styles.filterChip, filter === 'unassigned' && styles.filterChipActive]}
+            onPress={() => setFilter('unassigned')}
+            activeOpacity={0.75}
           >
-            Open to Family
-          </AppText>
-        </TouchableOpacity>
+            <AppText
+              variant="caption"
+              weight={filter === 'unassigned' ? '700' : '600'}
+              color={filter === 'unassigned' ? '#FFFFFF' : Palette.gray[700]}
+              numberOfLines={1}
+            >
+              Open to Family
+            </AppText>
+            <View style={[styles.filterCountBadge, filter === 'unassigned' && styles.filterCountBadgeActive]}>
+              <AppText
+                variant="caption"
+                weight="700"
+                color={filter === 'unassigned' ? '#184F2E' : Palette.gray[600]}
+                style={styles.badgeText}
+                numberOfLines={1}
+              >
+                {unassignedTasksCount}
+              </AppText>
+            </View>
+          </TouchableOpacity>
+        </ScrollView>
       </View>
 
       {/* Task Cards List */}
@@ -435,34 +487,56 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginBottom: 4,
   },
-  segmentedTabs: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(230, 240, 230, 0.75)',
-    borderRadius: Radius.full,
-    padding: 3,
-    marginHorizontal: Spacing.lg,
+  filterBarContainer: {
     marginBottom: Spacing.md,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
   },
-  segmentBtn: {
-    flex: 1,
-    paddingVertical: 8,
+  filterScrollContent: {
+    paddingHorizontal: Spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  filterChip: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 7,
+    paddingHorizontal: 14,
+    height: 38,
     borderRadius: Radius.full,
-  },
-  segmentBtnActive: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexShrink: 0,
     ...Platform.select({
       ios: {
-        shadowColor: '#184F2E',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
       },
-      android: { elevation: 2 },
+      android: { elevation: 1 },
     }),
+  },
+  filterChipActive: {
+    backgroundColor: '#184F2E',
+    borderColor: '#184F2E',
+  },
+  filterCountBadge: {
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: Radius.full,
+    minWidth: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterCountBadgeActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  badgeText: {
+    fontSize: 11,
+    lineHeight: 14,
   },
   loadingWrap: {
     paddingVertical: Spacing.xl,
