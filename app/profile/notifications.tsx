@@ -10,16 +10,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { type Href } from 'expo-router';
 
 import { AppText } from '@/components/ui/AppText';
-import { SafeModal } from '@/components/ui/SafeModal';
+import { ProfileScreenHeader } from '@/components/profile/ProfileScreenHeader';
+import { ProfileTheme } from '@/components/profile/profileTheme';
 import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
-import { usePremiumStatus } from '@/hooks/usePremiumStatus';
 import { useToast } from '@/hooks/useToast';
 import { isExpoGo } from '@/lib/runtime/isExpoGo';
 import {
@@ -28,22 +26,14 @@ import {
 } from '@/lib/permissions/permissionsManager';
 
 export interface NotificationPreferences {
-  // Core Care
   upcomingTasks: boolean;
   missedTasks: boolean;
   healthAlerts: boolean;
   dailyDigest: boolean;
-
-  // Family & Delegation
   familyActivity: boolean;
   delegationAlerts: boolean;
-
-  // Pro Controls
-  quietHoursEnabled: boolean;
-  quietHoursStart: string;
-  quietHoursEnd: string;
-  criticalEscalation: boolean;
-  vipChimes: boolean;
+  quietHours: boolean;
+  criticalBypass: boolean;
 }
 
 const PREFS_KEY = '@pet_horizon_notification_preferences_v2';
@@ -52,30 +42,23 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   upcomingTasks: true,
   missedTasks: true,
   healthAlerts: true,
-  dailyDigest: false,
+  dailyDigest: true,
   familyActivity: true,
   delegationAlerts: true,
-  quietHoursEnabled: false,
-  quietHoursStart: '22:00',
-  quietHoursEnd: '07:00',
-  criticalEscalation: true,
-  vipChimes: true,
+  quietHours: false,
+  criticalBypass: true,
 };
 
 export default function NotificationSettingsScreen() {
   const router = useDebouncedRouter();
   const { token } = useAuth();
-  const { isPremium } = usePremiumStatus();
   const { showSuccessToast, showErrorToast } = useToast();
 
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [checkingPerm, setCheckingPerm] = useState<boolean>(true);
   const [requestingPerm, setRequestingPerm] = useState<boolean>(false);
   const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_PREFERENCES);
-  const [proModalVisible, setProModalVisible] = useState<boolean>(false);
-  const [selectedProFeature, setSelectedProFeature] = useState<string>('Quiet Hours');
 
-  // Load status and stored preferences
   const checkStatus = useCallback(async () => {
     try {
       const summary = await getAppPermissionsStatus();
@@ -113,29 +96,20 @@ export default function NotificationSettingsScreen() {
     }
   };
 
-  const handleProToggle = (featureName: string, key: keyof NotificationPreferences) => {
-    if (!isPremium) {
-      setSelectedProFeature(featureName);
-      setProModalVisible(true);
-      return;
-    }
-    void togglePref(key);
-  };
-
   const handleEnablePermission = async () => {
     setRequestingPerm(true);
     try {
       const granted = await requestNotificationPermission(true);
       setHasPermission(granted);
       if (granted) {
-        showSuccessToast('System notifications enabled successfully');
+        showSuccessToast('Notifications enabled successfully');
         if (token && !isExpoGo() && Platform.OS !== 'web') {
           import('@/lib/push/registerPushToken')
             .then(({ registerPushToken }) => registerPushToken(token))
             .catch(() => {});
         }
       } else {
-        showErrorToast('Permission denied. Please enable notifications in your phone Settings.');
+        showErrorToast('Permission not granted. Please enable in phone Settings.');
       }
     } catch {
       showErrorToast('Failed to request permission');
@@ -144,162 +118,100 @@ export default function NotificationSettingsScreen() {
     }
   };
 
-  const headerGradient = isPremium
-    ? (['#062314', '#0E3821', '#184F2E'] as const)
-    : (['#1E5E2C', '#2E7D32', '#388E3C'] as const);
-
-  const switchActiveColor = isPremium ? '#10B981' : '#2E7D32';
-
   return (
-    <View style={styles.container}>
-      {/* Dynamic Header */}
-      <LinearGradient colors={headerGradient} style={styles.headerGradient}>
-        <SafeAreaView edges={['top']} style={styles.safeHeader}>
-          <View style={styles.navRow}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-              style={styles.backButton}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      {/* Standard Profile Header */}
+      <ProfileScreenHeader
+        title="Notifications & Reminders"
+        onBack={() => router.back()}
+      />
 
-            <View style={styles.headerTitleWrap}>
-              <AppText variant="h3" weight="800" color="#FFFFFF">
-                Notifications & Reminders
-              </AppText>
-              <AppText variant="caption" color="rgba(255,255,255,0.85)" style={styles.headerSubtitle}>
-                {isPremium ? 'VIP precision alerts & quiet hours' : 'Personalized care schedule reminders'}
-              </AppText>
-            </View>
-
-            <View
-              style={[
-                styles.tierBadge,
-                isPremium ? styles.tierBadgePremium : styles.tierBadgeFree,
-              ]}
-            >
-              <Ionicons
-                name={isPremium ? 'sparkles' : 'shield-checkmark-outline'}
-                size={12}
-                color={isPremium ? '#FDE047' : '#DCFCE7'}
-              />
-              <AppText
-                variant="caption"
-                weight="800"
-                color={isPremium ? '#FEF08A' : '#DCFCE7'}
-                style={styles.tierText}
-              >
-                {isPremium ? 'PRO' : 'FREE'}
-              </AppText>
-            </View>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-
-      {/* Main Content */}
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* System Permission Master Status Card */}
-        <View
-          style={[
-            styles.systemCard,
-            hasPermission ? styles.systemCardActive : styles.systemCardDisabled,
-          ]}
-        >
-          <View style={styles.systemCardHeader}>
+        {/* Permission Status Header Card */}
+        <View style={styles.statusCard}>
+          <View style={styles.statusRow}>
             <View
               style={[
-                styles.systemIconWrap,
-                { backgroundColor: hasPermission ? 'rgba(16, 185, 129, 0.14)' : 'rgba(239, 68, 68, 0.12)' },
+                styles.statusIconWrap,
+                { backgroundColor: hasPermission ? 'rgba(46, 125, 50, 0.1)' : 'rgba(230, 81, 0, 0.1)' },
               ]}
             >
               <Ionicons
-                name={hasPermission ? 'notifications-sharp' : 'notifications-off'}
-                size={22}
-                color={hasPermission ? '#059669' : '#DC2626'}
+                name={hasPermission ? 'notifications' : 'notifications-off-outline'}
+                size={20}
+                color={hasPermission ? '#2E7D32' : '#E65100'}
               />
             </View>
 
-            <View style={styles.systemTextWrap}>
-              <View style={styles.systemTitleRow}>
-                <AppText variant="body" weight="700" color="#0F172A">
-                  Device Push Alerts
-                </AppText>
-                {hasPermission && (
-                  <View style={styles.activePill}>
-                    <View style={styles.pulseDot} />
-                    <AppText variant="caption" weight="700" color="#059669">
-                      Active
-                    </AppText>
-                  </View>
-                )}
-              </View>
-
-              <AppText variant="caption" color="#64748B" style={styles.systemSubtitle}>
+            <View style={styles.statusTextWrap}>
+              <AppText variant="body" weight="700" color="#0E3821">
+                Push Notifications
+              </AppText>
+              <AppText variant="caption" color="#64748B" style={styles.statusSubtitle}>
                 {checkingPerm
-                  ? 'Checking system notification permissions...'
+                  ? 'Checking system status...'
                   : hasPermission
-                  ? 'Registered for instant lock-screen pet care reminders.'
-                  : 'Disabled. Scheduled feeding & medication alerts won’t pop up.'}
+                  ? 'Active · Device registered for care alerts'
+                  : 'Disabled · Reminders won’t appear on lockscreen'}
               </AppText>
             </View>
-          </View>
 
-          {!hasPermission && (
-            <TouchableOpacity
-              style={styles.enableBannerBtn}
-              onPress={handleEnablePermission}
-              disabled={requestingPerm}
-              activeOpacity={0.85}
-            >
-              {requestingPerm ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <Ionicons name="notifications-outline" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
-                  <AppText variant="bodySmall" weight="700" color="#FFFFFF">
-                    Enable System Notifications
+            {checkingPerm ? (
+              <ActivityIndicator size="small" color="#2E7D32" />
+            ) : hasPermission ? (
+              <View style={styles.grantedBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#2E7D32" />
+                <AppText variant="caption" weight="700" color="#2E7D32" style={{ marginLeft: 3 }}>
+                  Active
+                </AppText>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.enableButton}
+                onPress={handleEnablePermission}
+                disabled={requestingPerm}
+                activeOpacity={0.8}
+              >
+                {requestingPerm ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <AppText variant="caption" weight="700" color="#FFFFFF">
+                    Enable
                   </AppText>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        {/* Section 1: Routine & Care Reminders */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="bodySmall" weight="800" color="#475569" style={styles.sectionHeaderTitle}>
-            CARE & SCHEDULE REMINDERS
-          </AppText>
-          <AppText variant="caption" color="#94A3B8">
-            Core Routine
-          </AppText>
-        </View>
+        {/* Section 1: Care & Routine */}
+        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionTitle}>
+          CARE & ROUTINE REMINDERS
+        </AppText>
 
-        <View style={styles.cardGroup}>
+        <View style={styles.card}>
           {/* Upcoming Tasks */}
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="alarm-outline" size={20} color="#2E7D32" />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(46, 125, 50, 0.08)' }]}>
+              <Ionicons name="alarm-outline" size={18} color="#2E7D32" />
             </View>
-            <View style={styles.rowText}>
-              <AppText variant="body" weight="600" color="#0F172A">
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
                 Upcoming Tasks
               </AppText>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Timely alerts for meals, walks, meds, and grooming
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Reminders when meals, walks, meds, or grooming are scheduled
               </AppText>
             </View>
             <Switch
               value={prefs.upcomingTasks}
               onValueChange={() => togglePref('upcomingTasks')}
-              trackColor={{ false: '#CBD5E1', true: isPremium ? '#6EE7B7' : '#81C784' }}
-              thumbColor={prefs.upcomingTasks ? switchActiveColor : '#FFFFFF'}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.upcomingTasks ? '#2E7D32' : '#FFFFFF'}
             />
           </View>
 
@@ -307,22 +219,22 @@ export default function NotificationSettingsScreen() {
 
           {/* Missed Tasks */}
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: '#FFF7ED' }]}>
-              <Ionicons name="alert-circle-outline" size={20} color="#EA580C" />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(230, 81, 0, 0.08)' }]}>
+              <Ionicons name="alert-circle-outline" size={18} color="#E65100" />
             </View>
-            <View style={styles.rowText}>
-              <AppText variant="body" weight="600" color="#0F172A">
-                Missed & Overdue Alerts
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
+                Missed Tasks
               </AppText>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Warning pings when a task is 30 mins overdue
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Alert when a scheduled task is 30 mins overdue and uncompleted
               </AppText>
             </View>
             <Switch
               value={prefs.missedTasks}
               onValueChange={() => togglePref('missedTasks')}
-              trackColor={{ false: '#CBD5E1', true: isPremium ? '#6EE7B7' : '#81C784' }}
-              thumbColor={prefs.missedTasks ? switchActiveColor : '#FFFFFF'}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.missedTasks ? '#2E7D32' : '#FFFFFF'}
             />
           </View>
 
@@ -330,78 +242,73 @@ export default function NotificationSettingsScreen() {
 
           {/* Health & Milestones */}
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: '#FDF2F8' }]}>
-              <Ionicons name="medkit-outline" size={20} color="#DB2777" />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(194, 24, 91, 0.08)' }]}>
+              <Ionicons name="medkit-outline" size={18} color="#C2185B" />
             </View>
-            <View style={styles.rowText}>
-              <AppText variant="body" weight="600" color="#0F172A">
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
                 Health & Milestones
               </AppText>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Vaccine due dates, vet checkups, and pet birthdays
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Vaccinations due, vet appointments, and pet birthdays
               </AppText>
             </View>
             <Switch
               value={prefs.healthAlerts}
               onValueChange={() => togglePref('healthAlerts')}
-              trackColor={{ false: '#CBD5E1', true: isPremium ? '#6EE7B7' : '#81C784' }}
-              thumbColor={prefs.healthAlerts ? switchActiveColor : '#FFFFFF'}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.healthAlerts ? '#2E7D32' : '#FFFFFF'}
             />
           </View>
 
           <View style={styles.divider} />
 
-          {/* Daily Care Digest */}
+          {/* Daily Summary */}
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: '#F0F9FF' }]}>
-              <Ionicons name="sunny-outline" size={20} color="#0284C7" />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(2, 132, 199, 0.08)' }]}>
+              <Ionicons name="sunny-outline" size={18} color="#0284C7" />
             </View>
-            <View style={styles.rowText}>
-              <AppText variant="body" weight="600" color="#0F172A">
-                Morning Care Digest
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
+                Daily Summary
               </AppText>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                8:00 AM summary of your pet’s daily schedule
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Morning overview of today’s scheduled routine for all pets
               </AppText>
             </View>
             <Switch
               value={prefs.dailyDigest}
               onValueChange={() => togglePref('dailyDigest')}
-              trackColor={{ false: '#CBD5E1', true: isPremium ? '#6EE7B7' : '#81C784' }}
-              thumbColor={prefs.dailyDigest ? switchActiveColor : '#FFFFFF'}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.dailyDigest ? '#2E7D32' : '#FFFFFF'}
             />
           </View>
         </View>
 
         {/* Section 2: Family & Collaboration */}
-        <View style={styles.sectionHeader}>
-          <AppText variant="bodySmall" weight="800" color="#475569" style={styles.sectionHeaderTitle}>
-            FAMILY & CAREGIVER SYNC
-          </AppText>
-          <AppText variant="caption" color="#94A3B8">
-            Co-parenting
-          </AppText>
-        </View>
+        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionTitle}>
+          FAMILY & CAREGIVERS
+        </AppText>
 
-        <View style={styles.cardGroup}>
+        <View style={styles.card}>
           {/* Family Activity */}
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: '#EFF6FF' }]}>
-              <Ionicons name="people-outline" size={20} color="#2563EB" />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(21, 101, 192, 0.08)' }]}>
+              <Ionicons name="people-outline" size={18} color="#1565C0" />
             </View>
-            <View style={styles.rowText}>
-              <AppText variant="body" weight="600" color="#0F172A">
-                Family Activity Feed
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
+                Family Activity
               </AppText>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Notifies when family members feed or log a walk
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Notify when family members complete a task or log a walk
               </AppText>
             </View>
             <Switch
               value={prefs.familyActivity}
               onValueChange={() => togglePref('familyActivity')}
-              trackColor={{ false: '#CBD5E1', true: isPremium ? '#6EE7B7' : '#81C784' }}
-              thumbColor={prefs.familyActivity ? switchActiveColor : '#FFFFFF'}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.familyActivity ? '#2E7D32' : '#FFFFFF'}
             />
           </View>
 
@@ -409,465 +316,113 @@ export default function NotificationSettingsScreen() {
 
           {/* Delegation Alerts */}
           <View style={styles.row}>
-            <View style={[styles.iconBox, { backgroundColor: '#F5F3FF' }]}>
-              <Ionicons name="git-pull-request-outline" size={20} color="#7C3AED" />
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(124, 58, 237, 0.08)' }]}>
+              <Ionicons name="git-pull-request-outline" size={18} color="#7C3AED" />
             </View>
-            <View style={styles.rowText}>
-              <AppText variant="body" weight="600" color="#0F172A">
-                Delegated Tasks
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
+                Task Delegation
               </AppText>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Alerts when a co-parent assigns a task to you
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Alert when a co-parent assigns or reassigns a task to you
               </AppText>
             </View>
             <Switch
               value={prefs.delegationAlerts}
               onValueChange={() => togglePref('delegationAlerts')}
-              trackColor={{ false: '#CBD5E1', true: isPremium ? '#6EE7B7' : '#81C784' }}
-              thumbColor={prefs.delegationAlerts ? switchActiveColor : '#FFFFFF'}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.delegationAlerts ? '#2E7D32' : '#FFFFFF'}
             />
           </View>
         </View>
 
-        {/* Section 3: Exclusive Pro Care Suite */}
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionHeaderRow}>
-            <AppText variant="bodySmall" weight="800" color="#B45309" style={styles.sectionHeaderTitle}>
-              GOLD SUITE ADVANCED CONTROLS
-            </AppText>
-            <View style={styles.proSmallPill}>
-              <AppText variant="caption" weight="800" color="#B45309">
-                PRO ONLY
+        {/* Section 3: Quiet Hours & Schedule Preferences */}
+        <AppText variant="caption" weight="700" color="#64748B" style={styles.sectionTitle}>
+          PREFERENCES
+        </AppText>
+
+        <View style={styles.card}>
+          {/* Quiet Hours */}
+          <View style={styles.row}>
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(71, 85, 105, 0.08)' }]}>
+              <Ionicons name="moon-outline" size={18} color="#475569" />
+            </View>
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
+                Quiet Hours
+              </AppText>
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Mute routine notification alerts between 10:00 PM and 7:00 AM
               </AppText>
             </View>
+            <Switch
+              value={prefs.quietHours}
+              onValueChange={() => togglePref('quietHours')}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.quietHours ? '#2E7D32' : '#FFFFFF'}
+            />
           </View>
-          <AppText variant="caption" color={isPremium ? '#059669' : '#D97706'} weight="600">
-            {isPremium ? 'Unlocked for your account' : 'Tap to unlock'}
+
+          <View style={styles.divider} />
+
+          {/* Critical Bypass */}
+          <View style={styles.row}>
+            <View style={[styles.iconWrap, { backgroundColor: 'rgba(220, 38, 38, 0.08)' }]}>
+              <Ionicons name="shield-checkmark-outline" size={18} color="#DC2626" />
+            </View>
+            <View style={styles.infoWrap}>
+              <AppText variant="body" weight="600" color="#0E3821">
+                Urgent Medical Bypass
+              </AppText>
+              <AppText variant="caption" color="#64748B" style={styles.desc}>
+                Always sound critical medication reminders even during Quiet Hours
+              </AppText>
+            </View>
+            <Switch
+              value={prefs.criticalBypass}
+              onValueChange={() => togglePref('criticalBypass')}
+              trackColor={{ false: '#E2E8F0', true: '#81C784' }}
+              thumbColor={prefs.criticalBypass ? '#2E7D32' : '#FFFFFF'}
+            />
+          </View>
+        </View>
+
+        {/* Note Box */}
+        <View style={styles.noteBox}>
+          <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
+          <AppText variant="caption" color="#64748B" style={styles.noteText}>
+            Pet Horizon only sends relevant alerts. You will never receive notifications for actions you complete yourself.
           </AppText>
         </View>
-
-        <View style={[styles.cardGroup, styles.proCardGroup, isPremium && styles.proCardGroupUnlocked]}>
-          {/* Pro Banner Header inside the card */}
-          <LinearGradient
-            colors={
-              isPremium
-                ? ['rgba(16, 185, 129, 0.12)', 'rgba(6, 78, 59, 0.05)']
-                : ['rgba(245, 158, 11, 0.15)', 'rgba(217, 119, 6, 0.05)']
-            }
-            style={styles.proBannerInside}
-          >
-            <Ionicons
-              name={isPremium ? 'shield-checkmark' : 'sparkles'}
-              size={18}
-              color={isPremium ? '#059669' : '#D97706'}
-            />
-            <AppText
-              variant="caption"
-              weight="700"
-              color={isPremium ? '#065F46' : '#92400E'}
-              style={{ marginLeft: 6, flex: 1 }}
-            >
-              {isPremium
-                ? 'Precision care rules active — Enjoy VIP sleep mode and critical escalation.'
-                : 'Unlock Quiet Hours sleep mode and multi-caregiver alert escalation.'}
-            </AppText>
-            {!isPremium && (
-              <TouchableOpacity
-                onPress={() => {
-                  setSelectedProFeature('Pet Horizon Gold Care Suite');
-                  setProModalVisible(true);
-                }}
-                style={styles.unlockSmallBtn}
-                activeOpacity={0.8}
-              >
-                <AppText variant="caption" weight="800" color="#FFFFFF">
-                  Upgrade
-                </AppText>
-              </TouchableOpacity>
-            )}
-          </LinearGradient>
-
-          {/* Quiet Hours */}
-          <TouchableOpacity
-            style={styles.row}
-            activeOpacity={isPremium ? 1 : 0.7}
-            onPress={() => handleProToggle('Quiet Hours Sleep Mode', 'quietHoursEnabled')}
-          >
-            <View style={[styles.iconBox, { backgroundColor: isPremium ? '#ECFDF5' : '#FEF3C7' }]}>
-              <Ionicons
-                name="moon"
-                size={20}
-                color={isPremium ? '#059669' : '#D97706'}
-              />
-            </View>
-            <View style={styles.rowText}>
-              <View style={styles.proRowTitle}>
-                <AppText variant="body" weight="600" color="#0F172A">
-                  Quiet Hours (Sleep Mode)
-                </AppText>
-                {!isPremium && <Ionicons name="lock-closed" size={14} color="#D97706" style={{ marginLeft: 6 }} />}
-              </View>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Silences routine chimes from 10:00 PM to 7:00 AM (urgent meds still alert)
-              </AppText>
-            </View>
-            <Switch
-              value={isPremium ? prefs.quietHoursEnabled : false}
-              onValueChange={() => handleProToggle('Quiet Hours Sleep Mode', 'quietHoursEnabled')}
-              trackColor={{ false: '#CBD5E1', true: '#6EE7B7' }}
-              thumbColor={prefs.quietHoursEnabled && isPremium ? '#059669' : '#FFFFFF'}
-              disabled={!isPremium}
-            />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          {/* Critical Escalation */}
-          <TouchableOpacity
-            style={styles.row}
-            activeOpacity={isPremium ? 1 : 0.7}
-            onPress={() => handleProToggle('Urgent Escalation', 'criticalEscalation')}
-          >
-            <View style={[styles.iconBox, { backgroundColor: isPremium ? '#ECFDF5' : '#FEF3C7' }]}>
-              <Ionicons
-                name="flash"
-                size={20}
-                color={isPremium ? '#059669' : '#D97706'}
-              />
-            </View>
-            <View style={styles.rowText}>
-              <View style={styles.proRowTitle}>
-                <AppText variant="body" weight="600" color="#0F172A">
-                  Critical Task Escalation
-                </AppText>
-                {!isPremium && <Ionicons name="lock-closed" size={14} color="#D97706" style={{ marginLeft: 6 }} />}
-              </View>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Alerts backup caregivers if urgent medication is 45m uncompleted
-              </AppText>
-            </View>
-            <Switch
-              value={isPremium ? prefs.criticalEscalation : false}
-              onValueChange={() => handleProToggle('Urgent Escalation', 'criticalEscalation')}
-              trackColor={{ false: '#CBD5E1', true: '#6EE7B7' }}
-              thumbColor={prefs.criticalEscalation && isPremium ? '#059669' : '#FFFFFF'}
-              disabled={!isPremium}
-            />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          {/* VIP Priority Chimes */}
-          <TouchableOpacity
-            style={styles.row}
-            activeOpacity={isPremium ? 1 : 0.7}
-            onPress={() => handleProToggle('Custom Chimes', 'vipChimes')}
-          >
-            <View style={[styles.iconBox, { backgroundColor: isPremium ? '#ECFDF5' : '#FEF3C7' }]}>
-              <Ionicons
-                name="volume-high"
-                size={20}
-                color={isPremium ? '#059669' : '#D97706'}
-              />
-            </View>
-            <View style={styles.rowText}>
-              <View style={styles.proRowTitle}>
-                <AppText variant="body" weight="600" color="#0F172A">
-                  High-Priority Pet Chime
-                </AppText>
-                {!isPremium && <Ionicons name="lock-closed" size={14} color="#D97706" style={{ marginLeft: 6 }} />}
-              </View>
-              <AppText variant="caption" color="#64748B" style={styles.rowDesc}>
-                Custom sound patterns that cut through noisy environments
-              </AppText>
-            </View>
-            <Switch
-              value={isPremium ? prefs.vipChimes : false}
-              onValueChange={() => handleProToggle('Custom Chimes', 'vipChimes')}
-              trackColor={{ false: '#CBD5E1', true: '#6EE7B7' }}
-              thumbColor={prefs.vipChimes && isPremium ? '#059669' : '#FFFFFF'}
-              disabled={!isPremium}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Anti-Spam Guarantee Card */}
-        <View style={styles.guaranteeBox}>
-          <Ionicons name="shield-checkmark" size={18} color="#059669" style={{ marginTop: 2, marginRight: 8 }} />
-          <View style={{ flex: 1 }}>
-            <AppText variant="bodySmall" weight="700" color="#0F172A">
-              Zero-Spam Notification Policy
-            </AppText>
-            <AppText variant="caption" color="#64748B" style={{ marginTop: 2, lineHeight: 16 }}>
-              Pet Horizon only delivers scheduled care prompts and family coordination pings. You will never receive marketing spam or duplicate alerts for actions you log yourself.
-            </AppText>
-          </View>
-        </View>
       </ScrollView>
-
-      {/* Pro Perk Modal */}
-      <SafeModal
-        visible={proModalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setProModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBackdrop} onTouchEnd={() => setProModalVisible(false)} />
-          <View style={styles.modalContent}>
-            <LinearGradient
-              colors={['#062314', '#0E3821', '#184F2E']}
-              style={styles.modalGradientHeader}
-            >
-              <View style={styles.modalCrownWrap}>
-                <Ionicons name="sparkles" size={26} color="#FDE047" />
-              </View>
-              <AppText variant="h3" weight="800" color="#FFFFFF" style={{ textAlign: 'center' }}>
-                Unlock Gold Precision Care
-              </AppText>
-              <AppText variant="caption" color="#FEF08A" style={{ marginTop: 4, textAlign: 'center' }}>
-                {selectedProFeature} requires Pet Horizon Pro
-              </AppText>
-            </LinearGradient>
-
-            <View style={styles.modalBody}>
-              <View style={styles.benefitRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#059669" style={{ marginRight: 8 }} />
-                <AppText variant="bodySmall" color="#334155" style={{ flex: 1 }}>
-                  <AppText weight="700" color="#0F172A">Smart Quiet Hours: </AppText>
-                  Mute routine pings at night while keeping medical emergencies audible.
-                </AppText>
-              </View>
-
-              <View style={styles.benefitRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#059669" style={{ marginRight: 8 }} />
-                <AppText variant="bodySmall" color="#334155" style={{ flex: 1 }}>
-                  <AppText weight="700" color="#0F172A">Critical Escalation: </AppText>
-                  Auto-alert secondary caregivers when vital meds or feeds are missed.
-                </AppText>
-              </View>
-
-              <View style={styles.benefitRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#059669" style={{ marginRight: 8 }} />
-                <AppText variant="bodySmall" color="#334155" style={{ flex: 1 }}>
-                  <AppText weight="700" color="#0F172A">Unlimited Co-Parent Sync: </AppText>
-                  Live coordination across the whole family with instant push alerts.
-                </AppText>
-              </View>
-
-              <TouchableOpacity
-                style={styles.modalUpgradeBtn}
-                activeOpacity={0.85}
-                onPress={() => {
-                  setProModalVisible(false);
-                  router.navigate('/profile/billing' as Href);
-                }}
-              >
-                <LinearGradient
-                  colors={['#10B981', '#059669']}
-                  style={styles.modalBtnGradient}
-                >
-                  <AppText variant="body" weight="800" color="#FFFFFF">
-                    Explore Premium Plans
-                  </AppText>
-                  <Ionicons name="arrow-forward" size={16} color="#FFFFFF" style={{ marginLeft: 6 }} />
-                </LinearGradient>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.modalDismissBtn}
-                onPress={() => setProModalVisible(false)}
-              >
-                <AppText variant="bodySmall" weight="600" color="#64748B">
-                  Maybe Later
-                </AppText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </SafeModal>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  headerGradient: {
-    paddingBottom: Spacing.md,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-    }),
-  },
-  safeHeader: {
-    paddingHorizontal: Spacing.md,
-  },
-  navRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: Spacing.xs,
-  },
-  backButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.18)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.sm,
-  },
-  headerTitleWrap: {
-    flex: 1,
-  },
-  headerSubtitle: {
-    marginTop: 2,
-  },
-  tierBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    borderWidth: 1,
-  },
-  tierBadgeFree: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  tierBadgePremium: {
-    backgroundColor: 'rgba(245, 158, 11, 0.22)',
-    borderColor: 'rgba(245, 158, 11, 0.6)',
-  },
-  tierText: {
-    marginLeft: 4,
-    fontSize: 10,
-    letterSpacing: 0.5,
+    backgroundColor: ProfileTheme.background,
   },
   scroll: {
     flex: 1,
   },
-  scrollContent: {
-    paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xxl + 20,
+  content: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xxl + 24,
   },
-  systemCard: {
-    borderRadius: Radius.xl,
+  statusCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: Spacing.md,
-    marginBottom: Spacing.md,
     borderWidth: 1,
+    borderColor: '#E2EBE2',
+    marginBottom: Spacing.lg,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: '#0E3821',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  systemCardActive: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#D1FAE5',
-  },
-  systemCardDisabled: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
-  },
-  systemCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  systemIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.sm + 2,
-  },
-  systemTextWrap: {
-    flex: 1,
-  },
-  systemTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-  },
-  pulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#059669',
-    marginRight: 4,
-  },
-  systemSubtitle: {
-    marginTop: 2,
-    lineHeight: 16,
-  },
-  enableBannerBtn: {
-    marginTop: Spacing.sm + 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EA580C',
-    borderRadius: Radius.lg,
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.md,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs + 2,
-    paddingHorizontal: 4,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sectionHeaderTitle: {
-    letterSpacing: 0.6,
-  },
-  proSmallPill: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: Radius.sm,
-    marginLeft: 6,
-  },
-  cardGroup: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.xl,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden',
-    marginBottom: Spacing.md,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.04,
         shadowRadius: 4,
       },
@@ -876,133 +431,104 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  proCardGroup: {
-    borderColor: '#FDE68A',
-  },
-  proCardGroupUnlocked: {
-    borderColor: '#A7F3D0',
-  },
-  proBannerInside: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FEF3C7',
   },
-  unlockSmallBtn: {
-    backgroundColor: '#D97706',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: Radius.md,
-    marginLeft: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm + 4,
-    paddingHorizontal: Spacing.md,
-  },
-  iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: Radius.md,
+  statusIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: Spacing.sm + 2,
   },
-  rowText: {
+  statusTextWrap: {
     flex: 1,
-    marginRight: Spacing.sm,
   },
-  proRowTitle: {
+  statusSubtitle: {
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  grantedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(46, 125, 50, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: Radius.full,
   },
-  rowDesc: {
+  enableButton: {
+    backgroundColor: '#2E7D32',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: Radius.md,
+    minWidth: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    letterSpacing: 0.8,
+    marginBottom: Spacing.xs + 2,
+    marginLeft: 4,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2EBE2',
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#0E3821',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+  },
+  iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm + 2,
+  },
+  infoWrap: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  desc: {
     marginTop: 2,
     lineHeight: 16,
   },
   divider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginLeft: Spacing.md + 46,
+    marginLeft: Spacing.md + 44,
   },
-  guaranteeBox: {
+  noteBox: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: Radius.md,
+    padding: Spacing.sm + 2,
     borderWidth: 1,
-    borderColor: '#A7F3D0',
-    borderRadius: Radius.lg,
-    padding: Spacing.md,
-    marginTop: Spacing.xs,
+    borderColor: '#E2EBE2',
   },
-  // Modal styles
-  modalOverlay: {
+  noteText: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.lg,
-  },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-  },
-  modalContent: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
-  },
-  modalGradientHeader: {
-    alignItems: 'center',
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
-    paddingHorizontal: Spacing.lg,
-  },
-  modalCrownWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(253, 224, 71, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.sm,
-  },
-  modalBody: {
-    padding: Spacing.lg,
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.sm + 2,
-  },
-  modalUpgradeBtn: {
-    marginTop: Spacing.md,
-    borderRadius: Radius.xl,
-    overflow: 'hidden',
-  },
-  modalBtnGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-  },
-  modalDismissBtn: {
-    alignItems: 'center',
-    paddingVertical: Spacing.sm + 2,
-    marginTop: 4,
+    lineHeight: 16,
   },
 });
