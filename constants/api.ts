@@ -141,4 +141,17 @@ export const API_ENDPOINTS = {
   feedback: {
     submit: '/feedback',
   },
+  delegation: {
+    caretakers: (petId: string) => `/pets/${petId}/delegation/caretakers`,
+    tasks: (petId: string, date?: string) => `/pets/${petId}/delegation/tasks${date ? `?date=${encodeURIComponent(date)}` : ''}`,
+    updateWindow: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/window`,
+    assignTask: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/assign`,
+    requestSwap: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/swap-request`,
+    acceptSwap: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/swap-accept`,
+    lock: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/lock`,
+    unlock: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/unlock`,
+    complete: (petId: string, taskId: string) => `/pets/${petId}/delegation/tasks/${taskId}/complete`,
+    stats: (petId: string) => `/pets/${petId}/delegation/stats`,
+    goals: (petId: string) => `/pets/${petId}/delegation/goals`,
+  },
 } as const;

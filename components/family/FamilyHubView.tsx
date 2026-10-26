@@ -18,6 +18,7 @@ import { FamilyOverviewCard } from '@/components/family/FamilyOverviewCard';
 import { InviteFamilySheet } from '@/components/family/InviteFamilySheet';
 import { MemberPermissionsSheet } from '@/components/family/MemberPermissionsSheet';
 import { MembersListSection } from '@/components/family/MembersListSection';
+import { FamilyTasksHub } from '@/components/family/delegation';
 import { HomeTheme, Spacing, Radius } from '@/constants/theme';
 import { SkeletonFamilyHub } from '@/components/ui/skeletons';
 import { useStaleLoadScope } from '@/hooks/useStaleLoadScope';
@@ -329,6 +330,17 @@ export function FamilyHubView() {
                   setPermissionsVisible(true);
                 }
               }}
+            />
+
+            {/* Family Chore Delegation & Shared Care Hub */}
+            <FamilyTasksHub
+              token={token}
+              petId={activePetId ?? pet?._id ?? null}
+              currentUserId={user?._id}
+              isOwner={isOwner}
+              isPremium={isPremium}
+              familyName={familyName}
+              onUpgradePress={() => router.push('/profile/billing')}
             />
 
             {/* Join another family workspace via QR scan */}
