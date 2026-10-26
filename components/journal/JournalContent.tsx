@@ -187,13 +187,13 @@ export function JournalContent({ active = true, onClose }: JournalContentProps) 
 
     const currentPhotoCount = photos.length;
 
-    if (!isPremium && currentPhotoCount >= 1) {
+    if (!isPremium && currentPhotoCount >= 5) {
       dispatch(showUpgradePromptAction({ feature: 'photos' }));
       return;
     }
 
-    if (isPremium && currentPhotoCount >= 5) {
-      showToast('Maximum 5 daily photos reached.', 'info');
+    if (isPremium && currentPhotoCount >= 20) {
+      showToast('Daily photo limit reached for today.', 'info');
       return;
     }
 

@@ -37,7 +37,7 @@ export function TodaysPhotosSection({
   maxPhotos,
 }: TodaysPhotosSectionProps) {
   const hasPhotos = photos.length > 0;
-  const maxAllowed = maxPhotos ?? (isPremium ? 5 : 1);
+  const maxAllowed = maxPhotos ?? (isPremium ? 20 : 5);
   const canAddMore = canAddPhoto && photos.length < maxAllowed;
 
   return (

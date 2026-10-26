@@ -24,7 +24,7 @@ const FEATURE_CONFIG = {
   photos: {
     title: 'Upgrade for More Photos',
     message:
-      'Free accounts include 1 photo per daily journal entry. Upgrade to PetHorizon Premium for up to 5 photos per day, high-res storage, and photo galleries.',
+      "You've reached the daily photo limit for free accounts. Upgrade to PetHorizon Premium to capture and store even more memories in your pet's photo journal.",
   },
   general: {
     title: 'Upgrade to PetHorizon Premium',
