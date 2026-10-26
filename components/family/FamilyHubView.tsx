@@ -293,7 +293,7 @@ export function FamilyHubView() {
 
         {pet ? (
           <>
-            {/* Top Hub Navigation: Care Team vs Chore Delegation */}
+            {/* Top Hub Navigation: Care Team vs Daily Chores */}
             <View style={styles.topSegmentContainer}>
               <TouchableOpacity
                 style={[styles.topSegmentButton, activeTab === 'team' && styles.topSegmentActive]}
@@ -301,7 +301,7 @@ export function FamilyHubView() {
                 activeOpacity={0.8}
               >
                 <Ionicons
-                  name="people"
+                  name="people-outline"
                   size={16}
                   color={activeTab === 'team' ? '#184F2E' : Palette.gray[600]}
                 />
@@ -310,7 +310,7 @@ export function FamilyHubView() {
                   weight={activeTab === 'team' ? '800' : '600'}
                   color={activeTab === 'team' ? '#184F2E' : Palette.gray[600]}
                 >
-                  Care Team & Access
+                  Care Team
                 </AppText>
               </TouchableOpacity>
 
@@ -320,7 +320,7 @@ export function FamilyHubView() {
                 activeOpacity={0.8}
               >
                 <Ionicons
-                  name="calendar-outline"
+                  name="checkbox-outline"
                   size={16}
                   color={activeTab === 'chores' ? '#184F2E' : Palette.gray[600]}
                 />
@@ -329,13 +329,8 @@ export function FamilyHubView() {
                   weight={activeTab === 'chores' ? '800' : '600'}
                   color={activeTab === 'chores' ? '#184F2E' : Palette.gray[600]}
                 >
-                  Chores & Goals
+                  Daily Chores
                 </AppText>
-                <View style={styles.proSmallBadge}>
-                  <AppText variant="caption" weight="800" color="#D4A017" style={{ fontSize: 9 }}>
-                    PRO
-                  </AppText>
-                </View>
               </TouchableOpacity>
             </View>
 

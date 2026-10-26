@@ -249,24 +249,6 @@ export function FamilyTasksHub({
 
   return (
     <View style={styles.container}>
-      {/* Section Header */}
-      <View style={styles.sectionHeader}>
-        <View style={styles.titleWrap}>
-          <View style={styles.proPill}>
-            <Ionicons name="sparkles" size={11} color="#D4A017" />
-            <AppText variant="caption" weight="800" color="#D4A017">
-              PRO SUITE
-            </AppText>
-          </View>
-          <AppText variant="h3" weight="800" color={Palette.primary.base}>
-            Family Chore Delegation
-          </AppText>
-          <AppText variant="caption" color={Palette.gray[600]}>
-            Collaborative pet care, task swaps, and household activity goals
-          </AppText>
-        </View>
-      </View>
-
       {/* Shared Walking Goal Card */}
       <TeamGoalCard
         stats={goalStats}
@@ -354,12 +336,14 @@ export function FamilyTasksHub({
         ))
       ) : (
         <View style={styles.emptyState}>
-          <Ionicons name="checkmark-done-circle-outline" size={40} color={Palette.gray[400]} />
-          <AppText variant="bodySmall" weight="700" color={Palette.gray[700]}>
-            No chores in this view
+          <View style={styles.emptyIconCircle}>
+            <Ionicons name="calendar-outline" size={24} color="#2E7D32" />
+          </View>
+          <AppText variant="body" weight="800" color="#1A2B4E">
+            No Chores for Today
           </AppText>
-          <AppText variant="caption" color={Palette.gray[500]}>
-            All pet care tasks for this filter have been handled!
+          <AppText variant="caption" color={Palette.gray[600]} style={styles.emptySubtitle}>
+            Scheduled tasks from your daily care calendar appear here automatically for family delegation and coverage.
           </AppText>
         </View>
       )}
@@ -486,13 +470,27 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: Spacing.xl,
-    gap: 6,
+    paddingVertical: Spacing.xl + 4,
+    paddingHorizontal: Spacing.xl,
+    gap: 8,
     marginHorizontal: Spacing.lg,
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     marginBottom: Spacing.md,
+  },
+  emptyIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E8F5E9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  emptySubtitle: {
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });
