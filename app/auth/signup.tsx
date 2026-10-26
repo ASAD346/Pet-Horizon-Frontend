@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, ScrollView } from 'react-native';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, Keyboard, ScrollView, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -156,12 +157,35 @@ export default function SignupScreen() {
   }, [clearErrors, email, showToast]);
 
   const handleLogin = useCallback(() => {
-    router.back();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/auth/login');
+    }
   }, [router]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <LoginHeaderDecor />
+
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => {
+            if (step === 'verify') {
+              setStep('signup');
+            } else if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/auth/login');
+            }
+          }}
+          style={styles.backButton}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={18} color="#0E3821" />
+        </TouchableOpacity>
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -248,6 +272,25 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#FFF9F5',
+  },
+  topBar: {
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.xs,
+    zIndex: 10,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2EBE2',
+    ...Platform.select({
+      ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4 },
+      android: { elevation: 2 },
+    }),
   },
   flex: {
     flex: 1,

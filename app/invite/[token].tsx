@@ -1,10 +1,13 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Platform,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams } from 'expo-router';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
@@ -154,10 +157,27 @@ export default function InviteAcceptScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          onPress={() => {
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace('/(tabs)');
+            }
+          }}
+          style={styles.backButton}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="chevron-back" size={18} color="#0E3821" />
+        </TouchableOpacity>
         <AppText variant="h2" weight="800" color={HomeTheme.text} style={styles.title}>
           Family Invitation
         </AppText>
+        <View style={styles.placeholder} />
+      </View>
+      <ScrollView contentContainerStyle={styles.content}>
 
         {info ? (
           <>
@@ -242,12 +262,38 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: HomeTheme.background,
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E2EBE2',
+    ...Platform.select({
+      ios: { shadowColor: '#0E3821', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 4 },
+      android: { elevation: 2 },
+    }),
+  },
+  placeholder: {
+    width: 36,
+  },
   content: {
     padding: Spacing.lg,
+    paddingTop: Spacing.xs,
   },
   title: {
-    marginBottom: Spacing.lg,
     textAlign: 'center',
+    fontSize: 22,
   },
   card: {
     backgroundColor: HomeTheme.surface,

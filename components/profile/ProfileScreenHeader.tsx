@@ -5,11 +5,11 @@ import { AppText } from '@/components/ui/AppText';
 import { Radius, Spacing } from '@/constants/theme';
 import { ProfileTheme } from './profileTheme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useDebouncedCallback } from '@/hooks/useDebounce';
+import { useDebouncedCallback, useDebouncedRouter } from '@/hooks/useDebounce';
 
 interface ProfileScreenHeaderProps {
   title: string;
-  onBack: () => void;
+  onBack?: () => void;
   rightLabel?: string;
   onRightPress?: () => void;
   rightDisabled?: boolean;
@@ -25,8 +25,20 @@ export function ProfileScreenHeader({
   onRightPress,
   rightDisabled,
 }: ProfileScreenHeaderProps) {
+  const router = useDebouncedRouter();
   const insets = useSafeAreaInsets();
-  const debouncedBack = useDebouncedCallback(onBack, 450);
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
+  };
+
+  const debouncedBack = useDebouncedCallback(handleBack, 350);
   const debouncedRightPress = useDebouncedCallback(onRightPress, 600);
 
   return (

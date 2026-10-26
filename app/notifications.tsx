@@ -306,7 +306,16 @@ export default function NotificationsScreen() {
             </View>
 
             <View style={styles.headerRow}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace('/(tabs)');
+                  }
+                }}
+                style={styles.backButton}
+              >
                 <Ionicons name="chevron-back" size={16} color={isPremium ? '#184F2E' : '#3A8F3B'} />
               </TouchableOpacity>
               

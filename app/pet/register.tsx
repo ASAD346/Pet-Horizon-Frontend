@@ -430,6 +430,24 @@ export default function RegisterPetScreen() {
       {/* ─── Track-selection landing (only on first launch, not add/edit mode) ─── */}
       {chosenTrack === 'none' ? (
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          {router.canGoBack() && (
+            <View style={styles.trackTopBar}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace('/(tabs)');
+                  }
+                }}
+                style={styles.backButton}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityLabel="Go back"
+              >
+                <Ionicons name="chevron-back" size={16} color="#0E3821" />
+              </TouchableOpacity>
+            </View>
+          )}
           <View style={styles.trackContainer}>
             <View style={styles.trackHeader}>
               <AppText variant="h2" weight="800" align="center" color="#1A2B4E" style={styles.trackTitle}>
@@ -482,7 +500,20 @@ export default function RegisterPetScreen() {
         <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
           <View style={styles.headerOuter}>
             <View style={styles.headerRow}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+              <TouchableOpacity
+                onPress={() => {
+                  if (chosenTrack === 'add' && !isEditMode && !isAddMode) {
+                    setChosenTrack('none');
+                  } else if (router.canGoBack()) {
+                    router.back();
+                  } else {
+                    router.replace('/(tabs)');
+                  }
+                }}
+                style={styles.backButton}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                accessibilityLabel="Go back"
+              >
                 <Ionicons name="chevron-back" size={16} color="#0E3821" />
               </TouchableOpacity>
               <View style={styles.headerTextContainer}>
@@ -505,8 +536,21 @@ export default function RegisterPetScreen() {
             {/* Fixed Top Header */}
             <View style={styles.headerOuter}>
               <View style={styles.headerRow}>
-                {(isEditMode || isAddMode || !hasEditPermission) && (
-                  <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                {(isEditMode || isAddMode || !hasEditPermission || chosenTrack === 'add' || router.canGoBack()) && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      if (chosenTrack === 'add' && !isEditMode && !isAddMode) {
+                        setChosenTrack('none');
+                      } else if (router.canGoBack()) {
+                        router.back();
+                      } else {
+                        router.replace('/(tabs)');
+                      }
+                    }}
+                    style={styles.backButton}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                    accessibilityLabel="Go back"
+                  >
                     <Ionicons name="chevron-back" size={16} color="#0E3821" />
                   </TouchableOpacity>
                 )}
@@ -1027,6 +1071,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   // ── Track-selection landing ──────────────────────────────────
+  trackTopBar: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    width: '100%',
+    zIndex: 10,
+  },
   trackContainer: {
     flex: 1,
     justifyContent: 'center',

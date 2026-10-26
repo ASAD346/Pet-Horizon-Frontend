@@ -107,9 +107,9 @@ export function pickDefaultUnit(units: string[]): string {
 /** Short label for unit dropdown. */
 export function formatUnitLabel(unit: string): string {
   const u = unit.toLowerCase();
-  if (u === 'gram' || u === 'grams') return 'g';
-  if (u === 'cups') return 'cup';
-  if (u === 'tablespoon' || u === 'tablespoons') return 'tbsp';
+  if (u === 'gram' || u === 'grams' || u === 'g') return 'g';
+  if (u === 'cups' || u === 'cup') return 'cup';
+  if (u === 'tablespoon' || u === 'tablespoons' || u === 'tbsp') return 'tbsp';
   return unit;
 }
 

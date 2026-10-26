@@ -15,6 +15,7 @@ interface LocalizationSheetProps {
 
 const CURRENCIES: { value: CurrencyType; label: string; symbol: string; flag: string }[] = [
   { value: 'USD', label: 'United States Dollar', symbol: '$', flag: '🇺🇸' },
+  { value: 'EUR', label: 'European Euro', symbol: '€', flag: '🇪🇺' },
   { value: 'GBP', label: 'United Kingdom Pound', symbol: '£', flag: '🇬🇧' },
   { value: 'CAD', label: 'Canadian Dollar', symbol: '$', flag: '🇨🇦' },
   { value: 'AUD', label: 'Australian Dollar', symbol: '$', flag: '🇦🇺' },

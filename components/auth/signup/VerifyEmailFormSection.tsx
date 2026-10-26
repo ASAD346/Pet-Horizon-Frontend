@@ -51,10 +51,21 @@ export function VerifyEmailFormSection({
 
   return (
     <View style={styles.container}>
-
-      <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.title}>
-        Verify your email
-      </AppText>
+      <View style={styles.titleRow}>
+        {onBack ? (
+          <TouchableOpacity
+            onPress={onBack}
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel="Change email"
+          >
+            <Ionicons name="arrow-back" size={20} color="#1A2B4E" />
+          </TouchableOpacity>
+        ) : null}
+        <AppText variant="h3" color="#1A2B4E" weight="800" style={styles.title}>
+          Verify your email
+        </AppText>
+      </View>
 
       <View style={styles.subtitleContainer}>
         <AppText variant="bodySmall" color={Palette.gray[500]} weight="700">
@@ -120,10 +131,19 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  backButton: {
+    padding: Spacing.xs,
+    marginLeft: -Spacing.xs,
+  },
   title: {
     fontSize: 24,
     lineHeight: 30,
-    marginBottom: Spacing.xs,
   },
   subtitleContainer: {
     marginBottom: Spacing.sm,

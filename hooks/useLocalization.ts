@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Localization from 'expo-localization';
 
-export type CurrencyType = 'USD' | 'GBP' | 'CAD' | 'AUD';
+export type CurrencyType = 'USD' | 'EUR' | 'GBP' | 'CAD' | 'AUD';
 export type UnitSystemType = 'metric' | 'imperial';
 
 const CURRENCY_KEY = '@pethorizon_currency';
@@ -10,6 +10,7 @@ const UNIT_SYSTEM_KEY = '@pethorizon_unit_system';
 
 const CURRENCY_SYMBOLS: Record<CurrencyType, string> = {
   USD: '$',
+  EUR: '€',
   GBP: '£',
   CAD: '$',
   AUD: '$',
@@ -43,6 +44,8 @@ const initializeSettings = async () => {
         globalCurrency = 'CAD';
       } else if (countryCode === 'AU') {
         globalCurrency = 'AUD';
+      } else if (['AT', 'BE', 'CY', 'EE', 'FI', 'FR', 'DE', 'GR', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PT', 'SK', 'SI', 'ES'].includes(countryCode || '')) {
+        globalCurrency = 'EUR';
       } else {
         globalCurrency = 'USD';
       }
