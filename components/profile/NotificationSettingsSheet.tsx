@@ -18,31 +18,22 @@ interface NotificationSettingsSheetProps {
   onClose: () => void;
 }
 
-export interface NotificationPreferences {
-  upcomingTasks: boolean;
-  missedTasks: boolean;
-  familyActivity: boolean;
-  healthAlerts: boolean;
-}
-
-const PREFS_KEY = '@pet_horizon_notification_preferences_v1';
-
-export const DEFAULT_PREFERENCES: NotificationPreferences = {
-  upcomingTasks: true,
-  missedTasks: true,
-  familyActivity: true,
-  healthAlerts: true,
-};
+import {
+  NotificationPreferences,
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  getNotificationPreferences,
+  saveNotificationPreferences,
+} from '@/lib/notifications/notificationPreferences';
 
 export function NotificationSettingsSheet({ visible, onClose }: NotificationSettingsSheetProps) {
   const router = useDebouncedRouter();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { showSuccessToast, showErrorToast } = useToast();
 
   const [hasPermission, setHasPermission] = useState<boolean>(false);
   const [checkingPerm, setCheckingPerm] = useState<boolean>(true);
   const [requestingPerm, setRequestingPerm] = useState<boolean>(false);
-  const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_PREFERENCES);
+  const [prefs, setPrefs] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
 
   const checkStatus = useCallback(async () => {
     try {
@@ -57,10 +48,8 @@ export function NotificationSettingsSheet({ visible, onClose }: NotificationSett
 
   const loadPrefs = useCallback(async () => {
     try {
-      const saved = await AsyncStorage.getItem(PREFS_KEY);
-      if (saved) {
-        setPrefs({ ...DEFAULT_PREFERENCES, ...JSON.parse(saved) });
-      }
+      const loaded = await getNotificationPreferences();
+      setPrefs(loaded);
     } catch {
       // Ignore
     }
@@ -77,11 +66,7 @@ export function NotificationSettingsSheet({ visible, onClose }: NotificationSett
   const togglePref = async (key: keyof NotificationPreferences) => {
     const updated = { ...prefs, [key]: !prefs[key] };
     setPrefs(updated);
-    try {
-      await AsyncStorage.setItem(PREFS_KEY, JSON.stringify(updated));
-    } catch {
-      // Ignore
-    }
+    void saveNotificationPreferences(updated, token, user?._id);
   };
 
   const handleEnablePermission = async () => {

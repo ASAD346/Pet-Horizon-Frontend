@@ -3,6 +3,10 @@ import { isExpoGo } from '@/lib/runtime/isExpoGo';
 import { log } from '@/lib/log';
 import { API_BASE_URL } from '@/constants/api';
 import AsyncStorageStatic from '@react-native-async-storage/async-storage';
+import {
+  getNotificationPreferences,
+  evaluateNotificationAlertBehavior,
+} from '@/lib/notifications/notificationPreferences';
 
 export const DEFAULT_NOTIFICATION_CHANNEL_ID = 'default';
 export const FCM_FALLBACK_CHANNEL_ID = 'fcm_fallback_notification_channel';
@@ -100,6 +104,14 @@ export async function ensureNotificationHandler(): Promise<void> {
         }
       }
 
+      // Apply user notification preferences and Quiet Hours
+      try {
+        const prefs = await getNotificationPreferences();
+        return evaluateNotificationAlertBehavior(notification, prefs);
+      } catch (prefErr) {
+        log.warn(SCOPE, 'Error evaluating notification preferences', prefErr instanceof Error ? prefErr.message : String(prefErr));
+      }
+
       return {
         shouldShowAlert: true,
         shouldPlaySound: true,
@@ -136,8 +148,19 @@ async function createAndroidChannel(
 export async function ensureAndroidNotificationChannels(): Promise<void> {
   if (channelsConfigured || Platform.OS !== 'android' || isExpoGo()) return;
 
+  const Notifications = await getNotificationsModule();
   await createAndroidChannel(DEFAULT_NOTIFICATION_CHANNEL_ID, 'Pet Horizon');
   await createAndroidChannel(FCM_FALLBACK_CHANNEL_ID, 'Pet Horizon alerts');
+
+  // Register dedicated silent channel for Quiet Hours & non-audible alerts
+  await Notifications.setNotificationChannelAsync('silent_channel', {
+    name: 'Pet Horizon Quiet Alerts',
+    importance: Notifications.AndroidImportance.LOW,
+    sound: null,
+    enableVibrate: false,
+    showBadge: true,
+  });
+
   channelsConfigured = true;
 }
 
