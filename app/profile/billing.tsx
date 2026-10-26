@@ -41,294 +41,133 @@ import {
 } from 'expo-iap';
 import type { PaymentInvoice, PremiumStatusResponse } from '@/types/premium';
 
-const FREE_FEATURES = [
-  '1 pet profile registration',
-  'Daily photo journal & activity log',
-  'Routine feeding, walk & medicine scheduling',
-  'Standard notifications & care reminders',
+const PREMIUM_PERKS = [
+  {
+    title: 'Unlimited Pet Profiles',
+    description: 'Register all your pets and switch between profiles with a single tap.',
+    icon: 'paw',
+  },
+  {
+    title: 'Expanded Photo Journal',
+    description: 'Capture daily memories and store high-resolution pet photo galleries.',
+    icon: 'camera-outline',
+  },
+  {
+    title: 'Family & Caregiver Circle',
+    description: 'Invite family members, assign care chores, and sync daily routines.',
+    icon: 'account-group-outline',
+  },
+  {
+    title: 'Priority Smart Reminders',
+    description: 'Custom alerts for meals, medications, walks, and vet appointments.',
+    icon: 'bell-ring-outline',
+  },
 ];
 
-const MONTHLY_FEATURES = [
-  'Unlimited pet profiles with instant switching',
-  'Expanded daily photo journal & memory vault',
-  'Family circle & caregiver delegation with role controls',
-  'Daily household chores & task delegation',
-  'Smart priority alerts & custom reminders',
-];
+function PremiumPerksCard() {
+  return (
+    <View style={styles.perksCard}>
+      <View style={styles.perksHeader}>
+        <View style={styles.perksHeaderIcon}>
+          <MaterialCommunityIcons name="crown" size={16} color="#D4A017" />
+        </View>
+        <AppText variant="bodySmall" weight="800" color="#0F172A" style={styles.perksTitle}>
+          WHAT'S INCLUDED IN PREMIUM
+        </AppText>
+      </View>
 
-const YEARLY_FEATURES = [
-  'All Monthly Premium features included',
-  'Equivalent of 2 months free (Save 17%)',
-  'Dedicated priority customer support',
-  'Future pro care modules included automatically',
-];
+      <View style={styles.perksList}>
+        {PREMIUM_PERKS.map((perk, index) => (
+          <View key={index} style={styles.perkRow}>
+            <View style={styles.perkIconCircle}>
+              <MaterialCommunityIcons name={perk.icon as any} size={15} color="#184F2E" />
+            </View>
+            <View style={styles.perkContent}>
+              <AppText variant="bodySmall" weight="700" color="#0F172A">
+                {perk.title}
+              </AppText>
+              <AppText variant="caption" color="#64748B" style={styles.perkDesc}>
+                {perk.description}
+              </AppText>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
 
-interface PlanCardProps {
+interface PlanOptionCardProps {
   title: string;
-  iconName: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
-  features: string[];
   price: string;
   period: string;
   subPrice?: string;
   badge?: string;
-  isActive: boolean;
-  onPress?: () => void;
-  renewLabel?: string;
-  isPopular?: boolean;
-  ctaLabel?: string;
-  loading?: boolean;
+  selected: boolean;
+  isCurrentActive?: boolean;
+  onSelect: () => void;
 }
 
-function PlanCard({
+function PlanOptionCard({
   title,
-  iconName,
-  features,
   price,
   period,
   subPrice,
   badge,
-  isActive,
-  onPress,
-  renewLabel,
-  isPopular,
-  ctaLabel,
-  loading = false,
-}: PlanCardProps) {
-  if (isPopular && !isActive) {
-    return (
-      <View style={styles.popularCardWrapper}>
-        <LinearGradient
-          colors={['#062314', '#0F3C24', '#175634']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.popularCardGradient}
-        >
-          <View style={styles.popularAmbientGlow} />
-
-          <MaterialCommunityIcons
-            name="crown"
-            size={110}
-            color="rgba(255, 255, 255, 0.03)"
-            style={styles.watermarkCrown}
-          />
-
-          <View style={styles.planCardHeader}>
-            <View style={styles.planTitleRow}>
-              <View style={styles.goldIconCircle}>
-                <MaterialCommunityIcons name={iconName} size={18} color="#D4A017" />
-              </View>
-              <AppText variant="body" weight="800" color="#FFFFFF" style={{ fontSize: 16 }}>
-                {title}
-              </AppText>
-            </View>
-
-            {badge && (
-              <View style={styles.popularBadgeDark}>
-                <MaterialCommunityIcons name="crown" size={10} color="#D4A017" style={{ marginRight: 3 }} />
-                <AppText variant="caption" weight="800" color="#D4A017" style={{ fontSize: 9, letterSpacing: 0.5 }}>
-                  {badge}
-                </AppText>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.priceContainer}>
-            <View style={styles.priceRow}>
-              <AppText variant="h1" weight="800" color="#FFFFFF" style={styles.priceTextDark}>
-                {price}
-              </AppText>
-              <AppText variant="bodySmall" weight="700" color="#86EFAC" style={styles.periodTextDark}>
-                {` ${period}`}
-              </AppText>
-            </View>
-            {subPrice && (
-              <View style={styles.subPricePillDark}>
-                <AppText variant="caption" weight="700" color="#A7F3D0" style={{ fontSize: 10 }}>
-                  {subPrice}
-                </AppText>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.darkDivider} />
-
-          <View style={styles.featureList}>
-            {features.map((f, i) => (
-              <View key={i} style={styles.featureRow}>
-                <View style={styles.darkCheckCircle}>
-                  <Ionicons name="checkmark" size={11} color="#D4A017" />
-                </View>
-                <AppText variant="caption" color="#F1F5F9" weight="600" style={styles.featureTextDark}>
-                  {f}
-                </AppText>
-              </View>
-            ))}
-          </View>
-
-          {renewLabel && (
-            <View style={styles.renewRowDark}>
-              <Ionicons name="time-outline" size={12} color="#86EFAC" />
-              <AppText variant="caption" color="#86EFAC" weight="600" style={styles.renewText}>
-                {renewLabel}
-              </AppText>
-            </View>
-          )}
-
-          {onPress && (
-            <TouchableOpacity
-              style={styles.yearlyCtaButton}
-              onPress={onPress}
-              activeOpacity={0.88}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#064E3B" />
-              ) : (
-                <>
-                  <MaterialCommunityIcons name="star-four-points" size={14} color="#064E3B" />
-                  <AppText variant="body" weight="800" color="#064E3B" style={styles.ctaButtonText}>
-                    {ctaLabel || 'Get Yearly (Save 17%)'}
-                  </AppText>
-                  <Ionicons name="arrow-forward" size={15} color="#064E3B" />
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-        </LinearGradient>
-      </View>
-    );
-  }
-
-  const isEmerald = !isPopular && onPress && !isActive;
-
+  selected,
+  isCurrentActive = false,
+  onSelect,
+}: PlanOptionCardProps) {
   return (
-    <View
+    <TouchableOpacity
       style={[
-        styles.planCard,
-        isActive && styles.planCardActive,
-        isEmerald && styles.planCardEmerald,
+        styles.selectorCard,
+        selected && styles.selectorCardSelected,
+        isCurrentActive && styles.selectorCardActive,
       ]}
+      onPress={onSelect}
+      activeOpacity={0.8}
     >
-      <View style={styles.planCardHeader}>
-        <View style={styles.planTitleRow}>
-          <View style={[styles.standardIconCircle, isActive ? styles.activeIconCircle : isEmerald ? styles.emeraldIconCircle : null]}>
-            <MaterialCommunityIcons
-              name={iconName}
-              size={17}
-              color={isActive ? '#184F2E' : isEmerald ? '#166534' : '#64748B'}
-            />
-          </View>
-          <AppText
-            variant="body"
-            weight="800"
-            color={isActive ? '#184F2E' : isEmerald ? '#0F172A' : '#1E293B'}
-            style={{ fontSize: 15 }}
-          >
+      <View style={[styles.radioCircle, selected && styles.radioCircleSelected]}>
+        {selected && <View style={styles.radioInnerDot} />}
+      </View>
+
+      <View style={styles.selectorCenter}>
+        <View style={styles.selectorTitleRow}>
+          <AppText variant="body" weight="800" color={selected ? '#0F172A' : '#334155'}>
             {title}
           </AppText>
-        </View>
-
-        {isActive ? (
-          <View style={styles.activeBadge}>
-            <Ionicons name="checkmark-circle" size={11} color="#166534" style={{ marginRight: 3 }} />
-            <AppText variant="caption" weight="800" color="#166534" style={{ fontSize: 9 }}>
-              ACTIVE PLAN
-            </AppText>
-          </View>
-        ) : badge ? (
-          <View style={styles.flexibleBadge}>
-            <AppText variant="caption" weight="800" color="#166534" style={{ fontSize: 9 }}>
-              {badge}
-            </AppText>
-          </View>
-        ) : (
-          <View style={styles.standardBadge}>
-            <AppText variant="caption" weight="700" color="#64748B" style={{ fontSize: 9 }}>
-              STANDARD
-            </AppText>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.priceContainer}>
-        <View style={styles.priceRow}>
-          <AppText variant="h1" weight="800" color="#0F172A" style={styles.priceText}>
-            {price}
-          </AppText>
-          <AppText variant="bodySmall" weight="700" color="#64748B" style={styles.periodText}>
-            {` ${period}`}
-          </AppText>
+          {badge && (
+            <View style={styles.savingsBadge}>
+              <AppText variant="caption" weight="800" color="#166534" style={{ fontSize: 9 }}>
+                {badge}
+              </AppText>
+            </View>
+          )}
+          {isCurrentActive && (
+            <View style={styles.currentActiveBadge}>
+              <AppText variant="caption" weight="800" color="#2E7D32" style={{ fontSize: 9 }}>
+                CURRENT
+              </AppText>
+            </View>
+          )}
         </View>
         {subPrice && (
-          <View style={styles.subPricePillLight}>
-            <AppText variant="caption" weight="700" color="#64748B" style={{ fontSize: 10 }}>
-              {subPrice}
-            </AppText>
-          </View>
+          <AppText variant="caption" color="#64748B" style={{ marginTop: 2 }}>
+            {subPrice}
+          </AppText>
         )}
       </View>
 
-      <View style={styles.cardDivider} />
-
-      <View style={styles.featureList}>
-        {features.map((f, i) => (
-          <View key={i} style={styles.featureRow}>
-            <View style={[styles.lightCheckCircle, (isActive || isEmerald) && styles.emeraldCheckCircle]}>
-              <Ionicons
-                name="checkmark"
-                size={11}
-                color={isActive || isEmerald ? '#15803D' : '#64748B'}
-              />
-            </View>
-            <AppText variant="caption" color="#334155" weight="600" style={styles.featureText}>
-              {f}
-            </AppText>
-          </View>
-        ))}
+      <View style={styles.selectorRight}>
+        <AppText variant="h3" weight="800" color="#0F172A">
+          {price}
+        </AppText>
+        <AppText variant="caption" color="#64748B" style={{ fontSize: 11 }}>
+          {period}
+        </AppText>
       </View>
-
-      {renewLabel && (
-        <View style={styles.renewRow}>
-          <Ionicons name="time-outline" size={12} color="#64748B" />
-          <AppText variant="caption" color="#64748B" weight="600" style={styles.renewText}>
-            {renewLabel}
-          </AppText>
-        </View>
-      )}
-
-      {isActive ? (
-        <View style={styles.activeStatusPill}>
-          <Ionicons name="checkmark-circle" size={14} color="#166534" />
-          <AppText variant="bodySmall" weight="800" color="#166534" style={{ fontSize: 12 }}>
-            Your Current Active Plan
-          </AppText>
-        </View>
-      ) : onPress ? (
-        <TouchableOpacity
-          style={styles.monthlyCtaButton}
-          onPress={onPress}
-          activeOpacity={0.85}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <>
-              <AppText variant="body" weight="800" color="#FFFFFF" style={styles.ctaButtonText}>
-                {ctaLabel || 'Upgrade to Monthly'}
-              </AppText>
-              <Ionicons name="arrow-forward" size={15} color="#FFFFFF" />
-            </>
-          )}
-        </TouchableOpacity>
-      ) : (
-        <View style={styles.freeCurrentPill}>
-          <AppText variant="caption" weight="700" color="#64748B">
-            Included by default
-          </AppText>
-        </View>
-      )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -705,6 +544,16 @@ export default function BillingScreen() {
   const isMonthlyActive = isPremium && planKey !== 'yearly' && planKey !== 'annual';
   const isYearlyActive = isPremium && (planKey === 'yearly' || planKey === 'annual');
 
+  const [selectedPlanTier, setSelectedPlanTier] = useState<'yearly' | 'monthly'>('yearly');
+
+  useEffect(() => {
+    if (isMonthlyActive) {
+      setSelectedPlanTier('monthly');
+    } else if (isYearlyActive) {
+      setSelectedPlanTier('yearly');
+    }
+  }, [isMonthlyActive, isYearlyActive]);
+
   const renewLabel = status?.expiresAt
     ? `${status.autoRenew ? 'Renews' : 'Expires'} ${new Date(status.expiresAt).toLocaleDateString()}`
     : undefined;
@@ -778,49 +627,80 @@ export default function BillingScreen() {
         )}
 
         <AppText variant="bodySmall" weight="800" color="#64748B" style={styles.sectionTitle}>
-          MEMBERSHIP PLANS
+          PREMIUM BENEFITS
         </AppText>
 
-        <View style={styles.planContainer}>
-          <PlanCard
-            title="Free Plan"
-            iconName="paw"
-            features={FREE_FEATURES}
-            price="Free"
-            period="forever"
-            isActive={!isPremium}
-          />
+        <PremiumPerksCard />
 
-          <PlanCard
-            title="Monthly Premium"
-            iconName="star-four-points"
-            features={MONTHLY_FEATURES}
-            price="$4.99"
-            period="/ month"
-            subPrice="Flexible · Billed monthly"
-            badge="FLEXIBLE"
-            isActive={isMonthlyActive}
-            renewLabel={isMonthlyActive ? renewLabel : undefined}
-            onPress={!isMonthlyActive ? () => handleSelectPlan('monthly') : undefined}
-            ctaLabel={isMonthlyActive ? 'Current Plan' : 'Upgrade to Monthly'}
-            loading={checkoutLoading && selectedPlanRef.current === 'monthly'}
-          />
+        <AppText variant="bodySmall" weight="800" color="#64748B" style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>
+          SELECT BILLING CYCLE
+        </AppText>
 
-          <PlanCard
-            title="Yearly Premium"
-            iconName="crown"
-            features={YEARLY_FEATURES}
+        <View style={styles.selectorContainer}>
+          <PlanOptionCard
+            title="Yearly Subscription"
             price="$49.99"
             period="/ year"
             subPrice="$4.16 / mo · Billed annually"
-            badge="BEST VALUE • 2 MONTHS FREE"
-            isActive={isYearlyActive}
-            renewLabel={isYearlyActive ? renewLabel : undefined}
-            onPress={!isYearlyActive ? () => handleSelectPlan('yearly') : undefined}
-            isPopular={true}
-            ctaLabel={isYearlyActive ? 'Current Plan' : 'Upgrade to Yearly (Save 17%)'}
-            loading={checkoutLoading && selectedPlanRef.current === 'yearly'}
+            badge="SAVE 17%"
+            selected={selectedPlanTier === 'yearly'}
+            isCurrentActive={isYearlyActive}
+            onSelect={() => setSelectedPlanTier('yearly')}
           />
+
+          <PlanOptionCard
+            title="Monthly Subscription"
+            price="$4.99"
+            period="/ month"
+            subPrice="Flexible · Billed monthly"
+            selected={selectedPlanTier === 'monthly'}
+            isCurrentActive={isMonthlyActive}
+            onSelect={() => setSelectedPlanTier('monthly')}
+          />
+        </View>
+
+        {/* Primary Action Button */}
+        {((selectedPlanTier === 'yearly' && isYearlyActive) || (selectedPlanTier === 'monthly' && isMonthlyActive)) ? (
+          <View style={styles.currentActivePillContainer}>
+            <Ionicons name="checkmark-circle" size={18} color="#166534" />
+            <AppText variant="bodySmall" weight="800" color="#166534">
+              Your Current Active Plan
+            </AppText>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.primarySubscribeButton}
+            onPress={() => handleSelectPlan(selectedPlanTier)}
+            activeOpacity={0.85}
+            disabled={checkoutLoading}
+          >
+            {checkoutLoading && selectedPlanRef.current === selectedPlanTier ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="crown" size={18} color="#FDE047" />
+                <AppText variant="body" weight="800" color="#FFFFFF">
+                  {selectedPlanTier === 'yearly'
+                    ? 'Subscribe Yearly • $49.99 / yr'
+                    : 'Subscribe Monthly • $4.99 / mo'}
+                </AppText>
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+
+        <View style={styles.guaranteeRow}>
+          <Ionicons name="shield-checkmark-outline" size={13} color="#64748B" />
+          <AppText variant="caption" color="#64748B" style={styles.guaranteeText}>
+            Secured via Google Play • Cancel anytime in store settings
+          </AppText>
+        </View>
+
+        <View style={styles.freeNoticeContainer}>
+          <MaterialCommunityIcons name="paw" size={16} color="#64748B" />
+          <AppText variant="caption" color="#64748B" style={{ flex: 1, lineHeight: 16 }}>
+            Free Plan includes 1 pet profile and essential daily logging forever.
+          </AppText>
         </View>
 
         {isPremium && status?.autoRenew && (
@@ -917,129 +797,167 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
-  planContainer: {
-    gap: 14,
-    marginBottom: Spacing.xl,
-  },
-  /* Popular Featured Gradient Card */
-  popularCardWrapper: {
+  /* Premium Perks Card */
+  perksCard: {
+    backgroundColor: '#FFFFFF',
     borderRadius: Radius.lg || 16,
     borderWidth: 1.5,
-    borderColor: 'rgba(212, 160, 23, 0.45)',
-    overflow: 'hidden',
+    borderColor: '#E2E8F0',
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
     ...Platform.select({
       ios: {
-        shadowColor: '#071F13',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.22,
-        shadowRadius: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 6,
       },
       android: {
-        elevation: 5,
+        elevation: 1,
       },
     }),
   },
-  popularCardGradient: {
-    padding: Spacing.md + 2,
-    position: 'relative',
-    overflow: 'hidden',
+  perksHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    gap: 8,
   },
-  popularAmbientGlow: {
-    position: 'absolute',
-    top: -30,
-    right: -30,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: 'rgba(212, 160, 23, 0.1)',
+  perksHeaderIcon: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(212, 160, 23, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  watermarkCrown: {
-    position: 'absolute',
-    bottom: -15,
-    right: -10,
+  perksTitle: {
+    letterSpacing: 0.6,
+    fontSize: 12,
   },
-  goldIconCircle: {
+  perksList: {
+    gap: 12,
+  },
+  perkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  perkIconCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(212, 160, 23, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(212, 160, 23, 0.3)',
+    backgroundColor: '#E8F5ED',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
   },
-  popularBadgeDark: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(212, 160, 23, 0.18)',
-    paddingHorizontal: 8,
-    paddingVertical: 3.5,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(212, 160, 23, 0.38)',
-  },
-  priceTextDark: {
-    fontSize: 26,
-    lineHeight: 30,
-    color: '#FFFFFF',
-  },
-  periodTextDark: {
-    fontSize: 13,
-    color: '#86EFAC',
-    marginLeft: 4,
-  },
-  subPricePillDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
-    borderRadius: 6,
-    alignSelf: 'center',
-  },
-  darkDivider: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    marginVertical: Spacing.sm,
-  },
-  darkCheckCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: 'rgba(212, 160, 23, 0.16)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  featureTextDark: {
+  perkContent: {
     flex: 1,
-    fontSize: 12.5,
-    lineHeight: 18,
-    color: '#F1F5F9',
   },
-  renewRowDark: {
+  perkDesc: {
+    fontSize: 11.5,
+    lineHeight: 16,
+    marginTop: 2,
+    color: '#64748B',
+  },
+
+  /* Plan Selector Options */
+  selectorContainer: {
+    gap: 10,
+    marginBottom: Spacing.md,
+  },
+  selectorCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: Radius.md || 12,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.08)',
-    paddingTop: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  yearlyCtaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F59E0B',
-    borderRadius: Radius.md || 10,
-    paddingVertical: 12,
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.md,
-    gap: 6,
+    gap: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#F59E0B',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.03,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 1,
+      },
+    }),
+  },
+  selectorCardSelected: {
+    borderColor: '#184F2E',
+    backgroundColor: '#F8FCF9',
+  },
+  selectorCardActive: {
+    borderColor: '#86EFAC',
+  },
+  radioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioCircleSelected: {
+    borderColor: '#184F2E',
+  },
+  radioInnerDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#184F2E',
+  },
+  selectorCenter: {
+    flex: 1,
+  },
+  selectorTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  savingsBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#86EFAC',
+  },
+  currentActiveBadge: {
+    backgroundColor: '#E0F2FE',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+  },
+  selectorRight: {
+    alignItems: 'flex-end',
+  },
+
+  /* Actions */
+  primarySubscribeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#184F2E',
+    borderRadius: Radius.md || 12,
+    paddingVertical: 15,
+    paddingHorizontal: Spacing.md,
+    marginTop: 4,
+    gap: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#184F2E',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.25,
         shadowRadius: 8,
       },
       android: {
@@ -1047,213 +965,41 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  ctaButtonText: {
-    fontSize: 13.5,
-    fontWeight: '800',
-  },
-
-  /* Standard / Emerald Cards */
-  planCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: Radius.lg || 16,
-    padding: Spacing.md + 2,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000000',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 1,
-      },
-    }),
-  },
-  planCardActive: {
-    borderColor: '#16A34A',
-    backgroundColor: '#F9FCF9',
-    borderWidth: 1.5,
-  },
-  planCardEmerald: {
-    borderColor: 'rgba(24, 79, 46, 0.4)',
-    borderWidth: 1.5,
-    backgroundColor: '#FFFFFF',
-  },
-  planCardHeader: {
+  currentActivePillContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  planTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  standardIconCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
+    borderRadius: Radius.md || 12,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.md,
+    marginTop: 4,
+    gap: 8,
   },
-  activeIconCircle: {
-    backgroundColor: '#DCFCE7',
-  },
-  emeraldIconCircle: {
-    backgroundColor: '#E8F5E9',
-  },
-  standardBadge: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-  },
-  flexibleBadge: {
-    backgroundColor: '#E8F5E9',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 0.8,
-    borderColor: '#C8E6C9',
-  },
-  activeBadge: {
+  guaranteeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#86EFAC',
+    justifyContent: 'center',
+    gap: 5,
+    marginTop: 10,
+    marginBottom: Spacing.md,
   },
-  priceContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  priceText: {
-    fontSize: 26,
-    lineHeight: 30,
-    color: '#0F172A',
-  },
-  periodText: {
-    fontSize: 13,
+  guaranteeText: {
+    fontSize: 11.5,
     color: '#64748B',
-    marginLeft: 4,
   },
-  subPricePillLight: {
+  freeNoticeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 12,
     backgroundColor: '#F8FAFC',
-    borderWidth: 0.8,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 8,
-    paddingVertical: 2.5,
-    borderRadius: 6,
-    alignSelf: 'center',
-  },
-  cardDivider: {
-    height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: Spacing.sm,
-  },
-  featureList: {
-    gap: 7,
-    marginVertical: 2,
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  lightCheckCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  emeraldCheckCircle: {
-    backgroundColor: '#DCFCE7',
-  },
-  featureText: {
-    flex: 1,
-    fontSize: 12.5,
-    lineHeight: 18,
-    color: '#334155',
-  },
-  renewRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    paddingTop: Spacing.sm,
-    marginTop: Spacing.xs,
-  },
-  renewText: {
-    fontSize: 11,
-  },
-  activeStatusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#DCFCE7',
-    borderWidth: 1,
-    borderColor: '#86EFAC',
     borderRadius: Radius.md || 10,
-    paddingVertical: 10,
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.md,
-    gap: 6,
-  },
-  freeCurrentPill: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: Radius.md || 10,
-    paddingVertical: 9,
-    marginTop: Spacing.md,
-  },
-  monthlyCtaButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#184F2E',
-    borderRadius: Radius.md || 10,
-    paddingVertical: 11,
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.md,
-    gap: 6,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#184F2E',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.2,
-        shadowRadius: 6,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  planPriceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    paddingTop: Spacing.sm,
+    marginBottom: Spacing.xl,
   },
   /* Subscription Details Card */
   detailsCard: {
