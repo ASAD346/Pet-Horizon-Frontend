@@ -19,7 +19,7 @@ export function SheetHeroIllustration({
     <View style={styles.wrap}>
       <View style={[styles.frame, { borderColor, backgroundColor }]}>
         <Image
-          source={require('../../assets/images/onboarding.png')}
+          source={require('../../assets/images/onboarding_slide3.png')}
           style={styles.image}
           contentFit="cover"
         />

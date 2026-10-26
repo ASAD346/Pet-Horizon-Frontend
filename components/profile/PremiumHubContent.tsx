@@ -50,7 +50,7 @@ import { Spacing } from '@/constants/spacing';
 import { Radius } from '@/constants/radius';
 import { Shadows } from '@/constants/shadows';
 
-const HERO_ILLUSTRATION = require('../../assets/images/onboarding_health.png');
+const HERO_ILLUSTRATION = require('../../assets/images/onboarding_slide3.png');
 
 // ── Benefit Grid (2×N cards) ──────────────────────────────────────────────
 const BENEFITS = [

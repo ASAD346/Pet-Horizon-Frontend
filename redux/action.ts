@@ -11,6 +11,7 @@ import { queryClient } from '@/app/_layout';
 import { signOutGoogle } from '@/lib/auth/googleSignIn';
 import {
   setSessionAction,
+  updateUserAction,
   setActivePetAction,
   clearSessionAction,
   bootstrapCompleteAction,
@@ -47,6 +48,7 @@ export const hideUpgradePromptAction = () => hideUpgradeModalAction();
 // Re-export actions for backward compatibility
 export {
   setSessionAction,
+  updateUserAction,
   setActivePetAction,
   clearSessionAction,
   bootstrapCompleteAction,

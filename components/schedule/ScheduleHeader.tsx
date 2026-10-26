@@ -24,7 +24,7 @@ export function ScheduleHeader({ petName }: ScheduleHeaderProps) {
       </View>
       <View style={styles.artWrap}>
         <Image
-          source={require('../../assets/images/onboarding.png')}
+          source={require('../../assets/images/onboarding_slide3.png')}
           style={styles.art}
           contentFit="contain"
         />

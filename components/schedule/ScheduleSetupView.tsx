@@ -482,9 +482,9 @@ export function ScheduleSetupView({
   const focusReload = useCallback(() => {
     const currentPet = petRef.current;
     if (currentPet?._id) {
-      void reloadSchedules(currentPet._id);
+      void refetchSchedules();
     }
-  }, [reloadSchedules]);
+  }, [refetchSchedules]);
 
   useFocusReload(focusReload, Boolean(token && pet?._id));
 

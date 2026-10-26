@@ -4,6 +4,7 @@ import { loadExistingSchedules } from '@/lib/schedule/loadSchedules';
 import { Image } from 'expo-image';
 import { resolveMediaUrl } from '@/lib/mediaUrl';
 import { fetchJournalEntries } from '@/services/journal/journalApi';
+import { fetchGroomingTypes } from '@/services/grooming/groomingApi';
 import type { ApiPet } from '@/types/pet';
 
 /** Prefetches unified dashboard queries and preloads images to make transitions feel instant */
@@ -33,7 +34,7 @@ export async function prefetchDashboardData(
   }
 }
 
-/** Prefetches all tab data (Dashboard, Schedules, Journal, etc.) for a pet */
+/** Prefetches all tab data (Dashboard, Schedules, Journal, Grooming types, etc.) for a pet */
 export async function prefetchAllPetTabData(
   queryClient: QueryClient,
   token: string | null,
@@ -67,6 +68,13 @@ export async function prefetchAllPetTabData(
       queryFn: () => fetchJournalEntries(token, petId, 1, 100),
       staleTime: 1000 * 60 * 5,
     });
+  } catch {
+    // Ignore prefetch failure
+  }
+
+  // 4. Grooming types prefetch for instant Quick Action sheet opening
+  try {
+    void fetchGroomingTypes(token, petId);
   } catch {
     // Ignore prefetch failure
   }

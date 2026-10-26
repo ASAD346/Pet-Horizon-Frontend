@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import { Alert, ScrollView, StyleSheet, View, AppState, RefreshControl, ActivityIndicator } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
-import { useAppDispatch, useAppSelector } from '@/redux/store';
-import { selectAuthUser } from '@/redux/reducer';
+import { useAppDispatch } from '@/redux/store';
 import { showUpgradePromptAction } from '@/redux/action';
 import { type Href, useFocusEffect } from 'expo-router';
 import { useDebouncedRouter } from '@/hooks/useDebounce';
@@ -114,13 +113,6 @@ export default function HomeScreen() {
   const { pet, loading, reload: reloadPet } = useActivePet(token);
   const effectivePet = pet;
   const effectiveLoading = loading && !effectivePet;
-
-  const currentPetWorkspace = useAppSelector((state) => ((state as any).pet?.activeWorkspace || (state.family as any)?.activeWorkspace)); 
-  const currentUser = useAppSelector(selectAuthUser);
-
-  const myPermissions = currentPetWorkspace?.members?.find(
-      (m: any) => String(m.userId || m.id) === String((currentUser as any)?._id || (currentUser as any)?.id)
-  )?.permissions || currentPetWorkspace?.permissions;
 
   const petPermissions = usePetPermissions(token, effectivePet, user?._id);
   const {
@@ -770,6 +762,7 @@ export default function HomeScreen() {
           onClose={() => setLogGroomingVisible(false)}
           petId={effectivePet?._id ?? null}
           token={token}
+          species={effectivePet?.species}
           isReadOnly={!canEdit('grooming')}
           onSaved={() => {
             void refetchDashboard();

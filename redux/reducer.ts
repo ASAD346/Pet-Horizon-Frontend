@@ -1,5 +1,5 @@
 import { combineReducers, createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { AuthSession } from '@/types/auth';
+import type { AuthSession, ApiUser } from '@/types/auth';
 import type { ApiPet } from '@/types/pet';
 import type { AppState, AuthState, ToastState, UiState, FamilyState, UpgradeModalState } from './types';
 
@@ -40,6 +40,11 @@ const authSlice = createSlice({
       // Synchronize activePet if user activePetId is specified and activePet._id matches
       if (state.activePet && action.payload.user?.activePetId && state.activePet._id !== action.payload.user.activePetId) {
         // Do not immediately nullify if activePet exists; keep activePet unless explicit logout/clear
+      }
+    },
+    updateUser: (state, action: PayloadAction<Partial<ApiUser>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
       }
     },
     setActivePet: (state, action: PayloadAction<ApiPet | null>) => {
@@ -131,6 +136,7 @@ const upgradeModalSlice = createSlice({
 
 export const {
   setSession: setSessionAction,
+  updateUser: updateUserAction,
   setActivePet: setActivePetAction,
   clearSession: clearSessionAction,
   bootstrapComplete: bootstrapCompleteAction,

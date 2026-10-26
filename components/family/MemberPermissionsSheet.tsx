@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { useAppDispatch } from '@/redux/store';
+import { updateMemberPermissionsSuccess } from '@/redux/reducer';
 import { AppText } from '@/components/ui/AppText';
 import { AppConfirmModal } from '@/components/ui/AppConfirmModal';
 import { FormSheetShell } from '@/components/sheets';
@@ -232,20 +233,24 @@ export function MemberPermissionsSheet({
         );
       });
 
-      dispatch({
-        type: 'family/updateMemberPermissionsSuccess',
-        payload: { memberId: targetUserId, permissions: { ...permsObj, journal: true, expenses: true } },
-      });
+      dispatch(
+        updateMemberPermissionsSuccess({
+          memberId: targetUserId,
+          permissions: { ...permsObj, journal: true, expenses: true },
+        })
+      );
 
       return { previousPermissions: prev, previousMembers: prevMembers };
     },
     onError: (err, _new, ctx) => {
       if (ctx?.previousPermissions) {
         queryClient.setQueryData(['family-permissions', targetUserId], ctx.previousPermissions);
-        dispatch({
-          type: 'family/updateMemberPermissionsSuccess',
-          payload: { memberId: targetUserId, permissions: ctx.previousPermissions },
-        });
+        dispatch(
+          updateMemberPermissionsSuccess({
+            memberId: targetUserId,
+            permissions: ctx.previousPermissions,
+          })
+        );
       }
       if (ctx?.previousMembers !== undefined) {
         queryClient.setQueryData(['petMembers', petId], ctx.previousMembers);
