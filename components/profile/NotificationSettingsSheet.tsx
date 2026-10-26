@@ -10,6 +10,8 @@ import { getAppPermissionsStatus, requestNotificationPermission } from '@/lib/pe
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/useToast';
 import { isExpoGo } from '@/lib/runtime/isExpoGo';
+import { useDebouncedRouter } from '@/hooks/useDebounce';
+import { type Href } from 'expo-router';
 
 interface NotificationSettingsSheetProps {
   visible: boolean;
@@ -33,6 +35,7 @@ export const DEFAULT_PREFERENCES: NotificationPreferences = {
 };
 
 export function NotificationSettingsSheet({ visible, onClose }: NotificationSettingsSheetProps) {
+  const router = useDebouncedRouter();
   const { token } = useAuth();
   const { showSuccessToast, showErrorToast } = useToast();
 
@@ -254,6 +257,21 @@ export function NotificationSettingsSheet({ visible, onClose }: NotificationSett
           </View>
         </View>
 
+        <TouchableOpacity
+          style={styles.fullPageCta}
+          activeOpacity={0.85}
+          onPress={() => {
+            onClose();
+            router.navigate('/profile/notifications' as Href);
+          }}
+        >
+          <Ionicons name="options-outline" size={18} color="#059669" />
+          <AppText variant="bodySmall" weight="700" color="#065F46" style={{ flex: 1, marginLeft: 8 }}>
+            Advanced Precision Settings & Quiet Hours
+          </AppText>
+          <Ionicons name="chevron-forward" size={16} color="#059669" />
+        </TouchableOpacity>
+
         <View style={styles.noteBox}>
           <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
           <AppText variant="caption" color="#64748B" style={{ flex: 1 }}>
@@ -359,6 +377,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderRadius: Radius.md,
     padding: Spacing.sm + 2,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.sm,
+  },
+  fullPageCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm + 2,
+    marginTop: Spacing.md,
   },
 });

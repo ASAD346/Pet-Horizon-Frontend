@@ -381,7 +381,7 @@ export function ProfileHubView() {
             icon="notifications-outline"
             title="Notifications & Reminders"
             subtitle="Push alerts, reminders & family updates"
-            onPress={() => setNotificationSettingsVisible(true)}
+            onPress={() => router.navigate('/profile/notifications' as Href)}
           />
           <ProfileMenuRow
             icon="card-outline"

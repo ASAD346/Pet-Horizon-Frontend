@@ -8,6 +8,7 @@ export default function ProfileStackLayout() {
       <Stack.Screen name="premium" />
       <Stack.Screen name="change-password" />
       <Stack.Screen name="billing" />
+      <Stack.Screen name="notifications" />
     </Stack>
   );
 }
